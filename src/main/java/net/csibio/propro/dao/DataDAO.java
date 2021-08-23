@@ -86,28 +86,29 @@ public class DataDAO extends BaseMultiDAO<DataDO, DataQuery> {
         }
     }
 
-    public void batchUpdate(String overviewId, List<SimpleFeatureScores> simpleFeatureScoresList, String projectId) {
-        if (simpleFeatureScoresList.size() == 0) {
+    public void batchUpdate(String overviewId, List<SimpleFeatureScores> sfsList, String projectId) {
+        if (sfsList.size() == 0) {
             return;
         }
         BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, getCollectionName(projectId));
-        for (SimpleFeatureScores simpleFeatureScores : simpleFeatureScoresList) {
-
+        for (SimpleFeatureScores sfs : sfsList) {
             Query query = new Query();
-            query.addCriteria(Criteria.where("overviewId").is(overviewId).and("peptideRef").is(simpleFeatureScores.getPeptideRef()).and("decoy").is(simpleFeatureScores.getDecoy()));
+            query.addCriteria(Criteria.where("overviewId").is(overviewId));
+            query.addCriteria(Criteria.where("peptideRef").is(sfs.getPeptideRef()));
+            query.addCriteria(Criteria.where("decoy").is(sfs.getDecoy()));
             Update update = new Update();
-            update.set("bestRt", simpleFeatureScores.getRt());
-            update.set("intensitySum", simpleFeatureScores.getIntensitySum());
-            update.set("fragIntFeature", simpleFeatureScores.getFragIntFeature());
-            update.set("fdr", simpleFeatureScores.getFdr());
-            update.set("qValue", simpleFeatureScores.getQValue());
+            update.set("bestRt", sfs.getRt());
+            update.set("intensitySum", sfs.getIntensitySum());
+            update.set("fragIntFeature", sfs.getFragIntFeature());
+            update.set("fdr", sfs.getFdr());
+            update.set("qValue", sfs.getQValue());
 
-            if (!simpleFeatureScores.getDecoy()) {
+            if (!sfs.getDecoy()) {
                 //投票策略
-                if (simpleFeatureScores.getFdr() <= 0.01) {
-                    update.set("identifiedStatus", IdentifyStatus.SUCCESS);
+                if (sfs.getFdr() <= 0.01) {
+                    update.set("status", IdentifyStatus.SUCCESS.getCode());
                 } else {
-                    update.set("identifiedStatus", IdentifyStatus.FAILED);
+                    update.set("status", IdentifyStatus.FAILED.getCode());
                 }
             }
             ops.updateOne(query, update);

@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.constants.constant.ExpTypeConst;
 import net.csibio.propro.domain.bean.learner.*;
 import net.csibio.propro.domain.bean.score.FeatureScores;
 import net.csibio.propro.domain.bean.score.PeptideScores;
@@ -19,7 +18,7 @@ import java.util.List;
 
 @Slf4j
 @Component("lda")
-public class Lda extends AbstractClassifier {
+public class Lda extends Classifier {
 
     /**
      * @param scores
@@ -45,25 +44,25 @@ public class Lda extends AbstractClassifier {
             score(scores, ldaLearnData.getWeightsMap(), scoreTypes);
             List<SimpleFeatureScores> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
             int count = 0;
-            if (learningParams.getType().equals(ExpTypeConst.PRM)) {
-                double maxDecoy = Double.MIN_VALUE;
-                for (SimpleFeatureScores simpleFeatureScores : featureScoresList) {
-                    if (simpleFeatureScores.getDecoy() && simpleFeatureScores.getMainScore() > maxDecoy) {
-                        maxDecoy = simpleFeatureScores.getMainScore();
-                    }
-                }
-                for (SimpleFeatureScores simpleFeatureScores : featureScoresList) {
-                    if (!simpleFeatureScores.getDecoy() && simpleFeatureScores.getMainScore() > maxDecoy) {
-                        count++;
-                        simpleFeatureScores.setFdr(0d);
-                    } else {
-                        simpleFeatureScores.setFdr(1d);
-                    }
-                }
-            } else {
-                ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
-                count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
-            }
+//            if (learningParams.getType().equals(ExpTypeConst.PRM)) {
+//                double maxDecoy = Double.MIN_VALUE;
+//                for (SimpleFeatureScores simpleFeatureScores : featureScoresList) {
+//                    if (simpleFeatureScores.getDecoy() && simpleFeatureScores.getMainScore() > maxDecoy) {
+//                        maxDecoy = simpleFeatureScores.getMainScore();
+//                    }
+//                }
+//                for (SimpleFeatureScores simpleFeatureScores : featureScoresList) {
+//                    if (!simpleFeatureScores.getDecoy() && simpleFeatureScores.getMainScore() > maxDecoy) {
+//                        count++;
+//                        simpleFeatureScores.setFdr(0d);
+//                    } else {
+//                        simpleFeatureScores.setFdr(1d);
+//                    }
+//                }
+//            } else {
+            ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
+            count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
+//            }
 
             if (count > 0) {
                 logger.info("本轮尝试有效果:检测结果:" + count + "个");

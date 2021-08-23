@@ -1,5 +1,6 @@
 package net.csibio.propro.algorithm.learner.classifier;
 
+import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.learner.LearningParams;
@@ -9,8 +10,6 @@ import net.csibio.propro.domain.bean.score.FeatureScores;
 import net.csibio.propro.domain.bean.score.PeptideScores;
 import net.csibio.propro.domain.bean.score.SimpleFeatureScores;
 import net.csibio.propro.utils.ProProUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
@@ -23,9 +22,8 @@ import java.util.Set;
  *
  * @author lumiaoshan
  */
-public abstract class AbstractClassifier {
-
-    public final Logger logger = LoggerFactory.getLogger(AbstractClassifier.class);
+@Slf4j
+public abstract class Classifier {
 
     @Autowired
     public Statistics statistics;
@@ -83,7 +81,7 @@ public abstract class AbstractClassifier {
         TrainPeaks trainPeaks = new TrainPeaks();
         trainPeaks.setBestTargets(bestTargetPeaks);
         trainPeaks.setTopDecoys(topDecoyPeaks);
-        logger.info(topTargetPeaks.size() + " " + topDecoyPeaks.size() + " " + cutoffNew + " " + bestTargetPeaks.size());
+        log.info(topTargetPeaks.size() + " " + topDecoyPeaks.size() + " " + cutoffNew + " " + bestTargetPeaks.size());
         return trainPeaks;
     }
 }
