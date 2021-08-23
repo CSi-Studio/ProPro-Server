@@ -138,7 +138,7 @@ public class SemiSupervise {
         boolean isAllDecoy = true;
         boolean isAllReal = true;
         for (PeptideScores score : scores) {
-            if (score.getIsDecoy()) {
+            if (score.getDecoy()) {
                 isAllReal = false;
             } else {
                 isAllDecoy = false;
@@ -213,7 +213,7 @@ public class SemiSupervise {
 
     private void cleanScore(List<PeptideScores> scoresList, List<String> scoreTypes) {
         for (PeptideScores peptideScores : scoresList) {
-            if (peptideScores.getIsDecoy()) {
+            if (peptideScores.getDecoy()) {
                 continue;
             }
             for (FeatureScores featureScores : peptideScores.getFeatureScoresList()) {

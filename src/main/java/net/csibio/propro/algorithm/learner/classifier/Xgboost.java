@@ -127,7 +127,7 @@ public class Xgboost extends AbstractClassifier {
 //        List<Float> testData = new ArrayList<>();
         for (PeptideScores peptideScores : scores) {
             for (FeatureScores featureScores : peptideScores.getFeatureScoresList()) {
-                if (!peptideScores.getIsDecoy() && !checkRationality(featureScores, scoreTypes)) {
+                if (!peptideScores.getDecoy() && !checkRationality(featureScores, scoreTypes)) {
                     featureScores.put(ScoreType.WeightedTotalScore.getName(), 0d, scoreTypes);
                     continue;
                 }
