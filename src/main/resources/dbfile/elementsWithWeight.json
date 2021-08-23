@@ -1,0 +1,801 @@
+[
+  {
+    "atomicNumber": 1,
+    "averageWeight": 1.0079407537168315,
+    "isotopes": [
+      "99.9885:1.0078250319",
+      "0.0115:2.0141017",
+      "0.0:3.01604927"
+    ],
+    "maxAbundanceWeight": 1.0078250319,
+    "monoWeight": 1.0078250319,
+    "name": "Hydrogen",
+    "symbol": "H"
+  },
+  {
+    "atomicNumber": 1,
+    "averageWeight": 2.01410178,
+    "isotopes": [
+      "100.0:2.01410178"
+    ],
+    "maxAbundanceWeight": 2.01410178,
+    "monoWeight": 2.01410178,
+    "name": "Deuterium",
+    "symbol": "D"
+  },
+  {
+    "atomicNumber": 1,
+    "averageWeight": 3.01604927,
+    "isotopes": [
+      "100.0:3.01604927"
+    ],
+    "maxAbundanceWeight": 3.01604927,
+    "monoWeight": 3.01604927,
+    "name": "Tritium",
+    "symbol": "T"
+  },
+  {
+    "atomicNumber": 2,
+    "averageWeight": 4.002601932140927,
+    "isotopes": [
+      "0.000134:3.0160293191",
+      "99.999866:4.00260325415"
+    ],
+    "maxAbundanceWeight": 4.00260325415,
+    "monoWeight": 3.0160293191,
+    "name": "Helium",
+    "symbol": "He"
+  },
+  {
+    "atomicNumber": 3,
+    "averageWeight": 6.9400370561999996,
+    "isotopes": [
+      "7.59:6.015122",
+      "92.41:7.016004"
+    ],
+    "maxAbundanceWeight": 7.016004,
+    "monoWeight": 6.015122,
+    "name": "Lithium",
+    "symbol": "Li"
+  },
+  {
+    "atomicNumber": 4,
+    "averageWeight": 9.0121822,
+    "isotopes": [
+      "100.0:9.0121822"
+    ],
+    "maxAbundanceWeight": 9.0121822,
+    "monoWeight": 9.0121822,
+    "name": "Beryllium",
+    "symbol": "Be"
+  },
+  {
+    "atomicNumber": 5,
+    "averageWeight": 10.811027767999999,
+    "isotopes": [
+      "19.9:10.012937",
+      "80.1:11.009305"
+    ],
+    "maxAbundanceWeight": 11.009305,
+    "monoWeight": 10.012937,
+    "name": "Bor",
+    "symbol": "B"
+  },
+  {
+    "atomicNumber": 6,
+    "averageWeight": 12.0107358985,
+    "isotopes": [
+      "98.93:12.0000000",
+      "1.07:13.003355"
+    ],
+    "maxAbundanceWeight": 12.0,
+    "monoWeight": 12.0,
+    "name": "Carbon",
+    "symbol": "C"
+  },
+  {
+    "atomicNumber": 7,
+    "averageWeight": 14.0067430888,
+    "isotopes": [
+      "99.632:14.003074",
+      "0.368:15.000109"
+    ],
+    "maxAbundanceWeight": 14.003074,
+    "monoWeight": 14.003074,
+    "name": "Nitrogen",
+    "symbol": "N"
+  },
+  {
+    "atomicNumber": 8,
+    "averageWeight": 15.999405323160001,
+    "isotopes": [
+      "99.757:15.994915",
+      "0.038:16.999132",
+      "0.205:17.999169"
+    ],
+    "maxAbundanceWeight": 15.994915,
+    "monoWeight": 15.994915,
+    "name": "Oxygen",
+    "symbol": "O"
+  },
+  {
+    "atomicNumber": 9,
+    "averageWeight": 18.99840322,
+    "isotopes": [
+      "100.0:18.99840322"
+    ],
+    "maxAbundanceWeight": 18.99840322,
+    "monoWeight": 18.99840322,
+    "name": "Fluorine",
+    "symbol": "F"
+  },
+  {
+    "atomicNumber": 11,
+    "averageWeight": 22.9897692809,
+    "isotopes": [
+      "100.0:22.9897692809"
+    ],
+    "maxAbundanceWeight": 22.9897692809,
+    "monoWeight": 22.9897692809,
+    "name": "Sodium",
+    "symbol": "Na"
+  },
+  {
+    "atomicNumber": 12,
+    "averageWeight": 24.3050518651,
+    "isotopes": [
+      "78.99:23.985042",
+      "10.00:24.985837",
+      "11.01:25.982593"
+    ],
+    "maxAbundanceWeight": 23.985042,
+    "monoWeight": 23.985042,
+    "name": "Magnesium",
+    "symbol": "Mg"
+  },
+  {
+    "atomicNumber": 13,
+    "averageWeight": 26.98153863,
+    "isotopes": [
+      "100.0:26.98153863"
+    ],
+    "maxAbundanceWeight": 26.98153863,
+    "monoWeight": 26.98153863,
+    "name": "Aluminium",
+    "symbol": "Al"
+  },
+  {
+    "atomicNumber": 14,
+    "averageWeight": 28.07991313337825,
+    "isotopes": [
+      "92.21:27.9769265325",
+      "4.67:28.976494700",
+      "3.10:29.97377017"
+    ],
+    "maxAbundanceWeight": 27.9769265325,
+    "monoWeight": 27.9769265325,
+    "name": "Silicon",
+    "symbol": "Si"
+  },
+  {
+    "atomicNumber": 15,
+    "averageWeight": 30.97376149,
+    "isotopes": [
+      "100.0:30.97376149"
+    ],
+    "maxAbundanceWeight": 30.97376149,
+    "monoWeight": 30.97376149,
+    "name": "Phosphorus",
+    "symbol": "P"
+  },
+  {
+    "atomicNumber": 16,
+    "averageWeight": 32.066084735289,
+    "isotopes": [
+      "94.93:31.97207073",
+      "0.76:32.971458",
+      "4.29:33.967867",
+      "0.02:35.967081"
+    ],
+    "maxAbundanceWeight": 31.97207073,
+    "monoWeight": 31.97207073,
+    "name": "Sulfur",
+    "symbol": "S"
+  },
+  {
+    "atomicNumber": 17,
+    "averageWeight": 35.452937578184,
+    "isotopes": [
+      "75.76:34.96885268",
+      "24.24:36.96590259"
+    ],
+    "maxAbundanceWeight": 34.96885268,
+    "monoWeight": 34.96885268,
+    "name": "Chlorine",
+    "symbol": "Cl"
+  },
+  {
+    "atomicNumber": 18,
+    "averageWeight": 39.9477985625725,
+    "isotopes": [
+      "0.3336:35.967545106",
+      "0.0629:37.9627324",
+      "99.6035:39.9623831225"
+    ],
+    "maxAbundanceWeight": 39.9623831225,
+    "monoWeight": 35.967545106,
+    "name": "Argon",
+    "symbol": "Ar"
+  },
+  {
+    "atomicNumber": 19,
+    "averageWeight": 39.09830112446276,
+    "isotopes": [
+      "93.2581:38.96370668",
+      "0.0117:39.96399848",
+      "6.7302:40.96182576"
+    ],
+    "maxAbundanceWeight": 38.96370668,
+    "monoWeight": 38.96370668,
+    "name": "Potassium",
+    "symbol": "K"
+  },
+  {
+    "atomicNumber": 20,
+    "averageWeight": 40.07802265198851,
+    "isotopes": [
+      "96.941:39.96259098",
+      "0.647:41.95861801",
+      "0.135:42.9587666",
+      "2.086:43.9554818",
+      "0.004:45.9536926",
+      "0.187:47.952534"
+    ],
+    "maxAbundanceWeight": 39.96259098,
+    "monoWeight": 39.96259098,
+    "name": "Calcium",
+    "symbol": "Ca"
+  },
+  {
+    "atomicNumber": 22,
+    "averageWeight": 47.866749245159994,
+    "isotopes": [
+      "8.25:45.9526316",
+      "7.44:46.9517631",
+      "73.72:47.9479463",
+      "5.41:48.9478700",
+      "5.18:49.9447912"
+    ],
+    "maxAbundanceWeight": 47.9479463,
+    "monoWeight": 45.9526316,
+    "name": "Titanium",
+    "symbol": "Ti"
+  },
+  {
+    "atomicNumber": 23,
+    "averageWeight": 50.9414674975,
+    "isotopes": [
+      "0.250:49.9471585",
+      "99.750:50.9439595"
+    ],
+    "maxAbundanceWeight": 50.9439595,
+    "monoWeight": 49.9471585,
+    "name": "Vanadium",
+    "symbol": "V"
+  },
+  {
+    "atomicNumber": 24,
+    "averageWeight": 51.996133070619,
+    "isotopes": [
+      "4.345:49.9460442",
+      "83.789:51.9405075",
+      "9.501:52.9406494",
+      "2.365:53.9388804"
+    ],
+    "maxAbundanceWeight": 51.9405075,
+    "monoWeight": 49.9460442,
+    "name": "Chromium",
+    "symbol": "Cr"
+  },
+  {
+    "atomicNumber": 25,
+    "averageWeight": 54.93805,
+    "isotopes": [
+      "100.0:54.938050"
+    ],
+    "maxAbundanceWeight": 54.93805,
+    "monoWeight": 54.93805,
+    "name": "Manganese",
+    "symbol": "Mn"
+  },
+  {
+    "atomicNumber": 26,
+    "averageWeight": 55.8451446256454,
+    "isotopes": [
+      "5.845:53.9396105",
+      "91.754:55.9349375",
+      "2.1191:56.9353940",
+      "0.2819:57.9332756"
+    ],
+    "maxAbundanceWeight": 55.9349375,
+    "monoWeight": 53.9396105,
+    "name": "Ferrum",
+    "symbol": "Fe"
+  },
+  {
+    "atomicNumber": 27,
+    "averageWeight": 58.933195,
+    "isotopes": [
+      "100.0:58.933195"
+    ],
+    "maxAbundanceWeight": 58.933195,
+    "monoWeight": 58.933195,
+    "name": "Cobalt",
+    "symbol": "Co"
+  },
+  {
+    "atomicNumber": 28,
+    "averageWeight": 58.658595256198005,
+    "isotopes": [
+      "68.0169:57.935348",
+      "26.2231:59.930791",
+      "1.1399:60.931060",
+      "3.6345:61.928349",
+      "0.9256:63.927970"
+    ],
+    "maxAbundanceWeight": 57.935348,
+    "monoWeight": 57.935348,
+    "name": "Nickel",
+    "symbol": "Ni"
+  },
+  {
+    "atomicNumber": 29,
+    "averageWeight": 63.54564390189999,
+    "isotopes": [
+      "69.17:62.929601",
+      "30.83:64.927794"
+    ],
+    "maxAbundanceWeight": 62.929601,
+    "monoWeight": 62.929601,
+    "name": "Copper",
+    "symbol": "Cu"
+  },
+  {
+    "atomicNumber": 30,
+    "averageWeight": 65.3955668951,
+    "isotopes": [
+      "48.63:63.929147",
+      "27.90:65.926037",
+      "4.10:66.927131",
+      "18.75:67.924848",
+      "0.62:69.925325"
+    ],
+    "maxAbundanceWeight": 63.929147,
+    "monoWeight": 63.929147,
+    "name": "Zinc",
+    "symbol": "Zn"
+  },
+  {
+    "atomicNumber": 31,
+    "averageWeight": 69.723065622084,
+    "isotopes": [
+      "60.108:68.9255736",
+      "39.892:70.9247013"
+    ],
+    "maxAbundanceWeight": 68.9255736,
+    "monoWeight": 68.9255736,
+    "name": "Gallium",
+    "symbol": "Ga"
+  },
+  {
+    "atomicNumber": 32,
+    "averageWeight": 66.6951974199,
+    "isotopes": [
+      "20.38:69.9242474",
+      "27.31:71.9220758",
+      "7.76:72.9234589",
+      "36.72:73.9211778"
+    ],
+    "maxAbundanceWeight": 73.9211778,
+    "monoWeight": 69.9242474,
+    "name": "Germanium",
+    "symbol": "Ge"
+  },
+  {
+    "atomicNumber": 33,
+    "averageWeight": 74.9215965,
+    "isotopes": [
+      "100.0:74.9215965"
+    ],
+    "maxAbundanceWeight": 74.9215965,
+    "monoWeight": 74.9215965,
+    "name": "Arsenic",
+    "symbol": "As"
+  },
+  {
+    "atomicNumber": 34,
+    "averageWeight": 78.95943826002899,
+    "isotopes": [
+      "0.889:73.9224764",
+      "9.366:75.9192136",
+      "7.635:76.9199140",
+      "23.772:77.9173091",
+      "49.607:79.9165213",
+      "8.731:81.9166994"
+    ],
+    "maxAbundanceWeight": 79.9165213,
+    "monoWeight": 73.9224764,
+    "name": "Selenium",
+    "symbol": "Se"
+  },
+  {
+    "atomicNumber": 35,
+    "averageWeight": 79.90352797085,
+    "isotopes": [
+      "50.69:78.9183371",
+      "49.31:80.9162906"
+    ],
+    "maxAbundanceWeight": 78.9183371,
+    "monoWeight": 78.9183371,
+    "name": "Bromine",
+    "symbol": "Br"
+  },
+  {
+    "atomicNumber": 37,
+    "averageWeight": 61.2808386539146,
+    "isotopes": [
+      "72.17:84.911789738"
+    ],
+    "maxAbundanceWeight": 84.911789738,
+    "monoWeight": 84.911789738,
+    "name": "Rubidium",
+    "symbol": "Rb"
+  },
+  {
+    "atomicNumber": 38,
+    "averageWeight": 87.61664431476991,
+    "isotopes": [
+      "0.56:83.913425",
+      "9.86:85.9092607309",
+      "7.0:86.9088774970",
+      "82.58:87.9056122571"
+    ],
+    "maxAbundanceWeight": 87.9056122571,
+    "monoWeight": 83.913425,
+    "name": "Strontium",
+    "symbol": "Sr"
+  },
+  {
+    "atomicNumber": 40,
+    "averageWeight": 88.53821595152002,
+    "isotopes": [
+      "51.45:89.9047044",
+      "11.22:90.9056458",
+      "17.15:91.9050408",
+      "17.38:93.9063152"
+    ],
+    "maxAbundanceWeight": 89.9047044,
+    "monoWeight": 89.9047044,
+    "name": "Zirconium",
+    "symbol": "Zr"
+  },
+  {
+    "atomicNumber": 42,
+    "averageWeight": 95.93129157939998,
+    "isotopes": [
+      "14.84:91.906810",
+      "9.25:93.905088",
+      "15.92:94.905841",
+      "16.68:95.904679",
+      "9.55:96.906021",
+      "24.13:97.905408",
+      "9.63:99.907477"
+    ],
+    "maxAbundanceWeight": 97.905408,
+    "monoWeight": 91.90681,
+    "name": "Molybdenum",
+    "symbol": "Mo"
+  },
+  {
+    "atomicNumber": 44,
+    "averageWeight": 101.06494544279,
+    "isotopes": [
+      "5.54:95.907598",
+      "1.87:97.905287",
+      "12.76:98.9059393",
+      "12.60:99.9042195",
+      "17.06:100.9055821",
+      "31.55:101.9043493",
+      "18.62:103.905433"
+    ],
+    "maxAbundanceWeight": 101.9043493,
+    "monoWeight": 95.907598,
+    "name": "Ruthenium",
+    "symbol": "Ru"
+  },
+  {
+    "atomicNumber": 46,
+    "averageWeight": 106.41532878129999,
+    "isotopes": [
+      "1.02:101.905609",
+      "11.14:103.904036",
+      "22.33:104.905085",
+      "27.33:105.903486",
+      "26.46:107.903892",
+      "11.72:109.905153"
+    ],
+    "maxAbundanceWeight": 105.903486,
+    "monoWeight": 101.905609,
+    "name": "Palladium",
+    "symbol": "Pd"
+  },
+  {
+    "atomicNumber": 47,
+    "averageWeight": 107.86815069743,
+    "isotopes": [
+      "51.839:106.905093",
+      "48.161:108.904756"
+    ],
+    "maxAbundanceWeight": 106.905093,
+    "monoWeight": 106.905093,
+    "name": "Silver",
+    "symbol": "Ag"
+  },
+  {
+    "atomicNumber": 48,
+    "averageWeight": 112.41155218802001,
+    "isotopes": [
+      "1.25:105.906458",
+      "0.89:107.904184",
+      "12.49:109.9030021",
+      "12.8:110.9041781",
+      "24.13:111.9027578",
+      "12.22:112.9044017",
+      "28.73:113.9033585",
+      "7.49:115.904756"
+    ],
+    "maxAbundanceWeight": 113.9033585,
+    "monoWeight": 105.906458,
+    "name": "Cadmium",
+    "symbol": "Cd"
+  },
+  {
+    "atomicNumber": 50,
+    "averageWeight": 118.71010830810998,
+    "isotopes": [
+      "0.97:111.904818",
+      "0.66:113.9027779",
+      "0.34:114.903342",
+      "14.54:115.901741",
+      "7.68:116.902952",
+      "24.22:117.901603",
+      "8.59:118.903308",
+      "32.58:119.9021947",
+      "4.63:121.9034390",
+      "5.79:123.9052739"
+    ],
+    "maxAbundanceWeight": 119.9021947,
+    "monoWeight": 111.904818,
+    "name": "Tin",
+    "symbol": "Sn"
+  },
+  {
+    "atomicNumber": 51,
+    "averageWeight": 121.75978613256999,
+    "isotopes": [
+      "57.21:120.9038157",
+      "42.79:122.9042140"
+    ],
+    "maxAbundanceWeight": 120.9038157,
+    "monoWeight": 120.9038157,
+    "name": "Antimony",
+    "symbol": "Sb"
+  },
+  {
+    "atomicNumber": 52,
+    "averageWeight": 126.50927984414,
+    "isotopes": [
+      "0.09:119.90402",
+      "2.55:121.9030439",
+      "4.74:123.9028179",
+      "7.07:124.9044307",
+      "18.84:125.9033117",
+      "31.74:127.9044631",
+      "34.08:129.9062244"
+    ],
+    "maxAbundanceWeight": 129.9062244,
+    "monoWeight": 119.90402,
+    "name": "Tellurium",
+    "symbol": "Te"
+  },
+  {
+    "atomicNumber": 53,
+    "averageWeight": 126.904473,
+    "isotopes": [
+      "100.0:126.904473"
+    ],
+    "maxAbundanceWeight": 126.904473,
+    "monoWeight": 126.904473,
+    "name": "Iodine",
+    "symbol": "I"
+  },
+  {
+    "atomicNumber": 55,
+    "averageWeight": 132.905451933,
+    "isotopes": [
+      "100.0:132.905451933"
+    ],
+    "maxAbundanceWeight": 132.905451933,
+    "monoWeight": 132.905451933,
+    "name": "Caesium",
+    "symbol": "Cs"
+  },
+  {
+    "atomicNumber": 56,
+    "averageWeight": 137.189191134663,
+    "isotopes": [
+      "0.101:131.9050613",
+      "2.417:133.9045084",
+      "6.592:134.9056886",
+      "7.854:135.9045759",
+      "11.232:136.9058274",
+      "71.698:137.9052472"
+    ],
+    "maxAbundanceWeight": 137.9052472,
+    "monoWeight": 131.9050613,
+    "name": "Barium",
+    "symbol": "Ba"
+  },
+  {
+    "atomicNumber": 58,
+    "averageWeight": 140.11572621392,
+    "isotopes": [
+      "0.185:135.907172",
+      "0.251:137.905991",
+      "88.450:139.9054387",
+      "11.114:141.909244"
+    ],
+    "maxAbundanceWeight": 139.9054387,
+    "monoWeight": 135.907172,
+    "name": "Cerium",
+    "symbol": "Ce"
+  },
+  {
+    "atomicNumber": 64,
+    "averageWeight": 157.25212221543998,
+    "isotopes": [
+      "0.2:151.9197910",
+      "2.18:153.9208656",
+      "14.8:154.9226220",
+      "20.47:155.9221227",
+      "15.65:156.9239601",
+      "24.84:157.9241039",
+      "21.86:159.9270541"
+    ],
+    "maxAbundanceWeight": 157.9241039,
+    "monoWeight": 151.919791,
+    "name": "Gadolinium",
+    "symbol": "Gd"
+  },
+  {
+    "atomicNumber": 72,
+    "averageWeight": 178.20666806802,
+    "isotopes": [
+      "5.26:175.9414086",
+      "18.60:176.9432207",
+      "27.28:177.9436988",
+      "13.62:178.9458161",
+      "35.08:179.9465500"
+    ],
+    "maxAbundanceWeight": 179.94655,
+    "monoWeight": 175.9414086,
+    "name": "Hafnium",
+    "symbol": "Hf"
+  },
+  {
+    "atomicNumber": 73,
+    "averageWeight": 180.9479958,
+    "isotopes": [
+      "100.00:180.9479958"
+    ],
+    "maxAbundanceWeight": 180.9479958,
+    "monoWeight": 180.9479958,
+    "name": "Tantalum",
+    "symbol": "Ta"
+  },
+  {
+    "atomicNumber": 74,
+    "averageWeight": 183.84177804112997,
+    "isotopes": [
+      "0.12:179.946704",
+      "26.50:181.9482042",
+      "14.31:182.9502230",
+      "30.64:183.950931",
+      "28.43:185.9543641"
+    ],
+    "maxAbundanceWeight": 183.950931,
+    "monoWeight": 179.946704,
+    "name": "Tungsten",
+    "symbol": "W"
+  },
+  {
+    "atomicNumber": 78,
+    "averageWeight": 195.05121348983303,
+    "isotopes": [
+      "0.782:191.9610380",
+      "32.967:193.9626803",
+      "33.832:194.9647911",
+      "25.242:195.9649515",
+      "7.163:197.967893"
+    ],
+    "maxAbundanceWeight": 194.9647911,
+    "monoWeight": 191.961038,
+    "name": "Platinum",
+    "symbol": "Pt"
+  },
+  {
+    "atomicNumber": 79,
+    "averageWeight": 196.966551,
+    "isotopes": [
+      "100.00:196.966551"
+    ],
+    "maxAbundanceWeight": 196.966551,
+    "monoWeight": 196.966551,
+    "name": "Gold",
+    "symbol": "Au"
+  },
+  {
+    "atomicNumber": 80,
+    "averageWeight": 200.5991666178,
+    "isotopes": [
+      "0.15:195.965833",
+      "9.97:197.9667690",
+      "16.87:198.9682799",
+      "23.10:199.9683260",
+      "13.18:200.9703023",
+      "29.86:201.9706430",
+      "6.87:203.9734939"
+    ],
+    "maxAbundanceWeight": 201.970643,
+    "monoWeight": 195.965833,
+    "name": "Mercury",
+    "symbol": "Hg"
+  },
+  {
+    "atomicNumber": 81,
+    "averageWeight": 204.38341250983999,
+    "isotopes": [
+      "29.52:202.9723442",
+      "70.48:204.9744275"
+    ],
+    "maxAbundanceWeight": 204.9744275,
+    "monoWeight": 202.9723442,
+    "name": "Thallium",
+    "symbol": "Tl"
+  },
+  {
+    "atomicNumber": 82,
+    "averageWeight": 206.6925119382,
+    "isotopes": [
+      "1.4:203.9730436",
+      "24.1:205.9744653",
+      "22.1:206.9758969",
+      "52.4:206.9758969"
+    ],
+    "maxAbundanceWeight": 206.9758969,
+    "monoWeight": 203.9730436,
+    "name": "Lead",
+    "symbol": "Pb"
+  },
+  {
+    "atomicNumber": 83,
+    "averageWeight": 208.9803987,
+    "isotopes": [
+      "100.0:208.9803987"
+    ],
+    "maxAbundanceWeight": 208.9803987,
+    "monoWeight": 208.9803987,
+    "name": "Bismuth",
+    "symbol": "Bi"
+  }
+]

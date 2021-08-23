@@ -1,0 +1,77 @@
+package net.csibio.propro.algorithm.irt;
+
+import lombok.extern.slf4j.Slf4j;
+import net.csibio.aird.bean.Compressor;
+import net.csibio.aird.bean.MzIntensityPairs;
+import net.csibio.aird.parser.DIAParser;
+import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.peptide.SimplePeptide;
+import net.csibio.propro.domain.db.BlockIndexDO;
+import net.csibio.propro.domain.db.DataDO;
+import net.csibio.propro.domain.db.ExperimentDO;
+import net.csibio.propro.domain.options.AnalyzeParams;
+import net.csibio.propro.domain.query.BlockIndexQuery;
+import net.csibio.propro.utils.ConvolutionUtil;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+@Component("irtByInsLib")
+@Slf4j
+public class IrtByInsLib extends Irt {
+
+    /**
+     * XIC iRT内标库的数据
+     *
+     * @param exp
+     * @param params
+     * @return
+     */
+    @Override
+    public List<DataDO> extract(ExperimentDO exp, AnalyzeParams params) {
+        Result checkResult = ConvolutionUtil.checkExperiment(exp);
+        if (checkResult.isFailed()) {
+            log.error(checkResult.getErrorMessage());
+            return null;
+        }
+
+        List<DataDO> finalDataList = new ArrayList<>();
+        List<BlockIndexDO> blockList = blockIndexService.getAll(new BlockIndexQuery(exp.getId(), 2));
+        blockList = blockList.stream().sorted(Comparator.comparing(a -> a.getRange().getStart())).collect(Collectors.toList());
+        Compressor mzCompressor = exp.fetchCompressor(Compressor.TARGET_MZ);
+        Compressor intCompressor = exp.fetchCompressor(Compressor.TARGET_INTENSITY);
+        DIAParser parser = null;
+        try {
+            parser = new DIAParser(exp.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
+            for (int i = 0; i < blockList.size(); i++) {
+                log.info("第" + (i + 1) + "轮搜索开始");
+                //Step1.按照步长获取SwathList的点位库
+                BlockIndexDO blockIndex = blockList.get(i);
+                //Step2.获取标准库的目标肽段片段的坐标
+                List<SimplePeptide> coords = peptideService.buildCoord4Irt(params.getIrtLibraryId(), blockIndex.getRange());
+                if (coords.size() == 0) {
+                    log.warn("No iRT Targets Found,Rang:" + blockIndex.getRange().getStart() + ":" + blockIndex.getRange().getEnd());
+                    continue;
+                }
+
+                //Step3&4.提取指定原始谱图,提取数据并且存储数据,如果传入的库是标准库,那么使用采样的方式进行数据提取
+                try {
+                    TreeMap<Float, MzIntensityPairs> rtMap = parser.getSpectrums(blockIndex.getStartPtr(), blockIndex.getEndPtr(), blockIndex.getRts(), blockIndex.getMzs(), blockIndex.getInts());
+                    extractor.extract4Irt(finalDataList, coords, rtMap, params);
+                } catch (Exception e) {
+                    log.error("Parsing Error!!Precursor m/z start:" + blockIndex.getRange().getStart());
+                    throw e;
+                }
+            }
+        } finally {
+            if (parser != null) {
+                parser.close(); //使用完毕以后关闭parser
+            }
+        }
+        return finalDataList;
+    }
+}
