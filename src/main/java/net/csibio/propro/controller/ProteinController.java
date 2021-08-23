@@ -38,6 +38,7 @@ public class ProteinController {
 
     @GetMapping(value = "/list")
     Result<List<ProteinDO>> list(ProteinQuery query) {
+
         return proteinService.getList(query);
     }
 
