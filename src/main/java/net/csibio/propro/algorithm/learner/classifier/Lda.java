@@ -26,7 +26,7 @@ public class Lda extends Classifier {
      * @return
      */
     public HashMap<String, Double> classifier(List<PeptideScores> scores, LearningParams learningParams, List<String> scoreTypes) {
-        logger.info("开始训练学习数据权重");
+        log.info("开始训练学习数据权重");
         if (scores.size() < 500) {
             learningParams.setXevalNumIter(10);
             learningParams.setSsIterationFdr(0.02);
@@ -35,10 +35,10 @@ public class Lda extends Classifier {
         int neval = learningParams.getTrainTimes();
         List<HashMap<String, Double>> weightsMapList = new ArrayList<>();
         for (int i = 0; i < neval; i++) {
-            logger.info("开始第" + i + "轮尝试,总计" + neval + "轮");
+            log.info("开始第" + i + "轮尝试,总计" + neval + "轮");
             LDALearnData ldaLearnData = learnRandomized(scores, learningParams);
             if (ldaLearnData == null) {
-                logger.info("跳过本轮训练");
+                log.info("跳过本轮训练");
                 continue;
             }
             score(scores, ldaLearnData.getWeightsMap(), scoreTypes);
@@ -65,7 +65,7 @@ public class Lda extends Classifier {
 //            }
 
             if (count > 0) {
-                logger.info("本轮尝试有效果:检测结果:" + count + "个");
+                log.info("本轮尝试有效果:检测结果:" + count + "个");
             }
             weightsMapList.add(ldaLearnData.getWeightsMap());
             if (learningParams.isDebug()) {
@@ -84,7 +84,7 @@ public class Lda extends Classifier {
             TrainPeaks trainPeaks = selectFirstTrainPeaks(trainData, learningParams);
 
             HashMap<String, Double> weightsMap = learn(trainPeaks, learningParams.getMainScore(), learningParams.getScoreTypes());
-            logger.info("Train Weight:" + JSONArray.toJSONString(weightsMap));
+            log.info("Train Weight:" + JSONArray.toJSONString(weightsMap));
 
             //根据weightsMap计算子分数的加权总分
             score(trainData, weightsMap, learningParams.getScoreTypes());
@@ -94,10 +94,10 @@ public class Lda extends Classifier {
                 TrainPeaks trainPeaksTemp = selectTrainPeaks(trainData, ScoreType.WeightedTotalScore.getName(), learningParams, learningParams.getSsIterationFdr());
                 lastWeightsMap = weightsMap;
                 weightsMap = learn(trainPeaksTemp, ScoreType.WeightedTotalScore.getName(), learningParams.getScoreTypes());
-                logger.info("Train Weight:" + JSONArray.toJSONString(weightsMap));
+                log.info("Train Weight:" + JSONArray.toJSONString(weightsMap));
                 for (Double value : weightsMap.values()) {
                     if (value == null || Double.isNaN(value)) {
-                        logger.info("本轮训练一坨屎:" + JSON.toJSONString(weightsMap));
+                        log.info("本轮训练一坨屎:" + JSON.toJSONString(weightsMap));
                         continue;
                     }
                 }
@@ -227,7 +227,7 @@ public class Lda extends Classifier {
 
         for (Double value : weightsMap.values()) {
             if (value == null || Double.isNaN(value)) {
-                logger.info("本轮训练结果很差:" + JSON.toJSONString(weightsMap));
+                log.info("本轮训练结果很差:" + JSON.toJSONString(weightsMap));
                 return null;
             }
         }
