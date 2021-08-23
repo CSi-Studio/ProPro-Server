@@ -40,7 +40,6 @@ public class LibraryStat {
         int minMz = peptideList.get(0).getMz().intValue();
         int maxRange = (maxMz / 100 + 1) * 100;
         int minRange = (minMz / 100) * 100;
-
         int stage = (maxRange - minRange) / slice;
         int add = 0;
         int temp = 0;
@@ -71,7 +70,14 @@ public class LibraryStat {
         int maxRt = peptideList.get(peptideList.size() - 1).getRt().intValue();
         int minRt = peptideList.get(0).getRt().intValue();
         int maxRange = (maxRt / 100 + 1) * 100;
-        int minRange = (minRt / 100) * 100;
+        int minRange;
+        if(minRt<0 && minRt>-100){
+             minRange = -100;
+        } else{
+             minRange = (minRt / 100) * 100;
+        }
+
+
 
         int stage = (maxRange - minRange) / slice;
         int add = 0;

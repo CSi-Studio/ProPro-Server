@@ -17,7 +17,7 @@ public class PageQuery implements Serializable {
 
     private static final long serialVersionUID = -8745138167696978267L;
 
-    protected long pageNo = 1;
+    protected long current = 1;
     protected int pageSize = 20;
     protected long totalNum = 0;
 
@@ -31,27 +31,27 @@ public class PageQuery implements Serializable {
     }
 
     public PageQuery(int pageNo, int pageSize) {
-        this.pageNo = pageNo;
+        this.current = pageNo;
         this.pageSize = pageSize;
     }
 
     public PageQuery(int pageNo, int pageSize, Sort.Direction direction, String sortColumn) {
-        this.pageNo = pageNo;
+        this.current = pageNo;
         this.pageSize = pageSize;
         this.sortColumn = sortColumn;
         this.orderBy = direction;
     }
 
     public void setPageNo(final int pageNo) {
-        this.pageNo = pageNo;
+        this.current = pageNo;
 
         if (pageNo < 1) {
-            this.pageNo = 1;
+            this.current= 1;
         }
     }
 
     public Long getFirst() {
-        return (getPageNo() > 0 && getPageSize() > 0) ? ((getPageNo() - 1) * getPageSize()) : 0;
+        return (getCurrent() > 0 && getPageSize() > 0) ? ((getCurrent() - 1) * getPageSize()) : 0;
     }
 
     public Long getLast() {

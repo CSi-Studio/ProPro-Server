@@ -157,7 +157,7 @@ public abstract class BaseMultiDAO<T, Q extends PageQuery> {
 
     protected Query buildQuery(Q targetQuery) {
         Query query = buildQueryWithoutPage(targetQuery);
-        query.skip((targetQuery.getPageNo() - 1) * targetQuery.getPageSize());
+        query.skip((targetQuery.getCurrent() - 1) * targetQuery.getPageSize());
         query.limit(targetQuery.getPageSize());
         if (allowSort()) {
             if (targetQuery.getSortColumn() != null && targetQuery.getOrderBy() != null) {

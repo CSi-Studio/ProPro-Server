@@ -77,12 +77,12 @@ public class Result<T> implements Serializable {
         pagination.setPageSize(pageSize);
     }
 
-    public long getCurrentPageNo() {
+    public long getCurrent() {
         return pagination.getCurrent();
     }
 
-    public void setCurrentPageNo(long currentPageNo) {
-        pagination.setCurrent(currentPageNo);
+    public void setCurrent(long current) {
+        pagination.setCurrent(current);
     }
 
     public Result() {

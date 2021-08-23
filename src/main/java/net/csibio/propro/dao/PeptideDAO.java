@@ -107,7 +107,7 @@ public class PeptideDAO extends BaseDAO<PeptideDO, PeptideQuery> {
                         Aggregation.group("proteinIdentifier").
                                 first("proteinIdentifier").as("identifier").
                                 first("id").as("peptideId"),
-                        Aggregation.skip((query.getPageNo() - 1) * query.getPageSize()),
+                        Aggregation.skip((query.getCurrent() - 1) * query.getPageSize()),
                         Aggregation.limit(query.getPageSize())).withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build()), CollectionName,
                 Protein.class);
         return a.getMappedResults();
