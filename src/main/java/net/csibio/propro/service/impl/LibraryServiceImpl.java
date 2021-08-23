@@ -253,7 +253,7 @@ public class LibraryServiceImpl implements LibraryService {
         }
     }
 
-    @CacheEvict(cacheNames = "libraryGetId",key = "#libraryDOS.hashCode()")
+    @CacheEvict(allEntries = true)
     @Override
     public Result<List<LibraryDO>> update(List<LibraryDO> libraryDOS) {
         try {
