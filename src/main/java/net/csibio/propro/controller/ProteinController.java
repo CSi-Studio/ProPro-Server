@@ -38,7 +38,6 @@ public class ProteinController {
 
     @GetMapping(value = "/list")
     Result<List<ProteinDO>> list(ProteinQuery query) {
-
         return proteinService.getList(query);
     }
 
@@ -65,7 +64,6 @@ public class ProteinController {
             createTag = libFile.getOriginalFilename() + SymbolConst.DELIMITER + format;
         }
         proteinDO.setCreateTag(createTag);
-
         InputStream inputStream = libFile.getInputStream();
         Result<List<ProteinDO>> result = proteinService.importFromFasta(inputStream, libFile.getOriginalFilename(), reviewed, minPepLen, maxPepLen);
         if (result.isFailed()) {
@@ -84,5 +82,4 @@ public class ProteinController {
         }
         return Result.OK();
     }
-
 }

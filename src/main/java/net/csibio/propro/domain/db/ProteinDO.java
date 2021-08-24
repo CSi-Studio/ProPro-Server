@@ -48,7 +48,7 @@ public class ProteinDO extends BaseDO {
 
     public String getUniProtLink() {
         if (identifier != null) {
-            String[] identifiers = identifier.split(SymbolConst.BAR, -1);
+            String[] identifiers = identifier.split("\\|", -1);
             if (identifiers.length == 3) {
                 return "https://www.uniprot.org/uniprot/" + identifiers[1];
             } else {
@@ -61,7 +61,7 @@ public class ProteinDO extends BaseDO {
 
     public String getAlphaFoldLink() {
         if (identifier != null) {
-            String[] identifiers = identifier.split(SymbolConst.BAR, -1);
+            String[] identifiers = identifier.split("\\|",-1);
             if (identifiers.length == 3) {
                 return "https://www.alphafold.ebi.ac.uk/entry/" + identifiers[1];
             } else {

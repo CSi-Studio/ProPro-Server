@@ -26,6 +26,7 @@ import net.csibio.propro.service.TaskService;
 import net.csibio.propro.utils.FileUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -227,7 +228,7 @@ public class LibraryServiceImpl implements LibraryService {
         return Result.OK();
     }
 
-    @Cacheable(cacheNames = "LibraryGetId", key = "#id")
+    @Cacheable(cacheNames = "libraryGetId", key = "#id")
     @Override
     public LibraryDO getById(String id) {
         try {
@@ -238,11 +239,58 @@ public class LibraryServiceImpl implements LibraryService {
         }
     }
 
+    @CacheEvict(cacheNames = "libraryGetId",key="#libraryDO.id")
+    @Override
+    public Result<LibraryDO> update(LibraryDO libraryDO) {
+        try {
+            beforeUpdate(libraryDO);
+            getBaseDAO().update(libraryDO);
+            return Result.OK(libraryDO);
+        } catch (XException xe) {
+            return Result.Error(xe.getResultCode());
+        } catch (Exception e) {
+            return Result.Error(ResultCode.UPDATE_ERROR);
+        }
+    }
+
+    @CacheEvict(allEntries = true)
+    @Override
+    public Result<List<LibraryDO>> update(List<LibraryDO> libraryDOS) {
+        try {
+            for (LibraryDO t : libraryDOS) {
+                beforeUpdate(t);
+            }
+            getBaseDAO().update(libraryDOS);
+            return Result.OK(libraryDOS);
+        } catch (XException xe) {
+            return Result.Error(xe.getResultCode());
+        } catch (Exception e) {
+            return Result.Error(ResultCode.UPDATE_ERROR);
+        }
+    }
+
     //    @Cacheable(cacheNames = "LibraryGetAll", key = "#libraryQuery.getName()")
+
+
     @Override
     public List<LibraryDO> getAll(LibraryQuery libraryQuery) {
         log.info("执行getById方法");
         return getBaseDAO().getAll(libraryQuery);
+    }
+
+    @CacheEvict(cacheNames = "libraryGetId",key="#id")
+    @Override
+    public Result removeById(String id) {
+        if (id == null || id.isEmpty()) {
+            return Result.Error(ResultCode.ID_CANNOT_BE_NULL_OR_ZERO);
+        }
+        try {
+            beforeRemove(id);
+            getBaseDAO().removeById(id);
+            return Result.OK();
+        } catch (Exception e) {
+            return Result.Error(ResultCode.DELETE_ERROR);
+        }
     }
 
     private void simulateSlowService() {
