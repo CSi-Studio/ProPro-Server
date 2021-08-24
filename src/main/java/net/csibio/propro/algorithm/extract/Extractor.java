@@ -265,6 +265,7 @@ public class Extractor {
             int dataCount = 0;
             for (BlockIndexDO index : blockIndexList) {
                 long start = System.currentTimeMillis();
+                task.addLog("开始处理窗口:"+index.getRange().getStart()+"-"+index.getRange().getEnd());
                 List<DataDO> dataList = doExtract(parser, exp, index, analyzeParams);
                 if (dataList != null) {
                     for (DataDO dataDO : dataList) {
@@ -278,6 +279,8 @@ public class Extractor {
                 count++;
             }
 
+            log.info("Total Peptide Count:"+dataCount);
+            log.info("Total Peak Count:"+peakCount);
             overviewDO.getStatistic().put(StatConst.TOTAL_PEPTIDE_COUNT, dataCount);
             overviewDO.getStatistic().put(StatConst.TOTAL_PEAK_COUNT, peakCount);
             overviewService.update(overviewDO);

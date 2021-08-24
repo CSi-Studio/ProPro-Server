@@ -13,7 +13,7 @@ public class PeptideScores {
     //肽段名称_带电量,例如:SLMLSYN(UniMod:7)AITHLPAGIFR_3
     String peptideRef;
     //是否是伪肽段
-    Boolean isDecoy = false;
+    Boolean decoy = false;
     //所有峰组的打分情况
     List<FeatureScores> featureScoresList;
 }

@@ -18,6 +18,7 @@ import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.TaskDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.service.*;
+import net.csibio.propro.utils.LogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -99,7 +100,7 @@ public class ExperimentTask extends BaseTask {
             if (!exeResult) {
                 return;
             }
-            log.info("Irt消耗时间:" + (System.currentTimeMillis() - start));
+            LogUtil.log("Irt消耗时间", start);
         }
 
         boolean eppsResult = doEpps(taskDO, exp, params);
@@ -172,8 +173,8 @@ public class ExperimentTask extends BaseTask {
             taskService.update(taskDO);
             return false;
         }
-        taskDO.addLog("处理完毕,EPPS总耗时:" + (System.currentTimeMillis() - start) + "毫秒,开始进行合并打分.....");
-        log.info("EPPS耗时:" + (System.currentTimeMillis() - start));
+        taskDO.addLog("处理完毕,EPPS总耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒,开始进行合并打分.....");
+        log.info("EPPS耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
         return true;
     }
 }

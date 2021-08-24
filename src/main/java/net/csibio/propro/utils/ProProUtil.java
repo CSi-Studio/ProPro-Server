@@ -334,7 +334,7 @@ public class ProProUtil {
             if (score.getFeatureScoresList() == null || score.getFeatureScoresList().size() == 0) {
                 continue;
             }
-            SimpleFeatureScores bestFeatureScores = new SimpleFeatureScores(score.getPeptideRef(), score.getIsDecoy());
+            SimpleFeatureScores bestFeatureScores = new SimpleFeatureScores(score.getPeptideRef(), score.getDecoy());
             double maxScore = -Double.MAX_VALUE;
             FeatureScores topFeatureScore = null;
             for (FeatureScores featureScores : score.getFeatureScoresList()) {
@@ -485,7 +485,7 @@ public class ProProUtil {
         List<PeptideScores> decoys = new ArrayList<>();
         //按照是否是伪肽段分为两个数组
         for (PeptideScores score : scores) {
-            if (score.getIsDecoy()) {
+            if (score.getDecoy()) {
                 decoys.add(score);
             } else {
                 targets.add(score);
