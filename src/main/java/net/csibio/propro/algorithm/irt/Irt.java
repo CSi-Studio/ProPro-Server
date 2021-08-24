@@ -91,7 +91,7 @@ public abstract class Irt {
         List<List<ScoreRtPair>> scoreRtList = new ArrayList<>();
         List<Double> compoundRt = new ArrayList<>();
         double minGroupRt = Double.MAX_VALUE;
-        double maxGroupRt = Double.MIN_VALUE;
+        double maxGroupRt = -Double.MAX_VALUE;
         for (DataDO data : dataList) {
             SimplePeptide tp = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), SimplePeptide.class);
             PeptideFeature peptideFeature = featureExtractor.getExperimentFeature(data, tp.buildIntensityMap(), params.getMethod().getIrt().getSs());

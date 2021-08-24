@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * 批处理分析结果概览,每一次分析可以包含多个实验文件
@@ -41,9 +42,9 @@ public class OverviewDO extends BaseDO {
     String expName;
 
     /**
-     * 标签
+     * 项目标签
      */
-    String label;
+    Set<String> tags;
 
     /**
      * 内标库ID

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Api(tags = {"Overview Module"})
@@ -44,7 +45,7 @@ public class OverviewController {
     @PostMapping(value = "/update")
     Result<OverviewDO> update(
             @RequestParam("id") String id,
-            @RequestParam("label") String label,
+            @RequestParam("label") Set<String> tags,
             @RequestParam("note") String note) {
         OverviewDO overview = overviewService.getById(id);
         if (overview == null) {
@@ -52,7 +53,7 @@ public class OverviewController {
         }
 
         overview.setNote(note);
-        overview.setLabel(label);
+        overview.setTags(tags);
         return overviewService.update(overview);
     }
 
