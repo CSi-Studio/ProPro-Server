@@ -35,7 +35,9 @@ public class BlockIndexServiceImpl implements BlockIndexService {
         BlockIndexQuery query = new BlockIndexQuery();
         query.setExpId(expId);
         query.setLevel(2);
-        return blockIndexDAO.getAll(query);
+        List<BlockIndexDO> indexList = blockIndexDAO.getAll(query);
+        indexList = indexList.stream().filter(b -> b.getRange() != null).toList();
+        return indexList;
     }
 
     @Override

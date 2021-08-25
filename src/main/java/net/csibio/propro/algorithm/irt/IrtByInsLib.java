@@ -10,7 +10,6 @@ import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
-import net.csibio.propro.domain.query.BlockIndexQuery;
 import net.csibio.propro.utils.ConvolutionUtil;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +39,7 @@ public class IrtByInsLib extends Irt {
         }
 
         List<DataDO> finalDataList = new ArrayList<>();
-        List<BlockIndexDO> blockList = blockIndexService.getAll(new BlockIndexQuery(exp.getId(), 2));
+        List<BlockIndexDO> blockList = blockIndexService.getAllMS2ByExpId(exp.getId());
         blockList = blockList.stream().sorted(Comparator.comparing(a -> a.getRange().getStart())).collect(Collectors.toList());
         Compressor mzCompressor = exp.fetchCompressor(Compressor.TARGET_MZ);
         Compressor intCompressor = exp.fetchCompressor(Compressor.TARGET_INTENSITY);

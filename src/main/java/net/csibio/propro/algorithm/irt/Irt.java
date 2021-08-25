@@ -10,6 +10,7 @@ import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.ListPairs;
+import net.csibio.propro.domain.bean.common.Pair;
 import net.csibio.propro.domain.bean.irt.IrtResult;
 import net.csibio.propro.domain.bean.peptide.SimplePeptide;
 import net.csibio.propro.domain.bean.score.PeptideFeature;
@@ -23,10 +24,10 @@ import net.csibio.propro.service.BlockIndexService;
 import net.csibio.propro.service.ExperimentService;
 import net.csibio.propro.service.PeptideService;
 import net.csibio.propro.utils.MathUtil;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -87,11 +88,13 @@ public abstract class Irt {
      * @return
      */
     protected Result<IrtResult> align(List<DataDO> dataList, AnalyzeParams params) throws Exception {
-
         List<List<ScoreRtPair>> scoreRtList = new ArrayList<>();
         List<Double> compoundRt = new ArrayList<>();
         double minGroupRt = Double.MAX_VALUE;
         double maxGroupRt = -Double.MAX_VALUE;
+        //得分排名第一第二的两个峰组的得分分差,如果仅有一个峰组,那么分差就是自己, key为libRt,value为第一第二峰组分差
+        List<Pair> diffPairs = new ArrayList<>();
+        dataList = dataList.stream().sorted(Comparator.comparing(DataDO::getLibRt)).toList();
         for (DataDO data : dataList) {
             SimplePeptide tp = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), SimplePeptide.class);
             PeptideFeature peptideFeature = featureExtractor.getExperimentFeature(data, tp.buildIntensityMap(), params.getMethod().getIrt().getSs());
@@ -106,16 +109,24 @@ public abstract class Irt {
                 minGroupRt = groupRt;
             }
             List<ScoreRtPair> scoreRtPairs = rtNormalizerScorer.score(peptideFeature.getPeakGroupList(), peptideFeature.getNormedLibIntMap(), groupRt, params);
+            scoreRtPairs = scoreRtPairs.stream().sorted(Comparator.comparing(ScoreRtPair::getScore).reversed()).toList();
             if (scoreRtPairs.size() == 0) {
                 continue;
+            }
+            //得分排名第一第二的两个峰组的得分分差,如果仅有一个组,那么分差就是自己
+            if (scoreRtPairs.size() >= 2) {
+
+                diffPairs.add(new Pair(groupRt, scoreRtPairs.get(0).getScore() - scoreRtPairs.get(1).getScore()));
+            } else {
+                diffPairs.add(new Pair(groupRt, scoreRtPairs.get(0).getScore()));
             }
             scoreRtList.add(scoreRtPairs);
             compoundRt.add(groupRt);
         }
 
-        List<Pair<Double, Double>> pairs = simpleFindBestFeature(scoreRtList, compoundRt);
+        List<Pair> pairs = findBestFeature(scoreRtList, compoundRt);
         double delta = (maxGroupRt - minGroupRt) / 30d;
-        List<Pair<Double, Double>> pairsCorrected = chooseReliablePairs(pairs, delta);
+        List<Pair> pairsCorrected = selectPairs(pairs, delta, diffPairs);
 
         log.info("choose finish ------------------------");
         IrtResult irtResult = new IrtResult();
@@ -126,11 +137,11 @@ public abstract class Irt {
         List<Double> y4Unselected = new ArrayList<>();
         for (int i = 0; i < pairs.size(); i++) {
             if (pairsCorrected.contains(pairs.get(i))) {
-                x4Selected.add(pairs.get(i).getLeft());
-                y4Selected.add(pairs.get(i).getRight());
+                x4Selected.add(pairs.get(i).left());
+                y4Selected.add(pairs.get(i).right());
             } else {
-                x4Unselected.add(pairs.get(i).getLeft());
-                y4Unselected.add(pairs.get(i).getRight());
+                x4Unselected.add(pairs.get(i).left());
+                y4Unselected.add(pairs.get(i).right());
             }
         }
 
@@ -149,9 +160,9 @@ public abstract class Irt {
      * @param rt         get from groupsResult.getModel()
      * @return rt pairs
      */
-    protected List<Pair<Double, Double>> simpleFindBestFeature(List<List<ScoreRtPair>> scoresList, List<Double> rt) {
+    protected List<Pair> findBestFeature(List<List<ScoreRtPair>> scoresList, List<Double> rt) {
 
-        List<Pair<Double, Double>> pairs = new ArrayList<>();
+        List<Pair> pairs = new ArrayList<>();
 
         for (int i = 0; i < scoresList.size(); i++) {
             List<ScoreRtPair> scores = scoresList.get(i);
@@ -167,15 +178,23 @@ public abstract class Irt {
             if (Constants.ESTIMATE_BEST_PEPTIDES && max < Constants.OVERALL_QUALITY_CUTOFF) {
                 continue;
             }
-            Pair<Double, Double> rtPair = Pair.of(rt.get(i), expRt);
-            pairs.add(rtPair);
+            pairs.add(new Pair(rt.get(i), expRt));
         }
         return pairs;
     }
 
-    protected List<Pair<Double, Double>> chooseReliablePairs(List<Pair<Double, Double>> rtPairs, double delta) throws Exception {
-        List<Pair<Double, Double>> rtPairsCorrected = new ArrayList<>(rtPairs);
-        preprocessRtPairs(rtPairsCorrected, 50d);
+    /**
+     * 选择合适的点作为回归点
+     *
+     * @param rtPairsList 所有入选的点列表,每一个Pair<Double, Double>都代表该肽段的所有的峰得分
+     * @param delta
+     * @param diffList    得分中排名第一的和第二的两个峰得分的分差,left为libRt,right为分差
+     * @return
+     * @throws Exception
+     */
+    protected List<Pair> selectPairs(List<Pair> rtPairsList, double delta, List<Pair> diffList) throws Exception {
+        List<Pair> rtPairsCorrected = new ArrayList<>(rtPairsList);
+        preprocessRtPairs(rtPairsCorrected, diffList, 50d);
         SlopeIntercept slopeIntercept = linearFitter.huberFit(rtPairsCorrected, delta);
         while (MathUtil.getRsq(rtPairsCorrected) < 0.95 && rtPairsCorrected.size() >= 2) {
             int maxErrorIndex = findMaxErrorIndex(slopeIntercept, rtPairsCorrected);
@@ -185,11 +204,11 @@ public abstract class Irt {
         return rtPairsCorrected;
     }
 
-    protected int findMaxErrorIndex(SlopeIntercept slopeIntercept, List<Pair<Double, Double>> rtPairs) {
+    protected int findMaxErrorIndex(SlopeIntercept slopeIntercept, List<Pair> rtPairs) {
         int maxIndex = 0;
         double maxError = 0d;
         for (int i = 0; i < rtPairs.size(); i++) {
-            double tempError = Math.abs(rtPairs.get(i).getRight() * slopeIntercept.getSlope() + slopeIntercept.getIntercept() - rtPairs.get(i).getLeft());
+            double tempError = Math.abs(rtPairs.get(i).right() * slopeIntercept.getSlope() + slopeIntercept.getIntercept() - rtPairs.get(i).left());
             if (tempError > maxError) {
                 maxError = tempError;
                 maxIndex = i;
@@ -198,16 +217,15 @@ public abstract class Irt {
         return maxIndex;
     }
 
-    protected void preprocessRtPairs(List<Pair<Double, Double>> rtPairs, double tolerance) {
+    protected void preprocessRtPairs(List<Pair> rtPairs, List<Pair> diffList, double tolerance) {
         try {
-            SlopeIntercept initSlopeIntercept = linearFitter.getInitSlopeIntercept(rtPairs);
+            SlopeIntercept initSlopeIntercept = linearFitter.buildInitSlopeIntercept(rtPairs, diffList);
             for (int i = rtPairs.size() - 1; i >= 0; i--) {
-                double tempError = Math.abs(rtPairs.get(i).getRight() * initSlopeIntercept.getSlope() + initSlopeIntercept.getIntercept() - rtPairs.get(i).getLeft());
+                double tempError = Math.abs(rtPairs.get(i).right() * initSlopeIntercept.getSlope() + initSlopeIntercept.getIntercept() - rtPairs.get(i).left());
                 if (tempError > tolerance) {
                     rtPairs.remove(i);
                 }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }

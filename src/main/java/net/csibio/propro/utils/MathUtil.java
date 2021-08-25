@@ -1,9 +1,9 @@
 package net.csibio.propro.utils;
 
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.common.Pair;
 import net.csibio.propro.domain.bean.data.RtIntensityPairsDouble;
 import net.csibio.propro.domain.bean.math.BisectionLowHigh;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +21,7 @@ public class MathUtil {
 
     public static final Logger logger = LoggerFactory.getLogger(MathUtil.class);
 
-    public static double getRsq(List<Pair<Double, Double>> pairs) {
+    public static double getRsq(List<Pair> pairs) {
         double sigmaX = 0d;
         double sigmaY = 0d;
         double sigmaXSquare = 0d;
@@ -30,8 +30,8 @@ public class MathUtil {
         double x, y;
         int n = pairs.size();
         for (int i = 0; i < n; i++) {
-            x = pairs.get(i).getRight();//ExpRt
-            y = pairs.get(i).getLeft();//TheoryRt
+            x = pairs.get(i).right();//ExpRt
+            y = pairs.get(i).left();//TheoryRt
             sigmaX += x;
             sigmaY += y;
             sigmaXY += x * y;
