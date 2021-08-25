@@ -218,7 +218,7 @@ public abstract class Irt {
 
     protected void preprocessRtPairs(List<Pair> rtPairs, List<Pair> diffList, double tolerance) {
         try {
-            SlopeIntercept initSlopeIntercept = linearFitter.buildInitSlopeIntercept(rtPairs, diffList);
+            SlopeIntercept initSlopeIntercept = linearFitter.getInitSlopeIntercept(rtPairs);
             for (int i = rtPairs.size() - 1; i >= 0; i--) {
                 double tempError = Math.abs(rtPairs.get(i).right() * initSlopeIntercept.getSlope() + initSlopeIntercept.getIntercept() - rtPairs.get(i).left());
                 if (tempError > tolerance) {

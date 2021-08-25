@@ -25,6 +25,8 @@ public class LibraryDO extends BaseDO {
 
     String fastaName;
 
+    Set<String> tags;
+    
     /**
      * @see net.csibio.propro.constants.enums.LibraryType
      */

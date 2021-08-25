@@ -7,9 +7,7 @@ import net.csibio.propro.domain.query.TaskQuery;
 import net.csibio.propro.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +23,7 @@ public class TaskController {
     @Autowired
     TaskService taskService;
 
-    @RequestMapping(value = "/remove")
+    @PostMapping(value = "/remove")
     Result remove(@RequestParam(value = "idList", required = true) List<String> idList) {
         Result result = new Result();
         List<String> errorList = new ArrayList<>();
@@ -48,7 +46,7 @@ public class TaskController {
         return result;
     }
 
-    @RequestMapping("/list")
+    @GetMapping("/list")
     Result<List<TaskDO>> list(TaskQuery taskQuery) {
         taskQuery.setSortColumn("createDate");
         taskQuery.setOrderBy(Sort.Direction.DESC);
@@ -56,7 +54,7 @@ public class TaskController {
         return taskList;
     }
 
-    @RequestMapping(value = "/detail")
+    @GetMapping(value = "/detail")
     Result<TaskDO> detail(@RequestParam(value = "id") String id) {
         TaskDO task = taskService.getById(id);
         if (task == null) {

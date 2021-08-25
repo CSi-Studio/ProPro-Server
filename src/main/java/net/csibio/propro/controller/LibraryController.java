@@ -53,6 +53,7 @@ public class LibraryController extends XController<LibraryDO, LibraryQuery, Libr
             return Result.Error(ResultCode.OBJECT_NOT_EXISTED);
         }
 
+        library.setTags(libraryUpdateVO.getTags());
         library.setDescription(libraryUpdateVO.getDescription());
         library.setOrganismStr(libraryUpdateVO.getOrganism());
         library.setType(libraryUpdateVO.getType());
@@ -65,7 +66,6 @@ public class LibraryController extends XController<LibraryDO, LibraryQuery, Libr
         Result result = new Result();
         result.setData(byId);
         return result;
-
     }
 
     @GetMapping(value = "/remove")
