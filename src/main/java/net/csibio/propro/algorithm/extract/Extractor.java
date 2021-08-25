@@ -17,6 +17,7 @@ import net.csibio.propro.domain.query.BlockIndexQuery;
 import net.csibio.propro.service.*;
 import net.csibio.propro.utils.AnalyseUtil;
 import net.csibio.propro.utils.ConvolutionUtil;
+import net.csibio.propro.utils.LogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -265,7 +266,7 @@ public class Extractor {
             int dataCount = 0;
             for (BlockIndexDO index : blockIndexList) {
                 long start = System.currentTimeMillis();
-                task.addLog("开始处理窗口:"+index.getRange().getStart()+"-"+index.getRange().getEnd());
+                task.addLog("开始处理窗口:" + index.getRange().getStart() + "-" + index.getRange().getEnd());
                 List<DataDO> dataList = doExtract(parser, exp, index, analyzeParams);
                 if (dataList != null) {
                     for (DataDO dataDO : dataList) {
@@ -279,8 +280,8 @@ public class Extractor {
                 count++;
             }
 
-            log.info("Total Peptide Count:"+dataCount);
-            log.info("Total Peak Count:"+peakCount);
+            log.info("Total Peptide Count:" + dataCount);
+            log.info("Total Peak Count:" + peakCount);
             overviewDO.getStatistic().put(StatConst.TOTAL_PEPTIDE_COUNT, dataCount);
             overviewDO.getStatistic().put(StatConst.TOTAL_PEAK_COUNT, peakCount);
             overviewService.update(overviewDO);
@@ -364,7 +365,7 @@ public class Extractor {
             dataList.add(decoyData);
         });
 
-        log.info("提取XIC+选峰+打分耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
+        LogUtil.log("提取XIC+选峰+打分耗时", start);
         return dataList;
     }
 

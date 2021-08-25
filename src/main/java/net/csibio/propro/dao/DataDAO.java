@@ -1,19 +1,12 @@
 package net.csibio.propro.dao;
 
-import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.score.SimpleFeatureScores;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.query.DataQuery;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.mongodb.core.BulkOperations;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
@@ -84,49 +77,6 @@ public class DataDAO extends BaseMultiDAO<DataDO, DataQuery> {
             mongoTemplate.dropCollection(getCollectionName(projectId));
             return Result.Error(ResultCode.CREATE_COLLECTION_ERROR.getCode(), e.getMessage());
         }
-    }
-
-    public void batchUpdate(String overviewId, List<SimpleFeatureScores> sfsList, String projectId) {
-        if (sfsList.size() == 0) {
-            return;
-        }
-        BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, getCollectionName(projectId));
-        for (SimpleFeatureScores sfs : sfsList) {
-            Query query = new Query();
-            query.addCriteria(Criteria.where("overviewId").is(overviewId));
-            query.addCriteria(Criteria.where("peptideRef").is(sfs.getPeptideRef()));
-            query.addCriteria(Criteria.where("decoy").is(sfs.getDecoy()));
-            Update update = new Update();
-            update.set("bestRt", sfs.getRt());
-            update.set("intensitySum", sfs.getIntensitySum());
-            update.set("fragIntFeature", sfs.getFragIntFeature());
-            update.set("fdr", sfs.getFdr());
-            update.set("qValue", sfs.getQValue());
-
-            if (!sfs.getDecoy()) {
-                //投票策略
-                if (sfs.getFdr() <= 0.01) {
-                    update.set("status", IdentifyStatus.SUCCESS.getCode());
-                } else {
-                    update.set("status", IdentifyStatus.FAILED.getCode());
-                }
-            }
-            ops.updateOne(query, update);
-        }
-        ops.execute();
-    }
-
-    public void batchRemove(String overviewId, List<SimpleFeatureScores> simpleFeatureScoresList, String projectId) {
-        BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, getCollectionName(projectId));
-        for (SimpleFeatureScores simpleFeatureScores : simpleFeatureScoresList) {
-            Query query = new Query();
-            query.addCriteria(
-                    Criteria.where("overviewId").is(overviewId)
-                            .and("peptideRef").is(simpleFeatureScores.getPeptideRef())
-                            .and("decoy").is(simpleFeatureScores.getDecoy()));
-            ops.remove(query);
-        }
-        ops.execute();
     }
 
     public Result dropDataCollection(String projectId) {

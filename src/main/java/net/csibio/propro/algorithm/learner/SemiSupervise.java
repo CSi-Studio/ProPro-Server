@@ -88,7 +88,7 @@ public class SemiSupervise {
         giveDecoyFdr(featureScoresList);
         targetDecoyDistribution(featureScoresList, overview);
         log.info("统计分布完毕,开始移出无用数据");
-        dataService.removeUnuseData(overviewId, featureScoresList, params.getFdr(), overview.getProjectId());
+        dataService.removeUnusedData(overviewId, featureScoresList, params.getFdr(), overview.getProjectId());
         log.info("无用数据移除完毕,开始更新最终数据");
         long start = System.currentTimeMillis();
         dataService.batchUpdate(overview.getId(), featureScoresList, overview.getProjectId());

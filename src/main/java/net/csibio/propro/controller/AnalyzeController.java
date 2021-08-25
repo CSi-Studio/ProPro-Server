@@ -42,7 +42,7 @@ public class AnalyzeController {
 
     @GetMapping(value = "/scoreTypes")
     Result scoreTypes() {
-        return Result.OK(ScoreType.getUsedTypes());
+        return Result.OK(ScoreType.getAllTypesName());
     }
 
     @GetMapping(value = "/prepare")

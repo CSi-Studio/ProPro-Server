@@ -45,7 +45,7 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public void removeUnuseData(String overviewId, List<SimpleFeatureScores> simpleFeatureScoresList, Double fdr, String projectId) {
+    public void removeUnusedData(String overviewId, List<SimpleFeatureScores> simpleFeatureScoresList, Double fdr, String projectId) {
         List<SimpleFeatureScores> dataNeedToRemove = new ArrayList<>();
         for (int i = simpleFeatureScoresList.size() - 1; i >= 0; i--) {
             //如果fdr为空或者fdr小于指定的值,那么删除它
@@ -57,19 +57,27 @@ public class DataServiceImpl implements DataService {
 
         long start = System.currentTimeMillis();
         if (dataNeedToRemove.size() != 0) {
-            dataDAO.batchRemove(overviewId, dataNeedToRemove, projectId);
+            log.info("总计需要删除" + dataNeedToRemove.size() + "条数据");
+            dataNeedToRemove.forEach(sfs -> {
+                dataDAO.remove(new DataQuery().setOverviewId(overviewId).setPeptideRef(sfs.getPeptideRef()).setDecoy(sfs.getDecoy()), projectId);
+            });
         }
         log.info("删除无用数据:" + dataNeedToRemove.size() + "条,总计耗时:" + (System.currentTimeMillis() - start) + "毫秒");
     }
 
     @Override
-    public void batchRemove(String overviewId, List<SimpleFeatureScores> featureScoresList, String projectId) {
-        dataDAO.batchRemove(overviewId, featureScoresList, projectId);
-    }
+    public void batchUpdate(String overviewId, List<SimpleFeatureScores> sfsList, String projectId) {
+        if (sfsList.size() == 0) {
+            return;
+        }
 
-    @Override
-    public void batchUpdate(String overviewId, List<SimpleFeatureScores> featureScoresList, String projectId) {
-        dataDAO.batchUpdate(overviewId, featureScoresList, projectId);
+        sfsList.forEach(sfs -> {
+            boolean res = dataDAO.update(projectId, overviewId, sfs.getPeptideRef(), sfs.getDecoy(),
+                    sfs.getRt(), sfs.getIntensitySum(), sfs.getFragIntFeature(), sfs.getFdr(), sfs.getQValue());
+            if (!res) {
+                log.error("更新失败:" + sfs.getPeptideRef());
+            }
+        });
     }
 
     @Override

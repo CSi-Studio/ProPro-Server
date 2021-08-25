@@ -10,7 +10,7 @@ public class LogUtil {
         if (delta < 1000) {
             log.info(prefix + ":" + delta + "毫秒");
         } else if (delta > 1000) {
-            log.info(prefix + ":" + delta + "秒");
+            log.info(prefix + ":" + delta / 1000 + "秒");
         }
     }
 }
