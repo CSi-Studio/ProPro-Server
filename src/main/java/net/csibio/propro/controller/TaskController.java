@@ -1,6 +1,5 @@
 package net.csibio.propro.controller;
 
-import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.db.TaskDO;
@@ -27,13 +26,11 @@ public class TaskController {
     TaskService taskService;
 
     @RequestMapping(value = "/remove")
-    Result remove(@RequestParam(value = "taskIds", required = true) String taskIds) {
-
-        String[] taskIdArray = taskIds.split(SymbolConst.COMMA);
+    Result remove(@RequestParam(value = "idList", required = true) List<String> idList) {
         Result result = new Result();
         List<String> errorList = new ArrayList<>();
         List<String> deletedIds = new ArrayList<>();
-        for (String taskId : taskIdArray) {
+        for (String taskId : idList) {
             Result taskResult = taskService.removeById(taskId);
             if (taskResult.isSuccess()) {
                 deletedIds.add(taskId);
@@ -53,7 +50,6 @@ public class TaskController {
 
     @RequestMapping("/list")
     Result<List<TaskDO>> list(TaskQuery taskQuery) {
-
         taskQuery.setSortColumn("createDate");
         taskQuery.setOrderBy(Sort.Direction.DESC);
         Result<List<TaskDO>> taskList = taskService.getList(taskQuery);

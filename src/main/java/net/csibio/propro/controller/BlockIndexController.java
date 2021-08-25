@@ -41,7 +41,9 @@ public class BlockIndexController {
             return Result.Error(ResultCode.EXPERIMENT_ID_CANNOT_BE_EMPTY);
         }
 
+        long startX = System.currentTimeMillis();
         List<BlockIndexVO> allIndexList = blockIndexService.getAll(query, BlockIndexVO.class);
+        System.out.println("Time Cost:" + (System.currentTimeMillis() - startX));
         // allIndexList = allIndexList.stream().sorted(Comparator.comparing(index -> index.getRange().getStart())).toList();
         return Result.OK(allIndexList);
     }

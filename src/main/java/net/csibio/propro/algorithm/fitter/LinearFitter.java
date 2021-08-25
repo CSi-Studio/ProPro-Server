@@ -148,6 +148,13 @@ public class LinearFitter {
         return new SlopeIntercept(slope, intercept);
     }
 
+    /**
+     * 考虑显著点来进行初始化si构建
+     *
+     * @param rtPairs
+     * @param diffList
+     * @return
+     */
     public SlopeIntercept buildInitSlopeIntercept(List<Pair> rtPairs, List<Pair> diffList) {
         if (rtPairs.size() == 0) {
             log.error("rtPairs is empty!");
@@ -177,6 +184,12 @@ public class LinearFitter {
         return getInitSlopeIntercept(selectedRtPairs);
     }
 
+    /**
+     * 常规算法不考虑显著性因素初始化si
+     *
+     * @param rtPairs
+     * @return
+     */
     public SlopeIntercept getInitSlopeIntercept(List<Pair> rtPairs) {
         if (rtPairs.size() == 0) {
             log.error("rtPairs is empty!");

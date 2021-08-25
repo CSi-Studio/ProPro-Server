@@ -83,7 +83,7 @@ public abstract class Irt {
     /**
      * 从一个数据提取结果列表中求出iRT
      *
-     * @param dataList
+     * @param dataList 对于靶点的xic结果
      * @param params   分析参数,其中的Sigma通常为30/8 = 6.25/Spacing通常为0.01
      * @return
      */
@@ -113,9 +113,8 @@ public abstract class Irt {
             if (scoreRtPairs.size() == 0) {
                 continue;
             }
-            //得分排名第一第二的两个峰组的得分分差,如果仅有一个组,那么分差就是自己
+            //显著性因素, 得分排名第一第二的两个峰组的得分分差,如果仅有一个组,那么分差就是自己
             if (scoreRtPairs.size() >= 2) {
-
                 diffPairs.add(new Pair(groupRt, scoreRtPairs.get(0).getScore() - scoreRtPairs.get(1).getScore()));
             } else {
                 diffPairs.add(new Pair(groupRt, scoreRtPairs.get(0).getScore()));
@@ -204,11 +203,11 @@ public abstract class Irt {
         return rtPairsCorrected;
     }
 
-    protected int findMaxErrorIndex(SlopeIntercept slopeIntercept, List<Pair> rtPairs) {
+    protected int findMaxErrorIndex(SlopeIntercept si, List<Pair> rtPairs) {
         int maxIndex = 0;
         double maxError = 0d;
         for (int i = 0; i < rtPairs.size(); i++) {
-            double tempError = Math.abs(rtPairs.get(i).right() * slopeIntercept.getSlope() + slopeIntercept.getIntercept() - rtPairs.get(i).left());
+            double tempError = Math.abs(rtPairs.get(i).right() * si.getSlope() + si.getIntercept() - rtPairs.get(i).left());
             if (tempError > maxError) {
                 maxError = tempError;
                 maxIndex = i;
