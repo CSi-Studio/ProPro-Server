@@ -8,6 +8,7 @@ import net.csibio.propro.domain.query.DictQuery;
 import net.csibio.propro.domain.vo.DictItem;
 import net.csibio.propro.domain.vo.DictUpdateVO;
 import net.csibio.propro.service.DictService;
+import net.csibio.propro.tools.aspect.annotation.Dict;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -102,13 +103,26 @@ public class DictController {
         dict.setItem(newItems);
         return dictService.update(dict);
     }
+
     @PostMapping(value = "/remove")
     Result delete(
             @RequestParam(value = "id",required = true) String id
     ) {
         DictDO dict = dictService.getById(id);
        dictService.removeById(id);
-
         return Result.OK();
     }
+
+    @GetMapping(value = "/getAll")
+    Result get(){
+        DictQuery dictQuery = new DictQuery();
+        List<DictDO> dictAll = dictService.getAll(dictQuery);
+        if(dictAll.size()==0){
+            return Result.Error("没有此字典");
+        }
+        return Result.OK(dictAll);
+    }
+
+
+
 }

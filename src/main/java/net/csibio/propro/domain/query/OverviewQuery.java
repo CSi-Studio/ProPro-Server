@@ -19,11 +19,17 @@ public class OverviewQuery extends PageQuery {
 
     String methodId;
 
+    String expId;
     public OverviewQuery() {
     }
 
     public OverviewQuery(String projectId) {
         this.projectId = projectId;
+    }
+
+    public OverviewQuery(String projectId,String expId){
+         this.projectId=projectId;
+         this.expId=expId;
     }
 
 }

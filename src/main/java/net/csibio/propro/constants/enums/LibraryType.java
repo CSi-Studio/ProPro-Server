@@ -3,7 +3,7 @@ package net.csibio.propro.constants.enums;
 import net.csibio.propro.annotation.Section;
 
 import java.io.Serializable;
-@Section(name = "constants",key="Name",value="Desc",Version = "3")
+@Section(name = "constants",key="Name",value="Desc",Version = "1")
 public enum LibraryType implements Serializable {
 
     INS("INS", "Internal Standard"),

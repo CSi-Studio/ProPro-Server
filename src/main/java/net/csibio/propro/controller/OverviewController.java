@@ -45,7 +45,7 @@ public class OverviewController {
     @PostMapping(value = "/update")
     Result<OverviewDO> update(
             @RequestParam("id") String id,
-            @RequestParam("label") Set<String> tags,
+            @RequestParam("tags") Set<String> tags,
             @RequestParam("note") String note) {
         OverviewDO overview = overviewService.getById(id);
         if (overview == null) {

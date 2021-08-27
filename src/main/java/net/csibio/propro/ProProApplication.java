@@ -18,7 +18,6 @@ public class ProProApplication {
     public static void main(String[] args) throws UnknownHostException, ClassNotFoundException, InvocationTargetException, IllegalAccessException, NoSuchMethodException, InstantiationException {
         ConfigurableApplicationContext application = SpringApplication.run(ProProApplication.class, args);
         Environment env = application.getEnvironment();
-
         String ip = InetAddress.getLocalHost().getHostAddress();
         String port = env.getProperty("server.port");
         String path = env.getProperty("server.servlet.context-path");
