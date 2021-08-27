@@ -59,8 +59,8 @@ public class PeptideDAO extends BaseDAO<PeptideDO, PeptideQuery> {
         if (StringUtils.isNotEmpty(peptideQuery.getPeptideRef())) {
             query.addCriteria(where("peptideRef").is(peptideQuery.getPeptideRef()));
         }
-        if (StringUtils.isNotEmpty(peptideQuery.getProteinIdentifier())) {
-            query.addCriteria(where("proteinIdentifier").is(peptideQuery.getProteinIdentifier()));
+        if (StringUtils.isNotEmpty(peptideQuery.getProtein())) {
+            query.addCriteria(where("protein").is(peptideQuery.getProtein()));
         }
         if (peptideQuery.getMzStart() != null) {
             query.addCriteria(where("mz").gte(peptideQuery.getMzStart()).lt(peptideQuery.getMzEnd()));
@@ -76,9 +76,9 @@ public class PeptideDAO extends BaseDAO<PeptideDO, PeptideQuery> {
         return mongoTemplate.find(query, PeptideDO.class, CollectionName);
     }
 
-    public List<PeptideDO> getAllByLibraryIdAndProtein(String libraryId, String proteinIdentifier) {
+    public List<PeptideDO> getAllByLibraryIdAndProtein(String libraryId, String protein) {
         Query query = new Query(where("libraryId").is(libraryId));
-        query.addCriteria(where("proteinIdentifier").is(proteinIdentifier));
+        query.addCriteria(where("protein").is(protein));
         return mongoTemplate.find(query, PeptideDO.class, CollectionName);
     }
 
@@ -104,8 +104,8 @@ public class PeptideDAO extends BaseDAO<PeptideDO, PeptideQuery> {
                 Aggregation.newAggregation(
                         Protein.class,
                         Aggregation.match(where("libraryId").is(query.getLibraryId())),
-                        Aggregation.group("proteinIdentifier").
-                                first("proteinIdentifier").as("identifier").
+                        Aggregation.group("protein").
+                                first("protein").as("protein").
                                 first("id").as("peptideId"),
                         Aggregation.skip((query.getCurrent() - 1) * query.getPageSize()),
                         Aggregation.limit(query.getPageSize())).withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build()), CollectionName,
@@ -127,12 +127,12 @@ public class PeptideDAO extends BaseDAO<PeptideDO, PeptideQuery> {
         ops.execute();
     }
 
-    public long countByProteinName(String libraryId) {
+    public long countByProtein(String libraryId) {
         AggregationResults<BasicDBObject> a = mongoTemplate.aggregate(
                 Aggregation.newAggregation(
                         PeptideDO.class,
                         Aggregation.match(where("libraryId").is(libraryId)),
-                        Aggregation.group("proteinIdentifier").count().as("count")).withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build()), CollectionName,
+                        Aggregation.group("protein").count().as("count")).withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build()), CollectionName,
                 BasicDBObject.class);
         return a.getMappedResults().size();
     }
@@ -143,7 +143,7 @@ public class PeptideDAO extends BaseDAO<PeptideDO, PeptideQuery> {
                         PeptideDO.class,
                         Aggregation.match(where("libraryId").is(libraryId)),
                         Aggregation.match(where("isUnique").is(true)),
-                        Aggregation.group("proteinIdentifier").count().as("count")).withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build()), CollectionName,
+                        Aggregation.group("protein").count().as("count")).withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build()), CollectionName,
                 BasicDBObject.class);
         return a.getMappedResults().size();
     }

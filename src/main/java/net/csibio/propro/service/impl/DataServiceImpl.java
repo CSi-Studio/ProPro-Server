@@ -92,10 +92,10 @@ public class DataServiceImpl implements DataService {
         List<ProteinPeptide> ppList = dataDAO.getAll(query, ProteinPeptide.class, projectId);
         HashSet<String> proteins = new HashSet<>();
         for (ProteinPeptide pp : ppList) {
-            if (pp.getIsUnique() && (!pp.getIsUnique() || !pp.getProteinIdentifier().startsWith("1/"))) {
+            if (pp.getIsUnique() && (!pp.getIsUnique() || !pp.getProtein().startsWith("1/"))) {
                 continue;
             } else {
-                proteins.add(pp.getProteinIdentifier());
+                proteins.add(pp.getProtein());
             }
         }
         return proteins.size();

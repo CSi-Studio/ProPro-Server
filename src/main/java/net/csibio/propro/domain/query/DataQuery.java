@@ -16,7 +16,7 @@ public class DataQuery extends PageQuery {
 
     String peptideRef;
 
-    String proteinIdentifier;
+    String protein;
 
     Boolean decoy;
 
@@ -25,7 +25,7 @@ public class DataQuery extends PageQuery {
     Double mzStart;
 
     Double mzEnd;
-    
+
     Double fdrStart;
 
     Double fdrEnd;

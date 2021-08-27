@@ -199,9 +199,9 @@ public class LibraryTsvParser extends BaseLibraryParser {
 
         fi.setIntensity(Double.parseDouble(row[columnMap.get(ProductIonIntensity)]));
         peptideDO.setSequence(row[columnMap.get(PeptideSequence)]);
-        peptideDO.setProteinIdentifier(row[columnMap.get(ProteinName)]);
-        if (peptideDO.getProteinIdentifier().toLowerCase().contains("irt")) {
-            peptideDO.setProteinIdentifier("iRT");
+        peptideDO.setProtein(row[columnMap.get(ProteinName)]);
+        if (peptideDO.getProtein().toLowerCase().contains("irt")) {
+            peptideDO.setProtein("iRT");
         }
 
         String annotations = row[columnMap.get(Annotation)].replaceAll("\"", "");

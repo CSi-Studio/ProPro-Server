@@ -136,7 +136,7 @@ public class TraMLParser extends BaseLibraryParser {
         String rt = peptide.getRetentionTimeList().get(0).getCvParams().get(0).getValue();
         peptideDO.setRt(Double.valueOf(rt));
         peptideDO.setSequence(peptide.getSequence());
-        peptideDO.setProteinIdentifier(peptide.getProteinRefList().get(0).getRef());
+        peptideDO.setProtein(peptide.getProteinRefList().get(0).getRef());
         peptideDO.setFullName(peptide.getUserParams().get(0).getValue());
         for (CvParam cvParam : peptide.getCvParams()) {
             if (cvParam.getName().equals("charge state")) {

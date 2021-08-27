@@ -75,15 +75,15 @@ public class HomeController {
             String baseName = FilenameUtils.getBaseName(libraryFiles[j].getName());
             library.setName(baseName);
             library.setType(LibraryType.INS.getName());
-            libraryService.insert(library);
             try {
+                libraryService.insert(library);
                 TaskDO taskDO = new TaskDO(TaskTemplate.UPLOAD_LIBRARY_FILE, library.getName());
                 taskService.insert(taskDO);
                 library.setFilePath(libraryFiles[j].getPath());
                 InputStream libFileStream = new FileInputStream(libraryFiles[j]);
                 libraryTask.uploadLibraryFile(library, libFileStream, taskDO);
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error(e.getMessage());
             }
         }
     }

@@ -13,5 +13,7 @@ public class Protein {
 
     String peptideId;
 
+    String protein;
+
     String name;
 }

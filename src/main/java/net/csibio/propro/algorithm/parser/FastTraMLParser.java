@@ -177,7 +177,7 @@ public class FastTraMLParser extends BaseLibraryParser {
                 }
                 if (peptideDO.getPeptideRef() != null && line.contains(ProteinNameMarker)) {
                     String proteinName = line.split(RefMarker)[1].split("\"")[0];
-                    peptideDO.setProteinIdentifier(proteinName);
+                    peptideDO.setProtein(proteinName);
                     continue;
                 }
                 if (peptideDO.getPeptideRef() != null && line.contains(RetentionTimeMarker)) {
@@ -244,7 +244,7 @@ public class FastTraMLParser extends BaseLibraryParser {
                 }
                 if (peptideDO.getPeptideRef() != null && line.contains(ProteinNameMarker)) {
                     String proteinName = line.split(RefMarker)[1].split("\"")[0];
-                    peptideDO.setProteinIdentifier(proteinName);
+                    peptideDO.setProtein(proteinName);
                     continue;
                 }
                 if (peptideDO.getPeptideRef() != null && line.contains(RetentionTimeMarker)) {

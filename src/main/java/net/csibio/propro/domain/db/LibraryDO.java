@@ -26,7 +26,7 @@ public class LibraryDO extends BaseDO {
     String fastaName;
 
     Set<String> tags;
-    
+
     /**
      * @see net.csibio.propro.constants.enums.LibraryType
      */
@@ -39,6 +39,8 @@ public class LibraryDO extends BaseDO {
      */
     String generator;
 
+    Set<String> proteins;
+    
     /**
      * 关于本库的统计数据
      */

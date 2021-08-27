@@ -208,7 +208,7 @@ public class MsmsParser extends BaseLibraryParser {
             setFragmentInfo(peptideDO, ionArray, row[columnMap.get("intensities")].split(";"), massArray);
             peptideDO.setMz(Double.parseDouble(row[columnMap.get("m/z")]));
             String protName = row[columnMap.get("proteins")];
-            peptideDO.setProteinIdentifier(protName.startsWith("sp|iRT") ? "iRT" : protName);
+            peptideDO.setProtein(protName.startsWith("sp|iRT") ? "iRT" : protName);
 
             peptideDO.setLibraryId(library.getId());
             peptideDO.setSequence(row[columnMap.get("sequence")]);

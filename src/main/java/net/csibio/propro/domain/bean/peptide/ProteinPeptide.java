@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class ProteinPeptide {
 
-    String proteinIdentifier;
+    String protein;
 
     String peptideRef;
 

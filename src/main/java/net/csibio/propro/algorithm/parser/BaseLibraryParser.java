@@ -113,17 +113,17 @@ public abstract class BaseLibraryParser {
     }
 
     protected void setUnique(PeptideDO peptide, HashSet<String> fastaUniqueSet, HashSet<String> fastaDropPep, HashSet<String> libraryDropPep, HashSet<String> fastaDropProt, HashSet<String> libraryDropProt, HashSet<String> uniqueProt) {
-        if (peptide.getProteinIdentifier().startsWith("1/")) {
+        if (peptide.getProtein().startsWith("1/")) {
             if (!fastaUniqueSet.isEmpty() && !fastaUniqueSet.contains(peptide.getSequence())) {
                 peptide.setIsUnique(false);
-                fastaDropProt.add(peptide.getProteinIdentifier());
+                fastaDropProt.add(peptide.getProtein());
                 fastaDropPep.add(peptide.getPeptideRef());
             } else {
-                uniqueProt.add(peptide.getProteinIdentifier());
+                uniqueProt.add(peptide.getProtein());
             }
         } else {
             peptide.setIsUnique(false);
-            libraryDropProt.add(peptide.getProteinIdentifier());
+            libraryDropProt.add(peptide.getProtein());
             libraryDropPep.add(peptide.getPeptideRef());
         }
     }

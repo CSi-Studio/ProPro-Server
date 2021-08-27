@@ -28,7 +28,7 @@ public class PeptideQuery extends PageQuery {
     /**
      * 对应蛋白质名称
      */
-    String proteinIdentifier;
+    String protein;
 
     /**
      * 肽段

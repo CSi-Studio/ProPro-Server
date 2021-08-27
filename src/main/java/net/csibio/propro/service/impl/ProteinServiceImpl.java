@@ -191,7 +191,7 @@ public class ProteinServiceImpl implements ProteinService {
                 peptide.setCharge(i);
                 Set<FragmentInfo> fragmentInfos = simulateService.singlePredictFragment(peptide, spModel, isotope);
                 peptide.setFragments(fragmentInfos);
-                peptide.setProteinIdentifier(pPMap.get(item));
+                peptide.setProtein(pPMap.get(item));
                 peptideList.add(peptide);
             }
         });

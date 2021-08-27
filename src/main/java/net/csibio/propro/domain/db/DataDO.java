@@ -25,7 +25,7 @@ public class DataDO extends BaseDO {
     @Indexed
     String overviewId;
     @Indexed
-    String proteinIdentifier;
+    String protein;
     @Indexed
     String peptideRef;
     //是否是伪肽段

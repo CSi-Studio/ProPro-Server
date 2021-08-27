@@ -143,7 +143,7 @@ public class PeptideServiceImpl implements PeptideService {
 
     @Override
     public Long countByProteinName(String libraryId) {
-        return peptideDAO.countByProteinName(libraryId);
+        return peptideDAO.countByProtein(libraryId);
     }
 
     @Override

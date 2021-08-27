@@ -47,7 +47,7 @@ public class PeptideDO extends BaseDO {
      * 蛋白质标识符
      */
     @HashIndexed
-    String proteinIdentifier;
+    String protein;
 
     /**
      * 库id+蛋白质标签
@@ -111,20 +111,20 @@ public class PeptideDO extends BaseDO {
         this.decoySequence = null;
     }
 
-    public void setProteinIdentifier(String proteinIdentifier) {
-        this.proteinIdentifier = proteinIdentifier;
+    public void setProtein(String protein) {
+        this.protein = protein;
         if (libraryId != null) {
-            this.libProteinIdent = libraryId + "-" + proteinIdentifier;
+            this.libProteinIdent = libraryId + "-" + protein;
         } else {
-            this.libProteinIdent = proteinIdentifier;
+            this.libProteinIdent = protein;
         }
 
     }
 
     public void setLibraryId(String libraryId) {
         this.libraryId = libraryId;
-        if (proteinIdentifier != null) {
-            this.libProteinIdent = libraryId + "-" + proteinIdentifier;
+        if (protein != null) {
+            this.libProteinIdent = libraryId + "-" + protein;
         } else {
             this.libProteinIdent = libraryId;
         }
@@ -137,7 +137,7 @@ public class PeptideDO extends BaseDO {
         tp.setRt(rt);
         tp.setFragments(fragments);
         tp.setMz(mz);
-        tp.setProteinIdentifier(proteinIdentifier);
+        tp.setProtein(protein);
         tp.setUnimodMap(unimodMap);
         tp.setDecoySequence(decoySequence);
         tp.setDecoyUnimodMap(decoyUnimodMap);
