@@ -31,6 +31,9 @@ public class DataDO extends BaseDO {
     //是否是伪肽段
     @Indexed
     Boolean decoy = false;
+
+    Boolean isUnique = true;
+
     @Indexed
     int status; //打分相关的字段
     @Indexed

@@ -194,6 +194,7 @@ public class Extractor {
         data.setDecoy(sp.isDecoy());
         data.setLibRt(sp.getRt());
         data.setLibMz(sp.getMz());
+        data.setIsUnique(sp.getIsUnique());
 
         boolean isHit = false;
 

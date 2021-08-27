@@ -84,6 +84,10 @@ public class SimplePeptide {
         this.decoyFragments = peptide.getDecoyFragments();
     }
 
+    public Set<FragmentInfo> getFragments() {
+        return decoy ? decoyFragments : fragments;
+    }
+
     public Map<String, FragmentInfo> buildFragmentMap() {
         Set<FragmentInfo> infos = decoy ? decoyFragments : fragments;
         return infos.stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
