@@ -54,7 +54,7 @@ public class DictServiceImpl implements DictService {
         }
     }
 
-    @Cacheable(cacheNames = "DictGetAll",key = "#dictQuery.getId()")
+    @Cacheable(cacheNames = "DictGetAll",key = "#dictQuery.hashCode()")
     @Override
     public List<DictDO> getAll(DictQuery dictQuery) {
         return getBaseDAO().getAll(dictQuery);
