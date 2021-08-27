@@ -9,6 +9,7 @@ import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.domain.db.TaskDO;
+import net.csibio.propro.service.LibraryService;
 import net.csibio.propro.service.TaskService;
 import net.csibio.propro.utils.PeptideUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -19,10 +20,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by James Lu MiaoShan
@@ -36,6 +34,8 @@ public class LibraryTsvParser extends BaseLibraryParser {
     TaskService taskService;
     @Autowired
     ShuffleGenerator shuffleGenerator;
+    @Autowired
+    LibraryService libraryService;
 
     private static String PrecursorMz = "precursormz";
     private static String ProductMz = "productmz";
@@ -76,7 +76,7 @@ public class LibraryTsvParser extends BaseLibraryParser {
             }
             HashMap<String, Integer> columnMap = parseColumns(line);
             HashMap<String, PeptideDO> map = new HashMap<>();
-
+            Set<String> proteinSet = new HashSet<>();
             while ((line = reader.readLine()) != null) {
                 Result<PeptideDO> Result = parseTransition(line, columnMap, library);
                 if (Result.isFailed()) {
@@ -86,6 +86,7 @@ public class LibraryTsvParser extends BaseLibraryParser {
                     continue;
                 }
                 PeptideDO peptide = Result.getData();
+                proteinSet.add(peptide.getProtein());
                 addFragment(peptide, map);
             }
             List<PeptideDO> peptideDOList = new ArrayList<>(map.values());
@@ -94,6 +95,8 @@ public class LibraryTsvParser extends BaseLibraryParser {
             log.info("准备插入肽段:" + peptideDOList.size() + "条");
             Result<List<PeptideDO>> res = peptideService.insert(peptideDOList);
             log.info("实际插入肽段:" + res.getData().size() + "条");
+            library.setProteins(proteinSet);
+            libraryService.update(library);
             taskDO.addLog(res.getData().size() + "条肽段数据插入成功");
             taskService.update(taskDO);
             log.info(res.getData().size() + "条肽段数据插入成功");
@@ -203,7 +206,6 @@ public class LibraryTsvParser extends BaseLibraryParser {
         if (peptideDO.getProtein().toLowerCase().contains("irt")) {
             peptideDO.setProtein("iRT");
         }
-
         String annotations = row[columnMap.get(Annotation)].replaceAll("\"", "");
         fi.setAnnotations(annotations);
         String fullName = row[columnMap.get(FullUniModPeptideName)];//no target sequence

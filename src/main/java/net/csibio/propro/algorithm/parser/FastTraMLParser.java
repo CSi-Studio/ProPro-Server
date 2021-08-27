@@ -8,6 +8,7 @@ import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.domain.db.TaskDO;
+import net.csibio.propro.service.LibraryService;
 import net.csibio.propro.service.TaskService;
 import net.csibio.propro.utils.PeptideUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +18,8 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 对于TraML文件的高速解析引擎
@@ -31,6 +31,8 @@ public class FastTraMLParser extends BaseLibraryParser {
     TaskService taskService;
     @Autowired
     ShuffleGenerator shuffleGenerator;
+    @Autowired
+    LibraryService libraryService;
 
     private static String PeptideListBeginMarker = "<CompoundList>";
     private static String TransitionListBeginMarker = "<TransitionList>";
@@ -79,9 +81,16 @@ public class FastTraMLParser extends BaseLibraryParser {
                 shuffleGenerator.generate(peptide);
             }
 
-            peptideService.insert(new ArrayList<>(peptideMap.values()));
+            List<PeptideDO> peptideList = new ArrayList<>(peptideMap.values());
+            peptideService.insert(peptideList);
+
+            Set<String> proteins = peptideList.stream().map(PeptideDO::getProtein).collect(Collectors.toSet());
+            library.setProteins(proteins);
+            libraryService.update(library);
+
             taskDO.addLog(peptideMap.size() + "条肽段数据插入成功");
             taskService.update(taskDO);
+            
             logger.info(peptideMap.size() + "条肽段数据插入成功");
         } catch (Exception e) {
             e.printStackTrace();

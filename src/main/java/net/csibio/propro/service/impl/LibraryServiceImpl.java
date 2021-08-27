@@ -155,6 +155,7 @@ public class LibraryServiceImpl implements LibraryService {
         taskDO.addLog("开始统计蛋白质数目,肽段数目和Transition数目");
         taskService.update(taskDO);
 
+
         statistic(library);
         taskDO.finish(TaskStatus.SUCCESS.getName(), "统计完毕");
         taskService.update(taskDO);
@@ -239,7 +240,7 @@ public class LibraryServiceImpl implements LibraryService {
         }
     }
 
-    @CacheEvict(cacheNames = "libraryGetId",key="#libraryDO.id")
+    @CacheEvict(cacheNames = "libraryGetId", key = "#libraryDO.id")
     @Override
     public Result<LibraryDO> update(LibraryDO libraryDO) {
         try {
@@ -278,7 +279,7 @@ public class LibraryServiceImpl implements LibraryService {
         return getBaseDAO().getAll(libraryQuery);
     }
 
-    @CacheEvict(cacheNames = "libraryGetId",key="#id")
+    @CacheEvict(cacheNames = "libraryGetId", key = "#id")
     @Override
     public Result removeById(String id) {
         if (id == null || id.isEmpty()) {

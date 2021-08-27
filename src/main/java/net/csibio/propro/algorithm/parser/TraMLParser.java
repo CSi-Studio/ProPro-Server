@@ -10,6 +10,7 @@ import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.domain.db.TaskDO;
+import net.csibio.propro.service.LibraryService;
 import net.csibio.propro.service.TaskService;
 import net.csibio.propro.utils.PeptideUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +18,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component("traMLParser")
 public class TraMLParser extends BaseLibraryParser {
@@ -31,6 +30,8 @@ public class TraMLParser extends BaseLibraryParser {
     TaskService taskService;
     @Autowired
     ShuffleGenerator shuffleGenerator;
+    @Autowired
+    LibraryService libraryService;
 
     public Class<?>[] classes = new Class[]{
             Compound.class, CompoundList.class, Configuration.class, Contact.class, Cv.class, CvParam.class,
@@ -181,6 +182,8 @@ public class TraMLParser extends BaseLibraryParser {
             }
 
             HashMap<String, PeptideDO> map = new HashMap<>();
+            Set<String> proteinSet = new HashSet<>();
+
             for (Transition transition : traML.getTransitionList()) {
                 Result<PeptideDO> Result = parseTransition(transition, peptideMap, library);
                 if (Result.isFailed()) {
@@ -190,6 +193,7 @@ public class TraMLParser extends BaseLibraryParser {
                     continue;
                 }
                 PeptideDO peptide = Result.getData();
+                proteinSet.add(peptide.getProtein());
                 addFragment(peptide, map);
             }
 
@@ -197,8 +201,14 @@ public class TraMLParser extends BaseLibraryParser {
                 shuffleGenerator.generate(peptide);
             }
 
-            peptideService.insert(new ArrayList<>(map.values()));
+            List<PeptideDO> peptideList = new ArrayList<>(map.values());
+            peptideService.insert(peptideList);
+            Set<String> proteins = peptideList.stream().map(PeptideDO::getProtein).collect(Collectors.toSet());
+            library.setProteins(proteins);
+            libraryService.update(library);
+
             taskDO.addLog(map.size() + "条肽段数据插入成功");
+            
             taskService.update(taskDO);
             logger.info(map.size() + "条肽段数据插入成功");
         } catch (Exception e) {
