@@ -91,7 +91,7 @@ public class SemiSupervise {
         dataService.removeUnusedData(overviewId, featureScoresList, params.getFdr(), overview.getProjectId());
         log.info("无用数据移除完毕,开始更新最终数据");
         long start = System.currentTimeMillis();
-        dataService.batchUpdate(overview.getId(), featureScoresList, overview.getProjectId());
+        //  dataService.batchUpdate(overview.getId(), featureScoresList, overview.getProjectId());
         log.info("更新数据" + featureScoresList.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
 
         log.info("最终鉴定肽段数目为:" + count + ",打分反馈更新完毕");
