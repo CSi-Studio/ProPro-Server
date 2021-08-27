@@ -2,6 +2,8 @@ package net.csibio.propro.domain.vo;
 
 import lombok.Data;
 
+import java.util.Set;
+
 @Data
 public class PeptideUpdateVO {
 
@@ -13,7 +15,7 @@ public class PeptideUpdateVO {
     /**
      * 对应蛋白质名称,默认为UniProt网站上可以搜索到的蛋白质名称
      */
-    String protein;
+    Set<String> proteins;
 
     /**
      * 肽段的荷质比MZ

@@ -19,7 +19,7 @@ public class SimplePeptide {
 
     String id;
 
-    String protein;
+    Set<String> proteins;
 
     String peptideRef;
 
@@ -74,7 +74,7 @@ public class SimplePeptide {
 
     public SimplePeptide(PeptideDO peptide) {
         this.id = peptide.getId();
-        this.protein = peptide.getProtein();
+        this.proteins = peptide.getProteins();
         this.peptideRef = peptide.getPeptideRef();
         this.mz = peptide.getMz();
         this.fragments = peptide.getFragments();

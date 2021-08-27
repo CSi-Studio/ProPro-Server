@@ -1,9 +1,12 @@
 package net.csibio.propro.utils;
 
+import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.domain.db.PeptideDO;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,18 +19,39 @@ public class PeptideUtil {
 
     public static final Pattern unimodPattern = Pattern.compile("([a-z])[\\(]unimod[\\:](\\d*)[\\)]");
 
-    public static String removeUnimod(String fullName){
-        if (fullName.contains("(")){
-            String[] parts = fullName.replaceAll("\\(","|(").replaceAll("\\)","|").split("\\|");
+    /**
+     * 用于解码5/sp|Q9NY65|TBA8_HUMAN/sp|Q6PEY2|TBA3E_HUMAN/sp|Q13748|TBA3C_HUMAN/sp|Q9BQE3|TBA1C_HUMAN/sp|Q71U36|TBA1A_HUMAN
+     * 这种类似结构的格式
+     *
+     * @param proteinLabel 蛋白质编码
+     */
+    public static Set<String> parseProtein(String proteinLabel) {
+        Set<String> proteins = new HashSet<>();
+        if (proteinLabel.contains(SymbolConst.LEFT_SLASH)) {
+            String[] proteinArray = proteinLabel.split(SymbolConst.LEFT_SLASH);
+            for (int i = 1; i < proteinArray.length; i++) {
+                proteins.add(proteinArray[i]);
+            }
+        } else if (proteinLabel.contains("irt")) {
+            proteins.add("iRT");
+        } else {
+            proteins.add(proteinLabel);
+        }
+        return proteins;
+    }
+
+    public static String removeUnimod(String fullName) {
+        if (fullName.contains("(")) {
+            String[] parts = fullName.replaceAll("\\(", "|(").replaceAll("\\)", "|").split("\\|");
             String sequence = "";
-            for(String part: parts){
-                if (part.startsWith("(")){
+            for (String part : parts) {
+                if (part.startsWith("(")) {
                     continue;
                 }
                 sequence += part;
             }
             return sequence;
-        }else {
+        } else {
             return fullName;
         }
     }
@@ -52,7 +76,7 @@ public class PeptideUtil {
             }
         }
 //        if (unimodMap.size() > 0) {
-            peptideDO.setUnimodMap(unimodMap);
+        peptideDO.setUnimodMap(unimodMap);
 //        }
     }
 

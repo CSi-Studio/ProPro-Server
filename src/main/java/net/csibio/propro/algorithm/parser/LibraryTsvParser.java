@@ -86,7 +86,7 @@ public class LibraryTsvParser extends BaseLibraryParser {
                     continue;
                 }
                 PeptideDO peptide = Result.getData();
-                proteinSet.add(peptide.getProtein());
+                proteinSet.addAll(peptide.getProteins());
                 addFragment(peptide, map);
             }
             List<PeptideDO> peptideDOList = new ArrayList<>(map.values());
@@ -202,10 +202,9 @@ public class LibraryTsvParser extends BaseLibraryParser {
 
         fi.setIntensity(Double.parseDouble(row[columnMap.get(ProductIonIntensity)]));
         peptideDO.setSequence(row[columnMap.get(PeptideSequence)]);
-        peptideDO.setProtein(row[columnMap.get(ProteinName)]);
-        if (peptideDO.getProtein().toLowerCase().contains("irt")) {
-            peptideDO.setProtein("iRT");
-        }
+        String proteinName = row[columnMap.get(ProteinName)];
+        peptideDO.setProteins(PeptideUtil.parseProtein(proteinName));
+
         String annotations = row[columnMap.get(Annotation)].replaceAll("\"", "");
         fi.setAnnotations(annotations);
         String fullName = row[columnMap.get(FullUniModPeptideName)];//no target sequence

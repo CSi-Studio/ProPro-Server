@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @CompoundIndexes({
@@ -25,7 +26,7 @@ public class DataDO extends BaseDO {
     @Indexed
     String overviewId;
     @Indexed
-    String protein;
+    Set<String> proteins;
     @Indexed
     String peptideRef;
     //是否是伪肽段

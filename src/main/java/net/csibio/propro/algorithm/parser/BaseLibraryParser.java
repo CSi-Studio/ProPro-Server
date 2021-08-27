@@ -112,22 +112,6 @@ public abstract class BaseLibraryParser {
         return dropCount;
     }
 
-    protected void setUnique(PeptideDO peptide, HashSet<String> fastaUniqueSet, HashSet<String> fastaDropPep, HashSet<String> libraryDropPep, HashSet<String> fastaDropProt, HashSet<String> libraryDropProt, HashSet<String> uniqueProt) {
-        if (peptide.getProtein().startsWith("1/")) {
-            if (!fastaUniqueSet.isEmpty() && !fastaUniqueSet.contains(peptide.getSequence())) {
-                peptide.setIsUnique(false);
-                fastaDropProt.add(peptide.getProtein());
-                fastaDropPep.add(peptide.getPeptideRef());
-            } else {
-                uniqueProt.add(peptide.getProtein());
-            }
-        } else {
-            peptide.setIsUnique(false);
-            libraryDropProt.add(peptide.getProtein());
-            libraryDropPep.add(peptide.getPeptideRef());
-        }
-    }
-
     protected void addFragment(PeptideDO peptide, HashMap<String, PeptideDO> map) {
         PeptideDO existedPeptide = map.get(peptide.getPeptideRef());
         if (existedPeptide == null) {

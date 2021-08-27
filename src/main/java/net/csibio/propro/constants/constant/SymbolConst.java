@@ -9,4 +9,6 @@ public class SymbolConst {
     public static final String DELIMITER = "-";
     public static final String BAR = "|";
     public static final String SPACE = " ";
+    public static final String LEFT_SLASH = "/";
+    public static final String RIGHT_SLASH = "\\";
 }

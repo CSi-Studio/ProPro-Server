@@ -18,7 +18,8 @@ import java.util.Set;
 @Data
 @Document(collection = "peptide")
 @CompoundIndexes({
-        @CompoundIndex(name = "libraryId_peptideRef", def = "{'libraryId':1,'peptideRef':1}", unique = true)
+        @CompoundIndex(name = "libraryId_peptideRef", def = "{'libraryId':1,'peptideRef':1}", unique = true),
+        @CompoundIndex(name = "libraryId_proteins", def = "{'libraryId':1,'proteins':1}")
 })
 public class PeptideDO extends BaseDO {
 
@@ -46,8 +47,8 @@ public class PeptideDO extends BaseDO {
     /**
      * 蛋白质标识符
      */
-    @HashIndexed
-    String protein;
+    @Indexed
+    Set<String> proteins;
 
     /**
      * 库id+蛋白质标签
@@ -111,33 +112,13 @@ public class PeptideDO extends BaseDO {
         this.decoySequence = null;
     }
 
-    public void setProtein(String protein) {
-        this.protein = protein;
-        if (libraryId != null) {
-            this.libProteinIdent = libraryId + "-" + protein;
-        } else {
-            this.libProteinIdent = protein;
-        }
-
-    }
-
-    public void setLibraryId(String libraryId) {
-        this.libraryId = libraryId;
-        if (protein != null) {
-            this.libProteinIdent = libraryId + "-" + protein;
-        } else {
-            this.libProteinIdent = libraryId;
-        }
-
-    }
-
     public SimplePeptide toTargetPeptide() {
         SimplePeptide tp = new SimplePeptide();
         tp.setPeptideRef(peptideRef);
         tp.setRt(rt);
         tp.setFragments(fragments);
         tp.setMz(mz);
-        tp.setProtein(protein);
+        tp.setProteins(proteins);
         tp.setUnimodMap(unimodMap);
         tp.setDecoySequence(decoySequence);
         tp.setDecoyUnimodMap(decoyUnimodMap);

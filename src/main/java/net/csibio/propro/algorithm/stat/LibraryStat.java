@@ -23,7 +23,7 @@ public class LibraryStat {
     }
 
     public long proteinCount(LibraryDO library) {
-        return peptideService.countByProteinName(library.getId());
+        return library.getProteins().size();
     }
 
     public long fragmentCount(List<PeptideS1> peptideList) {
@@ -71,14 +71,12 @@ public class LibraryStat {
         int minRt = peptideList.get(0).getRt().intValue();
         int maxRange = (maxRt / 100 + 1) * 100;
         int minRange;
-        if(minRt<0 && minRt>-100){
-             minRange = -100;
-        } else{
-             minRange = (minRt / 100) * 100;
+        if (minRt < 0 && minRt > -100) {
+            minRange = -100;
+        } else {
+            minRange = (minRt / 100) * 100;
         }
-
-
-
+        
         int stage = (maxRange - minRange) / slice;
         int add = 0;
         int temp = 0;

@@ -19,7 +19,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 对于TraML文件的高速解析引擎
@@ -84,13 +83,14 @@ public class FastTraMLParser extends BaseLibraryParser {
             List<PeptideDO> peptideList = new ArrayList<>(peptideMap.values());
             peptideService.insert(peptideList);
 
-            Set<String> proteins = peptideList.stream().map(PeptideDO::getProtein).collect(Collectors.toSet());
+            Set<String> proteins = new HashSet<>();
+            peptideList.stream().forEach(peptide -> proteins.addAll(peptide.getProteins()));
             library.setProteins(proteins);
             libraryService.update(library);
 
             taskDO.addLog(peptideMap.size() + "条肽段数据插入成功");
             taskService.update(taskDO);
-            
+
             logger.info(peptideMap.size() + "条肽段数据插入成功");
         } catch (Exception e) {
             e.printStackTrace();
@@ -186,7 +186,7 @@ public class FastTraMLParser extends BaseLibraryParser {
                 }
                 if (peptideDO.getPeptideRef() != null && line.contains(ProteinNameMarker)) {
                     String proteinName = line.split(RefMarker)[1].split("\"")[0];
-                    peptideDO.setProtein(proteinName);
+                    peptideDO.setProteins(PeptideUtil.parseProtein(proteinName));
                     continue;
                 }
                 if (peptideDO.getPeptideRef() != null && line.contains(RetentionTimeMarker)) {
@@ -253,7 +253,7 @@ public class FastTraMLParser extends BaseLibraryParser {
                 }
                 if (peptideDO.getPeptideRef() != null && line.contains(ProteinNameMarker)) {
                     String proteinName = line.split(RefMarker)[1].split("\"")[0];
-                    peptideDO.setProtein(proteinName);
+                    peptideDO.setProteins(PeptideUtil.parseProtein(proteinName));
                     continue;
                 }
                 if (peptideDO.getPeptideRef() != null && line.contains(RetentionTimeMarker)) {
