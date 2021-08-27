@@ -27,9 +27,4 @@ public class PeptideUpdateVO {
      */
     Double rt;
 
-    /**
-     * 该肽段是否是该蛋白的不重复肽段
-     */
-    Boolean isUnique;
-
 }

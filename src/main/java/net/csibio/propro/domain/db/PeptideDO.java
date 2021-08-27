@@ -7,7 +7,6 @@ import net.csibio.propro.domain.bean.peptide.SimplePeptide;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
-import org.springframework.data.mongodb.core.index.HashIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -49,12 +48,6 @@ public class PeptideDO extends BaseDO {
      */
     @Indexed
     Set<String> proteins;
-
-    /**
-     * 库id+蛋白质标签
-     */
-    @HashIndexed
-    String libProteinIdent;
 
     /**
      * 该肽段是否是该蛋白的不重复肽段
@@ -110,6 +103,11 @@ public class PeptideDO extends BaseDO {
         this.decoyFragments = null;
         this.decoyUnimodMap = null;
         this.decoySequence = null;
+    }
+
+    public void setProteins(Set<String> proteins) {
+        this.proteins = proteins;
+        this.isUnique = (proteins != null && proteins.size() == 1);
     }
 
     public SimplePeptide toTargetPeptide() {

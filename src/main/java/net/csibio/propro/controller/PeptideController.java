@@ -40,7 +40,6 @@ public class PeptideController extends XController<LibraryDO, LibraryQuery, Libr
         peptide.setMz(peptideUpdateVO.getMz());
         peptide.setRt(peptideUpdateVO.getRt());
         peptide.setProteins(peptideUpdateVO.getProteins());
-        peptide.setIsUnique(peptideUpdateVO.getIsUnique());
 
         return peptideService.update(peptide);
     }

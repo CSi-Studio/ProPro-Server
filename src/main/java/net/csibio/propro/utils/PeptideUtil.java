@@ -27,6 +27,9 @@ public class PeptideUtil {
      */
     public static Set<String> parseProtein(String proteinLabel) {
         Set<String> proteins = new HashSet<>();
+        if (proteinLabel == null) {
+            return proteins;
+        }
         if (proteinLabel.contains(SymbolConst.LEFT_SLASH)) {
             String[] proteinArray = proteinLabel.split(SymbolConst.LEFT_SLASH);
             for (int i = 1; i < proteinArray.length; i++) {
