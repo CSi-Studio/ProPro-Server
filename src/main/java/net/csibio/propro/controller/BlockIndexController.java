@@ -106,4 +106,26 @@ public class BlockIndexController {
         return Result.OK(pairsList);
     }
 
+    @GetMapping(value = "/spectrumGauss")
+    Result spectrumGauss(@RequestParam("blockIndexId") String blockIndexId,
+                    @RequestParam("rt") float rt) {
+        BlockIndexDO blockIndex = blockIndexService.getById(blockIndexId);
+        if (blockIndex == null) {
+            return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
+        }
+
+        ExperimentDO experiment = experimentService.getById(blockIndex.getExpId());
+        if (experiment == null) {
+            return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
+        }
+
+        Compressor mzCompressor = experiment.fetchCompressor(Compressor.TARGET_MZ);
+        DIAParser parser = new DIAParser(experiment.getAirdPath(), mzCompressor, experiment.fetchCompressor(Compressor.TARGET_INTENSITY), mzCompressor.getPrecision());
+        MzIntensityPairs pairs = parser.getSpectrumByRt(blockIndex.getStartPtr(), blockIndex.getRts(), blockIndex.getMzs(), blockIndex.getInts(), rt);
+        parser.close();
+        //对光谱进行高斯平滑
+
+        return Result.OK(new FloatPairs(pairs.getMzArray(), pairs.getIntensityArray()));
+    }
+
 }
