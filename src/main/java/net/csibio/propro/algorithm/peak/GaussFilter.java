@@ -1,7 +1,7 @@
 package net.csibio.propro.algorithm.peak;
 
 import net.csibio.propro.constants.constant.Constants;
-import net.csibio.propro.domain.bean.data.SigmaSpacing;
+import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.utils.MathUtil;
 import org.springframework.stereotype.Component;
 

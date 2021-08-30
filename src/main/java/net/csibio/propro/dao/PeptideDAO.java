@@ -60,7 +60,7 @@ public class PeptideDAO extends BaseDAO<PeptideDO, PeptideQuery> {
             query.addCriteria(where("peptideRef").is(peptideQuery.getPeptideRef()));
         }
         if (StringUtils.isNotEmpty(peptideQuery.getProtein())) {
-            query.addCriteria(where("protein").is(peptideQuery.getProtein()));
+            query.addCriteria(where("proteins").regex(peptideQuery.getProtein(), "i"));
         }
         if (peptideQuery.getMzStart() != null) {
             query.addCriteria(where("mz").gte(peptideQuery.getMzStart()).lt(peptideQuery.getMzEnd()));

@@ -1,4 +1,4 @@
-package net.csibio.propro.domain.bean.data;
+package net.csibio.propro.domain.options;
 
 public class SigmaSpacing {
 

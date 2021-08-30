@@ -3,8 +3,8 @@ package net.csibio.propro.algorithm.peak;
 import net.csibio.propro.constants.constant.SmoothConst;
 import net.csibio.propro.constants.enums.SmoothMethod;
 import net.csibio.propro.domain.bean.common.DoublePairs;
-import net.csibio.propro.domain.bean.data.SigmaSpacing;
 import net.csibio.propro.domain.options.PeakFindingOptions;
+import net.csibio.propro.domain.options.SigmaSpacing;
 import org.springframework.stereotype.Component;
 
 @Component("smoother")
