@@ -5,9 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.Compressor;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.aird.parser.DIAParser;
+import net.csibio.propro.constants.constant.SmoothConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.blockindex.BlockIndexVO;
+import net.csibio.propro.domain.bean.common.DoublePairs;
+import net.csibio.propro.domain.bean.common.DoubleTreble;
 import net.csibio.propro.domain.bean.common.FloatPairs;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.ExperimentDO;
@@ -108,7 +111,8 @@ public class BlockIndexController {
 
     @GetMapping(value = "/spectrumGauss")
     Result spectrumGauss(@RequestParam("blockIndexId") String blockIndexId,
-                    @RequestParam("rt") float rt) {
+                         @RequestParam("rt") float rt,
+                         @RequestParam("pointNum")int pointNum) {
         BlockIndexDO blockIndex = blockIndexService.getById(blockIndexId);
         if (blockIndex == null) {
             return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
@@ -124,8 +128,36 @@ public class BlockIndexController {
         MzIntensityPairs pairs = parser.getSpectrumByRt(blockIndex.getStartPtr(), blockIndex.getRts(), blockIndex.getMzs(), blockIndex.getInts(), rt);
         parser.close();
         //对光谱进行高斯平滑
-
-        return Result.OK(new FloatPairs(pairs.getMzArray(), pairs.getIntensityArray()));
+        float[] mzFloat = pairs.getMzArray();
+        float[] intFloat = pairs.getIntensityArray();
+        double[] mzArray = new double[mzFloat.length];
+        double[] intArray = new double[intFloat.length];
+        for (int i = 0; i < mzArray.length; i++) {
+            mzArray[i] = mzFloat[i];
+            intArray[i] = intFloat[i];
+        }
+        double[] weights = SmoothConst.GAUSS.get(pointNum);
+        double[] smoothInts = new double[intArray.length];
+        for (int i = 0; i < intArray.length; i++) {
+            //mid
+            double sum = intArray[i] * weights[0];
+            //left
+            for (int j = 1; j < weights.length; j++) {
+                if (i - j < 0) {
+                    break;
+                }
+                sum += weights[j] * intArray[i - j];
+            }
+            //right
+            for (int j = 1; j < weights.length; j++) {
+                if (i + j >= intArray.length) {
+                    break;
+                }
+                sum += weights[j] * intArray[i + j];
+            }
+            smoothInts[i] = sum;
+        }
+        return Result.OK(new DoubleTreble(mzArray, intArray, smoothInts));
     }
 
 }
