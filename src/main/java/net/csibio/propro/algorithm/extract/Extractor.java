@@ -190,11 +190,9 @@ public class Extractor {
         data.setRtArray(rtArray);
         data.setOverviewId(overviewId);
         data.setPeptideRef(sp.getPeptideRef());
-        data.setProteins(sp.getProteins());
         data.setDecoy(sp.isDecoy());
         data.setLibRt(sp.getRt());
         data.setLibMz(sp.getMz());
-        data.setIsUnique(sp.getIsUnique());
 
         boolean isHit = false;
 

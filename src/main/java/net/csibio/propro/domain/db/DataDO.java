@@ -11,7 +11,6 @@ import org.springframework.data.mongodb.core.index.Indexed;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 @Data
 @CompoundIndexes({
@@ -26,20 +25,21 @@ public class DataDO extends BaseDO {
     @Indexed
     String overviewId;
     @Indexed
-    Set<String> proteins;
-    @Indexed
     String peptideRef;
     //是否是伪肽段
     @Indexed
     Boolean decoy = false;
-
-    Boolean isUnique = true;
-
+    /**
+     * @see net.csibio.propro.constants.enums.IdentifyStatus
+     */
     @Indexed
-    int status; //打分相关的字段
+    int status; //鉴定结果
+
     @Indexed
     Double fdr; //最终给出的FDR打分
+
     Double qValue; //最终给出的qValue
+
     Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得
     Double realRt;//最终选出的最佳峰RT,即算法认为的实际rt
     Double libMz; //该肽段的前体mz,从标准库中冗余所得

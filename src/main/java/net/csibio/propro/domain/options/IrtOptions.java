@@ -1,7 +1,6 @@
 package net.csibio.propro.domain.options;
 
 import lombok.Data;
-import net.csibio.propro.domain.bean.data.SigmaSpacing;
 
 @Data
 public class IrtOptions {
