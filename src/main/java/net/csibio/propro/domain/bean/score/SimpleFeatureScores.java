@@ -9,6 +9,8 @@ import lombok.Data;
 @Data
 public class SimpleFeatureScores extends BaseScores {
 
+    String id;
+
     String peptideRef;
 
     Boolean decoy;
@@ -37,7 +39,8 @@ public class SimpleFeatureScores extends BaseScores {
         this.scores = new Double[scoreTypesSize];
     }
 
-    public SimpleFeatureScores(String peptideRef, Boolean decoy) {
+    public SimpleFeatureScores(String id, String peptideRef, Boolean decoy) {
+        this.id = id;
         this.peptideRef = peptideRef;
         this.decoy = decoy;
     }

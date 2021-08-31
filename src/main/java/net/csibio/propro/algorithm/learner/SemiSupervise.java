@@ -17,6 +17,7 @@ import net.csibio.propro.domain.bean.score.SimpleFeatureScores;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.service.DataService;
+import net.csibio.propro.service.DataSumService;
 import net.csibio.propro.service.OverviewService;
 import net.csibio.propro.utils.ProProUtil;
 import net.csibio.propro.utils.SortUtil;
@@ -46,6 +47,8 @@ public class SemiSupervise {
     @Autowired
     DataService dataService;
     @Autowired
+    DataSumService dataSumService;
+    @Autowired
     OverviewService overviewService;
 
     public FinalResult doSemiSupervise(String overviewId, LearningParams params) {
@@ -66,16 +69,14 @@ public class SemiSupervise {
         //Step3. 开始训练数据集
         HashMap<String, Double> weightsMap = new HashMap<>();
         switch (params.getClassifier()) {
-            case lda:
+            case lda -> {
                 weightsMap = lda.classifier(scores, params, overview.getParams().getMethod().getScore().getScoreTypes());
                 lda.score(scores, weightsMap, params.getScoreTypes());
                 finalResult.setWeightsMap(weightsMap);
-                break;
-            case xgboost:
-                xgboost.classifier(scores, overview.getParams().getMethod().getScore().getScoreTypes(), params);
-                break;
-            default:
-                break;
+            }
+            case xgboost -> xgboost.classifier(scores, overview.getParams().getMethod().getScore().getScoreTypes(), params);
+            default -> {
+            }
         }
 
         List<SimpleFeatureScores> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), false);
@@ -100,18 +101,19 @@ public class SemiSupervise {
         }
 
         long start = System.currentTimeMillis();
+        //插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
         //  dataService.batchUpdate(overview.getId(), featureScoresList, overview.getProjectId());
-        log.info("更新数据" + featureScoresList.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
-
+        dataSumService.buildDataSumList(featureScoresList, params.getFdr(), overviewId, overview.getProjectId());
+        log.info("插入Sum数据" + featureScoresList.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
         log.info("最终鉴定肽段数目为:" + count + ",打分反馈更新完毕");
-        int matchedProteinsCount = dataService.countIdentifiedProteins(overviewId, overview.getProjectId());
-        log.info("最终鉴定蛋白数目(包含非Unique)为:" + matchedProteinsCount);
+//        int matchedProteinsCount = dataService.countIdentifiedProteins(overviewId, overview.getProjectId());
+//        log.info("最终鉴定蛋白数目(包含非Unique)为:" + matchedProteinsCount);
         finalResult.setMatchedPeptideCount(count);
-        finalResult.setMatchedProteinCount(matchedProteinsCount);
+//        finalResult.setMatchedProteinCount(matchedProteinsCount);
 
         overview.setWeights(weightsMap);
         overview.getStatistic().put(StatConst.MATCHED_PEPTIDE_COUNT, count);
-        overview.getStatistic().put(StatConst.MATCHED_PROTEIN_COUNT, matchedProteinsCount);
+//        overview.getStatistic().put(StatConst.MATCHED_PROTEIN_COUNT, matchedProteinsCount);
         overviewService.update(overview);
 
         log.info("合并打分完成,共找到新肽段" + count + "个");

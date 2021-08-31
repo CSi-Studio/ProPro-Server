@@ -3,9 +3,6 @@ package net.csibio.propro.domain.query;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Data
 @Accessors(chain = true)
 public class DataQuery extends PageQuery {
@@ -20,19 +17,9 @@ public class DataQuery extends PageQuery {
 
     Boolean decoy;
 
-    List<Integer> statusList;
-
     Double mzStart;
 
     Double mzEnd;
-
-    Double fdrStart;
-
-    Double fdrEnd;
-
-    Double qValueStart;
-
-    Double qValueEnd;
 
     public DataQuery() {
     }
@@ -43,12 +30,5 @@ public class DataQuery extends PageQuery {
 
     public DataQuery(int pageNo, int pageSize) {
         super(pageNo, pageSize);
-    }
-
-    public void addStatus(Integer status) {
-        if (status == null) {
-            statusList = new ArrayList();
-        }
-        statusList.add(status);
     }
 }

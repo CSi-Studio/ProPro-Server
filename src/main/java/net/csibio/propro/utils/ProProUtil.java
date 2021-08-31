@@ -334,7 +334,7 @@ public class ProProUtil {
             if (score.getFeatureScoresList() == null || score.getFeatureScoresList().size() == 0) {
                 continue;
             }
-            SimpleFeatureScores bestFeatureScores = new SimpleFeatureScores(score.getPeptideRef(), score.getDecoy());
+            SimpleFeatureScores bestFeatureScores = new SimpleFeatureScores(score.getId(), score.getPeptideRef(), score.getDecoy());
             double maxScore = -Double.MAX_VALUE;
             FeatureScores topFeatureScore = null;
             for (FeatureScores featureScores : score.getFeatureScoresList()) {

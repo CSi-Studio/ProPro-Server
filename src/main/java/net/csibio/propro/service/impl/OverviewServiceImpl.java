@@ -7,9 +7,11 @@ import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.DataQuery;
+import net.csibio.propro.domain.query.DataSumQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.DataService;
+import net.csibio.propro.service.DataSumService;
 import net.csibio.propro.service.OverviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ public class OverviewServiceImpl implements OverviewService {
     OverviewDAO overviewDAO;
     @Autowired
     DataService dataService;
+    @Autowired
+    DataSumService dataSumService;
 
     @Override
     public BaseDAO<OverviewDO, OverviewQuery> getBaseDAO() {
@@ -68,6 +72,7 @@ public class OverviewServiceImpl implements OverviewService {
         }
 
         dataService.remove(new DataQuery().setOverviewId(id), overview.getProjectId());
+        dataSumService.remove(new DataSumQuery().setOverviewId(id), overview.getProjectId());
     }
 
     @Override

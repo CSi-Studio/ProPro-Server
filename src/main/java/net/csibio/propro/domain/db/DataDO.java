@@ -29,29 +29,15 @@ public class DataDO extends BaseDO {
     //是否是伪肽段
     @Indexed
     Boolean decoy = false;
-    /**
-     * @see net.csibio.propro.constants.enums.IdentifyStatus
-     */
-    @Indexed
-    int status; //鉴定结果
-
-    @Indexed
-    Double fdr; //最终给出的FDR打分
-
-    Double qValue; //最终给出的qValue
 
     Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得
-    //Double libMz; //该肽段的前体mz,从标准库中冗余所得
 
+    Integer status;
+    
     //冗余的peptide切片信息
     List<String> cutInfos;
 
     List<FeatureScores> featureScoresList;
-
-    Double intensitySum;
-
-    //最终的定量值
-    String fragIntFeature;
 
     //*******************非数据库字段,仅在计算过程中产生*******************************
     @Transient

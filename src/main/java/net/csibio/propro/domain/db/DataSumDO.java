@@ -18,15 +18,22 @@ public class DataSumDO extends BaseDO {
     @Indexed
     String overviewId;
     @Indexed
-    String dataId;
-    @Indexed
     String peptideRef;
     @Indexed
     Boolean decoy = false;
     @Indexed
     Double fdr;
     @Indexed
-    int status; //鉴定结果
+    Integer status; //鉴定结果
 
-    
+    Double qValue;
+
+    //最终鉴定的时间
+    Double realRt;
+
+    //Intensity Sum
+    Double sum;
+
+    //最终的定量值
+    String fragIntFeature;
 }

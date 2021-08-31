@@ -57,7 +57,7 @@ public class OverviewController {
         return overviewService.update(overview);
     }
 
-    @GetMapping(value = "/remove")
+    @PostMapping(value = "/remove")
     Result<List<String>> remove(@RequestParam(value = "overviewIds") String overviewIds) {
         String[] overviewArray = overviewIds.split(SymbolConst.COMMA);
         Result<List<String>> result = new Result<List<String>>();

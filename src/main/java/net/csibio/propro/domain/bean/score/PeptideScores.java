@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 public class PeptideScores {
 
+    String id;
     //肽段名称_带电量,例如:SLMLSYN(UniMod:7)AITHLPAGIFR_3
     String peptideRef;
     //是否是伪肽段
