@@ -9,6 +9,9 @@ public class DataQuery extends PageQuery {
 
     String id;
 
+    //路由id
+    String projectId;
+
     String overviewId;
 
     String peptideRef;

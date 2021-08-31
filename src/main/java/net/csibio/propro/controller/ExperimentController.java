@@ -50,6 +50,19 @@ public class ExperimentController {
         return Result.OK(expList);
     }
 
+    @PostMapping(value = "/generateAlias")
+    Result generateAlias(@RequestParam("expIds") List<String> expIds) {
+        List<ExperimentDO> expList = experimentService.getAll(new ExperimentQuery().setIds(expIds));
+        if (expList != null) {
+            for (int i = 0; i < expList.size(); i++) {
+                ExperimentDO exp = expList.get(i);
+                exp.setAlias(i + 1 + "");
+                experimentService.update(exp);
+            }
+        }
+        return Result.OK();
+    }
+
     @PostMapping(value = "/edit")
     Result<ExperimentDO> edit(@RequestParam("id") String id, @RequestParam("alias") String alias) {
         ExperimentDO exp = experimentService.getById(id);
