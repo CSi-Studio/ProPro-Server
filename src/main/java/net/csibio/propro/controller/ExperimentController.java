@@ -17,10 +17,7 @@ import net.csibio.propro.task.ExperimentTask;
 import net.csibio.propro.task.LibraryTask;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +48,17 @@ public class ExperimentController {
         }
         List<BaseExp> expList = experimentService.getAll(query, BaseExp.class);
         return Result.OK(expList);
+    }
+
+    @PostMapping(value = "/edit")
+    Result<ExperimentDO> edit(@RequestParam("id") String id, @RequestParam("alias") String alias) {
+        ExperimentDO exp = experimentService.getById(id);
+        if (exp == null) {
+            return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
+        }
+        exp.setAlias(alias);
+        experimentService.update(exp);
+        return Result.OK(exp);
     }
 
     @GetMapping(value = "/detail")
