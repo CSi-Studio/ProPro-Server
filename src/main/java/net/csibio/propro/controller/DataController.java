@@ -6,6 +6,7 @@ import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.experiment.BaseExp;
 import net.csibio.propro.domain.db.DataDO;
+import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.ProjectDO;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.domain.query.ExperimentQuery;
@@ -53,7 +54,11 @@ public class DataController {
         if (expList.size() != expIds.size()) {
             return Result.Error(ResultCode.SOME_EXPERIMENT_NOT_EXISTED);
         }
-        
+        List<OverviewDO> overviewList = overviewService.getDefaultOverviewList(projectId, expIds);
+        if (overviewList.size() != expIds.size()) {
+            return Result.Error(ResultCode.SOME_EXPS_HAVE_NO_DEFAULT_OVERVIEW);
+        }
+
         DataQuery query = new DataQuery();
 
         Result<List<DataDO>> result = dataService.getList(query, query.getProjectId());

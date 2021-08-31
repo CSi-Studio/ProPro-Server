@@ -130,6 +130,7 @@ public enum ResultCode implements Serializable {
     FRAGMENT_CANNOT_BE_EMPTY_ALL("FRAGMENT_CANNOT_BE_EMPTY_ALL", "肽段碎片不能全部为空"),
     FRAGMENT_LENGTH_IS_TOO_LONG("FRAGMENT_LENGTH_IS_TOO_LONG", "设定的肽段碎片长度大于本身长度"),
     POSITION_DELTA_LIST_LENGTH_NOT_EQUAL_TO_MZMAP_PLUS_ONE("POSITION_DELTA_LIST_LENGTH_NOT_EQUAL_TO_MZMAP_PLUS_ONE", "索引地址搜索块的数目与mzMap+1的结果不一致"),
+    SOME_EXPS_HAVE_NO_DEFAULT_OVERVIEW("SOME_EXPS_HAVE_NO_DEFAULT_OVERVIEW", "部分实验没有默认的概览结果,请先进行分析或者设置默认值"),
 
     /**
      * ******

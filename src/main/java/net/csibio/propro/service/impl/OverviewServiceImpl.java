@@ -91,4 +91,17 @@ public class OverviewServiceImpl implements OverviewService {
         }
         return Result.OK();
     }
+
+    @Override
+    public List<OverviewDO> getDefaultOverviewList(String projectId, List<String> expIds) {
+        List<OverviewDO> overviewList = new ArrayList<>();
+        if (expIds != null && expIds.size() > 0) {
+            expIds.forEach(expId -> {
+                OverviewDO overview = getOne(new OverviewQuery(projectId).setExpId(expId).setDefaultOne(true), OverviewDO.class);
+                overviewList.add(overview);
+            });
+        }
+
+        return overviewList;
+    }
 }
