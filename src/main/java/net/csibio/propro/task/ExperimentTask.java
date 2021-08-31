@@ -15,6 +15,7 @@ import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
 import net.csibio.propro.domain.db.ExperimentDO;
+import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.TaskDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.service.*;
@@ -111,6 +112,7 @@ public class ExperimentTask extends BaseTask {
         LearningParams ap = new LearningParams();
         ap.setScoreTypes(params.getMethod().getScore().getScoreTypes());
         ap.setFdr(params.getMethod().getClassifier().getFdr());
+        ap.setRemoveUnmatched(params.getMethod().getClassifier().getRemoveUnmatched());
         FinalResult finalResult = semiSupervise.doSemiSupervise(params.getOverviewId(), ap);
         taskDO.addLog("流程执行完毕,总耗时:" + (System.currentTimeMillis() - start) + ",最终识别的肽段数为" + finalResult.getMatchedPeptideCount() + "最终识别的蛋白数目为:" + finalResult.getMatchedProteinCount());
         if (finalResult.getMatchedProteinCount() != null && finalResult.getMatchedProteinCount() != 0) {
@@ -166,7 +168,7 @@ public class ExperimentTask extends BaseTask {
         taskDO.addLog("Irt Result:" + exp.getIrt().getSi().getFormula()).addLog("入参准备完毕,开始提取数据(打分)");
         taskService.update(taskDO);
         params.setTaskDO(taskDO);
-        Result result = extractor.extract(exp, params);
+        Result<OverviewDO> result = extractor.extract(exp, params);
         taskService.update(taskDO);
         if (result.isFailed()) {
             taskDO.finish(TaskStatus.FAILED.getName(), "任务执行失败:" + result.getErrorMessage());

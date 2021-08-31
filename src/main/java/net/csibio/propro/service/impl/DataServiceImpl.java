@@ -46,24 +46,12 @@ public class DataServiceImpl implements DataService {
 
     @Override
     public void removeUnusedData(String overviewId, List<SimpleFeatureScores> simpleFeatureScoresList, Double fdr, String projectId) {
-        List<SimpleFeatureScores> dataNeedToRemove = new ArrayList<>();
-        long start = System.currentTimeMillis();
         for (int i = simpleFeatureScoresList.size() - 1; i >= 0; i--) {
             //如果fdr为空或者fdr小于指定的值,那么删除它
             if (simpleFeatureScoresList.get(i).getFdr() == null || simpleFeatureScoresList.get(i).getFdr() > fdr) {
-                dataNeedToRemove.add(simpleFeatureScoresList.get(i));
                 simpleFeatureScoresList.remove(i);
             }
         }
-
-
-//        if (dataNeedToRemove.size() != 0) {
-//            log.info("总计需要删除" + dataNeedToRemove.size() + "条数据");
-//            dataNeedToRemove.forEach(sfs -> {
-//                dataDAO.remove(new DataQuery().setOverviewId(overviewId).setPeptideRef(sfs.getPeptideRef()).setDecoy(sfs.getDecoy()), projectId);
-//            });
-//        }
-        log.info("删除无用数据:" + dataNeedToRemove.size() + "条,总计耗时:" + (System.currentTimeMillis() - start) + "毫秒");
     }
 
     @Override

@@ -96,8 +96,8 @@ public abstract class Irt {
         List<Pair> diffPairs = new ArrayList<>();
         dataList = dataList.stream().sorted(Comparator.comparing(DataDO::getLibRt)).toList();
         for (DataDO data : dataList) {
-            PeptideCoord tp = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
-            PeptideFeature peptideFeature = featureExtractor.getExperimentFeature(data, tp.buildIntensityMap(), params.getMethod().getIrt().getSs());
+            PeptideCoord coord = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
+            PeptideFeature peptideFeature = featureExtractor.getExperimentFeature(data, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
             if (!peptideFeature.isFeatureFound()) {
                 continue;
             }

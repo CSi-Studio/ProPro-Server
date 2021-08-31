@@ -16,6 +16,7 @@ public class SimpleFeatureScores extends BaseScores {
     //本峰值对应的最佳RT时间
     Double rt;
 
+    //定量结果
     Double intensitySum;
 
     //本峰对应的最终综合打分

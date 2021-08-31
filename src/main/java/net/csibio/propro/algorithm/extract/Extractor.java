@@ -134,8 +134,8 @@ public class Extractor {
      * @param params
      */
     public void extract4Irt(List<DataDO> finalList, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
-        for (PeptideCoord tp : coordinates) {
-            DataDO data = extractOne(tp, rtMap, params);
+        for (PeptideCoord coord : coordinates) {
+            DataDO data = extractOne(coord, rtMap, params);
             if (data != null) {
                 finalList.add(data);
             }
@@ -166,20 +166,20 @@ public class Extractor {
         }
     }
 
-    private DataDO extractOne(PeptideCoord tp, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
-        return extractOne(tp, rtMap, params, null);
+    private DataDO extractOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+        return extractOne(coord, rtMap, params, null);
     }
 
-    private DataDO extractOne(PeptideCoord sp, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params, String overviewId) {
+    private DataDO extractOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params, String overviewId) {
         float mzStart = 0;
         float mzEnd = -1;
         //所有的碎片共享同一个RT数组
         ArrayList<Float> rtList = new ArrayList<>();
         for (Float rt : rtMap.keySet()) {
-            if (params.getMethod().getEic().getRtWindow() != -1 && rt > sp.getRtEnd()) {
+            if (params.getMethod().getEic().getRtWindow() != -1 && rt > coord.getRtEnd()) {
                 break;
             }
-            if (params.getMethod().getEic().getRtWindow() == -1 || (rt >= sp.getRtStart() && rt <= sp.getRtEnd())) {
+            if (params.getMethod().getEic().getRtWindow() == -1 || (rt >= coord.getRtStart() && rt <= coord.getRtEnd())) {
                 rtList.add(rt);
             }
         }
@@ -190,17 +190,16 @@ public class Extractor {
         DataDO data = new DataDO();
         data.setRtArray(rtArray);
         data.setOverviewId(overviewId);
-        data.setPeptideRef(sp.getPeptideRef());
-        data.setDecoy(sp.isDecoy());
-        data.setLibRt(sp.getRt());
-//        data.setLibMz(sp.getMz());
-        data.setCutInfos(sp.getFragments().stream().map(FragmentInfo::getCutInfo).collect(Collectors.toList()));
+        data.setPeptideRef(coord.getPeptideRef());
+        data.setDecoy(coord.isDecoy());
+        data.setLibRt(coord.getRt());
+        data.setCutInfos(coord.getFragments().stream().map(FragmentInfo::getCutInfo).collect(Collectors.toList()));
 
         boolean isHit = false;
         float window = params.getMethod().getEic().getMzWindow().floatValue();
         Boolean adaptiveMzWindow = params.getMethod().getEic().getAdaptiveMzWindow();
 
-        for (FragmentInfo fi : sp.getFragments()) {
+        for (FragmentInfo fi : coord.getFragments()) {
             float mz = fi.getMz().floatValue();
             mzStart = mz - window;
             mzEnd = mz + window;
@@ -307,17 +306,17 @@ public class Extractor {
      * @return
      */
     private List<DataDO> doExtract(DIAParser parser, ExperimentDO exp, BlockIndexDO swathIndex, AnalyzeParams params) {
-        List<PeptideCoord> coordinates;
+        List<PeptideCoord> coords;
         TreeMap<Float, MzIntensityPairs> rtMap;
         //Step2.获取标准库的目标肽段片段的坐标
-        coordinates = peptideService.buildCoord(params.getAnaLibId(), swathIndex.getRange(), params.getMethod().getEic().getRtWindow(), exp.getIrt().getSi());
-        if (coordinates.isEmpty()) {
+        coords = peptideService.buildCoord(params.getAnaLibId(), swathIndex.getRange(), params.getMethod().getEic().getRtWindow(), exp.getIrt().getSi());
+        if (coords.isEmpty()) {
             log.warn("No Coordinates Found,Rang:" + swathIndex.getRange().getStart() + ":" + swathIndex.getRange().getEnd());
             return null;
         }
         //Step3.提取指定原始谱图
         rtMap = parser.getSpectrums(swathIndex.getStartPtr(), swathIndex.getEndPtr(), swathIndex.getRts(), swathIndex.getMzs(), swathIndex.getInts());
-        return epps(exp, coordinates, rtMap, params);
+        return epps(exp, coords, rtMap, params);
 
     }
 
@@ -333,15 +332,15 @@ public class Extractor {
         List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
         long start = System.currentTimeMillis();
         //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
-        coordinates.parallelStream().forEach(sp -> {
+        coordinates.parallelStream().forEach(coord -> {
             //Step1. 常规提取XIC,XIC结果不进行压缩处理,如果没有提取到任何结果,那么加入忽略列表
-            DataDO dataDO = extractOne(sp, rtMap, params, params.getOverviewId());
+            DataDO dataDO = extractOne(coord, rtMap, params, params.getOverviewId());
             if (dataDO == null) {
                 return;
             }
 
             //Step2. 常规选峰及打分,未满足条件的直接忽略
-            scorer.scoreForOne(exp, dataDO, sp, rtMap, params);
+            scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
             if (dataDO.getFeatureScoresList() == null) {
                 return;
             }
@@ -351,14 +350,14 @@ public class Extractor {
             dataList.add(dataDO);
 
             //Step4. 如果第一,二步均符合条件,那么开始对对应的伪肽段进行数据提取和打分
-            sp.setDecoy(true);
-            DataDO decoyData = extractOne(sp, rtMap, params, params.getOverviewId());
+            coord.setDecoy(true);
+            DataDO decoyData = extractOne(coord, rtMap, params, params.getOverviewId());
             if (decoyData == null) {
                 return;
             }
 
             //Step5. 对Decoy进行打分
-            scorer.scoreForOne(exp, decoyData, sp, rtMap, params);
+            scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
             if (decoyData.getFeatureScoresList() == null) {
                 return;
             }

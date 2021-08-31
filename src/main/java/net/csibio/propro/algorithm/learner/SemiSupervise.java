@@ -82,14 +82,23 @@ public class SemiSupervise {
         ErrorStat errorStat = statistics.errorStatistics(featureScoresList, params);
         finalResult.setAllInfo(errorStat);
         int count = ProProUtil.checkFdr(finalResult, params.getFdr());
-
         //Step4. 对于最终的打分结果和选峰结果保存到数据库中
         log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + featureScoresList.size() + "条数据,开始统计相关数据");
         giveDecoyFdr(featureScoresList);
         targetDecoyDistribution(featureScoresList, overview);
-        log.info("统计分布完毕,开始移出无用数据");
-        dataService.removeUnusedData(overviewId, featureScoresList, params.getFdr(), overview.getProjectId());
-        log.info("无用数据移除完毕,开始更新最终数据");
+        if (params.getRemoveUnmatched()) {
+            log.info("统计分布完毕,开始移出无用数据");
+            for (int i = featureScoresList.size() - 1; i >= 0; i--) {
+                //如果fdr为空或者fdr小于指定的值,那么删除它
+                if (featureScoresList.get(i).getFdr() == null || featureScoresList.get(i).getFdr() > params.getFdr()) {
+                    featureScoresList.remove(i);
+                }
+            }
+            log.info("无用数据移除完毕,开始生成最终鉴定数据");
+        } else {
+            log.info("不需要移出无用数据");
+        }
+
         long start = System.currentTimeMillis();
         //  dataService.batchUpdate(overview.getId(), featureScoresList, overview.getProjectId());
         log.info("更新数据" + featureScoresList.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
