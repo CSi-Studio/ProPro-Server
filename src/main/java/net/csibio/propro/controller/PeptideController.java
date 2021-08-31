@@ -48,4 +48,11 @@ public class PeptideController extends XController<LibraryDO, LibraryQuery, Libr
     Result remove(@RequestParam(value = "peptideId") String peptideId) {
         return peptideService.removeById(peptideId);
     }
+
+    @GetMapping(value = "/getPeptideRefs")
+    Result getPeptideRefs(@RequestParam(value = "libraryId") String libraryId,
+                          @RequestParam(value = "protein") String protein) {
+        List<String> peptideList = peptideService.getAll(new PeptideQuery(libraryId).setProtein(protein)).stream().map(PeptideDO::getPeptideRef).toList();
+        return Result.OK(peptideList);
+    }
 }

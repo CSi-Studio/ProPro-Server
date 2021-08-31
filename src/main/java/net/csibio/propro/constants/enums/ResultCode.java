@@ -200,6 +200,9 @@ public enum ResultCode implements Serializable {
      * ******
      */
     PROTEIN_IDENTIFIER_CANNOT_BE_NULL("PROTEIN_IDENTIFIER_CANNOT_BE_NULL", "蛋白识别号不能为空"),
+    OVERVIEWS_MUST_USE_THE_SAME_ANA_LIBRARY_ID("OVERVIEWS_MUST_USE_THE_SAME_ANA_LIBRARY_ID", "概览使用的标准库id必须是同一个"),
+
+
     /**
      * ******
      * User

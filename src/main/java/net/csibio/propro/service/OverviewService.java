@@ -4,8 +4,9 @@ import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.OverviewQuery;
 
 import java.util.List;
+import java.util.Map;
 
 public interface OverviewService extends BaseService<OverviewDO, OverviewQuery> {
 
-    List<OverviewDO> getDefaultOverviewList(String projectId, List<String> expIds);
+    Map<String, OverviewDO> getDefaultOverviews(String projectId, List<String> expIds);
 }

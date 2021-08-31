@@ -16,9 +16,7 @@ import net.csibio.propro.service.OverviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service("overviewService")
 public class OverviewServiceImpl implements OverviewService {
@@ -93,15 +91,15 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public List<OverviewDO> getDefaultOverviewList(String projectId, List<String> expIds) {
-        List<OverviewDO> overviewList = new ArrayList<>();
+    public Map<String, OverviewDO> getDefaultOverviews(String projectId, List<String> expIds) {
+        Map<String, OverviewDO> overviewMap = new HashMap<>();
         if (expIds != null && expIds.size() > 0) {
             expIds.forEach(expId -> {
                 OverviewDO overview = getOne(new OverviewQuery(projectId).setExpId(expId).setDefaultOne(true), OverviewDO.class);
-                overviewList.add(overview);
+                overviewMap.put(expId, overview);
             });
         }
 
-        return overviewList;
+        return overviewMap;
     }
 }

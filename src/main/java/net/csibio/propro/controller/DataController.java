@@ -6,6 +6,7 @@ import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.experiment.BaseExp;
 import net.csibio.propro.domain.db.DataDO;
+import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.ProjectDO;
 import net.csibio.propro.domain.query.DataQuery;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Api(tags = {"Data Module"})
 @RestController
@@ -46,6 +49,9 @@ public class DataController {
                 @RequestParam("protein") String protein,
                 @RequestParam("peptide") String peptide
     ) {
+        if (expIds == null || expIds.size() == 0) {
+            return Result.Error(ResultCode.EXPERIMENT_ID_CANNOT_BE_EMPTY);
+        }
         ProjectDO project = projectService.getById(projectId);
         if (project == null) {
             return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
@@ -54,10 +60,15 @@ public class DataController {
         if (expList.size() != expIds.size()) {
             return Result.Error(ResultCode.SOME_EXPERIMENT_NOT_EXISTED);
         }
-        List<OverviewDO> overviewList = overviewService.getDefaultOverviewList(projectId, expIds);
-        if (overviewList.size() != expIds.size()) {
+        Map<String, OverviewDO> overviewMap = overviewService.getDefaultOverviews(projectId, expIds);
+        if (overviewMap.size() != expIds.size()) {
             return Result.Error(ResultCode.SOME_EXPS_HAVE_NO_DEFAULT_OVERVIEW);
         }
+        if (overviewMap.values().stream().map(OverviewDO::getAnaLibId).collect(Collectors.toSet()).size() > 1) {
+            return Result.Error(ResultCode.OVERVIEWS_MUST_USE_THE_SAME_ANA_LIBRARY_ID);
+        }
+
+        LibraryDO anaLibId = libraryService.getById(overviewMap.get(expIds.get(0)).getAnaLibId());
 
         DataQuery query = new DataQuery();
 
