@@ -45,13 +45,14 @@ public class OverviewController {
     @PostMapping(value = "/update")
     Result<OverviewDO> update(
             @RequestParam("id") String id,
-            @RequestParam("tags") Set<String> tags,
-            @RequestParam("note") String note) {
+            @RequestParam(value = "defaultOne", required = false) Boolean defaultOne,
+            @RequestParam(value = "tags", required = false) Set<String> tags,
+            @RequestParam(value = "note", required = false) String note) {
         OverviewDO overview = overviewService.getById(id);
         if (overview == null) {
             return Result.Error(ResultCode.OVERVIEW_NOT_EXISTED);
         }
-
+        overview.setDefaultOne(defaultOne);
         overview.setNote(note);
         overview.setTags(tags);
         return overviewService.update(overview);

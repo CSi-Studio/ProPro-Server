@@ -14,6 +14,7 @@ import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.BlockIndexQuery;
+import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.service.*;
 import net.csibio.propro.utils.AnalyseUtil;
 import net.csibio.propro.utils.ConvolutionUtil;
@@ -388,6 +389,11 @@ public class Extractor {
         overview.setInsLibId(params.getInsLibId());
         overview.setName(exp.getName() + "-" + params.getInsLibName() + "-" + params.getAnaLibName() + "-" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
         overview.setNote(params.getNote());
+
+        Boolean exist = overviewService.exist(new OverviewQuery().setProjectId(exp.getProjectId()).setExpId(exp.getId()));
+        if (!exist) {
+            overview.setDefaultOne(true);
+        }
         Result result = overviewService.insert(overview);
         if (result.isFailed()) {
             log.error(result.getErrorMessage());
