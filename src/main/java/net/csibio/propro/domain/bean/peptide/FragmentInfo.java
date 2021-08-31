@@ -54,8 +54,7 @@ public class FragmentInfo {
             return false;
         }
 
-        if (obj instanceof FragmentInfo) {
-            FragmentInfo fragment = (FragmentInfo) obj;
+        if (obj instanceof FragmentInfo fragment) {
             if (cutInfo == null || fragment.getCutInfo() == null) {
                 return false;
             }

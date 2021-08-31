@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 @Service("SimulateService")
 public class SimulateServiceImpl implements SimulateService {
@@ -45,7 +44,7 @@ public class SimulateServiceImpl implements SimulateService {
             } else {
                 peak_group = simu.getYList();
             }
-            Set<FragmentInfo> fragments = peptideDO.getFragments();
+            List<FragmentInfo> fragments = peptideDO.getFragments();
             for (int i = 0; i <= peak_group.length - 1; i++) {
                 FragmentInfo fragment = new FragmentInfo();
                 fragment.setMz((double) peak_group[i][0]);
@@ -107,7 +106,7 @@ public class SimulateServiceImpl implements SimulateService {
     }
 
     @Override
-    public Set<FragmentInfo> singlePredictFragment(PeptideDO peptideDO, String spModel, boolean iso) {
+    public List<FragmentInfo> singlePredictFragment(PeptideDO peptideDO, String spModel, boolean iso) {
         if (spModel.equals("HCD")) {
             staticValue.parameter = new Parameters1();
         } else {
@@ -125,7 +124,7 @@ public class SimulateServiceImpl implements SimulateService {
         } else {
             peak_group = simu.getYList();
         }
-        Set<FragmentInfo> fragments = peptideDO.getFragments();
+        List<FragmentInfo> fragments = peptideDO.getFragments();
         for (int i = 0; i <= peak_group.length - 1; i++) {
             FragmentInfo fragment = new FragmentInfo();
             fragment.setMz((double) peak_group[i][0]);

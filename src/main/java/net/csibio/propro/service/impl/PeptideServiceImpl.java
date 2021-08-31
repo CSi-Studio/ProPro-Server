@@ -10,8 +10,8 @@ import net.csibio.propro.dao.BaseDAO;
 import net.csibio.propro.dao.LibraryDAO;
 import net.csibio.propro.dao.PeptideDAO;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.peptide.Protein;
-import net.csibio.propro.domain.bean.peptide.SimplePeptide;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.PeptideDO;
@@ -147,11 +147,11 @@ public class PeptideServiceImpl implements PeptideService {
     }
 
     @Override
-    public List<SimplePeptide> buildCoord4Irt(String libraryId, WindowRange mzRange) {
+    public List<PeptideCoord> buildCoord4Irt(String libraryId, WindowRange mzRange) {
         long start = System.currentTimeMillis();
         PeptideQuery query = new PeptideQuery(libraryId);
         query.setMzStart(mzRange.getStart()).setMzEnd(mzRange.getEnd());
-        List<SimplePeptide> targetList = getAll(query, SimplePeptide.class);
+        List<PeptideCoord> targetList = getAll(query, PeptideCoord.class);
         long dbTime = System.currentTimeMillis() - start;
         targetList.parallelStream().forEach(s -> s.setRtRange(-1, 99999));
         logger.info("构建提取EIC的MS2坐标(4Irt),总计" + targetList.size() + "条记录,读取标准库耗时:" + dbTime + "毫秒");
@@ -159,23 +159,23 @@ public class PeptideServiceImpl implements PeptideService {
     }
 
     @Override
-    public List<SimplePeptide> buildCoord(String libraryId, WindowRange mzRange, Double rtWindow, SlopeIntercept si) {
+    public List<PeptideCoord> buildCoord(String libraryId, WindowRange mzRange, Double rtWindow, SlopeIntercept si) {
         long start = System.currentTimeMillis();
         PeptideQuery query = new PeptideQuery(libraryId);
         query.setMzStart(mzRange.getStart()).setMzEnd(mzRange.getEnd());
-        List<SimplePeptide> targetList = getAll(query, SimplePeptide.class);
+        List<PeptideCoord> targetList = getAll(query, PeptideCoord.class);
         long dbTime = System.currentTimeMillis() - start;
 
         if (rtWindow != null) {
-            for (SimplePeptide simplePeptide : targetList) {
-                double iRt = (simplePeptide.getRt() - si.getIntercept()) / si.getSlope();
-                simplePeptide.setRtStart(iRt - rtWindow);
-                simplePeptide.setRtEnd(iRt + rtWindow);
+            for (PeptideCoord peptideCoord : targetList) {
+                double iRt = (peptideCoord.getRt() - si.getIntercept()) / si.getSlope();
+                peptideCoord.setRtStart(iRt - rtWindow);
+                peptideCoord.setRtEnd(iRt + rtWindow);
             }
         } else {
-            for (SimplePeptide simplePeptide : targetList) {
-                simplePeptide.setRtStart(-1);
-                simplePeptide.setRtEnd(99999);
+            for (PeptideCoord peptideCoord : targetList) {
+                peptideCoord.setRtStart(-1);
+                peptideCoord.setRtEnd(99999);
             }
         }
 

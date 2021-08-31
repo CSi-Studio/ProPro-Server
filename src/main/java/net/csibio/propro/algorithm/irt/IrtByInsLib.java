@@ -5,7 +5,7 @@ import net.csibio.aird.bean.Compressor;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.aird.parser.DIAParser;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.peptide.SimplePeptide;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.ExperimentDO;
@@ -51,7 +51,7 @@ public class IrtByInsLib extends Irt {
                 //Step1.按照步长获取SwathList的点位库
                 BlockIndexDO blockIndex = blockList.get(i);
                 //Step2.获取标准库的目标肽段片段的坐标
-                List<SimplePeptide> coords = peptideService.buildCoord4Irt(params.getIrtLibraryId(), blockIndex.getRange());
+                List<PeptideCoord> coords = peptideService.buildCoord4Irt(params.getIrtLibraryId(), blockIndex.getRange());
                 if (coords.size() == 0) {
                     log.warn("No iRT Targets Found,Rang:" + blockIndex.getRange().getStart() + ":" + blockIndex.getRange().getEnd());
                     continue;

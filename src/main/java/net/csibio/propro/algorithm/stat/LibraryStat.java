@@ -1,7 +1,7 @@
 package net.csibio.propro.algorithm.stat;
 
 import net.csibio.propro.domain.bean.common.StrIntPairs;
-import net.csibio.propro.domain.bean.peptide.PeptideS1;
+import net.csibio.propro.domain.bean.peptide.FragmentGroup;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.service.PeptideService;
@@ -26,16 +26,16 @@ public class LibraryStat {
         return library.getProteins().size();
     }
 
-    public long fragmentCount(List<PeptideS1> peptideList) {
-        return peptideList.stream().mapToLong(peptideS1 -> peptideS1.getFragments().size()).sum();
+    public long fragmentCount(List<FragmentGroup> peptideList) {
+        return peptideList.stream().mapToLong(fragmentGroup -> fragmentGroup.getFragments().size()).sum();
     }
 
     /**
      * @param peptideList
      * @param slice       一般设置为20
      */
-    public StrIntPairs mzDistList(List<PeptideS1> peptideList, int slice) {
-        peptideList = peptideList.stream().sorted(Comparator.comparing(PeptideS1::getMz)).collect(Collectors.toList());
+    public StrIntPairs mzDistList(List<FragmentGroup> peptideList, int slice) {
+        peptideList = peptideList.stream().sorted(Comparator.comparing(FragmentGroup::getMz)).collect(Collectors.toList());
         int maxMz = peptideList.get(peptideList.size() - 1).getMz().intValue();
         int minMz = peptideList.get(0).getMz().intValue();
         int maxRange = (maxMz / 100 + 1) * 100;
@@ -50,7 +50,7 @@ public class LibraryStat {
             add = minRange + (i + 1) * stage;
             temp = minRange + i * stage;
             int count = 0;
-            for (PeptideS1 peptide : peptideList) {
+            for (FragmentGroup peptide : peptideList) {
                 if (peptide.getMz() > temp && peptide.getMz() <= add) {
                     count = count + 1;
                 }
@@ -65,8 +65,8 @@ public class LibraryStat {
      * @param peptideList
      * @param slice       一般设置为20
      */
-    public StrIntPairs rtDistList(List<PeptideS1> peptideList, int slice) {
-        peptideList = peptideList.stream().sorted(Comparator.comparing(PeptideS1::getRt)).collect(Collectors.toList());
+    public StrIntPairs rtDistList(List<FragmentGroup> peptideList, int slice) {
+        peptideList = peptideList.stream().sorted(Comparator.comparing(FragmentGroup::getRt)).collect(Collectors.toList());
         int maxRt = peptideList.get(peptideList.size() - 1).getRt().intValue();
         int minRt = peptideList.get(0).getRt().intValue();
         int maxRange = (maxRt / 100 + 1) * 100;
@@ -76,7 +76,7 @@ public class LibraryStat {
         } else {
             minRange = (minRt / 100) * 100;
         }
-        
+
         int stage = (maxRange - minRange) / slice;
         int add = 0;
         int temp = 0;
@@ -87,7 +87,7 @@ public class LibraryStat {
             add = minRange + (i + 1) * stage;
             temp = minRange + i * stage;
             int count = 0;
-            for (PeptideS1 peptide : peptideList) {
+            for (FragmentGroup peptide : peptideList) {
                 if (peptide.getRt() > temp && peptide.getRt() <= add) {
                     count = count + 1;
                 }

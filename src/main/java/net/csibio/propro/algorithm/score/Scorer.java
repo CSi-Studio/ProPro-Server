@@ -7,7 +7,7 @@ import net.csibio.propro.algorithm.fitter.LinearFitter;
 import net.csibio.propro.algorithm.peak.*;
 import net.csibio.propro.algorithm.score.features.*;
 import net.csibio.propro.constants.enums.IdentifyStatus;
-import net.csibio.propro.domain.bean.peptide.SimplePeptide;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.FeatureScores;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.PeptideFeature;
@@ -68,7 +68,7 @@ public class Scorer {
     @Autowired
     BlockIndexService blockIndexService;
 
-    public void scoreForOne(ExperimentDO exp, DataDO dataDO, SimplePeptide peptide, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public void scoreForOne(ExperimentDO exp, DataDO dataDO, PeptideCoord peptide, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
 
         if (dataDO.getIntensityMap() == null || dataDO.getIntensityMap().size() <= peptide.getFragments().size() / 2) {
             dataDO.setStatus(IdentifyStatus.NO_FIT.getCode());
@@ -90,7 +90,8 @@ public class Scorer {
         HashMap<String, Float> productMzMap = new HashMap<>();
         HashMap<String, Integer> productChargeMap = new HashMap<>();
 
-        for (String cutInfo : dataDO.getMzMap().keySet()) {
+        for (int i = 0; i < dataDO.getCutInfos().size(); i++) {
+            String cutInfo = dataDO.getCutInfos().get(i);
             try {
                 if (cutInfo.contains("^")) {
                     String temp = cutInfo;
@@ -109,7 +110,7 @@ public class Scorer {
                 log.info("cutInfo:" + cutInfo + ";data:" + JSON.toJSONString(dataDO));
             }
 
-            float mz = dataDO.getMzMap().get(cutInfo);
+            float mz = peptide.getFragments().get(i).getMz().floatValue();
             productMzMap.put(cutInfo, mz);
         }
 
@@ -170,7 +171,7 @@ public class Scorer {
         dataDO.setFeatureScoresList(featureScoresList);
     }
 
-    public void strictScoreForOne(DataDO dataDO, SimplePeptide peptide, double shapeScoreThreshold) {
+    public void strictScoreForOne(DataDO dataDO, PeptideCoord peptide, double shapeScoreThreshold) {
         if (dataDO.getIntensityMap() == null || dataDO.getIntensityMap().size() < peptide.getFragments().size()) {
             dataDO.setStatus(IdentifyStatus.NO_FIT.getCode());
             return;

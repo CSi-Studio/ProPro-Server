@@ -41,10 +41,10 @@ public class DataDO extends BaseDO {
     Double qValue; //最终给出的qValue
 
     Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得
-    Double realRt;//最终选出的最佳峰RT,即算法认为的实际rt
-    Double libMz; //该肽段的前体mz,从标准库中冗余所得
-    Double realMz;  //算法认为的实际mz
-    HashMap<String, Float> mzMap = new HashMap<>();  //key为cutInfo, value为对应的mz
+    //Double libMz; //该肽段的前体mz,从标准库中冗余所得
+
+    //冗余的peptide切片信息
+    List<String> cutInfos;
 
     List<FeatureScores> featureScoresList;
 
@@ -53,12 +53,11 @@ public class DataDO extends BaseDO {
     //最终的定量值
     String fragIntFeature;
 
-    //*******************非数据库字段*******************************
-    //排序后的rt,仅在解压缩的时候使用,不存入数据库
+    //*******************非数据库字段,仅在计算过程中产生*******************************
     @Transient
-    Float[] rtArray;
-
-    //key为cutInfo, value为对应的intensity值,仅在解压缩的时候使用,不存入数据库
+    Float[] rtArray;  //排序后的rt
     @Transient
-    HashMap<String, float[]> intensityMap = new HashMap<>();
+    HashMap<String, float[]> intensityMap = new HashMap<>();  //key为cutInfo, value为对应的intensity值列表(也即该碎片的光谱图信息)
+    @Transient
+    Float[] mzs; //每一个切片对应的mz,与cutInfos数组长度相同且一一对应
 }

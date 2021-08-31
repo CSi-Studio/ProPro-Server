@@ -2,8 +2,8 @@ package net.csibio.propro.service;
 
 import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.peptide.Protein;
-import net.csibio.propro.domain.bean.peptide.SimplePeptide;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
 import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.domain.query.PeptideQuery;
@@ -40,7 +40,7 @@ public interface PeptideService extends BaseService<PeptideDO, PeptideQuery> {
      */
     Long countByProteinName(String libraryId);
 
-    List<SimplePeptide> buildCoord4Irt(String libraryId, WindowRange mzRange);
+    List<PeptideCoord> buildCoord4Irt(String libraryId, WindowRange mzRange);
 
     /**
      * 根据分析参数动态构建符合条件的目标肽段
@@ -51,7 +51,7 @@ public interface PeptideService extends BaseService<PeptideDO, PeptideQuery> {
      * @param si        斜率截距
      * @return
      */
-    List<SimplePeptide> buildCoord(String libraryId, WindowRange mzRange, Double rtWindow, SlopeIntercept si);
+    List<PeptideCoord> buildCoord(String libraryId, WindowRange mzRange, Double rtWindow, SlopeIntercept si);
 
     /**
      * 根据PeptideRef生成一个全新的PeptideDO

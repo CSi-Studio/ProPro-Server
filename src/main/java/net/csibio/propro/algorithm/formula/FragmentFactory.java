@@ -5,7 +5,6 @@ import net.csibio.propro.algorithm.parser.model.chemistry.AminoAcid;
 import net.csibio.propro.algorithm.parser.model.chemistry.Unimod;
 import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.constants.constant.ResidueType;
-
 import net.csibio.propro.domain.bean.peptide.Annotation;
 import net.csibio.propro.domain.bean.peptide.Fragment;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
@@ -20,7 +19,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by James Lu MiaoShan
@@ -102,8 +103,8 @@ public class FragmentFactory {
      * @param limitLength 生成的B,Y离子的最小长度
      * @return
      */
-    public Set<FragmentInfo> buildFragmentMap(PeptideDO peptideDO, int limitLength, List<String> ionTypes, List<Integer> chargeTypes) {
-        HashSet<FragmentInfo> fragmentSet = new HashSet<>();
+    public List<FragmentInfo> buildFragmentMap(PeptideDO peptideDO, int limitLength, List<String> ionTypes, List<Integer> chargeTypes) {
+        List<FragmentInfo> fragmentSet = new ArrayList<>();
         String sequence = peptideDO.getSequence();
         int length = sequence.length();
         if (length < limitLength) {

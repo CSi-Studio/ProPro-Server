@@ -9,8 +9,14 @@ import java.util.List;
 @Data
 public class IrtResult {
 
+    /**
+     * 参与irt的库id(可能是标准库也可能是内标库)
+     */
     String libraryId;
 
+    /**
+     * 斜率与截距
+     */
     SlopeIntercept si;
 
     /**
@@ -21,7 +27,6 @@ public class IrtResult {
 
     /**
      * 未选中的Peptide序列, 长度与unselected中数组长度一致
-     * <p>
      * unselected peptides
      */
     List<String> usp;
