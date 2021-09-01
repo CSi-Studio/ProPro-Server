@@ -48,6 +48,44 @@ public class Extractor {
     TaskService taskService;
 
     /**
+     * 根据coord肽段坐标读取exp对应的aird文件中涉及的相关光谱图
+     *
+     * @param exp
+     * @param coord
+     * @return
+     */
+    public Result<TreeMap<Float, MzIntensityPairs>> getRtMap(ExperimentDO exp, PeptideCoord coord) {
+        Result checkResult = ConvolutionUtil.checkExperiment(exp);
+        if (checkResult.isFailed()) {
+            log.error("条件检查失败:" + checkResult.getErrorMessage());
+            return checkResult;
+        }
+
+        Compressor mzCompressor = exp.fetchCompressor(Compressor.TARGET_MZ);
+        Compressor intCompressor = exp.fetchCompressor(Compressor.TARGET_INTENSITY);
+
+        //Step1.获取窗口信息
+        TreeMap<Float, MzIntensityPairs> rtMap;
+        BlockIndexDO index = blockIndexService.getOne(exp.getId(), coord.getMz().floatValue());
+        if (index == null) {
+            return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
+        }
+        DIAParser parser = null;
+        try {
+            parser = new DIAParser(exp.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
+            rtMap = parser.getSpectrums(index.getStartPtr(), index.getEndPtr(), index.getRts(), index.getMzs(), index.getInts());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Result.Error(ResultCode.PARSE_ERROR);
+        } finally {
+            if (parser != null) {
+                parser.close();
+            }
+        }
+        return Result.OK(rtMap);
+    }
+
+    /**
      * 提取XIC的核心函数,最终返回提取到XIC的Peptide数目
      * 目前只支持MS2的XIC提取
      *
@@ -73,55 +111,36 @@ public class Extractor {
     }
 
     /**
-     * 实时提取某一个PeptideRef的XIC图谱,即全时间段XIC提取
+     * 实时提取某一个PeptideRef的XIC图谱
+     * 其中Exp如果没有包含irt结果,则会进行全rt进行搜索
      * 不适合用于大批量处理
      *
      * @param exp
-     * @param peptide
+     * @param coord
      * @return
      */
-    public Result<DataDO> extractOne(ExperimentDO exp, PeptideDO peptide, AnalyzeParams params) {
-        Result checkResult = ConvolutionUtil.checkExperiment(exp);
-        if (checkResult.isFailed()) {
-            log.error("条件检查失败:" + checkResult.getErrorMessage());
-            return checkResult;
+    public Result<DataDO> extractOne(ExperimentDO exp, PeptideCoord coord, AnalyzeParams params) {
+        Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(exp, coord);
+        if (rtMapResult.isFailed()) {
+            return Result.Error(ResultCode.PARSE_ERROR);
         }
 
-        Compressor mzCompressor = exp.fetchCompressor(Compressor.TARGET_MZ);
-        Compressor intCompressor = exp.fetchCompressor(Compressor.TARGET_INTENSITY);
-        DIAParser parser = new DIAParser(exp.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
-        //Step1.获取窗口信息.
-        BlockIndexQuery query = new BlockIndexQuery(exp.getId(), 2);
-        query.setMz(peptide.getMz().floatValue());
-        BlockIndexDO swathIndexDO;
-        TreeMap<Float, MzIntensityPairs> rtMap;
-        swathIndexDO = blockIndexService.getOne(exp.getId(), peptide.getMz().floatValue());
-        if (swathIndexDO == null) {
-            return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
-        }
-        rtMap = parser.getSpectrums(swathIndexDO.getStartPtr(), swathIndexDO.getEndPtr(), swathIndexDO.getRts(), swathIndexDO.getMzs(), swathIndexDO.getInts());
-
-        parser.close();
-
-        PeptideCoord tp = new PeptideCoord(peptide);
-        Double rt = peptide.getRt();
+        Double rt = coord.getRt();
         if (params.getMethod().getEic().getRtWindow() == -1) {
-            tp.setRtStart(-1);
-            tp.setRtEnd(99999);
+            coord.setRtStart(-1);
+            coord.setRtEnd(99999);
         } else {
-            Double targetRt = (rt - exp.getIrt().getSi().getIntercept()) / exp.getIrt().getSi().getSlope();
-            tp.setRtStart(targetRt - params.getMethod().getEic().getRtWindow());
-            tp.setRtEnd(targetRt + params.getMethod().getEic().getRtWindow());
+            Double targetRt = exp.getIrt().getSi().realRt(rt);
+            coord.setRtStart(targetRt - params.getMethod().getEic().getRtWindow());
+            coord.setRtEnd(targetRt + params.getMethod().getEic().getRtWindow());
         }
 
-        DataDO dataDO = extractOne(tp, rtMap, params, null);
+        DataDO dataDO = extractOne(coord, rtMapResult.getData(), params, null);
         if (dataDO == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }
 
-        Result<DataDO> resultDO = new Result<DataDO>(true);
-        resultDO.setData(dataDO);
-        return resultDO;
+        return Result.OK(dataDO);
     }
 
     /**
@@ -167,7 +186,7 @@ public class Extractor {
         }
     }
 
-    private DataDO extractOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public DataDO extractOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         return extractOne(coord, rtMap, params, null);
     }
 
@@ -231,7 +250,6 @@ public class Extractor {
                 isHit = true;
                 data.getIntensityMap().put(fi.getCutInfo(), intArray); //记录每一个碎片的光谱图
             }
-            //data.getMzMap().put(fi.getCutInfo(), fi.getMz().floatValue());
         }
 
         //如果所有的片段均没有提取到XIC的结果,则直接返回null
@@ -318,7 +336,6 @@ public class Extractor {
         //Step3.提取指定原始谱图
         rtMap = parser.getSpectrums(swathIndex.getStartPtr(), swathIndex.getEndPtr(), swathIndex.getRts(), swathIndex.getMzs(), swathIndex.getInts());
         return epps(exp, coords, rtMap, params);
-
     }
 
     /**
