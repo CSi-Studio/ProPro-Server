@@ -56,7 +56,7 @@ public class ExperimentController {
         if (expList != null) {
             for (int i = 0; i < expList.size(); i++) {
                 ExperimentDO exp = expList.get(i);
-                exp.setAlias(i + 1 + "");
+                exp.setAlias("Exp-" + (i + 1) + "");
                 experimentService.update(exp);
             }
         }
