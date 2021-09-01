@@ -26,6 +26,7 @@ public class DataDO extends BaseDO {
     String overviewId;
     @Indexed
     String peptideRef;
+
     //是否是伪肽段
     @Indexed
     Boolean decoy = false;
@@ -33,7 +34,7 @@ public class DataDO extends BaseDO {
     Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得
 
     Integer status;
-    
+
     //冗余的peptide切片信息
     List<String> cutInfos;
 

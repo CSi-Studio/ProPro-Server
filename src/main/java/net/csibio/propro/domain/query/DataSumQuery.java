@@ -13,7 +13,7 @@ public class DataSumQuery extends PageQuery {
     String id;
 
     String overviewId;
-    
+
     String peptideRef;
 
     Boolean decoy;
@@ -23,10 +23,6 @@ public class DataSumQuery extends PageQuery {
     Double fdrStart;
 
     Double fdrEnd;
-
-    Double qValueStart;
-
-    Double qValueEnd;
 
     public DataSumQuery() {
     }
@@ -41,7 +37,7 @@ public class DataSumQuery extends PageQuery {
 
     public void addStatus(Integer status) {
         if (status == null) {
-            statusList = new ArrayList();
+            statusList = new ArrayList<Integer>();
         }
         statusList.add(status);
     }

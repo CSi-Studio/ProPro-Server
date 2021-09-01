@@ -15,7 +15,7 @@ public class DataQuery extends PageQuery {
     String overviewId;
 
     String peptideRef;
-
+    
     String protein;
 
     Boolean decoy;

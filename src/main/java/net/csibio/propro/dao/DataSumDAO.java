@@ -55,9 +55,9 @@ public class DataSumDAO extends BaseMultiDAO<DataSumDO, DataSumQuery> {
         if (dataSumQuery.getFdrStart() != null || dataSumQuery.getFdrEnd() != null) {
             query.addCriteria(where("fdr").gte(dataSumQuery.getFdrStart() == null ? 0 : dataSumQuery.getFdrStart()).lte(dataSumQuery.getFdrEnd() == null ? 1 : dataSumQuery.getFdrEnd()));
         }
-        if (dataSumQuery.getQValueStart() != null || dataSumQuery.getQValueEnd() != null) {
-            query.addCriteria(where("qValue").gte(dataSumQuery.getQValueStart() == null ? 0 : dataSumQuery.getQValueStart()).lte(dataSumQuery.getQValueEnd() == null ? 1 : dataSumQuery.getQValueEnd()));
-        }
+//        if (dataSumQuery.getQValueStart() != null || dataSumQuery.getQValueEnd() != null) {
+//            query.addCriteria(where("qValue").gte(dataSumQuery.getQValueStart() == null ? 0 : dataSumQuery.getQValueStart()).lte(dataSumQuery.getQValueEnd() == null ? 1 : dataSumQuery.getQValueEnd()));
+//        }
         if (dataSumQuery.getStatusList() != null) {
             query.addCriteria(where("status").in(dataSumQuery.getStatusList()));
         }
