@@ -10,6 +10,7 @@ import net.csibio.propro.dao.BaseDAO;
 import net.csibio.propro.dao.LibraryDAO;
 import net.csibio.propro.dao.PeptideDAO;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.peptide.Protein;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
@@ -223,12 +224,12 @@ public class PeptideServiceImpl implements PeptideService {
         peptideQuery.setLibraryId(libraryId);
         peptideQuery.setProtein(proteinName);
         List<PeptideDO> peptideList = getAll(peptideQuery);
-        Map<String,Double[]> swath = new HashMap<>();
-        for(PeptideDO pp : peptideList){
-            for(WindowRange windowRange:windowRanges){
-                if(pp.getMz()<=windowRange.getEnd() && pp.getMz()>=windowRange.getStart() ){
-                    Double[] dd = new Double[]{windowRange.getStart(),windowRange.getEnd()};
-                    swath.put(pp.getPeptideRef(),dd);
+        Map<String, Double[]> swath = new HashMap<>();
+        for (PeptideDO pp : peptideList) {
+            for (WindowRange windowRange : windowRanges) {
+                if (pp.getMz() <= windowRange.getEnd() && pp.getMz() >= windowRange.getStart()) {
+                    Double[] dd = new Double[]{windowRange.getStart(), windowRange.getEnd()};
+                    swath.put(pp.getPeptideRef(), dd);
                 }
             }
         }
@@ -242,7 +243,7 @@ public class PeptideServiceImpl implements PeptideService {
             SourceNode sourceNode = new SourceNode();
             String peptideRef = peptide.getPeptideRef();
             sourceNode.setId(peptideRef);
-            sourceNode.setValue(new double[]{peptide.getMz(),peptide.getRt()});
+            sourceNode.setValue(new double[]{peptide.getMz(), peptide.getRt()});
             sourceNode.setSymbolSize(24.266666666666666);
             sourceNode.setCategory(0);
             sourceNode.setName(peptideRef);
@@ -256,7 +257,7 @@ public class PeptideServiceImpl implements PeptideService {
                 SourceNode sourceNodeFragment = new SourceNode();
                 sourceNodeFragment.setName(fragment.getCutInfo());
                 sourceNodeFragment.setId(peptideRef + "-" + fragment.getCutInfo());
-                double[] d = new double[]{fragment.getMz(),peptide.getRt(), fragment.getIntensity()};
+                double[] d = new double[]{fragment.getMz(), peptide.getRt(), fragment.getIntensity()};
                 sourceNodeFragment.setValue(d);
                 sourceNodeFragment.setCategory(0);
                 sourceNodeFragment.setSymbolSize(5.295237333333333);
@@ -266,33 +267,33 @@ public class PeptideServiceImpl implements PeptideService {
                 sourceLink.setSource(sourceNodeFragment.getId());
                 sourceLink.setTarget(peptideRef);
                 sourceLinks.add(sourceLink);
-                }
-                SourceCategory sourceCategory = new SourceCategory();
-                sourceCategory.setName("类目"+i);
-                finalMap.get("nodes").addAll(sourceNodes);
-                finalMap.get("links").addAll(sourceLinks);
-                finalMap.get("categories").add(sourceCategory);
             }
+            SourceCategory sourceCategory = new SourceCategory();
+            sourceCategory.setName("类目" + i);
+            finalMap.get("nodes").addAll(sourceNodes);
+            finalMap.get("links").addAll(sourceLinks);
+            finalMap.get("categories").add(sourceCategory);
+        }
         List<SourceNode> sourceNodeWithOutPet = new ArrayList<>();
-        Map<String,double[]> fragMap = new HashMap<>();
-        for(Object ss:finalMap.get("nodes")){
+        Map<String, double[]> fragMap = new HashMap<>();
+        for (Object ss : finalMap.get("nodes")) {
             SourceNode tt = (SourceNode) ss;
-            if(tt.getSymbolSize()==5.295237333333333){
+            if (tt.getSymbolSize() == 5.295237333333333) {
                 sourceNodeWithOutPet.add(tt);
-                fragMap.put(tt.getId(),tt.getValue());
+                fragMap.put(tt.getId(), tt.getValue());
             }
         }
         List<Object> intensityList = new ArrayList<>();
-        for(int st=0;st<sourceNodeWithOutPet.size();st++) {
+        for (int st = 0; st < sourceNodeWithOutPet.size(); st++) {
             for (int sts = st + 1; sts < sourceNodeWithOutPet.size(); sts++) {
-                if (Math.abs(sourceNodeWithOutPet.get(st).getValue()[0] - sourceNodeWithOutPet.get(sts).getValue()[0]) <= range ) {
+                if (Math.abs(sourceNodeWithOutPet.get(st).getValue()[0] - sourceNodeWithOutPet.get(sts).getValue()[0]) <= range) {
                     SourceLinkUtil stLink = new SourceLinkUtil();
                     stLink.setSource(sourceNodeWithOutPet.get(sts).getId());
                     stLink.setTarget(sourceNodeWithOutPet.get(st).getId());
                     finalMap.get("links").add(stLink);
-                    if(sourceNodeWithOutPet.get(st).getValue().length==3 && sourceNodeWithOutPet.get(sts).getValue().length==3){
+                    if (sourceNodeWithOutPet.get(st).getValue().length == 3 && sourceNodeWithOutPet.get(sts).getValue().length == 3) {
                         SourceLinkUtil intensityDesc = new SourceLinkUtil();
-                        intensityDesc.setValue(Math.abs(sourceNodeWithOutPet.get(st).getValue()[2]-sourceNodeWithOutPet.get(sts).getValue()[2])/sourceNodeWithOutPet.get(st).getValue()[2]);
+                        intensityDesc.setValue(Math.abs(sourceNodeWithOutPet.get(st).getValue()[2] - sourceNodeWithOutPet.get(sts).getValue()[2]) / sourceNodeWithOutPet.get(st).getValue()[2]);
                         intensityDesc.setSource(sourceNodeWithOutPet.get(sts).getId());
                         intensityDesc.setTarget(sourceNodeWithOutPet.get(st).getId());
                         intensityList.add(intensityDesc);
@@ -303,23 +304,23 @@ public class PeptideServiceImpl implements PeptideService {
         List<PeptideDO> allByLibraryId = getAllByLibraryId(libraryId);
         allByLibraryId.removeAll(peptideList);
         List<PeptideDO> removeNull = new ArrayList<>();
-        for(PeptideDO peptideDO:allByLibraryId){
-            if(peptideDO.getProteins()!=null){
+        for (PeptideDO peptideDO : allByLibraryId) {
+            if (peptideDO.getProteins() != null) {
                 removeNull.add(peptideDO);
             }
         }
-        AtomicInteger c= new AtomicInteger();
+        AtomicInteger c = new AtomicInteger();
         removeNull.forEach(peptideDO -> {
-            if(c.get()%1000==0){
-                logger.info("已经循环"+c.get()+"次");
+            if (c.get() % 1000 == 0) {
+                logger.info("已经循环" + c.get() + "次");
             }
-            Set<FragmentInfo> fragments = peptideDO.getFragments();
-            fragments.forEach(fragment ->{
-                for(SourceNode sourceNode:sourceNodeWithOutPet){
+            List<FragmentInfo> fragments = peptideDO.getFragments();
+            fragments.forEach(fragment -> {
+                for (SourceNode sourceNode : sourceNodeWithOutPet) {
                     String[] peptideRef = sourceNode.getId().split("-");
                     String s = peptideRef[0];
-                    if(peptideDO.getMz()<=swath.get(s)[1] && peptideDO.getMz()>=swath.get(s)[0]){
-                        if(Math.abs(sourceNode.getValue()[0]-fragment.getMz())<range){
+                    if (peptideDO.getMz() <= swath.get(s)[1] && peptideDO.getMz() >= swath.get(s)[0]) {
+                        if (Math.abs(sourceNode.getValue()[0] - fragment.getMz()) < range) {
                             SourceNode node = new SourceNode();
                             SourceNode fNode = new SourceNode();
                             node.setSymbol("triangle");
@@ -327,11 +328,11 @@ public class PeptideServiceImpl implements PeptideService {
                             node.setCategory(1);
                             fNode.setCategory(1);
                             node.setId(peptideDO.getPeptideRef());
-                            fNode.setId(peptideDO.getPeptideRef()+"-"+fragment.getCutInfo());
+                            fNode.setId(peptideDO.getPeptideRef() + "-" + fragment.getCutInfo());
                             node.setCategory(1);
                             fNode.setCategory(1);
-                            node.setValue(new double[]{peptideDO.getMz(),peptideDO.getRt()});
-                            fNode.setValue(new double[]{fragment.getMz(),peptideDO.getRt(), fragment.getIntensity()});
+                            node.setValue(new double[]{peptideDO.getMz(), peptideDO.getRt()});
+                            fNode.setValue(new double[]{fragment.getMz(), peptideDO.getRt(), fragment.getIntensity()});
                             node.setSymbolSize(20.266666666666666);
                             fNode.setSymbolSize(5.295237333333333);
                             node.setName(peptideDO.getPeptideRef());
@@ -342,14 +343,14 @@ public class PeptideServiceImpl implements PeptideService {
                             SourceLinkUtil sourceLinkF = new SourceLinkUtil();
                             sourceLinkF.setSource(fNode.getId());
                             sourceLinkF.setTarget(sourceNode.getId());
-                            if(fNode.getValue().length==3 && sourceNode.getValue().length==3){
+                            if (fNode.getValue().length == 3 && sourceNode.getValue().length == 3) {
                                 SourceLinkUtil intensityDesc = new SourceLinkUtil();
-                                intensityDesc.setValue(fNode.getValue()[2]/sourceNode.getValue()[2]);
+                                intensityDesc.setValue(fNode.getValue()[2] / sourceNode.getValue()[2]);
                                 intensityDesc.setSource(fNode.getId());
                                 intensityDesc.setTarget(sourceNode.getId());
                                 intensityList.add(intensityDesc);
                             }
-                            sourceLinkF.setValue(Math.abs(peptideDO.getRt()-sourceNode.getValue()[1]));
+                            sourceLinkF.setValue(Math.abs(peptideDO.getRt() - sourceNode.getValue()[1]));
                             finalMap.get("nodes").add(node);
                             finalMap.get("nodes").add(fNode);
                             finalMap.get("links").add(sourceLinkP);
@@ -366,7 +367,7 @@ public class PeptideServiceImpl implements PeptideService {
         finalMap.remove("nodes");
         List<Object> finalList = new ArrayList<>();
         finalList.addAll(removeRepeat);
-        finalMap.put("nodes",finalList);
+        finalMap.put("nodes", finalList);
         SourceCategory sourceCategory = new SourceCategory();
         sourceCategory.setName("本蛋白肽段");
         SourceCategory sourceCategory2 = new SourceCategory();
@@ -375,9 +376,9 @@ public class PeptideServiceImpl implements PeptideService {
         finalMap.get("categories").add(sourceCategory);
         finalMap.get("categories").add(sourceCategory2);
         Result result = new Result();
-        Map<String,Integer>  linMap= new HashMap<>();
+        Map<String, Integer> linMap = new HashMap<>();
         List<Object> links = finalMap.get("links");
-        for(Object object:links) {
+        for (Object object : links) {
             SourceLinkUtil sourceLinkUtil = (SourceLinkUtil) object;
             if (sourceLinkUtil.getTarget().contains("-") && sourceLinkUtil.getSource().contains("-")) {
                 if (linMap.containsKey(sourceLinkUtil.getTarget())) {
@@ -388,17 +389,17 @@ public class PeptideServiceImpl implements PeptideService {
                 }
             }
         }
-        List<Object> list =new ArrayList<>();
-        for(String key:linMap.keySet()){
+        List<Object> list = new ArrayList<>();
+        for (String key : linMap.keySet()) {
             SourcePeptideLinkNumber sourcePeptideLinkNumber = new SourcePeptideLinkNumber();
             sourcePeptideLinkNumber.setName(key);
             sourcePeptideLinkNumber.setNumber(linMap.get(key));
             list.add(sourcePeptideLinkNumber);
         }
-        finalMap.put("count",list);
-        finalMap.put("intensity",intensityList);
+        finalMap.put("count", list);
+        finalMap.put("intensity", intensityList);
         result.setData(finalMap);
         return result;
-        }
     }
+}
 
