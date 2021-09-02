@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.overview.OverviewV1;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.service.OverviewService;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -53,13 +55,23 @@ public class OverviewController {
         if (overview == null) {
             return Result.Error(ResultCode.OVERVIEW_NOT_EXISTED);
         }
+        //如果将默认设置为true,那么会清理改exp下的所有overview状态为false
+        if (defaultOne) {
+            List<OverviewV1> v1List = overviewService.getAll(new OverviewQuery().setExpId(overview.getExpId()), OverviewV1.class);
+            HashMap<String, Object> query = new HashMap<>();
+            query.put("expId", overview.getExpId());
+
+            HashMap<String, Object> field = new HashMap<>();
+            field.put("defaultOne", false);
+            overviewService.updateAll(query, field);
+        }
+
         overview.setDefaultOne(defaultOne);
         overview.setNote(note);
         overview.setTags(tags);
         return overviewService.update(overview);
     }
-
-
+    
     @PostMapping(value = "/batchUpdate")
     Result batchUpdate(
             @RequestParam("ids") List<String> ids,

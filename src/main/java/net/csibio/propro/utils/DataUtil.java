@@ -3,17 +3,45 @@ package net.csibio.propro.utils;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.domain.db.DataDO;
 
+import java.util.HashMap;
+
 @Slf4j
 public class DataUtil {
 
-    public static void clear(DataDO data) {
+    public static void clearOrigin(DataDO data) {
         data.setRtArray(null);
         data.setIntensityMap(null);
+        data.setCutInfoMap(null);
+    }
+
+    public static void clearCompressed(DataDO data) {
+        data.setRtsBytes(null);
+        data.setIntMapBytes(null);
+        data.setCutInfosFeature(null);
     }
 
     public static void compress(DataDO data) {
-
+        data.setRtsBytes(CompressUtil.compressedToBytes(data.getRtArray()));
+        HashMap<String, byte[]> intMap = new HashMap<>();
+        data.getIntensityMap().forEach((key, value) -> {
+            intMap.put(key, CompressUtil.compressedToBytes(value));
+        });
+        data.setIntMapBytes(intMap);
+        data.setCutInfosFeature(FeatureUtil.toString(data.getCutInfoMap()));
+        clearOrigin(data);
     }
+
+    public static void decompress(DataDO data) {
+        data.setRtArray(CompressUtil.transToFloat(data.getRtsBytes()));
+        HashMap<String, float[]> intensityMap = new HashMap<>();
+        data.getIntMapBytes().forEach((key, value) -> {
+            intensityMap.put(key, CompressUtil.transToFloat(value));
+        });
+        data.setIntensityMap(intensityMap);
+        data.setCutInfoMap(FeatureUtil.toFloatMap(data.getCutInfosFeature()));
+        clearCompressed(data);
+    }
+
 
     public static String getDataRef(String overviewId, String peptideRef, Boolean decoy) {
         return overviewId + "-" + peptideRef + "-" + decoy;

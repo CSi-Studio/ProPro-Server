@@ -95,9 +95,6 @@ public class Scorer {
             productChargeMap.put(key, charge);
             productMzMap.put(key, value);
         });
-        for (int i = 0; i < dataDO.getCutInfoMap().keySet().size(); i++) {
-
-        }
 
         HashMap<Integer, String> unimodHashMap = peptide.getUnimodMap();
         String sequence = peptide.getSequence();

@@ -16,12 +16,12 @@ public class FeatureUtil {
      * @param attrs
      * @return
      */
-    public static final String toString(Map<String, Double> attrs) {
+    public static final <T> String toString(Map<String, T> attrs) {
         StringBuilder sb = new StringBuilder();
         if (null != attrs && !attrs.isEmpty()) {
             sb.append(SP);
-            Set<Map.Entry<String, Double>> entrySet = attrs.entrySet();
-            for (Map.Entry<String, Double> entry : entrySet) {
+            Set<Map.Entry<String, T>> entrySet = attrs.entrySet();
+            for (Map.Entry<String, T> entry : entrySet) {
                 String key = entry.getKey();
                 String val = entry.getValue().toString();
                 sb.append(key).append(SSP).append(val).append(SP);
@@ -47,7 +47,7 @@ public class FeatureUtil {
      * @param str (格式比如为: "k:v;k:v;k:v")
      * @return
      */
-    public static final Map<String, Double> toMap(String str) {
+    public static final Map<String, Double> toDoubleMap(String str) {
         Map<String, Double> attrs = new HashMap<>();
         if (str != null) {
             String[] arr = str.split(SP);
@@ -56,6 +56,29 @@ public class FeatureUtil {
                 if (ar.length == 2) {
                     String k = ar[0];
                     Double v = Double.parseDouble(ar[1]);
+                    attrs.put(k, v);
+                }
+            }
+        }
+        return attrs;
+    }
+
+
+    /**
+     * 通过字符串解析成attributes
+     *
+     * @param str (格式比如为: "k:v;k:v;k:v")
+     * @return
+     */
+    public static final HashMap<String, Float> toFloatMap(String str) {
+        HashMap<String, Float> attrs = new HashMap<>();
+        if (str != null) {
+            String[] arr = str.split(SP);
+            for (String kv : arr) {
+                String[] ar = kv.split(SSP);
+                if (ar.length == 2) {
+                    String k = ar[0];
+                    Float v = Float.parseFloat(ar[1]);
                     attrs.put(k, v);
                 }
             }

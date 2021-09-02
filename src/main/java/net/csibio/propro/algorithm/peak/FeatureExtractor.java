@@ -82,7 +82,7 @@ public class FeatureExtractor {
         //计算GaussFilter
         Double[] rtDoubleArray = new Double[data.getRtArray().length];
         for (int k = 0; k < rtDoubleArray.length; k++) {
-            rtDoubleArray[k] = Double.parseDouble(data.getRtArray()[k].toString());
+            rtDoubleArray[k] = Double.parseDouble(data.getRtArray()[k] + "");
         }
         PeptideSpectrum peptideSpectrum = new PeptideSpectrum(rtDoubleArray, intensitiesMap);
         HashMap<String, Double[]> smoothIntensitiesMap = gaussFilter.filter(rtDoubleArray, intensitiesMap, ss);

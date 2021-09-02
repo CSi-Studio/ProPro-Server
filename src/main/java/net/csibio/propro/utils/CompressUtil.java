@@ -124,7 +124,7 @@ public class CompressUtil {
         return targetStr;
     }
 
-    public static byte[] transToByte(int[] target) {
+    public static byte[] compressedToBytes(int[] target) {
         IntBuffer ibTarget = IntBuffer.wrap(target);
         ByteBuffer bbTarget = ByteBuffer.allocate(ibTarget.capacity() * 4);
         bbTarget.asIntBuffer().put(ibTarget);
@@ -133,7 +133,7 @@ public class CompressUtil {
         return compressedArray;
     }
 
-    public static byte[] transToByte(float[] target) {
+    public static byte[] compressedToBytes(float[] target) {
         FloatBuffer fbTarget = FloatBuffer.wrap(target);
         ByteBuffer bbTarget = ByteBuffer.allocate(fbTarget.capacity() * 4);
         bbTarget.asFloatBuffer().put(fbTarget);
@@ -142,12 +142,12 @@ public class CompressUtil {
         return compressedArray;
     }
 
-    public static Float[] transToFloat(byte[] value){
+    public static float[] transToFloat(byte[] value) {
         ByteBuffer byteBuffer = ByteBuffer.wrap(value);
         byteBuffer = ByteBuffer.wrap(CompressUtil.zlibDecompress(byteBuffer.array()));
 
         FloatBuffer floats = byteBuffer.asFloatBuffer();
-        Float[] floatValues = new Float[floats.capacity()];
+        float[] floatValues = new float[floats.capacity()];
         for (int i = 0; i < floats.capacity(); i++) {
             floatValues[i] = floats.get(i);
         }

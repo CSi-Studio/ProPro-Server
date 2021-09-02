@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component("extractor")
@@ -203,8 +204,10 @@ public class Extractor {
             }
         }
 
-        Float[] rtArray = new Float[rtList.size()];
-        rtList.toArray(rtArray);
+        float[] rtArray = new float[rtList.size()];
+        for (int i = 0; i < rtList.size(); i++) {
+            rtArray[i] = rtList.get(i);
+        }
 
         DataDO data = new DataDO();
         data.setRtArray(rtArray);
@@ -212,7 +215,7 @@ public class Extractor {
         data.setPeptideRef(coord.getPeptideRef());
         data.setDecoy(coord.isDecoy());
         data.setLibRt(coord.getRt());
-        // data.setCutInfos(coord.getFragments().stream().map(FragmentInfo::getCutInfo).collect(Collectors.toList()));
+        data.setCutInfoMap(coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getMz().floatValue())));
 
         boolean isHit = false;
         float window = params.getMethod().getEic().getMzWindow().floatValue();
@@ -307,7 +310,7 @@ public class Extractor {
             overviewService.update(overviewDO);
 
         } catch (Exception e) {
-            log.error(e.getMessage());
+            e.printStackTrace();
         } finally {
             if (parser != null) {
                 parser.close();
@@ -348,6 +351,10 @@ public class Extractor {
     private List<DataDO> epps(ExperimentDO exp, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
         long start = System.currentTimeMillis();
+        if (coordinates == null || coordinates.size() == 0) {
+            log.error("肽段坐标为空");
+            return null;
+        }
         //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
         coordinates.parallelStream().forEach(coord -> {
             //Step1. 常规提取XIC,XIC结果不进行压缩处理,如果没有提取到任何结果,那么加入忽略列表
@@ -384,7 +391,7 @@ public class Extractor {
             dataList.add(decoyData);
         });
 
-        LogUtil.log("提取XIC+选峰+打分耗时", start);
+        LogUtil.log("XIC+选峰+打分耗时", start);
         return dataList;
     }
 
