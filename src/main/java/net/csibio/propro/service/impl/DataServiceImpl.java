@@ -9,11 +9,9 @@ import net.csibio.propro.dao.DataDAO;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.DataDO;
-import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.DataQuery;
-import net.csibio.propro.domain.query.DataSumQuery;
 import net.csibio.propro.domain.vo.ExpDataVO;
 import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.DataService;
@@ -74,19 +72,19 @@ public class DataServiceImpl implements DataService {
         }
 
         //Step2. 常规选峰及打分,未满足条件的直接忽略
-        scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
-        if (dataDO.getFeatureScoresList() == null) {
-            return null;
-        }
-        
-        DataSumDO dataSum = dataSumService.getOne(new DataSumQuery(params.getOverviewId()).setPeptideRef(coord.getPeptideRef()), DataSumDO.class, exp.getProjectId());
-        DataDO realData = dataDO;
+//        scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+//        if (dataDO.getFeatureScoresList() == null) {
+//            return null;
+//        }
+
+//        DataSumDO dataSum = dataSumService.getOne(new DataSumQuery(params.getOverviewId()).setPeptideRef(coord.getPeptideRef()), DataSumDO.class, exp.getProjectId());
+//        DataDO realData = dataDO;
         ExpDataVO dataVO = new ExpDataVO();
-        dataVO.setPeptideRef(realData.getPeptideRef());
-        dataVO.setExpId(exp.getId());
-        dataVO.setCutInfoList(realData.getCutInfos());
-        dataVO.setRtArray(realData.getRtArray());
-        dataVO.setIntensityMap(realData.getIntensityMap());
+//        dataVO.setPeptideRef(realData.getPeptideRef());
+//        dataVO.setExpId(exp.getId());
+//        dataVO.setCutInfoList(realData.getCutInfos());
+//        dataVO.setRtArray(realData.getRtArray());
+//        dataVO.setIntensityMap(realData.getIntensityMap());
 
         return dataVO;
     }

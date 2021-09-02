@@ -58,6 +58,33 @@ public class OverviewController {
         return overviewService.update(overview);
     }
 
+
+    @PostMapping(value = "/batchUpdate")
+    Result batchUpdate(
+            @RequestParam("ids") List<String> ids,
+            @RequestParam(value = "defaultOne", required = false) Boolean defaultOne,
+            @RequestParam(value = "tags", required = false) Set<String> tags,
+            @RequestParam(value = "note", required = false) String note) {
+        for (int i = 0; i < ids.size(); i++) {
+            OverviewDO overview = overviewService.getById(ids.get(i));
+            if (overview == null) {
+                return Result.Error(ResultCode.OVERVIEW_NOT_EXISTED);
+            }
+            if (defaultOne != null) {
+                overview.setDefaultOne(defaultOne);
+            }
+            if (note != null) {
+                overview.setNote(note);
+            }
+            if (tags != null) {
+                overview.setTags(tags);
+            }
+
+            overviewService.update(overview);
+        }
+        return Result.OK();
+    }
+
     @PostMapping(value = "/remove")
     Result<List<String>> remove(@RequestParam(value = "overviewIds") String overviewIds) {
         String[] overviewArray = overviewIds.split(SymbolConst.COMMA);
