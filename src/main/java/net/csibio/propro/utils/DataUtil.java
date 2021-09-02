@@ -4,11 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.domain.db.DataDO;
 
 @Slf4j
-public class AnalyseUtil {
+public class DataUtil {
 
-    public static void compress(DataDO data) {
+    public static void clear(DataDO data) {
         data.setRtArray(null);
         data.setIntensityMap(null);
+    }
+
+    public static void compress(DataDO data) {
+
     }
 
     public static String getDataRef(String overviewId, String peptideRef, Boolean decoy) {

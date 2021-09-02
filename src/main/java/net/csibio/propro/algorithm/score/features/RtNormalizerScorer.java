@@ -58,8 +58,8 @@ public class RtNormalizerScorer {
 
             double ldaScore = -1d * calculateLdaPrescore(scores, defaultScoreTypes);
             ScoreRtPair scoreRtPair = new ScoreRtPair();
-            scoreRtPair.setGroupRt(groupRt);
-            scoreRtPair.setRt(peakGroupFeature.getApexRt());
+            scoreRtPair.setLibRt(groupRt);
+            scoreRtPair.setRealRt(peakGroupFeature.getApexRt());
             scoreRtPair.setScore(ldaScore);
             scoreRtPair.setScores(scores);
             finalScores.add(scoreRtPair);

@@ -8,8 +8,8 @@ import lombok.Data;
  */
 @Data
 public class ScoreRtPair {
-    double groupRt;
+    double libRt;
     double score;
-    double rt;
+    double realRt;
     FeatureScores scores;
 }

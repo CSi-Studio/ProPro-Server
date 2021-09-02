@@ -1,6 +1,5 @@
 package net.csibio.propro.algorithm.score;
 
-import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.algorithm.fitter.LinearFitter;
@@ -17,6 +16,7 @@ import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.service.*;
 import net.csibio.propro.utils.FeatureUtil;
+import net.csibio.propro.utils.PeptideUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -90,28 +90,13 @@ public class Scorer {
         HashMap<String, Float> productMzMap = new HashMap<>();
         HashMap<String, Integer> productChargeMap = new HashMap<>();
 
-        for (int i = 0; i < dataDO.getCutInfos().size(); i++) {
-            String cutInfo = dataDO.getCutInfos().get(i);
-            try {
-                if (cutInfo.contains("^")) {
-                    String temp = cutInfo;
-                    if (cutInfo.contains("[")) {
-                        temp = cutInfo.substring(0, cutInfo.indexOf("["));
-                    }
-                    if (temp.contains("i")) {
-                        temp = temp.replace("i", "");
-                    }
-                    productChargeMap.put(cutInfo, Integer.parseInt(temp.split("\\^")[1]));
-                } else {
-                    productChargeMap.put(cutInfo, 1);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                log.info("cutInfo:" + cutInfo + ";data:" + JSON.toJSONString(dataDO));
-            }
+        dataDO.getCutInfoMap().forEach((key, value) -> {
+            int charge = PeptideUtil.parseChargeFromCutInfo(key);
+            productChargeMap.put(key, charge);
+            productMzMap.put(key, value);
+        });
+        for (int i = 0; i < dataDO.getCutInfoMap().keySet().size(); i++) {
 
-            float mz = peptide.getFragments().get(i).getMz().floatValue();
-            productMzMap.put(cutInfo, mz);
         }
 
         HashMap<Integer, String> unimodHashMap = peptide.getUnimodMap();

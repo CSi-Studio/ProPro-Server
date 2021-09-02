@@ -26,19 +26,21 @@ public class DataDO extends BaseDO {
     String overviewId;
     @Indexed
     String peptideRef;
-
-    //是否是伪肽段
     @Indexed
-    Boolean decoy = false;
+    Boolean decoy = false; //是否是伪肽段
 
     Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得
 
-    Integer status;
-
-    //冗余的peptide切片信息
-    List<String> cutInfos;
+    Integer status; //鉴定态
+    
+    String cutInfosFeature; //由cutInfoMap转换所得
 
     List<FeatureScores> featureScoresList;
+
+    //压缩后的rt列表,对应rtArray
+    byte[] rtsBytes;
+    //压缩后的intensityMap,对应intensityMap
+    HashMap<String, byte[]> intMapBytes;
 
     //*******************非数据库字段,仅在计算过程中产生*******************************
     @Transient
@@ -46,5 +48,6 @@ public class DataDO extends BaseDO {
     @Transient
     HashMap<String, float[]> intensityMap = new HashMap<>();  //key为cutInfo, value为对应的intensity值列表(也即该碎片的光谱图信息)
     @Transient
-    Float[] mzs; //每一个切片对应的mz,与cutInfos数组长度相同且一一对应
+    HashMap<String, Float> cutInfoMap; //冗余的peptide切片信息,key为cutInfo,value为mz
+
 }

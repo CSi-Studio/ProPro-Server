@@ -171,7 +171,7 @@ public abstract class Irt {
             for (int j = 0; j < scores.size(); j++) {
                 if (scores.get(j).getScore() > max) {
                     max = scores.get(j).getScore();
-                    expRt = scores.get(j).getRt();
+                    expRt = scores.get(j).getRealRt();
                 }
             }
             if (Constants.ESTIMATE_BEST_PEPTIDES && max < Constants.OVERALL_QUALITY_CUTOFF) {

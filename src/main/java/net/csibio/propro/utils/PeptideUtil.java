@@ -104,4 +104,25 @@ public class PeptideUtil {
         return unimodMap;
     }
 
+    /**
+     * 根据cutInfo解析出该cutInfo的带电量
+     *
+     * @param cutInfo
+     * @return
+     */
+    public static int parseChargeFromCutInfo(String cutInfo) {
+        if (cutInfo.contains("^")) {
+            String temp = cutInfo;
+            if (cutInfo.contains("[")) {
+                temp = cutInfo.substring(0, cutInfo.indexOf("["));
+            }
+            if (temp.contains("i")) {
+                temp = temp.replace("i", "");
+            }
+            return Integer.parseInt(temp.split("\\^")[1]);
+        } else {
+            return 1;
+        }
+    }
+
 }

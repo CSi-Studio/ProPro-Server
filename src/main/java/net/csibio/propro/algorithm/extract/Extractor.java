@@ -16,15 +16,14 @@ import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.BlockIndexQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.service.*;
-import net.csibio.propro.utils.AnalyseUtil;
 import net.csibio.propro.utils.ConvolutionUtil;
+import net.csibio.propro.utils.DataUtil;
 import net.csibio.propro.utils.LogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component("extractor")
@@ -213,7 +212,7 @@ public class Extractor {
         data.setPeptideRef(coord.getPeptideRef());
         data.setDecoy(coord.isDecoy());
         data.setLibRt(coord.getRt());
-        data.setCutInfos(coord.getFragments().stream().map(FragmentInfo::getCutInfo).collect(Collectors.toList()));
+        // data.setCutInfos(coord.getFragments().stream().map(FragmentInfo::getCutInfo).collect(Collectors.toList()));
 
         boolean isHit = false;
         float window = params.getMethod().getEic().getMzWindow().floatValue();
@@ -364,7 +363,7 @@ public class Extractor {
             }
 
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
-            AnalyseUtil.compress(dataDO);
+            DataUtil.compress(dataDO);
             dataList.add(dataDO);
 
             //Step4. 如果第一,二步均符合条件,那么开始对对应的伪肽段进行数据提取和打分
@@ -381,7 +380,7 @@ public class Extractor {
             }
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
-            AnalyseUtil.compress(decoyData);
+            DataUtil.compress(decoyData);
             dataList.add(decoyData);
         });
 
