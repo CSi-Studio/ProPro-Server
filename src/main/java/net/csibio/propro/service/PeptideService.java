@@ -9,6 +9,7 @@ import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.domain.query.PeptideQuery;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by James Lu MiaoShan
@@ -63,5 +64,10 @@ public interface PeptideService extends BaseService<PeptideDO, PeptideQuery> {
      * @return
      */
     PeptideDO buildWithPeptideRef(String peptideRef, int minLength, List<String> ionTypes, List<Integer> chargeTypes);
+
+
+    Result<Map<String,List<Object>>> getPeptideLink(String libraryId, String proteinName, double range, List<WindowRange> windowRanges);
+
+
 }
 

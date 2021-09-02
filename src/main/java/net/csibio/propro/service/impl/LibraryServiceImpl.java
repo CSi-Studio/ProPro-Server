@@ -229,7 +229,7 @@ public class LibraryServiceImpl implements LibraryService {
         return Result.OK();
     }
 
-    @Cacheable(cacheNames = "libraryGetId", key = "#id")
+//    @Cacheable(cacheNames = "libraryGetId", key = "#id")
     @Override
     public LibraryDO getById(String id) {
         try {
@@ -240,7 +240,7 @@ public class LibraryServiceImpl implements LibraryService {
         }
     }
 
-    @CacheEvict(cacheNames = "libraryGetId", key = "#libraryDO.id")
+//    @CacheEvict(cacheNames = "libraryGetId", key = "#libraryDO.id")
     @Override
     public Result<LibraryDO> update(LibraryDO libraryDO) {
         try {
@@ -254,7 +254,7 @@ public class LibraryServiceImpl implements LibraryService {
         }
     }
 
-    @CacheEvict(allEntries = true)
+//    @CacheEvict(allEntries = true)
     @Override
     public Result<List<LibraryDO>> update(List<LibraryDO> libraryDOS) {
         try {
@@ -279,7 +279,7 @@ public class LibraryServiceImpl implements LibraryService {
         return getBaseDAO().getAll(libraryQuery);
     }
 
-    @CacheEvict(cacheNames = "libraryGetId", key = "#id")
+//    @CacheEvict(cacheNames = "libraryGetId", key = "#id")
     @Override
     public Result removeById(String id) {
         if (id == null || id.isEmpty()) {

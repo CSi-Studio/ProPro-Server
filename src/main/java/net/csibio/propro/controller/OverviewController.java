@@ -31,6 +31,7 @@ public class OverviewController {
     Result list(OverviewQuery query) {
         Result<List<OverviewDO>> result = overviewService.getList(query, OverviewDO.class);
         return result;
+
     }
 
     @GetMapping(value = "/detail")

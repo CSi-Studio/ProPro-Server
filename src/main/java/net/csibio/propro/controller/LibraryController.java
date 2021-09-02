@@ -2,17 +2,17 @@ package net.csibio.propro.controller;
 
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.algorithm.decoy.repeatCount.RepeatCount;
 import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.constants.enums.TaskTemplate;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.db.LibraryDO;
-import net.csibio.propro.domain.db.TaskDO;
+import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.query.LibraryQuery;
+import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.domain.vo.LibraryUpdateVO;
-import net.csibio.propro.service.LibraryService;
-import net.csibio.propro.service.TaskService;
+import net.csibio.propro.service.*;
 import net.csibio.propro.task.LibraryTask;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Api(tags = {"Library Module"})
@@ -39,7 +40,12 @@ public class LibraryController extends XController<LibraryDO, LibraryQuery, Libr
     LibraryTask libraryTask;
     @Autowired
     RepeatCount repeatCount;
-
+    @Autowired
+    PeptideService peptideService;
+    @Autowired
+    ProjectService projectService;
+    @Autowired
+    ExperimentService experimentService;
     @GetMapping(value = "/list")
     Result list(LibraryQuery query) {
         Result<List<LibraryDO>> result = libraryService.getList(query);
@@ -180,4 +186,24 @@ public class LibraryController extends XController<LibraryDO, LibraryQuery, Libr
         return result;
     }
 
+    @GetMapping(value ="/getProteins")
+    Result getProteins(@RequestParam(value = "projectId") String projectId){
+
+        ProjectDO project = projectService.getById(projectId);
+        LibraryDO library = libraryService.getById(project.getAnaLibId());
+        return Result.OK(library.getProteins());
+    }
+
+    @GetMapping(value = "/getPeptide")
+    Result getPeptide(@RequestParam(value = "projectId") String projectId,
+                      @RequestParam(value = "proteinName") String proteinName,
+                      @RequestParam(value = "range") double range
+                     ){
+        ProjectDO project = projectService.getById(projectId);
+        List<ExperimentDO> experiments = experimentService.getAllByProjectId(projectId);
+        List<WindowRange> windowRanges = experiments.get(0).getWindowRanges();
+        Result<Map<String, List<Object>>> peptideLink = peptideService.getPeptideLink(project.getAnaLibId(), proteinName,range,windowRanges);
+        peptideLink.setSuccess(true);
+        return peptideLink;
+    }
 }

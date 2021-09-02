@@ -55,14 +55,6 @@ public class DataServiceImpl implements DataService {
                 simpleFeatureScoresList.remove(i);
             }
         }
-
-
-//        if (dataNeedToRemove.size() != 0) {
-//            log.info("总计需要删除" + dataNeedToRemove.size() + "条数据");
-//            dataNeedToRemove.forEach(sfs -> {
-//                dataDAO.remove(new DataQuery().setOverviewId(overviewId).setPeptideRef(sfs.getPeptideRef()).setDecoy(sfs.getDecoy()), projectId);
-//            });
-//        }
         log.info("删除无用数据:" + dataNeedToRemove.size() + "条,总计耗时:" + (System.currentTimeMillis() - start) + "毫秒");
     }
 
@@ -71,7 +63,6 @@ public class DataServiceImpl implements DataService {
         if (sfsList.size() == 0) {
             return;
         }
-
         sfsList.forEach(sfs -> {
             boolean res = dataDAO.update(projectId, overviewId, sfs.getPeptideRef(), sfs.getDecoy(),
                     sfs.getRt(), sfs.getIntensitySum(), sfs.getFragIntFeature(), sfs.getFdr(), sfs.getQValue());
