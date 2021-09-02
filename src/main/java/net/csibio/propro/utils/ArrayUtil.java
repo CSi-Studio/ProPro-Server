@@ -3,7 +3,7 @@ package net.csibio.propro.utils;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.domain.bean.learner.IndexValue;
 import net.csibio.propro.domain.bean.learner.TrainAndTest;
-import net.csibio.propro.domain.bean.peptide.SimplePeptide;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
 import net.csibio.propro.domain.db.PeptideDO;
 
@@ -539,10 +539,10 @@ public class ArrayUtil {
         }
     }
 
-    public static List<SimplePeptide> toTargetPeptideList(List<PeptideDO> peptides, SlopeIntercept slopeIntercept, Double rtWindows) {
-        List<SimplePeptide> tps = new ArrayList<>();
+    public static List<PeptideCoord> toTargetPeptideList(List<PeptideDO> peptides, SlopeIntercept slopeIntercept, Double rtWindows) {
+        List<PeptideCoord> tps = new ArrayList<>();
         for (PeptideDO peptide : peptides) {
-            SimplePeptide tp = peptide.toTargetPeptide();
+            PeptideCoord tp = peptide.toTargetPeptide();
             if (rtWindows != -1) {
                 double iRt = (tp.getRt() - slopeIntercept.getIntercept()) / slopeIntercept.getSlope();
                 tp.setRtStart(iRt - rtWindows);

@@ -1,22 +1,22 @@
 package net.csibio.propro.algorithm.score;
 
-import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.algorithm.fitter.LinearFitter;
 import net.csibio.propro.algorithm.peak.*;
 import net.csibio.propro.algorithm.score.features.*;
 import net.csibio.propro.constants.enums.IdentifyStatus;
-import net.csibio.propro.domain.bean.data.SigmaSpacing;
-import net.csibio.propro.domain.bean.peptide.SimplePeptide;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.FeatureScores;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.PeptideFeature;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
+import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.service.*;
 import net.csibio.propro.utils.FeatureUtil;
+import net.csibio.propro.utils.PeptideUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -68,7 +68,7 @@ public class Scorer {
     @Autowired
     BlockIndexService blockIndexService;
 
-    public void scoreForOne(ExperimentDO exp, DataDO dataDO, SimplePeptide peptide, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public void scoreForOne(ExperimentDO exp, DataDO dataDO, PeptideCoord peptide, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
 
         if (dataDO.getIntensityMap() == null || dataDO.getIntensityMap().size() <= peptide.getFragments().size() / 2) {
             dataDO.setStatus(IdentifyStatus.NO_FIT.getCode());
@@ -90,27 +90,13 @@ public class Scorer {
         HashMap<String, Float> productMzMap = new HashMap<>();
         HashMap<String, Integer> productChargeMap = new HashMap<>();
 
-        for (String cutInfo : dataDO.getMzMap().keySet()) {
-            try {
-                if (cutInfo.contains("^")) {
-                    String temp = cutInfo;
-                    if (cutInfo.contains("[")) {
-                        temp = cutInfo.substring(0, cutInfo.indexOf("["));
-                    }
-                    if (temp.contains("i")) {
-                        temp = temp.replace("i", "");
-                    }
-                    productChargeMap.put(cutInfo, Integer.parseInt(temp.split("\\^")[1]));
-                } else {
-                    productChargeMap.put(cutInfo, 1);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                log.info("cutInfo:" + cutInfo + ";data:" + JSON.toJSONString(dataDO));
-            }
+        dataDO.getCutInfoMap().forEach((key, value) -> {
+            int charge = PeptideUtil.parseChargeFromCutInfo(key);
+            productChargeMap.put(key, charge);
+            productMzMap.put(key, value);
+        });
+        for (int i = 0; i < dataDO.getCutInfoMap().keySet().size(); i++) {
 
-            float mz = dataDO.getMzMap().get(cutInfo);
-            productMzMap.put(cutInfo, mz);
         }
 
         HashMap<Integer, String> unimodHashMap = peptide.getUnimodMap();
@@ -170,7 +156,7 @@ public class Scorer {
         dataDO.setFeatureScoresList(featureScoresList);
     }
 
-    public void strictScoreForOne(DataDO dataDO, SimplePeptide peptide, double shapeScoreThreshold) {
+    public void strictScoreForOne(DataDO dataDO, PeptideCoord peptide, double shapeScoreThreshold) {
         if (dataDO.getIntensityMap() == null || dataDO.getIntensityMap().size() < peptide.getFragments().size()) {
             dataDO.setStatus(IdentifyStatus.NO_FIT.getCode());
             return;

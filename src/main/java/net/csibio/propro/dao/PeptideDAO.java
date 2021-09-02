@@ -1,8 +1,8 @@
 package net.csibio.propro.dao;
 
 import com.mongodb.BasicDBObject;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.peptide.Protein;
-import net.csibio.propro.domain.bean.peptide.SimplePeptide;
 import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.domain.query.PeptideQuery;
 import org.apache.commons.lang3.StringUtils;
@@ -88,10 +88,10 @@ public class PeptideDAO extends BaseDAO<PeptideDO, PeptideQuery> {
         return mongoTemplate.findOne(query, PeptideDO.class, CollectionName);
     }
 
-    public SimplePeptide getTargetPeptideByDataRef(String libraryId, String peptideRef) {
+    public PeptideCoord getTargetPeptideByDataRef(String libraryId, String peptideRef) {
         Query query = new Query(where("libraryId").is(libraryId));
         query.addCriteria(where("peptideRef").is(peptideRef));
-        return mongoTemplate.findOne(query, SimplePeptide.class, CollectionName);
+        return mongoTemplate.findOne(query, PeptideCoord.class, CollectionName);
     }
 
     public void deleteAllByLibraryId(String libraryId) {

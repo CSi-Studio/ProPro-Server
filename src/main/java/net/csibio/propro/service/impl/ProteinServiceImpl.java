@@ -189,7 +189,7 @@ public class ProteinServiceImpl implements ProteinService {
                 peptide.setMz(monoMz);
                 peptide.setPeptideRef(peptide + "_" + i);
                 peptide.setCharge(i);
-                Set<FragmentInfo> fragmentInfos = simulateService.singlePredictFragment(peptide, spModel, isotope);
+                List<FragmentInfo> fragmentInfos = simulateService.singlePredictFragment(peptide, spModel, isotope);
                 peptide.setFragments(fragmentInfos);
                 Set<String> proteinSet = new HashSet<>();
                 proteinSet.add(pPMap.get(item));

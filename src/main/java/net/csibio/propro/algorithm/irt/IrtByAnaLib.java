@@ -5,7 +5,7 @@ import net.csibio.aird.bean.Compressor;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.aird.parser.DIAParser;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.peptide.SimplePeptide;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.ExperimentDO;
@@ -60,7 +60,7 @@ public class IrtByAnaLib extends Irt {
                 BlockIndexDO swathIndexDO = blockList.get(i * step);
                 //Step2.获取标准库的目标肽段片段的坐标
                 //如果使用标准库进行卷积,为了缩短读取数据库的时间,每一轮从数据库中仅读取300个点位进行测试
-                List<SimplePeptide> coordinates = peptideService.buildCoord4Irt(params.getIrtLibraryId(), swathIndexDO.getRange());
+                List<PeptideCoord> coordinates = peptideService.buildCoord4Irt(params.getIrtLibraryId(), swathIndexDO.getRange());
                 if (coordinates.size() == 0) {
                     log.warn("No iRT Targets Found,Rang:" + swathIndexDO.getRange().getStart() + ":" + swathIndexDO.getRange().getEnd());
                     continue;

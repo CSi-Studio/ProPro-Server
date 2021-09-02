@@ -3,15 +3,16 @@ package net.csibio.propro.domain.db;
 import lombok.Data;
 import net.csibio.propro.domain.BaseDO;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
-import net.csibio.propro.domain.bean.peptide.SimplePeptide;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -83,7 +84,7 @@ public class PeptideDO extends BaseDO {
      * 对应的肽段碎片的信息
      * key为cutinfo
      */
-    Set<FragmentInfo> fragments = new HashSet<>();
+    List<FragmentInfo> fragments = new ArrayList<>();
 
     /**
      * 伪肽段的信息
@@ -92,7 +93,7 @@ public class PeptideDO extends BaseDO {
 
     HashMap<Integer, String> decoyUnimodMap;
 
-    Set<FragmentInfo> decoyFragments = new HashSet<>();
+    List<FragmentInfo> decoyFragments = new ArrayList<>();
 
     /**
      * 扩展字段
@@ -110,13 +111,12 @@ public class PeptideDO extends BaseDO {
         this.isUnique = (proteins != null && proteins.size() == 1);
     }
 
-    public SimplePeptide toTargetPeptide() {
-        SimplePeptide tp = new SimplePeptide();
+    public PeptideCoord toTargetPeptide() {
+        PeptideCoord tp = new PeptideCoord();
         tp.setPeptideRef(peptideRef);
         tp.setRt(rt);
         tp.setFragments(fragments);
         tp.setMz(mz);
-        tp.setProteins(proteins);
         tp.setUnimodMap(unimodMap);
         tp.setDecoySequence(decoySequence);
         tp.setDecoyUnimodMap(decoyUnimodMap);

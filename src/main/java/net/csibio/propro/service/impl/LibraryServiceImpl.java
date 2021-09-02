@@ -13,7 +13,7 @@ import net.csibio.propro.dao.LibraryDAO;
 import net.csibio.propro.dao.PeptideDAO;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
-import net.csibio.propro.domain.bean.peptide.PeptideS1;
+import net.csibio.propro.domain.bean.peptide.FragmentGroup;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.domain.db.TaskDO;
@@ -186,7 +186,7 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     public void statistic(LibraryDO library) {
         Map<String, Object> statistic = new HashMap<>();
-        List<PeptideS1> peptideList = peptideService.getAll(new PeptideQuery(library.getId()), PeptideS1.class);
+        List<FragmentGroup> peptideList = peptideService.getAll(new PeptideQuery(library.getId()), FragmentGroup.class);
         statistic.put(StatConst.Protein_Count, libraryStat.proteinCount(library));
         statistic.put(StatConst.Peptide_Count, libraryStat.peptideCount(library));
         statistic.put(StatConst.Fragment_Count, libraryStat.fragmentCount(peptideList));

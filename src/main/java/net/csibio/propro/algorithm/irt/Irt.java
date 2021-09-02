@@ -12,7 +12,7 @@ import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.ListPairs;
 import net.csibio.propro.domain.bean.common.Pair;
 import net.csibio.propro.domain.bean.irt.IrtResult;
-import net.csibio.propro.domain.bean.peptide.SimplePeptide;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeptideFeature;
 import net.csibio.propro.domain.bean.score.ScoreRtPair;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
@@ -85,7 +85,7 @@ public abstract class Irt {
      *
      * @param dataList 对于靶点的xic结果
      * @param params   分析参数,其中的Sigma通常为30/8 = 6.25/Spacing通常为0.01
-     * @return
+     * @return irt结果
      */
     protected Result<IrtResult> align(List<DataDO> dataList, AnalyzeParams params) throws Exception {
         List<List<ScoreRtPair>> scoreRtList = new ArrayList<>();
@@ -96,8 +96,8 @@ public abstract class Irt {
         List<Pair> diffPairs = new ArrayList<>();
         dataList = dataList.stream().sorted(Comparator.comparing(DataDO::getLibRt)).toList();
         for (DataDO data : dataList) {
-            SimplePeptide tp = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), SimplePeptide.class);
-            PeptideFeature peptideFeature = featureExtractor.getExperimentFeature(data, tp.buildIntensityMap(), params.getMethod().getIrt().getSs());
+            PeptideCoord coord = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
+            PeptideFeature peptideFeature = featureExtractor.getExperimentFeature(data, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
             if (!peptideFeature.isFeatureFound()) {
                 continue;
             }
@@ -171,7 +171,7 @@ public abstract class Irt {
             for (int j = 0; j < scores.size(); j++) {
                 if (scores.get(j).getScore() > max) {
                     max = scores.get(j).getScore();
-                    expRt = scores.get(j).getRt();
+                    expRt = scores.get(j).getRealRt();
                 }
             }
             if (Constants.ESTIMATE_BEST_PEPTIDES && max < Constants.OVERALL_QUALITY_CUTOFF) {

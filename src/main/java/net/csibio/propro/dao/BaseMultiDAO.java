@@ -1,6 +1,5 @@
 package net.csibio.propro.dao;
 
-import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.query.PageQuery;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +38,10 @@ public abstract class BaseMultiDAO<T, Q extends PageQuery> {
 
     public T getOne(Q query, String routerId) {
         return (T) mongoTemplate.findOne(buildQueryWithoutPage(query), getDomainClass(), getCollectionName(routerId));
+    }
+
+    public <K> K getOne(Q query, Class<K> clazz, String routerId) {
+        return mongoTemplate.findOne(buildQueryWithoutPage(query), clazz, getCollectionName(routerId));
     }
 
     public boolean exists(Q query, String routerId) {
@@ -88,43 +91,6 @@ public abstract class BaseMultiDAO<T, Q extends PageQuery> {
     public List<T> update(List<T> list, String routerId) {
         mongoTemplate.save(list, getCollectionName(routerId));
         return list;
-    }
-
-    /**
-     * @param projectId       routerId
-     * @param overviewId      必填查询条件
-     * @param peptideRef      必填查询条件
-     * @param decoy           必填查询条件
-     * @param rt              修改信息
-     * @param intensitySum    修改信息
-     * @param fragIntFeatures 修改信息
-     * @param fdr             修改信息
-     * @param qValue          修改信息
-     * @return
-     */
-    public boolean update(String projectId, String overviewId, String peptideRef, Boolean decoy,
-                          Double rt, Double intensitySum, String fragIntFeatures, Double fdr, Double qValue) {
-        Query query = new Query();
-        query.addCriteria(Criteria.where("overviewId").is(overviewId));
-        query.addCriteria(Criteria.where("peptideRef").is(peptideRef));
-        query.addCriteria(Criteria.where("decoy").is(decoy));
-        
-        Update update = new Update();
-        update.set("bestRt", rt);
-        update.set("intensitySum", intensitySum);
-        update.set("fragIntFeature", fragIntFeatures);
-        update.set("fdr", fdr);
-        update.set("qValue", qValue);
-
-        if (!decoy) {
-            //投票策略
-            if (fdr <= 0.01) {
-                update.set("status", IdentifyStatus.SUCCESS.getCode());
-            } else {
-                update.set("status", IdentifyStatus.FAILED.getCode());
-            }
-        }
-        return mongoTemplate.updateFirst(query, update, getCollectionName(projectId)).wasAcknowledged();
     }
 
     public boolean updateFirst(HashMap<String, Object> queryMap, HashMap<String, Object> fieldMap, String routerId) {

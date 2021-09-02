@@ -29,6 +29,11 @@ public class BaseExp {
     String name;
 
     /**
+     * 实验别名
+     */
+    String alias;
+    
+    /**
      * 项目名称
      */
     String projectName;

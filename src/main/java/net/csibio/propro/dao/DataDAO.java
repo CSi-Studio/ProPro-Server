@@ -55,15 +55,6 @@ public class DataDAO extends BaseMultiDAO<DataDO, DataQuery> {
         if (dataQuery.getMzStart() != null && dataQuery.getMzEnd() != null) {
             query.addCriteria(where("mz").gte(dataQuery.getMzStart()).lt(dataQuery.getMzEnd()));
         }
-        if (dataQuery.getFdrStart() != null || dataQuery.getFdrEnd() != null) {
-            query.addCriteria(where("fdr").gte(dataQuery.getFdrStart() == null ? 0 : dataQuery.getFdrStart()).lte(dataQuery.getFdrEnd() == null ? 1 : dataQuery.getFdrEnd()));
-        }
-        if (dataQuery.getQValueStart() != null || dataQuery.getQValueEnd() != null) {
-            query.addCriteria(where("qValue").gte(dataQuery.getQValueStart() == null ? 0 : dataQuery.getQValueStart()).lte(dataQuery.getQValueEnd() == null ? 1 : dataQuery.getQValueEnd()));
-        }
-        if (dataQuery.getStatusList() != null) {
-            query.addCriteria(where("status").in(dataQuery.getStatusList()));
-        }
         return query;
     }
 

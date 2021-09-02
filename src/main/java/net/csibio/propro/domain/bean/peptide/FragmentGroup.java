@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.Set;
 
 @Data
-public class PeptideS1 {
+public class FragmentGroup {
 
     Double rt;
     Double mz;

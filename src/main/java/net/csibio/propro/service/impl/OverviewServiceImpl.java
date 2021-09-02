@@ -7,16 +7,16 @@ import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.DataQuery;
+import net.csibio.propro.domain.query.DataSumQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.DataService;
+import net.csibio.propro.service.DataSumService;
 import net.csibio.propro.service.OverviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service("overviewService")
 public class OverviewServiceImpl implements OverviewService {
@@ -25,6 +25,8 @@ public class OverviewServiceImpl implements OverviewService {
     OverviewDAO overviewDAO;
     @Autowired
     DataService dataService;
+    @Autowired
+    DataSumService dataSumService;
 
     @Override
     public BaseDAO<OverviewDO, OverviewQuery> getBaseDAO() {
@@ -68,6 +70,7 @@ public class OverviewServiceImpl implements OverviewService {
         }
 
         dataService.remove(new DataQuery().setOverviewId(id), overview.getProjectId());
+        dataSumService.remove(new DataSumQuery().setOverviewId(id), overview.getProjectId());
     }
 
     @Override
@@ -85,5 +88,18 @@ public class OverviewServiceImpl implements OverviewService {
             return Result.Error(ResultCode.DELETE_ERROR, errorList);
         }
         return Result.OK();
+    }
+
+    @Override
+    public Map<String, OverviewDO> getDefaultOverviews(String projectId, List<String> expIds) {
+        Map<String, OverviewDO> overviewMap = new HashMap<>();
+        if (expIds != null && expIds.size() > 0) {
+            expIds.forEach(expId -> {
+                OverviewDO overview = getOne(new OverviewQuery(projectId).setExpId(expId).setDefaultOne(true), OverviewDO.class);
+                overviewMap.put(expId, overview);
+            });
+        }
+
+        return overviewMap;
     }
 }

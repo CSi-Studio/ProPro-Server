@@ -28,6 +28,10 @@ public class SlopeIntercept {
         return si;
     }
 
+    public double realRt(double libRt) {
+        return (libRt - intercept) / slope;
+    }
+
     @Override
     public String toString() {
         return "Slope:" + slope + ";Intercept:" + intercept;

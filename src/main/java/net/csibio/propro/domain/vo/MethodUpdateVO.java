@@ -57,4 +57,5 @@ public class MethodUpdateVO {
     //*********************************回归参数****************************************************//
     String classifier = Classifier.lda.name(); //回归用的算法分类器 @see net.csibio.propro.constants.enums.Classifier
     Double fdr = 0.01d; //筛选的FDR值,默认值为0.01
+    boolean removeUnmatched = false; //是否删除fdr不符合阈值的结果,默认不删除
 }

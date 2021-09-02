@@ -4,8 +4,8 @@ import lombok.Data;
 import net.csibio.propro.domain.db.PeptideDO;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -15,11 +15,9 @@ import java.util.stream.Collectors;
  * 具体的注释说明请参考PeptideDO类
  */
 @Data
-public class SimplePeptide {
+public class PeptideCoord {
 
     String id;
-
-    Set<String> proteins;
 
     String peptideRef;
 
@@ -33,7 +31,7 @@ public class SimplePeptide {
      */
     Double mz;
 
-    Set<FragmentInfo> fragments;
+    List<FragmentInfo> fragments;
 
     /**
      * 是否在蛋白中是unique类型的肽段
@@ -53,12 +51,13 @@ public class SimplePeptide {
      */
     String decoySequence;
     HashMap<Integer, String> decoyUnimodMap;
-    Set<FragmentInfo> decoyFragments;
+    List<FragmentInfo> decoyFragments;
 
     /**
      * 是否作为伪肽段存在,不存储到数据库中
      */
     boolean decoy = false;
+
     /**
      * rtStart是在计算时使用的,并不会存在数据库中
      */
@@ -69,12 +68,11 @@ public class SimplePeptide {
     double rtEnd;
 
 
-    public SimplePeptide() {
+    public PeptideCoord() {
     }
 
-    public SimplePeptide(PeptideDO peptide) {
+    public PeptideCoord(PeptideDO peptide) {
         this.id = peptide.getId();
-        this.proteins = peptide.getProteins();
         this.peptideRef = peptide.getPeptideRef();
         this.mz = peptide.getMz();
         this.fragments = peptide.getFragments();
@@ -84,12 +82,12 @@ public class SimplePeptide {
         this.decoyFragments = peptide.getDecoyFragments();
     }
 
-    public Set<FragmentInfo> getFragments() {
+    public List<FragmentInfo> getFragments() {
         return decoy ? decoyFragments : fragments;
     }
 
     public Map<String, FragmentInfo> buildFragmentMap() {
-        Set<FragmentInfo> infos = decoy ? decoyFragments : fragments;
+        List<FragmentInfo> infos = decoy ? decoyFragments : fragments;
         return infos.stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
     }
 
@@ -122,8 +120,8 @@ public class SimplePeptide {
             return false;
         }
 
-        if (obj instanceof SimplePeptide) {
-            SimplePeptide target = (SimplePeptide) obj;
+        if (obj instanceof PeptideCoord) {
+            PeptideCoord target = (PeptideCoord) obj;
             if (this.getPeptideRef().equals(target.getPeptideRef())) {
                 return true;
             }

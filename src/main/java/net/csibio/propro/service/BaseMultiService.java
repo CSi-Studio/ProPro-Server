@@ -121,6 +121,10 @@ public interface BaseMultiService<T, Q extends PageQuery> {
         }
     }
 
+    default <K> K getOne(Q q, Class<K> clazz, String routerId) {
+        return getBaseDAO().getOne(q, clazz, routerId);
+    }
+
     default Result<List<T>> getList(Q q, String routerId) {
         List<T> tList = getBaseDAO().getList(q, routerId);
         long totalCount = getBaseDAO().count(q, routerId);

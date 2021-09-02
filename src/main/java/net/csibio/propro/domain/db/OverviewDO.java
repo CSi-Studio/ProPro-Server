@@ -30,6 +30,7 @@ public class OverviewDO extends BaseDO {
     @Indexed
     String expId;
 
+    Boolean defaultOne = false;
     /**
      * 分析名称
      */

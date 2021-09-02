@@ -84,7 +84,7 @@ public class FastTraMLParser extends BaseLibraryParser {
             peptideService.insert(peptideList);
 
             Set<String> proteins = new HashSet<>();
-            peptideList.stream().forEach(peptide -> proteins.addAll(peptide.getProteins()));
+            peptideList.forEach(peptide -> proteins.addAll(peptide.getProteins()));
             library.setProteins(proteins);
             libraryService.update(library);
 

@@ -11,7 +11,6 @@ import org.springframework.data.mongodb.core.index.Indexed;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 @Data
 @CompoundIndexes({
@@ -26,39 +25,29 @@ public class DataDO extends BaseDO {
     @Indexed
     String overviewId;
     @Indexed
-    Set<String> proteins;
-    @Indexed
     String peptideRef;
-    //是否是伪肽段
     @Indexed
-    Boolean decoy = false;
+    Boolean decoy = false; //是否是伪肽段
 
-    Boolean isUnique = true;
-
-    @Indexed
-    int status; //打分相关的字段
-    @Indexed
-    Double fdr; //最终给出的FDR打分
-    Double qValue; //最终给出的qValue
     Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得
-    Double realRt;//最终选出的最佳峰RT,即算法认为的实际rt
-    Double libMz; //该肽段的前体mz,从标准库中冗余所得
-    Double realMz;  //算法认为的实际mz
-    HashMap<String, Float> mzMap = new HashMap<>();  //key为cutInfo, value为对应的mz
+
+    Integer status; //鉴定态
+    
+    String cutInfosFeature; //由cutInfoMap转换所得
 
     List<FeatureScores> featureScoresList;
 
-    Double intensitySum;
+    //压缩后的rt列表,对应rtArray
+    byte[] rtsBytes;
+    //压缩后的intensityMap,对应intensityMap
+    HashMap<String, byte[]> intMapBytes;
 
-    //最终的定量值
-    String fragIntFeature;
-
-    //*******************非数据库字段*******************************
-    //排序后的rt,仅在解压缩的时候使用,不存入数据库
+    //*******************非数据库字段,仅在计算过程中产生*******************************
     @Transient
-    Float[] rtArray;
-
-    //key为cutInfo, value为对应的intensity值,仅在解压缩的时候使用,不存入数据库
+    Float[] rtArray;  //排序后的rt
     @Transient
-    HashMap<String, float[]> intensityMap = new HashMap<>();
+    HashMap<String, float[]> intensityMap = new HashMap<>();  //key为cutInfo, value为对应的intensity值列表(也即该碎片的光谱图信息)
+    @Transient
+    HashMap<String, Float> cutInfoMap; //冗余的peptide切片信息,key为cutInfo,value为mz
+
 }
