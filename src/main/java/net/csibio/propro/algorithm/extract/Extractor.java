@@ -7,7 +7,6 @@ import net.csibio.aird.bean.WindowRange;
 import net.csibio.aird.parser.DIAParser;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
-import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
@@ -179,9 +178,9 @@ public class Extractor {
             }
             scorer.strictScoreForOne(dataDO, coordinates.get(i), params.getMethod().getQuickFilter().getMinShapeScore());
 
-            if (dataDO.getPeakGroupScoresList() != null) {
+            if (dataDO.getScoreList() != null) {
                 finalList.add(dataDO);
-                log.info("第" + i + "次搜索找到了:" + dataDO.getPeptideRef() + ",BestRT:" + dataDO.getPeakGroupScoresList().get(0).getRt() + "耗时:" + (System.currentTimeMillis() - start));
+                log.info("第" + i + "次搜索找到了:" + dataDO.getPeptideRef() + ",BestRT:" + dataDO.getScoreList().get(0).getRt() + "耗时:" + (System.currentTimeMillis() - start));
                 count++;
             }
         }
@@ -300,8 +299,8 @@ public class Extractor {
                 List<DataDO> dataList = doExtract(parser, exp, index, analyzeParams);
                 if (dataList != null) {
                     for (DataDO dataDO : dataList) {
-                        if (dataDO.getPeakGroupScoresList() != null) {
-                            peakCount += dataDO.getPeakGroupScoresList().size();
+                        if (dataDO.getScoreList() != null) {
+                            peakCount += dataDO.getScoreList().size();
                         }
                     }
                     dataCount += dataList.size();
@@ -378,11 +377,8 @@ public class Extractor {
             dataList.add(dataDO);
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
             DataUtil.compress(dataDO);
-            dataDO.setStatus(IdentifyStatus.WAIT.getCode());
-
-
             //如果没有打分数据,那么对应的decoy也不再计算,以保持target与decoy 1:1的混合比例
-            if (dataDO.getPeakGroupScoresList() == null) {
+            if (dataDO.getScoreList() == null) {
                 return;
             }
 
@@ -395,11 +391,9 @@ public class Extractor {
 
             //Step5. 对Decoy进行打分
             scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
-            decoyData.setStatus(IdentifyStatus.WAIT.getCode());
             dataList.add(decoyData);
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
             DataUtil.compress(decoyData);
-            dataList.add(decoyData);
         });
 
         LogUtil.log("XIC+选峰+打分耗时", start);
@@ -424,7 +418,7 @@ public class Extractor {
         overview.setName(exp.getName() + "-" + params.getInsLibName() + "-" + params.getAnaLibName() + "-" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
         overview.setNote(params.getNote());
 
-        Boolean exist = overviewService.exist(new OverviewQuery().setProjectId(exp.getProjectId()).setExpId(exp.getId()));
+        boolean exist = overviewService.exist(new OverviewQuery().setProjectId(exp.getProjectId()).setExpId(exp.getId()));
         if (!exist) {
             overview.setDefaultOne(true);
         }

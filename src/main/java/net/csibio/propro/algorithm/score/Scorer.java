@@ -149,8 +149,8 @@ public class Scorer {
             dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
             return;
         }
-
-        dataDO.setPeakGroupScoresList(peakGroupScoresList);
+        dataDO.setStatus(IdentifyStatus.WAIT.getCode());
+        dataDO.setScoreList(peakGroupScoresList);
     }
 
     public void strictScoreForOne(DataDO dataDO, PeptideCoord peptide, double shapeScoreThreshold) {
@@ -185,7 +185,7 @@ public class Scorer {
             return;
         }
 
-        dataDO.setPeakGroupScoresList(peakGroupScoresList);
+        dataDO.setScoreList(peakGroupScoresList);
     }
 
 }

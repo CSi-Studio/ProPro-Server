@@ -36,7 +36,7 @@ public class DataDO extends BaseDO {
 
     String cutInfosFeature; //由cutInfoMap转换所得
 
-    List<PeakGroupScores> peakGroupScoresList;
+    List<PeakGroupScores> scoreList;
 
     //压缩后的rt列表,对应rtArray
     byte[] rtBytes;
