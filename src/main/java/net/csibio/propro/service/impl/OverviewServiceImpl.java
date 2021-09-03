@@ -91,15 +91,24 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public Map<String, OverviewDO> getDefaultOverviews(String projectId, List<String> expIds) {
+    public Map<String, OverviewDO> getDefaultOverviews(List<String> expIds) {
         Map<String, OverviewDO> overviewMap = new HashMap<>();
         if (expIds != null && expIds.size() > 0) {
             expIds.forEach(expId -> {
-                OverviewDO overview = getOne(new OverviewQuery(projectId).setExpId(expId).setDefaultOne(true), OverviewDO.class);
+                OverviewDO overview = getOne(new OverviewQuery().setExpId(expId).setDefaultOne(true), OverviewDO.class);
                 overviewMap.put(expId, overview);
             });
         }
 
         return overviewMap;
+    }
+
+    @Override
+    public Result resetDefaultOne(String expId) {
+        HashMap<String, Object> query = new HashMap<>();
+        query.put("expId", expId);
+        HashMap<String, Object> field = new HashMap<>();
+        field.put("defaultOne", false);
+        return updateAll(query, field);
     }
 }
