@@ -19,9 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by James Lu MiaoShan
@@ -103,8 +101,8 @@ public class FragmentFactory {
      * @param limitLength 生成的B,Y离子的最小长度
      * @return
      */
-    public List<FragmentInfo> buildFragmentMap(PeptideDO peptideDO, int limitLength, List<String> ionTypes, List<Integer> chargeTypes) {
-        List<FragmentInfo> fragmentSet = new ArrayList<>();
+    public Set<FragmentInfo> buildFragmentMap(PeptideDO peptideDO, int limitLength, List<String> ionTypes, List<Integer> chargeTypes) {
+        Set<FragmentInfo> fragmentSet = new HashSet<>();
         String sequence = peptideDO.getSequence();
         int length = sequence.length();
         if (length < limitLength) {

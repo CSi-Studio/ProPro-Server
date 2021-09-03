@@ -50,7 +50,7 @@ public class FeatureExtractor {
      * @return
      */
     public PeptideFeature getExperimentFeature(DataDO data, HashMap<String, Float> intensityMap, SigmaSpacing ss) {
-        if (data.getIntensityMap().isEmpty()) {
+        if (data.getIntMap().isEmpty()) {
             return new PeptideFeature(false);
         }
 
@@ -64,7 +64,7 @@ public class FeatureExtractor {
         //将没有提取到信号的CutInfo过滤掉,同时将Float类型的参数调整为Double类型进行计算
         for (String cutInfo : intensityMap.keySet()) {
             //获取对应的XIC数据
-            float[] intensityArray = data.getIntensityMap().get(cutInfo);
+            float[] intensityArray = data.getIntMap().get(cutInfo);
             //如果没有提取到信号,dataDO为null
             if (intensityArray == null) {
                 continue;

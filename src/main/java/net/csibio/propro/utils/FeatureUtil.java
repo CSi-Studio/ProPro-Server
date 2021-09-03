@@ -19,7 +19,6 @@ public class FeatureUtil {
     public static final <T> String toString(Map<String, T> attrs) {
         StringBuilder sb = new StringBuilder();
         if (null != attrs && !attrs.isEmpty()) {
-            sb.append(SP);
             Set<Map.Entry<String, T>> entrySet = attrs.entrySet();
             for (Map.Entry<String, T> entry : entrySet) {
                 String key = entry.getKey();

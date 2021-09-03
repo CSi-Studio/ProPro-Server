@@ -10,9 +10,8 @@ import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -84,7 +83,7 @@ public class PeptideDO extends BaseDO {
      * 对应的肽段碎片的信息
      * key为cutinfo
      */
-    List<FragmentInfo> fragments = new ArrayList<>();
+    Set<FragmentInfo> fragments = new HashSet<>();
 
     /**
      * 伪肽段的信息
@@ -93,7 +92,7 @@ public class PeptideDO extends BaseDO {
 
     HashMap<Integer, String> decoyUnimodMap;
 
-    List<FragmentInfo> decoyFragments = new ArrayList<>();
+    Set<FragmentInfo> decoyFragments = new HashSet<>();
 
     /**
      * 扩展字段

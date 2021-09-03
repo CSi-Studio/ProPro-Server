@@ -215,7 +215,11 @@ public class Extractor {
         data.setPeptideRef(coord.getPeptideRef());
         data.setDecoy(coord.isDecoy());
         data.setLibRt(coord.getRt());
-        data.setCutInfoMap(coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getMz().floatValue())));
+        try {
+            data.setCutInfoMap(coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getMz().floatValue())));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         boolean isHit = false;
         float window = params.getMethod().getEic().getMzWindow().floatValue();
@@ -247,10 +251,10 @@ public class Extractor {
                 }
             }
             if (isAllZero) {
-                data.getIntensityMap().put(fi.getCutInfo(), null);
+                data.getIntMap().put(fi.getCutInfo(), null);
             } else {
                 isHit = true;
-                data.getIntensityMap().put(fi.getCutInfo(), intArray); //记录每一个碎片的光谱图
+                data.getIntMap().put(fi.getCutInfo(), intArray); //记录每一个碎片的光谱图
             }
         }
 

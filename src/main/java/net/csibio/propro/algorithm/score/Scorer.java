@@ -70,7 +70,7 @@ public class Scorer {
 
     public void scoreForOne(ExperimentDO exp, DataDO dataDO, PeptideCoord peptide, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
 
-        if (dataDO.getIntensityMap() == null || dataDO.getIntensityMap().size() <= peptide.getFragments().size() / 2) {
+        if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= peptide.getFragments().size() / 2) {
             dataDO.setStatus(IdentifyStatus.NO_FIT.getCode());
             return;
         }
@@ -154,7 +154,7 @@ public class Scorer {
     }
 
     public void strictScoreForOne(DataDO dataDO, PeptideCoord peptide, double shapeScoreThreshold) {
-        if (dataDO.getIntensityMap() == null || dataDO.getIntensityMap().size() < peptide.getFragments().size()) {
+        if (dataDO.getIntMap() == null || dataDO.getIntMap().size() < peptide.getFragments().size()) {
             dataDO.setStatus(IdentifyStatus.NO_FIT.getCode());
             return;
         }

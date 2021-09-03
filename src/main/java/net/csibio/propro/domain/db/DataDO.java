@@ -39,7 +39,7 @@ public class DataDO extends BaseDO {
     List<FeatureScores> featureScoresList;
 
     //压缩后的rt列表,对应rtArray
-    byte[] rtsBytes;
+    byte[] rtBytes;
     //压缩后的intensityMap,对应intensityMap
     Map<String, byte[]> intMapBytes;
 
@@ -47,7 +47,7 @@ public class DataDO extends BaseDO {
     @Transient
     float[] rtArray;  //排序后的rt
     @Transient
-    Map<String, float[]> intensityMap = new HashMap<>();  //key为cutInfo, value为对应的intensity值列表(也即该碎片的光谱图信息)
+    Map<String, float[]> intMap = new HashMap<>();  //key为cutInfo, value为对应的intensity值列表(也即该碎片的光谱图信息)
     @Transient
     Map<String, Float> cutInfoMap; //冗余的peptide切片信息,key为cutInfo,value为mz
 

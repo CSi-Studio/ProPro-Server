@@ -1,5 +1,6 @@
 package net.csibio.propro.algorithm.score.features;
 
+import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.constants.constant.Constants;
@@ -11,6 +12,7 @@ import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.loader.AminoAcidLoader;
 import net.csibio.propro.loader.ElementsLoader;
 import net.csibio.propro.loader.UnimodLoader;
+import net.csibio.propro.utils.FeatureUtil;
 import net.csibio.propro.utils.ScoreUtil;
 import org.apache.commons.math3.util.FastMath;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,7 @@ import java.util.List;
  * scores.bseries_score
  * scores.yseries_score
  */
+@Slf4j
 @Component("diaScorer")
 public class DIAScorer {
 
@@ -67,11 +70,15 @@ public class DIAScorer {
             try {
                 IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left, right);
                 if (mzIntensity.isSignalFound()) {
+                    if (normedLibIntMap.get(key) == null) {
+                        continue;
+                    }
                     double diffPpm = Math.abs(mzIntensity.getMz() - productMz) * 1000000d / productMz;
                     ppmScore += diffPpm;
                     ppmScoreWeighted += diffPpm * normedLibIntMap.get(key);
                 }
             } catch (Exception e) {
+                log.error(key + ":" + FeatureUtil.toString(normedLibIntMap));
                 e.printStackTrace();
             }
         }

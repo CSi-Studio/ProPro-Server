@@ -4,8 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.constants.enums.LibraryType;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.db.LibraryDO;
+import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.domain.db.ProteinDO;
+import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.service.LibraryService;
+import net.csibio.propro.service.PeptideService;
 import net.csibio.propro.service.ProteinService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -27,6 +30,8 @@ public class TestController {
     ProteinService proteinService;
     @Autowired
     LibraryService libraryService;
+    @Autowired
+    PeptideService peptideService;
 
     @GetMapping(value = "/lms")
     Result lms() throws IOException {
@@ -40,6 +45,37 @@ public class TestController {
 
         return Result.OK();
     }
+
+    @GetMapping(value = "/checkFragmentMz")
+    Result checkFragmentMz() {
+        long count = peptideService.count(new PeptideQuery());
+        log.info("Total Peptides:" + count);
+        long batch = count / 2000 + 1;
+        PeptideQuery query = new PeptideQuery();
+        query.setPageSize(2000);
+        for (int i = 0; i < batch; i++) {
+            query.setPageNo(i + 1);
+            Result<List<PeptideDO>> pepListRes = peptideService.getList(query);
+            if (pepListRes.isFailed()) {
+                log.error(pepListRes.getErrorMessage());
+            }
+            List<PeptideDO> pepList = pepListRes.getData();
+            if (pepList.size() == 0) {
+                break;
+            }
+            pepList.forEach(pep -> {
+                pep.getDecoyFragments().forEach(fragmentInfo -> {
+                    if (fragmentInfo.getMz() == null) {
+                        log.info(pep.getLibraryId() + "-" + pep.getPeptideRef() + "有问题");
+                    }
+                });
+            });
+            log.info("已扫描" + i + "/" + batch);
+        }
+
+        return Result.OK();
+    }
+
 
     public static File[] getFiles(String path) throws IOException {
         ClassPathResource classPathResource = new ClassPathResource(path);

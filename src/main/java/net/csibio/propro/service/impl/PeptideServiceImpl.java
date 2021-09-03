@@ -314,7 +314,7 @@ public class PeptideServiceImpl implements PeptideService {
             if (c.get() % 1000 == 0) {
                 logger.info("已经循环" + c.get() + "次");
             }
-            List<FragmentInfo> fragments = peptideDO.getFragments();
+            Set<FragmentInfo> fragments = peptideDO.getFragments();
             fragments.forEach(fragment -> {
                 for (SourceNode sourceNode : sourceNodeWithOutPet) {
                     String[] peptideRef = sourceNode.getId().split("-");

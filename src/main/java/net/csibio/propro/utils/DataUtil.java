@@ -10,35 +10,57 @@ public class DataUtil {
 
     public static void clearOrigin(DataDO data) {
         data.setRtArray(null);
-        data.setIntensityMap(null);
+        data.setIntMap(null);
         data.setCutInfoMap(null);
     }
 
     public static void clearCompressed(DataDO data) {
-        data.setRtsBytes(null);
+        data.setRtBytes(null);
         data.setIntMapBytes(null);
         data.setCutInfosFeature(null);
     }
 
     public static void compress(DataDO data) {
-        data.setRtsBytes(CompressUtil.compressedToBytes(data.getRtArray()));
-        HashMap<String, byte[]> intMap = new HashMap<>();
-        data.getIntensityMap().forEach((key, value) -> {
-            intMap.put(key, CompressUtil.compressedToBytes(value));
-        });
-        data.setIntMapBytes(intMap);
+        if (data.getRtArray() != null) {
+            data.setRtBytes(CompressUtil.compressedToBytes(data.getRtArray()));
+        }
+
+        if (data.getIntMap() != null && data.getIntMap().size() > 0) {
+            HashMap<String, byte[]> intMap = new HashMap<>();
+            data.getIntMap().forEach((key, value) -> {
+                if (value != null) {
+                    intMap.put(key, CompressUtil.compressedToBytes(value));
+                } else {
+                    intMap.put(key, null);
+                }
+            });
+            data.setIntMapBytes(intMap);
+        }
         data.setCutInfosFeature(FeatureUtil.toString(data.getCutInfoMap()));
         clearOrigin(data);
     }
 
     public static void decompress(DataDO data) {
-        data.setRtArray(CompressUtil.transToFloat(data.getRtsBytes()));
-        HashMap<String, float[]> intensityMap = new HashMap<>();
-        data.getIntMapBytes().forEach((key, value) -> {
-            intensityMap.put(key, CompressUtil.transToFloat(value));
-        });
-        data.setIntensityMap(intensityMap);
-        data.setCutInfoMap(FeatureUtil.toFloatMap(data.getCutInfosFeature()));
+        if (data.getRtBytes() != null) {
+            data.setRtArray(CompressUtil.transToFloat(data.getRtBytes()));
+        }
+
+        if (data.getIntMapBytes() != null && data.getIntMapBytes().size() > 0) {
+            HashMap<String, float[]> intensityMap = new HashMap<>();
+            data.getIntMapBytes().forEach((key, value) -> {
+                if (value != null) {
+                    intensityMap.put(key, CompressUtil.transToFloat(value));
+                } else {
+                    intensityMap.put(key, null);
+                }
+            });
+            data.setIntMap(intensityMap);
+        }
+
+        if (data.getCutInfosFeature() != null) {
+            data.setCutInfoMap(FeatureUtil.toFloatMap(data.getCutInfosFeature()));
+        }
+
         clearCompressed(data);
     }
 
