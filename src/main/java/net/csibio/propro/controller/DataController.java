@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.overview.OverviewV1;
-import net.csibio.propro.domain.db.DataSumDO;
+import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.ProjectDO;
-import net.csibio.propro.domain.query.DataSumQuery;
+import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.domain.vo.ExpDataVO;
 import net.csibio.propro.service.*;
@@ -45,8 +45,11 @@ public class DataController {
 
 
     @GetMapping(value = "/list")
-    Result list(DataSumQuery query, @RequestParam("projectId") String projectId) {
-        Result<List<DataSumDO>> result = dataSumService.getList(query, projectId);
+    Result list(DataQuery dataQuery) {
+        if (dataQuery.getProjectId() == null) {
+            return Result.Error(ResultCode.PROJECT_ID_CANNOT_BE_EMPTY);
+        }
+        Result<List<DataDO>> result = dataService.getList(dataQuery, dataQuery.getProjectId());
         return result;
     }
 
