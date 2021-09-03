@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.decoy.repeatCount.RepeatCount;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.experiment.BaseExp;
 import net.csibio.propro.domain.bean.experiment.ExpIrt;
 import net.csibio.propro.domain.db.ExperimentDO;
@@ -40,6 +41,12 @@ public class ExperimentController {
     LibraryTask libraryTask;
     @Autowired
     RepeatCount repeatCount;
+
+    @GetMapping(value = "/listByProjectId")
+    Result<List<IdName>> listByProjectId(@RequestParam("projectId") String projectId) {
+        List<IdName> expList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId), IdName.class);
+        return Result.OK(expList);
+    }
 
     @GetMapping(value = "/list")
     Result<List<BaseExp>> list(ExperimentQuery query) {
