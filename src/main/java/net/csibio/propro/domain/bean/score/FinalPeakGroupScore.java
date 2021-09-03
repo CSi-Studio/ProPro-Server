@@ -7,7 +7,7 @@ import lombok.Data;
  * Time: 2018-08-05 22:42
  */
 @Data
-public class SimpleFeatureScores extends BaseScores {
+public class FinalPeakGroupScore extends BaseScores {
 
     String id;
 
@@ -32,14 +32,14 @@ public class SimpleFeatureScores extends BaseScores {
 
     String fragIntFeature;
 
-    public SimpleFeatureScores() {
+    public FinalPeakGroupScore() {
     }
 
-    public SimpleFeatureScores(int scoreTypesSize) {
+    public FinalPeakGroupScore(int scoreTypesSize) {
         this.scores = new Double[scoreTypesSize];
     }
 
-    public SimpleFeatureScores(String id, String peptideRef, Boolean decoy) {
+    public FinalPeakGroupScore(String id, String peptideRef, Boolean decoy) {
         this.id = id;
         this.peptideRef = peptideRef;
         this.decoy = decoy;

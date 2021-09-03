@@ -3,8 +3,8 @@ package net.csibio.propro.algorithm.score.features;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.domain.bean.score.FeatureScores;
 import net.csibio.propro.domain.bean.score.PeakGroup;
+import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import net.csibio.propro.utils.MathUtil;
 import org.apache.commons.math3.util.FastMath;
 import org.springframework.stereotype.Component;
@@ -31,7 +31,7 @@ public class ChromatographicScorer {
     /**
      * @param peakGroup list of features in selected mrmfeature
      */
-    public void calculateChromatographicScores(PeakGroup peakGroup, HashMap<String, Double> normedLibIntMap, FeatureScores scores, List<String> scoreTypes) {
+    public void calculateChromatographicScores(PeakGroup peakGroup, HashMap<String, Double> normedLibIntMap, PeakGroupScores scores, List<String> scoreTypes) {
         Table<Integer, Integer, Double[]> xcorrMatrix = initializeXCorrMatrix(peakGroup);
 
         //xcorrCoelutionScore
@@ -94,7 +94,7 @@ public class ChromatographicScorer {
         }
     }
 
-    public void calculateLogSnScore(PeakGroup peakGroup, FeatureScores scores, List<String> scoreTypes) {
+    public void calculateLogSnScore(PeakGroup peakGroup, PeakGroupScores scores, List<String> scoreTypes) {
         //logSnScore
         // log(mean of Apex sn s)
         double snScore = peakGroup.getSignalToNoiseSum();

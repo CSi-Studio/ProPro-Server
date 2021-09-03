@@ -7,6 +7,7 @@ import net.csibio.aird.bean.WindowRange;
 import net.csibio.aird.parser.DIAParser;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
+import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
@@ -178,9 +179,9 @@ public class Extractor {
             }
             scorer.strictScoreForOne(dataDO, coordinates.get(i), params.getMethod().getQuickFilter().getMinShapeScore());
 
-            if (dataDO.getFeatureScoresList() != null) {
+            if (dataDO.getPeakGroupScoresList() != null) {
                 finalList.add(dataDO);
-                log.info("第" + i + "次搜索找到了:" + dataDO.getPeptideRef() + ",BestRT:" + dataDO.getFeatureScoresList().get(0).getRt() + "耗时:" + (System.currentTimeMillis() - start));
+                log.info("第" + i + "次搜索找到了:" + dataDO.getPeptideRef() + ",BestRT:" + dataDO.getPeakGroupScoresList().get(0).getRt() + "耗时:" + (System.currentTimeMillis() - start));
                 count++;
             }
         }
@@ -251,7 +252,9 @@ public class Extractor {
                 }
             }
             if (isAllZero) {
-                data.getIntMap().put(fi.getCutInfo(), null);
+                //如果该cutInfo没有XIC到任何数据,则不存入IntMap中
+                continue;
+                // data.getIntMap().put(fi.getCutInfo(), null);
             } else {
                 isHit = true;
                 data.getIntMap().put(fi.getCutInfo(), intArray); //记录每一个碎片的光谱图
@@ -297,7 +300,9 @@ public class Extractor {
                 List<DataDO> dataList = doExtract(parser, exp, index, analyzeParams);
                 if (dataList != null) {
                     for (DataDO dataDO : dataList) {
-                        peakCount += dataDO.getFeatureScoresList().size();
+                        if (dataDO.getPeakGroupScoresList() != null) {
+                            peakCount += dataDO.getPeakGroupScoresList().size();
+                        }
                     }
                     dataCount += dataList.size();
                 }
@@ -364,18 +369,22 @@ public class Extractor {
             //Step1. 常规提取XIC,XIC结果不进行压缩处理,如果没有提取到任何结果,那么加入忽略列表
             DataDO dataDO = extractOne(coord, rtMap, params, params.getOverviewId());
             if (dataDO == null) {
+                log.info(coord.getPeptideRef() + ":EIC结果为空");
                 return;
             }
 
             //Step2. 常规选峰及打分,未满足条件的直接忽略
             scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
-            if (dataDO.getFeatureScoresList() == null) {
-                return;
-            }
-
+            dataList.add(dataDO);
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
             DataUtil.compress(dataDO);
-            dataList.add(dataDO);
+            dataDO.setStatus(IdentifyStatus.WAIT.getCode());
+
+
+            //如果没有打分数据,那么对应的decoy也不再计算,以保持target与decoy 1:1的混合比例
+            if (dataDO.getPeakGroupScoresList() == null) {
+                return;
+            }
 
             //Step4. 如果第一,二步均符合条件,那么开始对对应的伪肽段进行数据提取和打分
             coord.setDecoy(true);
@@ -386,10 +395,8 @@ public class Extractor {
 
             //Step5. 对Decoy进行打分
             scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
-            if (decoyData.getFeatureScoresList() == null) {
-                return;
-            }
-
+            decoyData.setStatus(IdentifyStatus.WAIT.getCode());
+            dataList.add(decoyData);
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
             DataUtil.compress(decoyData);
             dataList.add(decoyData);

@@ -5,9 +5,9 @@ import com.alibaba.fastjson.JSONArray;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.learner.*;
-import net.csibio.propro.domain.bean.score.FeatureScores;
+import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import net.csibio.propro.domain.bean.score.PeptideScores;
-import net.csibio.propro.domain.bean.score.SimpleFeatureScores;
 import net.csibio.propro.utils.ProProUtil;
 import org.apache.commons.math3.linear.*;
 import org.springframework.stereotype.Component;
@@ -42,28 +42,10 @@ public class Lda extends Classifier {
                 continue;
             }
             score(scores, ldaLearnData.getWeightsMap(), scoreTypes);
-            List<SimpleFeatureScores> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
+            List<FinalPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
             int count = 0;
-//            if (learningParams.getType().equals(ExpTypeConst.PRM)) {
-//                double maxDecoy = Double.MIN_VALUE;
-//                for (SimpleFeatureScores simpleFeatureScores : featureScoresList) {
-//                    if (simpleFeatureScores.getDecoy() && simpleFeatureScores.getMainScore() > maxDecoy) {
-//                        maxDecoy = simpleFeatureScores.getMainScore();
-//                    }
-//                }
-//                for (SimpleFeatureScores simpleFeatureScores : featureScoresList) {
-//                    if (!simpleFeatureScores.getDecoy() && simpleFeatureScores.getMainScore() > maxDecoy) {
-//                        count++;
-//                        simpleFeatureScores.setFdr(0d);
-//                    } else {
-//                        simpleFeatureScores.setFdr(1d);
-//                    }
-//                }
-//            } else {
             ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
             count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
-//            }
-
             if (count > 0) {
                 log.info("本轮尝试有效果:检测结果:" + count + "个");
             }
@@ -117,26 +99,26 @@ public class Lda extends Classifier {
     }
 
     private TrainPeaks selectFirstTrainPeaks(TrainData trainData, LearningParams learningParams) {
-        List<SimpleFeatureScores> decoyPeaks = new ArrayList<>();
+        List<FinalPeakGroupScore> decoyPeaks = new ArrayList<>();
         List<String> scoreTypes = learningParams.getScoreTypes();
         for (PeptideScores peptideScores : trainData.getDecoys()) {
-            FeatureScores topDecoy = null;
+            PeakGroupScores topDecoy = null;
             double maxMainScore = -Double.MAX_VALUE;
-            for (FeatureScores featureScores : peptideScores.getFeatureScoresList()) {
-                double mainScore = featureScores.get(ScoreType.MainScore.getName(), scoreTypes);
+            for (PeakGroupScores peakGroupScores : peptideScores.getScoreList()) {
+                double mainScore = peakGroupScores.get(ScoreType.MainScore.getName(), scoreTypes);
                 if (mainScore > maxMainScore) {
                     maxMainScore = mainScore;
-                    topDecoy = featureScores;
+                    topDecoy = peakGroupScores;
                 }
             }
-            SimpleFeatureScores simpleFeatureScores = new SimpleFeatureScores();
-            simpleFeatureScores.setScores(topDecoy.getScores());
-            decoyPeaks.add(simpleFeatureScores);
+            FinalPeakGroupScore finalPeakGroupScore = new FinalPeakGroupScore();
+            finalPeakGroupScore.setScores(topDecoy.getScores());
+            decoyPeaks.add(finalPeakGroupScore);
         }
         TrainPeaks trainPeaks = new TrainPeaks();
         trainPeaks.setTopDecoys(decoyPeaks);
 
-        SimpleFeatureScores bestTargetScore = new SimpleFeatureScores(learningParams.getScoreTypes().size());
+        FinalPeakGroupScore bestTargetScore = new FinalPeakGroupScore(learningParams.getScoreTypes().size());
         bestTargetScore.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.XcorrShapeWeighted.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.XcorrCoelution.getName(), 0d, scoreTypes);
@@ -158,7 +140,7 @@ public class Lda extends Classifier {
         bestTargetScore.put(ScoreType.YseriesScore.getName(), 10d, scoreTypes);
 
 
-        List<SimpleFeatureScores> bestTargets = new ArrayList<>();
+        List<FinalPeakGroupScore> bestTargets = new ArrayList<>();
         bestTargets.add(bestTargetScore);
         trainPeaks.setBestTargets(bestTargets);
         return trainPeaks;
@@ -185,7 +167,7 @@ public class Lda extends Classifier {
         RealMatrix scoresMatrix = new Array2DRowRealMatrix(totalLength, scoreTypesCount);
         RealVector labelVector = new ArrayRealVector(totalLength);
         int k = 0;
-        for (SimpleFeatureScores sfs : trainPeaks.getBestTargets()) {
+        for (FinalPeakGroupScore sfs : trainPeaks.getBestTargets()) {
             int i = 0;
             for (String scoreType : scoreTypes) {
                 if (scoreType.equals(skipScoreType)) {
@@ -197,7 +179,7 @@ public class Lda extends Classifier {
             labelVector.setEntry(k, 1);
             k++;
         }
-        for (SimpleFeatureScores sfs : trainPeaks.getTopDecoys()) {
+        for (FinalPeakGroupScore sfs : trainPeaks.getTopDecoys()) {
             int i = 0;
             for (String scoreType : scoreTypes) {
                 if (scoreType.equals(skipScoreType)) {

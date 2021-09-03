@@ -14,8 +14,10 @@ public class DataQuery extends PageQuery {
 
     String overviewId;
 
+    Integer status;
+
     String peptideRef;
-    
+
     String protein;
 
     Boolean decoy;

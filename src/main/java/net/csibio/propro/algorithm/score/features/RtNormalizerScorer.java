@@ -1,8 +1,8 @@
 package net.csibio.propro.algorithm.score.features;
 
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.domain.bean.score.FeatureScores;
 import net.csibio.propro.domain.bean.score.PeakGroup;
+import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import net.csibio.propro.domain.bean.score.ScoreRtPair;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +51,7 @@ public class RtNormalizerScorer {
             if (peakGroupFeature.getBestRightRt() - peakGroupFeature.getBestLeftRt() < 15d) {
                 continue;
             }
-            FeatureScores scores = new FeatureScores(defaultScoreTypes.size());
+            PeakGroupScores scores = new PeakGroupScores(defaultScoreTypes.size());
             chromatographicScorer.calculateChromatographicScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
             chromatographicScorer.calculateLogSnScore(peakGroupFeature, scores, defaultScoreTypes);
             libraryScorer.calculateLibraryScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
@@ -74,7 +74,7 @@ public class RtNormalizerScorer {
      * @param scores pre-calculated
      * @return final scoreForAll
      */
-    private double calculateLdaPrescore(FeatureScores scores, List<String> scoreTypes) {
+    private double calculateLdaPrescore(PeakGroupScores scores, List<String> scoreTypes) {
         return scores.get(ScoreType.LibraryCorr.getName(), scoreTypes) * -0.34664267d +
                 scores.get(ScoreType.LibraryRsmd.getName(), scoreTypes) * 2.98700722d +
                 scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes) * 0.09445371d +

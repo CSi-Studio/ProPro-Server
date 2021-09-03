@@ -8,8 +8,10 @@ public enum IdentifyStatus {
     SUCCESS(1, "SUCCESS"),
     //鉴定失败
     FAILED(2, "FAILED"),
-    //未满足鉴定条件
-    NO_FIT(3, "NO_FIT"),
+    //未满足鉴定条件,没有足够的肽段碎片
+    NO_ENOUGH_FRAGMENTS(3, "NO_ENOUGH_FRAGMENTS"),
+    //NO_PEAK_GROUP_FIND
+    NO_PEAK_GROUP_FIND(4, "NO_PEAK_GROUP_FIND"),
     ;
 
     int code;

@@ -1,25 +1,20 @@
 package net.csibio.propro.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.algorithm.extract.Extractor;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.dao.BaseMultiDAO;
 import net.csibio.propro.dao.DataDAO;
-import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.DataDO;
-import net.csibio.propro.domain.db.ExperimentDO;
-import net.csibio.propro.domain.options.AnalyzeParams;
+import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.domain.vo.ExpDataVO;
 import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.DataService;
 import net.csibio.propro.service.DataSumService;
+import net.csibio.propro.utils.DataUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.TreeMap;
 
 @Slf4j
 @Service("dataService")
@@ -55,36 +50,27 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public ExpDataVO fetchEicByPeptideRef(ExperimentDO exp, PeptideCoord coord, AnalyzeParams params) {
-
-        Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = extractor.getRtMap(exp, coord);
-        if (rtMapResult.isFailed()) {
-            return null;
+    public ExpDataVO getData(String projectId, String expId, String overviewId, String peptideRef) {
+        ExpDataVO dataVO = new ExpDataVO(expId, peptideRef);
+        DataDO data = getOne(new DataQuery(overviewId).setPeptideRef(peptideRef), DataDO.class, projectId);
+        if (data != null) {
+            DataUtil.decompress(data);
+            dataVO.setRtArray(data.getRtArray());
+            dataVO.setCutInfoMap(data.getCutInfoMap());
+            dataVO.setIntMap(data.getIntMap());
+            dataVO.setStatus(data.getStatus());
+        } else {
+            return dataVO;
         }
-        TreeMap<Float, MzIntensityPairs> rtMap = rtMapResult.getData();
-
-        Double targetRt = exp.getIrt().getSi().realRt(coord.getRt());
-        coord.setRtStart(targetRt - params.getMethod().getEic().getRtWindow());
-        coord.setRtEnd(targetRt + params.getMethod().getEic().getRtWindow());
-        DataDO dataDO = extractor.extractOne(coord, rtMap, params);
-        if (dataDO == null) {
-            return null;
+        DataSumDO dataSum = dataSumService.getById(data.getId(), projectId);
+        if (dataSum != null) {
+            dataVO.setFdr(dataSum.getFdr());
+            dataVO.setQValue(dataSum.getQValue());
+            dataVO.setStatus(dataSum.getStatus());
+            dataVO.setSum(dataSum.getSum());
+            dataVO.setFragIntFeature(dataSum.getFragIntFeature());
+            dataVO.setRealRt(dataSum.getRealRt());
         }
-
-        //Step2. 常规选峰及打分,未满足条件的直接忽略
-//        scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
-//        if (dataDO.getFeatureScoresList() == null) {
-//            return null;
-//        }
-
-//        DataSumDO dataSum = dataSumService.getOne(new DataSumQuery(params.getOverviewId()).setPeptideRef(coord.getPeptideRef()), DataSumDO.class, exp.getProjectId());
-//        DataDO realData = dataDO;
-        ExpDataVO dataVO = new ExpDataVO();
-//        dataVO.setPeptideRef(realData.getPeptideRef());
-//        dataVO.setExpId(exp.getId());
-//        dataVO.setCutInfoList(realData.getCutInfos());
-//        dataVO.setRtArray(realData.getRtArray());
-//        dataVO.setIntensityMap(realData.getIntensityMap());
 
         return dataVO;
     }

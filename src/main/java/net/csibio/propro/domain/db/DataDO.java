@@ -2,7 +2,7 @@ package net.csibio.propro.domain.db;
 
 import lombok.Data;
 import net.csibio.propro.domain.BaseDO;
-import net.csibio.propro.domain.bean.score.FeatureScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -36,7 +36,7 @@ public class DataDO extends BaseDO {
 
     String cutInfosFeature; //由cutInfoMap转换所得
 
-    List<FeatureScores> featureScoresList;
+    List<PeakGroupScores> peakGroupScoresList;
 
     //压缩后的rt列表,对应rtArray
     byte[] rtBytes;

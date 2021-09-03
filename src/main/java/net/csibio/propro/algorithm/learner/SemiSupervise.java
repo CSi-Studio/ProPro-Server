@@ -6,14 +6,15 @@ import net.csibio.propro.algorithm.learner.classifier.Xgboost;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
+import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
-import net.csibio.propro.domain.bean.score.FeatureScores;
+import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import net.csibio.propro.domain.bean.score.PeptideScores;
-import net.csibio.propro.domain.bean.score.SimpleFeatureScores;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.service.DataService;
@@ -64,7 +65,7 @@ public class SemiSupervise {
         params.setType(overview.getType());
         //Step2. 从数据库读取全部打分数据
         log.info("开始获取打分数据");
-        List<PeptideScores> scores = dataService.getAll(new DataQuery().setOverviewId(overviewId), PeptideScores.class, overview.getProjectId());
+        List<PeptideScores> scores = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), PeptideScores.class, overview.getProjectId());
 
         //Step3. 开始训练数据集
         HashMap<String, Double> weightsMap = new HashMap<>();
@@ -79,7 +80,7 @@ public class SemiSupervise {
             }
         }
 
-        List<SimpleFeatureScores> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), false);
+        List<FinalPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), false);
         ErrorStat errorStat = statistics.errorStatistics(featureScoresList, params);
         finalResult.setAllInfo(errorStat);
         int count = ProProUtil.checkFdr(finalResult, params.getFdr());
@@ -140,18 +141,18 @@ public class SemiSupervise {
     }
 
     //给分布在target中的decoy赋以Fdr值, 最末尾部分的decoy忽略, fdr为null
-    private void giveDecoyFdr(List<SimpleFeatureScores> featureScoresList) {
-        List<SimpleFeatureScores> sortedAll = SortUtil.sortByMainScore(featureScoresList, false);
-        SimpleFeatureScores leftFeatureScore = null;
-        SimpleFeatureScores rightFeatureScore;
-        List<SimpleFeatureScores> decoyPartList = new ArrayList<>();
-        for (SimpleFeatureScores simpleFeatureScores : sortedAll) {
-            if (simpleFeatureScores.getDecoy()) {
-                decoyPartList.add(simpleFeatureScores);
+    private void giveDecoyFdr(List<FinalPeakGroupScore> featureScoresList) {
+        List<FinalPeakGroupScore> sortedAll = SortUtil.sortByMainScore(featureScoresList, false);
+        FinalPeakGroupScore leftFeatureScore = null;
+        FinalPeakGroupScore rightFeatureScore;
+        List<FinalPeakGroupScore> decoyPartList = new ArrayList<>();
+        for (FinalPeakGroupScore finalPeakGroupScore : sortedAll) {
+            if (finalPeakGroupScore.getDecoy()) {
+                decoyPartList.add(finalPeakGroupScore);
             } else {
-                rightFeatureScore = simpleFeatureScores;
+                rightFeatureScore = finalPeakGroupScore;
                 if (leftFeatureScore != null && !decoyPartList.isEmpty()) {
-                    for (SimpleFeatureScores decoy : decoyPartList) {
+                    for (FinalPeakGroupScore decoy : decoyPartList) {
                         if (decoy.getMainScore() - leftFeatureScore.getMainScore() < rightFeatureScore.getMainScore() - decoy.getMainScore()) {
                             decoy.setFdr(leftFeatureScore.getFdr());
                             decoy.setQValue(leftFeatureScore.getQValue());
@@ -166,7 +167,7 @@ public class SemiSupervise {
             }
         }
         if (leftFeatureScore != null && !decoyPartList.isEmpty()) {
-            for (SimpleFeatureScores decoy : decoyPartList) {
+            for (FinalPeakGroupScore decoy : decoyPartList) {
                 decoy.setFdr(leftFeatureScore.getFdr());
                 decoy.setQValue(leftFeatureScore.getQValue());
             }
@@ -180,10 +181,10 @@ public class SemiSupervise {
      * @param featureScoresList
      * @param overviewDO
      */
-    private void targetDecoyDistribution(List<SimpleFeatureScores> featureScoresList, OverviewDO overviewDO) {
+    private void targetDecoyDistribution(List<FinalPeakGroupScore> featureScoresList, OverviewDO overviewDO) {
         HashMap<String, Integer> targetDistributions = ProProUtil.buildDistributionMap();
         HashMap<String, Integer> decoyDistributions = ProProUtil.buildDistributionMap();
-        for (SimpleFeatureScores sfs : featureScoresList) {
+        for (FinalPeakGroupScore sfs : featureScoresList) {
             if (sfs.getFdr() != null) {
                 if (sfs.getDecoy()) {
                     ProProUtil.addOneForFdrDistributionMap(sfs.getFdr(), decoyDistributions);
@@ -202,38 +203,38 @@ public class SemiSupervise {
             if (peptideScores.getDecoy()) {
                 continue;
             }
-            for (FeatureScores featureScores : peptideScores.getFeatureScoresList()) {
+            for (PeakGroupScores peakGroupScores : peptideScores.getScoreList()) {
                 int count = 0;
-                if (featureScores.get(ScoreType.NormRtScore, scoreTypes) != null && featureScores.get(ScoreType.NormRtScore, scoreTypes) > 8) {
+                if (peakGroupScores.get(ScoreType.NormRtScore, scoreTypes) != null && peakGroupScores.get(ScoreType.NormRtScore, scoreTypes) > 8) {
                     count++;
                 }
-                if (featureScores.get(ScoreType.LogSnScore, scoreTypes) != null && featureScores.get(ScoreType.LogSnScore, scoreTypes) < 3) {
+                if (peakGroupScores.get(ScoreType.LogSnScore, scoreTypes) != null && peakGroupScores.get(ScoreType.LogSnScore, scoreTypes) < 3) {
                     count++;
                 }
-                if (featureScores.get(ScoreType.IsotopeCorrelationScore, scoreTypes) != null && featureScores.get(ScoreType.IsotopeCorrelationScore, scoreTypes) < 0.8) {
+                if (peakGroupScores.get(ScoreType.IsotopeCorrelationScore, scoreTypes) != null && peakGroupScores.get(ScoreType.IsotopeCorrelationScore, scoreTypes) < 0.8) {
                     count++;
                 }
-                if (featureScores.get(ScoreType.IsotopeOverlapScore, scoreTypes) != null && featureScores.get(ScoreType.IsotopeOverlapScore, scoreTypes) > 0.2) {
+                if (peakGroupScores.get(ScoreType.IsotopeOverlapScore, scoreTypes) != null && peakGroupScores.get(ScoreType.IsotopeOverlapScore, scoreTypes) > 0.2) {
                     count++;
                 }
-                if (featureScores.get(ScoreType.MassdevScoreWeighted, scoreTypes) != null && featureScores.get(ScoreType.MassdevScoreWeighted, scoreTypes) > 15) {
+                if (peakGroupScores.get(ScoreType.MassdevScoreWeighted, scoreTypes) != null && peakGroupScores.get(ScoreType.MassdevScoreWeighted, scoreTypes) > 15) {
                     count++;
                 }
-                if (featureScores.get(ScoreType.BseriesScore, scoreTypes) != null && featureScores.get(ScoreType.BseriesScore, scoreTypes) < 1) {
+                if (peakGroupScores.get(ScoreType.BseriesScore, scoreTypes) != null && peakGroupScores.get(ScoreType.BseriesScore, scoreTypes) < 1) {
                     count++;
                 }
-                if (featureScores.get(ScoreType.YseriesScore, scoreTypes) != null && featureScores.get(ScoreType.YseriesScore, scoreTypes) < 5) {
+                if (peakGroupScores.get(ScoreType.YseriesScore, scoreTypes) != null && peakGroupScores.get(ScoreType.YseriesScore, scoreTypes) < 5) {
                     count++;
                 }
-                if (featureScores.get(ScoreType.XcorrShapeWeighted, scoreTypes) != null && featureScores.get(ScoreType.XcorrShapeWeighted, scoreTypes) < 0.6) {
+                if (peakGroupScores.get(ScoreType.XcorrShapeWeighted, scoreTypes) != null && peakGroupScores.get(ScoreType.XcorrShapeWeighted, scoreTypes) < 0.6) {
                     count++;
                 }
-                if (featureScores.get(ScoreType.XcorrShape, scoreTypes) != null && featureScores.get(ScoreType.XcorrShape, scoreTypes) < 0.5) {
+                if (peakGroupScores.get(ScoreType.XcorrShape, scoreTypes) != null && peakGroupScores.get(ScoreType.XcorrShape, scoreTypes) < 0.5) {
                     count++;
                 }
 
                 if (count > 3) {
-                    featureScores.setThresholdPassed(false);
+                    peakGroupScores.setThresholdPassed(false);
                 }
             }
         }

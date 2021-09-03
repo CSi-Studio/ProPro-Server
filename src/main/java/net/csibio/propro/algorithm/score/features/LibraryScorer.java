@@ -2,8 +2,8 @@ package net.csibio.propro.algorithm.score.features;
 
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.constants.constant.Constants;
-import net.csibio.propro.domain.bean.score.FeatureScores;
 import net.csibio.propro.domain.bean.score.PeakGroup;
+import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
 import net.csibio.propro.domain.options.DeveloperParams;
 import net.csibio.propro.utils.MathUtil;
@@ -35,7 +35,7 @@ public class LibraryScorer {
      * @param normedLibIntMap get libraryIntensity: from transitions
      * @param scores          library_corr, library_norm_manhattan
      */
-    public void calculateLibraryScores(PeakGroup peakGroup, HashMap<String, Double> normedLibIntMap, FeatureScores scores, List<String> scoreTypes) {
+    public void calculateLibraryScores(PeakGroup peakGroup, HashMap<String, Double> normedLibIntMap, PeakGroupScores scores, List<String> scoreTypes) {
         List<Double> experimentIntensity = new ArrayList<>(peakGroup.getIonIntensity().values());
         assert experimentIntensity.size() == normedLibIntMap.size();
 
@@ -131,7 +131,7 @@ public class LibraryScorer {
         }
     }
 
-    public void calculateNormRtScore(PeakGroup peakGroup, SlopeIntercept slopeIntercept, double groupRt, FeatureScores scores, List<String> scoreTypes) {
+    public void calculateNormRtScore(PeakGroup peakGroup, SlopeIntercept slopeIntercept, double groupRt, PeakGroupScores scores, List<String> scoreTypes) {
         //varNormRtScore
         double experimentalRt = peakGroup.getApexRt();
         double normalizedExperimentalRt = ScoreUtil.trafoApplier(slopeIntercept, experimentalRt);
@@ -143,7 +143,7 @@ public class LibraryScorer {
      * sum of intensitySum:
      * totalXic
      */
-    public void calculateIntensityScore(PeakGroup peakGroup, FeatureScores scores, List<String> scoreTypes) {
+    public void calculateIntensityScore(PeakGroup peakGroup, PeakGroupScores scores, List<String> scoreTypes) {
         double intensitySum = peakGroup.getPeakGroupInt();
         double totalXic = peakGroup.getTotalXic();
         scores.put(ScoreType.IntensityScore.getName(), intensitySum / totalXic, scoreTypes);

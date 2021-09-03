@@ -49,6 +49,9 @@ public class DataDAO extends BaseMultiDAO<DataDO, DataQuery> {
         if (StringUtils.isNotEmpty(dataQuery.getProtein())) {
             query.addCriteria(where("protein").is(dataQuery.getProtein()));
         }
+        if (dataQuery.getStatus() != null) {
+            query.addCriteria(where("status").is(dataQuery.getStatus()));
+        }
         if (dataQuery.getDecoy() != null) {
             query.addCriteria(where("decoy").is(dataQuery.getDecoy()));
         }

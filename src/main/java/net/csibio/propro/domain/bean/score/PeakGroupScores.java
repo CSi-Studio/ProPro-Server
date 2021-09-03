@@ -8,7 +8,7 @@ import lombok.Data;
  * @author Nico Wang Ruimin
  */
 @Data
-public class FeatureScores extends BaseScores {
+public class PeakGroupScores extends BaseScores {
 
     /**
      * 检测出的该峰的峰顶的rt时间
@@ -26,10 +26,10 @@ public class FeatureScores extends BaseScores {
 
     Boolean thresholdPassed;
 
-    public FeatureScores() {
+    public PeakGroupScores() {
     }
 
-    public FeatureScores(int scoreTypesSize) {
+    public PeakGroupScores(int scoreTypesSize) {
         this.scores = new Double[scoreTypesSize];
     }
 

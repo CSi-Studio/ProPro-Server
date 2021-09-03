@@ -4,8 +4,8 @@ import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.domain.bean.data.RtIntensityPairsDouble;
 import net.csibio.propro.domain.bean.score.EmgModelParams;
-import net.csibio.propro.domain.bean.score.FeatureScores;
 import net.csibio.propro.domain.bean.score.PeakGroup;
+import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import net.csibio.propro.utils.MathUtil;
 import net.finmath.optimizer.SolverException;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ public class ElutionScorer {
 
     public final Logger logger = LoggerFactory.getLogger(ElutionScorer.class);
 
-    public void calculateElutionModelScore(PeakGroup peakGroupFeature, FeatureScores scores, List<String> scoreTypes) {
+    public void calculateElutionModelScore(PeakGroup peakGroupFeature, PeakGroupScores scores, List<String> scoreTypes) {
         double avgScore = 0.0d;
         for (String cutInfo : peakGroupFeature.getIonHullInt().keySet()) {
             RtIntensityPairsDouble preparedHullPoints = prepareElutionFit(peakGroupFeature.getIonHullRt(), peakGroupFeature.getIonHullInt().get(cutInfo));

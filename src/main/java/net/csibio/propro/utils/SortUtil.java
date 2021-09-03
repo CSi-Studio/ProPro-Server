@@ -2,9 +2,9 @@ package net.csibio.propro.utils;
 
 import com.google.common.collect.Ordering;
 import net.csibio.aird.bean.WindowRange;
-import net.csibio.propro.domain.bean.score.FeatureScores;
+import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import net.csibio.propro.domain.bean.score.PeptideScores;
-import net.csibio.propro.domain.bean.score.SimpleFeatureScores;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.PeptideDO;
 
@@ -35,10 +35,10 @@ public class SortUtil {
         return ordering.sortedCopy(swathList);
     }
 
-    public static List<SimpleFeatureScores> sortByMainScore(List<SimpleFeatureScores> scores, boolean isDesc) {
-        Ordering<SimpleFeatureScores> ordering = Ordering.from(new Comparator<SimpleFeatureScores>() {
+    public static List<FinalPeakGroupScore> sortByMainScore(List<FinalPeakGroupScore> scores, boolean isDesc) {
+        Ordering<FinalPeakGroupScore> ordering = Ordering.from(new Comparator<FinalPeakGroupScore>() {
             @Override
-            public int compare(SimpleFeatureScores o1, SimpleFeatureScores o2) {
+            public int compare(FinalPeakGroupScore o1, FinalPeakGroupScore o2) {
                 try {
                     if (isDesc) {
                         return o2.getMainScore().compareTo(o1.getMainScore());
@@ -55,10 +55,10 @@ public class SortUtil {
         return ordering.sortedCopy(scores);
     }
 
-    public static List<SimpleFeatureScores> sortByFdr(List<SimpleFeatureScores> scores, boolean isDesc) {
-        Ordering<SimpleFeatureScores> ordering = Ordering.from(new Comparator<SimpleFeatureScores>() {
+    public static List<FinalPeakGroupScore> sortByFdr(List<FinalPeakGroupScore> scores, boolean isDesc) {
+        Ordering<FinalPeakGroupScore> ordering = Ordering.from(new Comparator<FinalPeakGroupScore>() {
             @Override
-            public int compare(SimpleFeatureScores o1, SimpleFeatureScores o2) {
+            public int compare(FinalPeakGroupScore o1, FinalPeakGroupScore o2) {
                 try {
                     if (o1.getFdr() == null) {
                         return 1;
@@ -81,10 +81,10 @@ public class SortUtil {
         return ordering.sortedCopy(scores);
     }
 
-    public static List<FeatureScores> sortBySelectedScore(List<FeatureScores> scores, String scoreName, boolean isDesc, List<String> scoreTypes) {
-        Ordering<FeatureScores> ordering = Ordering.from(new Comparator<FeatureScores>() {
+    public static List<PeakGroupScores> sortBySelectedScore(List<PeakGroupScores> scores, String scoreName, boolean isDesc, List<String> scoreTypes) {
+        Ordering<PeakGroupScores> ordering = Ordering.from(new Comparator<PeakGroupScores>() {
             @Override
-            public int compare(FeatureScores o1, FeatureScores o2) {
+            public int compare(PeakGroupScores o1, PeakGroupScores o2) {
                 if (isDesc) {
                     return o2.get(scoreName, scoreTypes).compareTo(o1.get(scoreName, scoreTypes));
                 } else {
@@ -106,10 +106,10 @@ public class SortUtil {
      * @param isDesc 是否降序排序
      * @return
      */
-    public static List<SimpleFeatureScores> sortByPValue(List<SimpleFeatureScores> scores, boolean isDesc) {
-        Ordering<SimpleFeatureScores> ordering = Ordering.from(new Comparator<SimpleFeatureScores>() {
+    public static List<FinalPeakGroupScore> sortByPValue(List<FinalPeakGroupScore> scores, boolean isDesc) {
+        Ordering<FinalPeakGroupScore> ordering = Ordering.from(new Comparator<FinalPeakGroupScore>() {
             @Override
-            public int compare(SimpleFeatureScores o1, SimpleFeatureScores o2) {
+            public int compare(FinalPeakGroupScore o1, FinalPeakGroupScore o2) {
                 if (isDesc) {
                     return o2.getPValue().compareTo(o1.getPValue());
                 } else {

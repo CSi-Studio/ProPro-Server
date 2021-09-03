@@ -5,12 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.overview.OverviewV1;
-import net.csibio.propro.domain.bean.peptide.PeptideCoord;
-import net.csibio.propro.domain.db.*;
-import net.csibio.propro.domain.options.AnalyzeParams;
+import net.csibio.propro.domain.db.DataSumDO;
+import net.csibio.propro.domain.db.ProjectDO;
 import net.csibio.propro.domain.query.DataSumQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
-import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.domain.vo.ExpDataVO;
 import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +52,6 @@ public class DataController {
 
     @GetMapping(value = "/getExpData")
     Result getExpData(@RequestParam("projectId") String projectId,
-                      @RequestParam("libraryId") String libraryId,
                       @RequestParam("peptideRef") String peptideRef,
                       @RequestParam("expIds") List<String> expIds) {
         if (expIds == null || expIds.size() == 0) {
@@ -64,23 +61,11 @@ public class DataController {
         if (project == null) {
             return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
         }
-        LibraryDO library = libraryService.getById(libraryId);
-        if (library == null) {
-            return Result.Error(ResultCode.LIBRARY_NOT_EXISTED);
-        }
-        MethodDO method = methodService.getById(project.getMethodId());
-        if (method == null) {
-            return Result.Error(ResultCode.METHOD_NOT_EXISTED);
-        }
         long start = System.currentTimeMillis();
-        PeptideCoord coord = peptideService.getOne(new PeptideQuery(libraryId).setPeptideRef(peptideRef), PeptideCoord.class);
-        AnalyzeParams params = new AnalyzeParams(method);
         List<ExpDataVO> dataList = new ArrayList<>();
         expIds.forEach(expId -> {
-            ExperimentDO exp = experimentService.getById(expId);
             OverviewV1 overview = overviewService.getOne(new OverviewQuery(projectId).setExpId(expId).setDefaultOne(true), OverviewV1.class);
-            params.setOverviewId(overview.id());
-            ExpDataVO data = dataService.fetchEicByPeptideRef(exp, coord, params);
+            ExpDataVO data = dataService.getData(projectId, expId, overview.id(), peptideRef);
             dataList.add(data);
         });
         log.info("分析完毕,耗时:" + (System.currentTimeMillis() - start));

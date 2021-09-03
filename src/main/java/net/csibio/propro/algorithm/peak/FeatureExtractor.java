@@ -5,7 +5,7 @@ import net.csibio.propro.domain.bean.data.PeptideSpectrum;
 import net.csibio.propro.domain.bean.data.RtIntensityPairsDouble;
 import net.csibio.propro.domain.bean.score.IonPeak;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.PeptideFeature;
+import net.csibio.propro.domain.bean.score.PeakGroupList;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.options.DeveloperParams;
 import net.csibio.propro.domain.options.SigmaSpacing;
@@ -46,12 +46,12 @@ public class FeatureExtractor {
     /**
      * @param data         XIC后的数据对象
      * @param intensityMap 得到标准库中peptideRef对应的碎片和强度的键值对
-     * @param ss
+     * @param ss           sigma spacing
      * @return
      */
-    public PeptideFeature getExperimentFeature(DataDO data, HashMap<String, Float> intensityMap, SigmaSpacing ss) {
+    public PeakGroupList getExperimentFeature(DataDO data, HashMap<String, Float> intensityMap, SigmaSpacing ss) {
         if (data.getIntMap().isEmpty()) {
-            return new PeptideFeature(false);
+            return new PeakGroupList(false);
         }
 
         HashMap<String, RtIntensityPairsDouble> ionPeaks = new HashMap<>();
@@ -77,7 +77,7 @@ public class FeatureExtractor {
         }
 
         if (intensitiesMap.size() == 0) {
-            return new PeptideFeature(false);
+            return new PeakGroupList(false);
         }
         //计算GaussFilter
         Double[] rtDoubleArray = new Double[data.getRtArray().length];
@@ -108,7 +108,7 @@ public class FeatureExtractor {
             normedLibIntMap.put(cutInfo, intensityMap.get(cutInfo) / libIntSum);
         }
         if (ionPeakParams.size() == 0) {
-            return new PeptideFeature(false);
+            return new PeakGroupList(false);
         }
 
         List<PeakGroup> peakGroupFeatureList;
@@ -117,9 +117,9 @@ public class FeatureExtractor {
         } else {
             peakGroupFeatureList = featureFinder.findFeatures(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
         }
-        PeptideFeature featureResult = new PeptideFeature(true);
-        featureResult.setPeakGroupList(peakGroupFeatureList);
-        featureResult.setNormedLibIntMap(normedLibIntMap);
+        PeakGroupList featureResult = new PeakGroupList(true);
+        featureResult.setList(peakGroupFeatureList);
+        featureResult.setNormedIntMap(normedLibIntMap);
 
         return featureResult;
     }

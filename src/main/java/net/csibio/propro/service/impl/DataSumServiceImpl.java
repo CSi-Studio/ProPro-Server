@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.dao.BaseMultiDAO;
 import net.csibio.propro.dao.DataSumDAO;
-import net.csibio.propro.domain.bean.score.SimpleFeatureScores;
+import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.query.DataSumQuery;
 import net.csibio.propro.exceptions.XException;
@@ -43,7 +43,7 @@ public class DataSumServiceImpl implements DataSumService {
     }
 
     @Override
-    public void buildDataSumList(List<SimpleFeatureScores> sfsList, Double fdr, String overviewId, String projectId) {
+    public void buildDataSumList(List<FinalPeakGroupScore> sfsList, Double fdr, String overviewId, String projectId) {
         List<DataSumDO> sumList = new ArrayList<>();
         sfsList.forEach(sfs -> {
             DataSumDO sum = new DataSumDO();
