@@ -35,8 +35,7 @@ public class OverviewDO extends BaseDO {
      * 分析名称
      */
     String name;
-
-
+    
     /**
      * 分析的实验对象名称
      */

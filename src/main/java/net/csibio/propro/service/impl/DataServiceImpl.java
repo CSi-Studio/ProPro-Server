@@ -51,7 +51,7 @@ public class DataServiceImpl implements DataService {
 
     @Override
     public ExpDataVO getData(String projectId, String expId, String overviewId, String peptideRef) {
-        ExpDataVO dataVO = new ExpDataVO(expId, peptideRef);
+        ExpDataVO dataVO = new ExpDataVO(expId, overviewId, peptideRef);
         DataDO data = getOne(new DataQuery(overviewId).setPeptideRef(peptideRef), DataDO.class, projectId);
         if (data != null) {
             DataUtil.decompress(data);

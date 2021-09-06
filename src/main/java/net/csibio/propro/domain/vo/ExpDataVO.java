@@ -10,6 +10,8 @@ public class ExpDataVO {
 
     String expId;
 
+    String overviewId;
+
     String peptideRef;
 
     float[] rtArray;  //排序后的rt
@@ -36,8 +38,9 @@ public class ExpDataVO {
     public ExpDataVO() {
     }
 
-    public ExpDataVO(String expId, String peptideRef) {
+    public ExpDataVO(String expId, String overviewId, String peptideRef) {
         this.expId = expId;
         this.peptideRef = peptideRef;
+        this.overviewId = overviewId;
     }
 }

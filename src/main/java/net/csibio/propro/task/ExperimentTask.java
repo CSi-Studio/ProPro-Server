@@ -114,8 +114,8 @@ public class ExperimentTask extends BaseTask {
         ap.setFdr(params.getMethod().getClassifier().getFdr());
         ap.setRemoveUnmatched(params.getMethod().getClassifier().getRemoveUnmatched());
         FinalResult finalResult = semiSupervise.doSemiSupervise(params.getOverviewId(), ap);
-        taskDO.addLog("流程执行完毕,总耗时:" + (System.currentTimeMillis() - start) + ",最终识别的肽段数为" + finalResult.getMatchedPeptideCount() + "最终识别的蛋白数目为:" + finalResult.getMatchedUniqueProteinCount());
-        log.info("流程执行完毕,总耗时:" + ((System.currentTimeMillis() - start) / 1000) + "秒,最终识别的肽段数为" + finalResult.getMatchedPeptideCount() + "最终识别的蛋白数目为:" + finalResult.getMatchedUniqueProteinCount());
+        taskDO.addLog("流程执行完毕,总耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
+        log.info("流程执行完毕,总耗时:" + ((System.currentTimeMillis() - start) / 1000) + "秒");
         if (finalResult.getMatchedUniqueProteinCount() != null && finalResult.getMatchedUniqueProteinCount() != 0) {
             taskDO.addLog("Peptide/Protein Rate:" + finalResult.getMatchedPeptideCount() / finalResult.getMatchedUniqueProteinCount());
         }

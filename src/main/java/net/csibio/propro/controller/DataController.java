@@ -55,6 +55,7 @@ public class DataController {
     @GetMapping(value = "/getExpData")
     Result getExpData(@RequestParam("projectId") String projectId,
                       @RequestParam("peptideRef") String peptideRef,
+                      @RequestParam("onlyDefault") Boolean onlyDefault,
                       @RequestParam("expIds") List<String> expIds) {
         if (expIds == null || expIds.size() == 0) {
             return Result.Error(ResultCode.EXP_IDS_CANNOT_BE_EMPTY);
@@ -66,11 +67,15 @@ public class DataController {
         long start = System.currentTimeMillis();
         List<ExpDataVO> dataList = new ArrayList<>();
         expIds.forEach(expId -> {
-            OverviewV1 overview = overviewService.getOne(new OverviewQuery(projectId).setExpId(expId).setDefaultOne(true), OverviewV1.class);
+            OverviewQuery query = new OverviewQuery(projectId).setExpId(expId);
+            if (onlyDefault) {
+                query.setDefaultOne(true);
+            }
+            OverviewV1 overview = overviewService.getOne(query, OverviewV1.class);
             ExpDataVO data = dataService.getData(projectId, expId, overview.id(), peptideRef);
             dataList.add(data);
         });
-        log.info("分析完毕,耗时:" + (System.currentTimeMillis() - start));
+        log.info("获取数据完毕,耗时:" + (System.currentTimeMillis() - start));
         return Result.OK(dataList);
     }
 }
