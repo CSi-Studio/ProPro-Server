@@ -4,8 +4,10 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.data.BaseData;
 import net.csibio.propro.domain.bean.overview.OverviewV1;
-import net.csibio.propro.domain.db.DataDO;
+import net.csibio.propro.domain.db.DataSumDO;
+import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.ProjectDO;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
@@ -45,11 +47,25 @@ public class DataController {
 
     @GetMapping(value = "/list")
     Result list(DataQuery dataQuery) {
-        if (dataQuery.getProjectId() == null) {
-            return Result.Error(ResultCode.PROJECT_ID_CANNOT_BE_EMPTY);
+        if (dataQuery.getOverviewId() == null) {
+            return Result.Error(ResultCode.OVERVIEW_ID_CAN_NOT_BE_EMPTY);
         }
-        Result<List<DataDO>> result = dataService.getList(dataQuery, dataQuery.getProjectId());
-        return result;
+        OverviewDO overview = overviewService.getById(dataQuery.getOverviewId());
+        Result<List<BaseData>> result = dataService.getList(dataQuery, BaseData.class, overview.getProjectId());
+        if (result.isFailed()) {
+            return result;
+        }
+
+        List<BaseData> baseDataList = result.getData();
+
+        List<ExpDataVO> dataList = new ArrayList<>();
+        baseDataList.forEach(baseData -> {
+            DataSumDO dataSum = dataSumService.getById(baseData.getId(), overview.getProjectId());
+            ExpDataVO dataVO = new ExpDataVO(overview.getExpId());
+            dataVO.merge(baseData, dataSum);
+            dataList.add(dataVO);
+        });
+        return Result.OK(dataList);
     }
 
     @GetMapping(value = "/getExpData")

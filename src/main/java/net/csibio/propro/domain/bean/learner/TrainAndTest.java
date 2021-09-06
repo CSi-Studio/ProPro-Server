@@ -1,7 +1,7 @@
 package net.csibio.propro.domain.bean.learner;
 
 import lombok.Data;
-import net.csibio.propro.domain.bean.score.PeptideScores;
+import net.csibio.propro.domain.bean.data.PeptideScores;
 
 import java.util.List;
 

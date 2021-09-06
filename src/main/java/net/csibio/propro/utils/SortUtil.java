@@ -2,9 +2,9 @@ package net.csibio.propro.utils;
 
 import com.google.common.collect.Ordering;
 import net.csibio.aird.bean.WindowRange;
+import net.csibio.propro.domain.bean.data.PeptideScores;
 import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
 import net.csibio.propro.domain.bean.score.PeakGroupScores;
-import net.csibio.propro.domain.bean.score.PeptideScores;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.PeptideDO;
 
