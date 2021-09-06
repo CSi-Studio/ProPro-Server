@@ -14,6 +14,8 @@ public class DataSumQuery extends PageQuery {
 
     String overviewId;
 
+    Boolean isUnique;
+
     String peptideRef;
 
     Boolean decoy;
@@ -35,10 +37,11 @@ public class DataSumQuery extends PageQuery {
         super(pageNo, pageSize);
     }
 
-    public void addStatus(Integer status) {
-        if (status == null) {
+    public DataSumQuery addStatus(Integer status) {
+        if (statusList == null) {
             statusList = new ArrayList<Integer>();
         }
         statusList.add(status);
+        return this;
     }
 }

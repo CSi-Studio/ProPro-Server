@@ -22,7 +22,9 @@ public class FinalResult {
 
     Integer matchedPeptideCount;
 
-    Integer matchedProteinCount;
+    Integer matchedUniqueProteinCount;
+
+    Integer matchedTotalProteinCount;
 
     String errorInfo;
 }

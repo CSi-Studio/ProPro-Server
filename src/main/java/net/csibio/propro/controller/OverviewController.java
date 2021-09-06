@@ -7,6 +7,7 @@ import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.OverviewQuery;
+import net.csibio.propro.service.DataSumService;
 import net.csibio.propro.service.OverviewService;
 import net.csibio.propro.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,8 @@ public class OverviewController {
     OverviewService overviewService;
     @Autowired
     ProjectService projectService;
+    @Autowired
+    DataSumService dataSumService;
 
     @GetMapping(value = "/list")
     Result list(OverviewQuery query) {
@@ -111,5 +114,24 @@ public class OverviewController {
             result.setErrorList(errorList);
         }
         return result;
+    }
+
+    /**
+     * 重新统计该overview的鉴定数目
+     *
+     * @param idList
+     * @return
+     */
+    @PostMapping(value = "/statistic")
+    Result statistic(@RequestParam("idList") List<String> idList) {
+        idList.forEach(id -> {
+            OverviewDO overview = overviewService.getById(id);
+            if (overview != null) {
+                overviewService.statistic(overview);
+                log.info(overview.getName() + " 统计成功");
+            }
+        });
+
+        return Result.OK();
     }
 }

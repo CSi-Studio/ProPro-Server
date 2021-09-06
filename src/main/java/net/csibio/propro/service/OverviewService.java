@@ -24,4 +24,12 @@ public interface OverviewService extends BaseService<OverviewDO, OverviewQuery> 
      * @return
      */
     Result resetDefaultOne(String expId);
+
+    /**
+     * 对overview进行鉴定统计
+     *
+     * @param overview
+     * @return
+     */
+    Result statistic(OverviewDO overview);
 }

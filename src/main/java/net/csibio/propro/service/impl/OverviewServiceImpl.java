@@ -1,5 +1,7 @@
 package net.csibio.propro.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
+import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.dao.BaseDAO;
 import net.csibio.propro.dao.OverviewDAO;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Slf4j
 @Service("overviewService")
 public class OverviewServiceImpl implements OverviewService {
 
@@ -110,5 +113,24 @@ public class OverviewServiceImpl implements OverviewService {
         HashMap<String, Object> field = new HashMap<>();
         field.put("defaultOne", false);
         return updateAll(query, field);
+    }
+
+    @Override
+    public Result statistic(OverviewDO overview) {
+
+        int matchedUniqueProteinsCount = dataSumService.countMatchedProteins(overview.getId(), overview.getProjectId(), true, 1);
+        int matchedTotalProteinsCount = dataSumService.countMatchedProteins(overview.getId(), overview.getProjectId(), false, 1);
+        int matchedUniquePeptidesCount = dataSumService.countMatchedPeptide(overview.getId(), overview.getProjectId(), true);
+        int matchedTotalPeptidesCount = dataSumService.countMatchedPeptide(overview.getId(), overview.getProjectId(), false);
+        log.info("最终鉴定蛋白数目(Unique)为:" + matchedUniqueProteinsCount);
+        log.info("最终鉴定蛋白数目(含非Unique)为:" + matchedTotalProteinsCount);
+        log.info("最终鉴定肽段数目(Unique)为:" + matchedUniquePeptidesCount);
+        log.info("最终鉴定肽段数目(含非Unique)为:" + matchedTotalPeptidesCount);
+
+        overview.getStatistic().put(StatConst.MATCHED_UNIQUE_PROTEIN_COUNT, matchedUniqueProteinsCount);
+        overview.getStatistic().put(StatConst.MATCHED_TOTAL_PROTEIN_COUNT, matchedTotalProteinsCount);
+        overview.getStatistic().put(StatConst.MATCHED_UNIQUE_PEPTIDE_COUNT, matchedUniquePeptidesCount);
+        overview.getStatistic().put(StatConst.MATCHED_TOTAL_PEPTIDE_COUNT, matchedTotalPeptidesCount);
+        return update(overview);
     }
 }

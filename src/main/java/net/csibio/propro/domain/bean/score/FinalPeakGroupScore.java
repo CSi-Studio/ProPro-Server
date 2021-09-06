@@ -2,6 +2,8 @@ package net.csibio.propro.domain.bean.score;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * Created by Nico Wang Ruimin
  * Time: 2018-08-05 22:42
@@ -10,6 +12,8 @@ import lombok.Data;
 public class FinalPeakGroupScore extends BaseScores {
 
     String id;
+
+    List<String> proteins;
 
     String peptideRef;
 
@@ -39,8 +43,9 @@ public class FinalPeakGroupScore extends BaseScores {
         this.scores = new Double[scoreTypesSize];
     }
 
-    public FinalPeakGroupScore(String id, String peptideRef, Boolean decoy) {
+    public FinalPeakGroupScore(String id, List<String> proteins, String peptideRef, Boolean decoy) {
         this.id = id;
+        this.proteins = proteins;
         this.peptideRef = peptideRef;
         this.decoy = decoy;
     }

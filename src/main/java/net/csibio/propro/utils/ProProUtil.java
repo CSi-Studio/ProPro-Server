@@ -334,7 +334,7 @@ public class ProProUtil {
             if (score.getScoreList() == null || score.getScoreList().size() == 0) {
                 continue;
             }
-            FinalPeakGroupScore bestFeatureScores = new FinalPeakGroupScore(score.getId(), score.getPeptideRef(), score.getDecoy());
+            FinalPeakGroupScore bestFeatureScores = new FinalPeakGroupScore(score.getId(), score.getProteins(), score.getPeptideRef(), score.getDecoy());
             double maxScore = -Double.MAX_VALUE;
             PeakGroupScores topFeatureScore = null;
             for (PeakGroupScores peakGroupScores : score.getScoreList()) {

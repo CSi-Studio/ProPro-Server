@@ -4,6 +4,7 @@ import lombok.Data;
 import net.csibio.propro.domain.db.PeptideDO;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -21,6 +22,7 @@ public class PeptideCoord {
 
     String peptideRef;
 
+    List<String> proteins;
     /**
      * 对应肽段序列,如果是伪肽段,则为对应的伪肽段的序列(不包含UniModId)
      */

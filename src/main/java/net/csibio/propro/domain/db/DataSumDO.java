@@ -7,9 +7,12 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 
+import java.util.List;
+
 @Data
 @CompoundIndexes({
-        @CompoundIndex(name = "overviewId_peptideRef_decoy", def = "{'overviewId':1,'peptideRef':1,'decoy':1}", unique = true)
+        @CompoundIndex(name = "overviewId_peptideRef_decoy", def = "{'overviewId':1,'peptideRef':1,'decoy':1}", unique = true),
+        @CompoundIndex(name = "overviewId_proteins_decoy", def = "{'overviewId':1,'proteins':1,'decoy':1}")
 })
 public class DataSumDO extends BaseDO {
 
@@ -17,6 +20,8 @@ public class DataSumDO extends BaseDO {
     String id;
     @Indexed
     String overviewId;
+    @Indexed
+    List<String> proteins;
     @Indexed
     String peptideRef;
     @Indexed

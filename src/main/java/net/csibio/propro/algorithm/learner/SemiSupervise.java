@@ -63,7 +63,7 @@ public class SemiSupervise {
             return finalResult;
         }
         params.setType(overview.getType());
-        //Step2. 从数据库读取全部打分数据
+        //Step2. 从数据库读取全部含打分结果的数据
         log.info("开始获取打分数据");
         List<PeptideScores> scores = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), PeptideScores.class, overview.getProjectId());
 
@@ -103,20 +103,11 @@ public class SemiSupervise {
 
         long start = System.currentTimeMillis();
         //插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
-        //  dataService.batchUpdate(overview.getId(), featureScoresList, overview.getProjectId());
         dataSumService.buildDataSumList(featureScoresList, params.getFdr(), overviewId, overview.getProjectId());
         log.info("插入Sum数据" + featureScoresList.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
-        log.info("最终鉴定肽段数目为:" + count + ",打分反馈更新完毕");
-//        int matchedProteinsCount = dataService.countIdentifiedProteins(overviewId, overview.getProjectId());
-//        log.info("最终鉴定蛋白数目(包含非Unique)为:" + matchedProteinsCount);
-        finalResult.setMatchedPeptideCount(count);
-//        finalResult.setMatchedProteinCount(matchedProteinsCount);
-
         overview.setWeights(weightsMap);
-        overview.getStatistic().put(StatConst.MATCHED_PEPTIDE_COUNT, count);
-//        overview.getStatistic().put(StatConst.MATCHED_PROTEIN_COUNT, matchedProteinsCount);
         overviewService.update(overview);
-
+        overviewService.statistic(overview);
         log.info("合并打分完成,共找到新肽段" + count + "个");
         return finalResult;
     }

@@ -16,6 +16,7 @@ import java.util.Map;
 @Data
 @CompoundIndexes({
         @CompoundIndex(name = "overviewId_peptideRef", def = "{'overviewId':1,'peptideRef':1}"),
+        @CompoundIndex(name = "overviewId_proteins", def = "{'overviewId':1,'proteins':1}"),
         @CompoundIndex(name = "overviewId_peptideRef_status", def = "{'overviewId':1,'peptideRef':1,'status':1}"),
         @CompoundIndex(name = "overviewId_peptideRef_decoy", def = "{'overviewId':1,'peptideRef':1,'decoy':1}", unique = true)
 })
@@ -29,6 +30,8 @@ public class DataDO extends BaseDO {
     String peptideRef;
     @Indexed
     Boolean decoy = false; //是否是伪肽段
+    @Indexed
+    List<String> proteins;
 
     Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得
 

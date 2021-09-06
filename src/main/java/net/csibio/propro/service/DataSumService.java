@@ -9,4 +9,8 @@ import java.util.List;
 public interface DataSumService extends BaseMultiService<DataSumDO, DataSumQuery> {
 
     void buildDataSumList(List<FinalPeakGroupScore> sfsList, Double fdr, String overviewId, String projectId);
+
+    int countMatchedProteins(String overviewId, String projectId, Boolean needUnique, int hit);
+
+    int countMatchedPeptide(String overviewId, String projectId, Boolean needUnique);
 }

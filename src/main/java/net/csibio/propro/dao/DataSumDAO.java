@@ -49,6 +49,9 @@ public class DataSumDAO extends BaseMultiDAO<DataSumDO, DataSumQuery> {
         if (dataSumQuery.getDecoy() != null) {
             query.addCriteria(where("decoy").is(dataSumQuery.getDecoy()));
         }
+        if (dataSumQuery.getIsUnique() != null && dataSumQuery.getIsUnique()) {
+            query.addCriteria(where("proteins.1").exists(false));
+        }
 //        if (dataQuery.getMzStart() != null && dataQuery.getMzEnd() != null) {
 //            query.addCriteria(where("mz").gte(dataQuery.getMzStart()).lt(dataQuery.getMzEnd()));
 //        }

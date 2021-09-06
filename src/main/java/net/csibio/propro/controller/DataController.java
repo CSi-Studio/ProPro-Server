@@ -43,7 +43,6 @@ public class DataController {
     @Autowired
     DataSumService dataSumService;
 
-
     @GetMapping(value = "/list")
     Result list(DataQuery dataQuery) {
         if (dataQuery.getProjectId() == null) {
