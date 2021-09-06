@@ -51,12 +51,12 @@ public class DataController {
             return Result.Error(ResultCode.OVERVIEW_ID_CAN_NOT_BE_EMPTY);
         }
         OverviewDO overview = overviewService.getById(dataQuery.getOverviewId());
-        Result<List<BaseData>> result = dataService.getList(dataQuery, BaseData.class, overview.getProjectId());
-        if (result.isFailed()) {
-            return result;
+        Result<List<BaseData>> res = dataService.getList(dataQuery, BaseData.class, overview.getProjectId());
+        if (res.isFailed()) {
+            return res;
         }
 
-        List<BaseData> baseDataList = result.getData();
+        List<BaseData> baseDataList = res.getData();
 
         List<ExpDataVO> dataList = new ArrayList<>();
         baseDataList.forEach(baseData -> {
@@ -65,7 +65,10 @@ public class DataController {
             dataVO.merge(baseData, dataSum);
             dataList.add(dataVO);
         });
-        return Result.OK(dataList);
+        Result<List<ExpDataVO>> result = new Result<>(true);
+        result.setPagination(res.getPagination());
+        result.setData(dataList);
+        return result;
     }
 
     @GetMapping(value = "/getExpData")

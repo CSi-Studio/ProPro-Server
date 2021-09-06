@@ -7,14 +7,19 @@ import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.utils.DataUtil;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Data
 public class ExpDataVO {
 
+    String id;
+
     String expId;
 
     String overviewId;
+
+    List<String> proteins;
 
     String peptideRef;
 
@@ -58,6 +63,7 @@ public class ExpDataVO {
     public ExpDataVO merge(DataDO data, DataSumDO dataSum) {
         if (data != null) {
             DataUtil.decompress(data);
+            this.id = data.getId();
             this.peptideRef = data.getPeptideRef();
             this.overviewId = data.getOverviewId();
             this.rtArray = data.getRtArray();
@@ -65,8 +71,12 @@ public class ExpDataVO {
             this.intMap = data.getIntMap();
             this.status = data.getStatus();
             this.libRt = data.getLibRt();
+            this.proteins = data.getProteins();
         }
         if (dataSum != null) {
+            this.id = dataSum.getId();
+            this.peptideRef = dataSum.getPeptideRef();
+            this.overviewId = dataSum.getOverviewId();
             this.fdr = dataSum.getFdr();
             this.qValue = dataSum.getQValue();
             this.status = dataSum.getStatus();
@@ -84,6 +94,7 @@ public class ExpDataVO {
             this.overviewId = data.getOverviewId();
             this.status = data.getStatus();
             this.libRt = data.getLibRt();
+            this.proteins = data.getProteins();
         }
         if (dataSum != null) {
             this.fdr = dataSum.getFdr();
