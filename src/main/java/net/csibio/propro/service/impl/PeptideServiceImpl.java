@@ -172,6 +172,7 @@ public class PeptideServiceImpl implements PeptideService {
         if (rtWindow != null) {
             for (PeptideCoord peptideCoord : targetList) {
                 double iRt = (peptideCoord.getRt() - si.getIntercept()) / si.getSlope();
+                peptideCoord.setIrt(iRt);
                 peptideCoord.setRtStart(iRt - rtWindow);
                 peptideCoord.setRtEnd(iRt + rtWindow);
             }
@@ -185,7 +186,6 @@ public class PeptideServiceImpl implements PeptideService {
         logger.info("构建提取XIC的MS2坐标,总计" + targetList.size() + "条记录,读取标准库耗时:" + dbTime + "毫秒");
         return targetList;
     }
-
 
     @Override
     public PeptideDO buildWithPeptideRef(String peptideRef, int minLength, List<String> ionTypes, List<Integer> chargeTypes) {

@@ -12,6 +12,8 @@ public class DataSumQuery extends PageQuery {
 
     String id;
 
+    String proteins;
+
     String overviewId;
 
     Boolean isUnique;

@@ -8,12 +8,12 @@ import net.csibio.propro.domain.bean.data.BaseData;
 import net.csibio.propro.domain.bean.overview.OverviewV1;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.OverviewDO;
-import net.csibio.propro.domain.db.ProjectDO;
-import net.csibio.propro.domain.query.DataQuery;
+import net.csibio.propro.domain.query.DataSumQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.domain.vo.ExpDataVO;
 import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,21 +46,22 @@ public class DataController {
     DataSumService dataSumService;
 
     @GetMapping(value = "/list")
-    Result list(DataQuery dataQuery) {
+    Result list(DataSumQuery dataQuery) {
         if (dataQuery.getOverviewId() == null) {
             return Result.Error(ResultCode.OVERVIEW_ID_CAN_NOT_BE_EMPTY);
         }
         OverviewDO overview = overviewService.getById(dataQuery.getOverviewId());
-        Result<List<BaseData>> res = dataService.getList(dataQuery, BaseData.class, overview.getProjectId());
+        dataQuery.setSortColumn("status").setOrderBy(Sort.Direction.ASC);
+        Result<List<DataSumDO>> res = dataSumService.getList(dataQuery, overview.getProjectId());
         if (res.isFailed()) {
             return res;
         }
 
-        List<BaseData> baseDataList = res.getData();
+        List<DataSumDO> dataSumList = res.getData();
 
         List<ExpDataVO> dataList = new ArrayList<>();
-        baseDataList.forEach(baseData -> {
-            DataSumDO dataSum = dataSumService.getById(baseData.getId(), overview.getProjectId());
+        dataSumList.forEach(dataSum -> {
+            BaseData baseData = dataService.getById(dataSum.getId(), BaseData.class, overview.getProjectId());
             ExpDataVO dataVO = new ExpDataVO(overview.getExpId());
             dataVO.merge(baseData, dataSum);
             dataList.add(dataVO);
@@ -76,13 +77,6 @@ public class DataController {
                       @RequestParam("peptideRef") String peptideRef,
                       @RequestParam("onlyDefault") Boolean onlyDefault,
                       @RequestParam("expIds") List<String> expIds) {
-        if (expIds == null || expIds.size() == 0) {
-            return Result.Error(ResultCode.EXP_IDS_CANNOT_BE_EMPTY);
-        }
-        ProjectDO project = projectService.getById(projectId);
-        if (project == null) {
-            return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
-        }
         long start = System.currentTimeMillis();
         List<ExpDataVO> dataList = new ArrayList<>();
         expIds.forEach(expId -> {

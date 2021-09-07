@@ -30,6 +30,10 @@ public abstract class BaseDAO<T, Q extends PageQuery> {
         return mongoTemplate.findById(id, getDomainClass(), getCollectionName());
     }
 
+    public <K> K getById(String id, Class<K> clazz) {
+        return mongoTemplate.findById(id, clazz, getCollectionName());
+    }
+
     public <K> K getOne(Q query, Class<K> clazz) {
         return mongoTemplate.findOne(buildQueryWithoutPage(query), clazz, getCollectionName());
     }

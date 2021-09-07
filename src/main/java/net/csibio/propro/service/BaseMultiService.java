@@ -20,6 +20,15 @@ public interface BaseMultiService<T, Q extends PageQuery> {
         }
     }
 
+    default <K> K getById(String id, Class<K> clazz, String routerId) {
+        try {
+            return getBaseDAO().getById(id, clazz, routerId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     default boolean exist(Q q, String routerId) {
         try {
             return getBaseDAO().exists(q, routerId);

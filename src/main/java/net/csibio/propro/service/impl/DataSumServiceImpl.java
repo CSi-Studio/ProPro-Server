@@ -58,12 +58,10 @@ public class DataSumServiceImpl implements DataSumService {
             sum.setRealRt(sfs.getRt());
             sum.setPeptideRef(sfs.getPeptideRef());
             sum.setSum(sfs.getIntensitySum());
-            if (!sfs.getDecoy()) {
-                if (sfs.getFdr() <= 0.01) {
-                    sum.setStatus(IdentifyStatus.SUCCESS.getCode());
-                } else {
-                    sum.setStatus(IdentifyStatus.FAILED.getCode());
-                }
+            if (sfs.getFdr() != null && sfs.getFdr() <= 0.01) {
+                sum.setStatus(IdentifyStatus.SUCCESS.getCode());
+            } else {
+                sum.setStatus(IdentifyStatus.FAILED.getCode());
             }
             sumList.add(sum);
         });

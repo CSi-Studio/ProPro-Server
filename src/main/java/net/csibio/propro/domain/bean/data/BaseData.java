@@ -1,6 +1,7 @@
 package net.csibio.propro.domain.bean.data;
 
 import lombok.Data;
+import net.csibio.propro.domain.bean.score.PeakGroupScores;
 
 import java.util.List;
 
@@ -17,7 +18,13 @@ public class BaseData {
 
     List<String> proteins;
 
-    Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得
+    List<PeakGroupScores> scoreList;
+
+    Double fdr;
+
+    Double qValue;
+
+    Double irt;  //该肽段片段的理论rt时间(已经过irt校准)
 
     Integer status; //鉴定态
 

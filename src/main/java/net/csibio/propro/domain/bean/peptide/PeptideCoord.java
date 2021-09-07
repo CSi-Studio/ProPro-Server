@@ -40,8 +40,16 @@ public class PeptideCoord {
      */
     Boolean isUnique;
 
+    /**
+     * 库中的rt
+     */
     Double rt;
 
+    /**
+     * 经过校准以后的rt值
+     */
+    Double irt;
+    
     /**
      * 如果是伪肽段,则本字段代表的是伪肽段中unimod的位置
      * key为unimod在肽段中的位置,位置从0开始计数,value为unimod的Id(参见unimod.obo文件)

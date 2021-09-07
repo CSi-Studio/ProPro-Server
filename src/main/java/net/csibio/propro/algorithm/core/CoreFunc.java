@@ -65,6 +65,7 @@ public class CoreFunc {
         data.setPeptideRef(coord.getPeptideRef());
         data.setDecoy(coord.isDecoy());
         data.setLibRt(coord.getRt());
+        data.setIrt(coord.getIrt());
         try {
             data.setCutInfoMap(coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getMz().floatValue())));
         } catch (Exception e) {
@@ -168,6 +169,9 @@ public class CoreFunc {
         });
 
         LogUtil.log("XIC+选峰+打分耗时", start);
+        if (dataList.stream().filter(data -> data.getStatus() == null).toList().size() > 0) {
+            log.info("居然有问题");
+        }
         return dataList;
     }
 }

@@ -35,7 +35,7 @@ public class OverviewDO extends BaseDO {
      * 分析名称
      */
     String name;
-    
+
     /**
      * 分析的实验对象名称
      */
@@ -85,7 +85,7 @@ public class OverviewDO extends BaseDO {
      * 关于本次分析的统计数据
      */
     HashMap<String, Object> statistic = new HashMap<>();
-
+    
     /**
      * 备忘录
      */

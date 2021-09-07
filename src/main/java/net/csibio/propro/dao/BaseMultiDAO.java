@@ -36,6 +36,10 @@ public abstract class BaseMultiDAO<T, Q extends PageQuery> {
         return mongoTemplate.findById(id, getDomainClass(), getCollectionName(routerId));
     }
 
+    public <K> K getById(String id, Class<K> clazz, String routerId) {
+        return mongoTemplate.findById(id, clazz, getCollectionName(routerId));
+    }
+
     public T getOne(Q query, String routerId) {
         return (T) mongoTemplate.findOne(buildQueryWithoutPage(query), getDomainClass(), getCollectionName(routerId));
     }

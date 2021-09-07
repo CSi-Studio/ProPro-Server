@@ -2,13 +2,16 @@ package net.csibio.propro.domain.vo;
 
 import lombok.Data;
 import net.csibio.propro.domain.bean.data.BaseData;
+import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.utils.DataUtil;
+import org.springframework.beans.BeanUtils;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Data
 public class ExpDataVO {
@@ -17,11 +20,15 @@ public class ExpDataVO {
 
     String expId;
 
+    Boolean decoy;
+
     String overviewId;
 
     List<String> proteins;
 
     String peptideRef;
+
+    PeakGroupScores score;
 
     float[] rtArray;  //排序后的rt
 
@@ -36,7 +43,7 @@ public class ExpDataVO {
     Double qValue;
 
     //库rt
-    Double libRt;
+    Double irt;
 
     //最终鉴定的时间
     Double realRt;
@@ -63,46 +70,28 @@ public class ExpDataVO {
     public ExpDataVO merge(DataDO data, DataSumDO dataSum) {
         if (data != null) {
             DataUtil.decompress(data);
-            this.id = data.getId();
-            this.peptideRef = data.getPeptideRef();
-            this.overviewId = data.getOverviewId();
-            this.rtArray = data.getRtArray();
-            this.cutInfoMap = data.getCutInfoMap();
-            this.intMap = data.getIntMap();
-            this.status = data.getStatus();
-            this.libRt = data.getLibRt();
-            this.proteins = data.getProteins();
+            BeanUtils.copyProperties(data, this);
         }
         if (dataSum != null) {
-            this.id = dataSum.getId();
-            this.peptideRef = dataSum.getPeptideRef();
-            this.overviewId = dataSum.getOverviewId();
-            this.fdr = dataSum.getFdr();
-            this.qValue = dataSum.getQValue();
-            this.status = dataSum.getStatus();
-            this.sum = dataSum.getSum();
-            this.fragIntFeature = dataSum.getFragIntFeature();
-            this.realRt = dataSum.getRealRt();
+            BeanUtils.copyProperties(dataSum, this);
+            if (data != null && data.getScoreList() != null && dataSum.getRealRt() != null) {
+                Optional<PeakGroupScores> op = data.getScoreList().stream().filter(score -> score.getRt().equals(dataSum.getRealRt())).findFirst();
+                op.ifPresent(this::setScore);
+            }
         }
         return this;
     }
 
-
     public ExpDataVO merge(BaseData data, DataSumDO dataSum) {
         if (data != null) {
-            this.peptideRef = data.getPeptideRef();
-            this.overviewId = data.getOverviewId();
-            this.status = data.getStatus();
-            this.libRt = data.getLibRt();
-            this.proteins = data.getProteins();
+            BeanUtils.copyProperties(data, this);
         }
         if (dataSum != null) {
-            this.fdr = dataSum.getFdr();
-            this.qValue = dataSum.getQValue();
-            this.status = dataSum.getStatus();
-            this.sum = dataSum.getSum();
-            this.fragIntFeature = dataSum.getFragIntFeature();
-            this.realRt = dataSum.getRealRt();
+            BeanUtils.copyProperties(dataSum, this);
+            if (data != null && data.getScoreList() != null && dataSum.getRealRt() != null) {
+                Optional<PeakGroupScores> op = data.getScoreList().stream().filter(score -> score.getRt().equals(dataSum.getRealRt())).findFirst();
+                op.ifPresent(this::setScore);
+            }
         }
         return this;
     }

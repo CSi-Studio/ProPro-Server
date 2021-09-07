@@ -20,6 +20,15 @@ public interface BaseService<T, Q extends PageQuery> {
         }
     }
 
+    default <K> K getById(String id, Class<K> clazz) {
+        try {
+            return getBaseDAO().getById(id, clazz);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     default boolean exist(Q q) {
         try {
             return getBaseDAO().exists(q);
