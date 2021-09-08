@@ -82,7 +82,7 @@ public class ClinicController {
         data.setExpList(expList);
         data.setInsLib(new IdName(insLib.getId(), insLib.getName()));
         data.setAnaLib(new IdName(anaLib.getId(), anaLib.getName()));
-        data.setMethod(new IdName(method.getId(), method.getName()));
+        data.setMethod(method);
         data.setAnaProteins(anaLib.getProteins());
         data.setOverviewMap(overviewMap);
         return Result.OK(data);
