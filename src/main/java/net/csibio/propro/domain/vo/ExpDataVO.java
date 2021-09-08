@@ -11,7 +11,6 @@ import org.springframework.beans.BeanUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Data
 public class ExpDataVO {
@@ -28,7 +27,9 @@ public class ExpDataVO {
 
     String peptideRef;
 
-    PeakGroupScores score;
+    List<PeakGroupScores> scoreList;
+
+    int selectIndex;
 
     float[] rtArray;  //排序后的rt
 
@@ -75,8 +76,7 @@ public class ExpDataVO {
         if (dataSum != null) {
             BeanUtils.copyProperties(dataSum, this);
             if (data != null && data.getScoreList() != null && dataSum.getRealRt() != null) {
-                Optional<PeakGroupScores> op = data.getScoreList().stream().filter(score -> score.getRt().equals(dataSum.getRealRt())).findFirst();
-                op.ifPresent(this::setScore);
+                this.selectIndex = scoreList.stream().map(PeakGroupScores::getRt).toList().indexOf(dataSum.getRealRt());
             }
         }
         return this;
@@ -89,8 +89,7 @@ public class ExpDataVO {
         if (dataSum != null) {
             BeanUtils.copyProperties(dataSum, this);
             if (data != null && data.getScoreList() != null && dataSum.getRealRt() != null) {
-                Optional<PeakGroupScores> op = data.getScoreList().stream().filter(score -> score.getRt().equals(dataSum.getRealRt())).findFirst();
-                op.ifPresent(this::setScore);
+                this.selectIndex = scoreList.stream().map(PeakGroupScores::getRt).toList().indexOf(dataSum.getRealRt());
             }
         }
         return this;
