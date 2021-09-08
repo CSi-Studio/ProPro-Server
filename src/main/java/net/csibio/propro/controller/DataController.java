@@ -74,6 +74,7 @@ public class DataController {
                       @RequestParam("peptideRef") String peptideRef,
                       @RequestParam("onlyDefault") Boolean onlyDefault,
                       @RequestParam(value = "smooth", required = false) Boolean smooth,
+                      @RequestParam(value = "denoise", required = false) Boolean denoise,
                       @RequestParam("expIds") List<String> expIds) {
         long start = System.currentTimeMillis();
         List<ExpDataVO> dataList = new ArrayList<>();
