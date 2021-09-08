@@ -58,12 +58,20 @@ public class ExperimentController {
     }
 
     @PostMapping(value = "/generateAlias")
-    Result generateAlias(@RequestParam("expIds") List<String> expIds) {
-        List<ExperimentDO> expList = experimentService.getAll(new ExperimentQuery().setIds(expIds));
+    Result generateAlias(@RequestParam(value = "projectId") String projectId,
+                         @RequestParam(value = "prefix", defaultValue = "Exp") String prefix,
+                         @RequestParam(value = "expIds", required = false) List<String> expIds) {
+        List<ExperimentDO> expList;
+        if (expIds == null || expIds.size() == 0) {
+            expList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId));
+        } else {
+            expList = experimentService.getAll(new ExperimentQuery().setIds(expIds));
+        }
+
         if (expList != null) {
             for (int i = 0; i < expList.size(); i++) {
                 ExperimentDO exp = expList.get(i);
-                exp.setAlias("Exp-" + (i + 1) + "");
+                exp.setAlias(prefix + "-" + (i + 1) + "");
                 experimentService.update(exp);
             }
         }
