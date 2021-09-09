@@ -97,7 +97,6 @@ public class OverviewDO extends BaseDO {
     HashMap featureMap;
 
     public String buildUniqueTag() {
-        
         return (insLibId != null ? insLibId : "NaN") + "-" + (anaLibId != null ? anaLibId : "NaN") + "-" + getParams().getMethod().getId();
     }
 }

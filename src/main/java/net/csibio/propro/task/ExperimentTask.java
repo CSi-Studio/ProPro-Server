@@ -106,6 +106,8 @@ public class ExperimentTask extends BaseTask {
 
         boolean eppsResult = doEpps(taskDO, exp, params);
         if (!eppsResult) {
+            taskDO.finish(TaskStatus.FAILED.getName());
+            taskService.update(taskDO);
             return;
         }
 
@@ -119,6 +121,8 @@ public class ExperimentTask extends BaseTask {
         if (finalResult.getMatchedUniqueProteinCount() != null && finalResult.getMatchedUniqueProteinCount() != 0) {
             taskDO.addLog("Peptide/Protein Rate:" + finalResult.getMatchedPeptideCount() / finalResult.getMatchedUniqueProteinCount());
         }
+        taskDO.finish(TaskStatus.SUCCESS.getName());
+        taskService.update(taskDO);
     }
 
     @Async(value = "extractorExecutor")
