@@ -76,7 +76,6 @@ public class DataController {
                       @RequestParam(value = "smooth", required = false) Boolean smooth,
                       @RequestParam(value = "denoise", required = false) Boolean denoise,
                       @RequestParam("expIds") List<String> expIds) {
-        long start = System.currentTimeMillis();
         List<ExpDataVO> dataList = new ArrayList<>();
         expIds.forEach(expId -> {
             OverviewQuery query = new OverviewQuery(projectId).setExpId(expId);
@@ -87,7 +86,6 @@ public class DataController {
             ExpDataVO data = dataService.getData(projectId, expId, overview.id(), peptideRef);
             dataList.add(data);
         });
-        log.info("获取数据完毕,耗时:" + (System.currentTimeMillis() - start));
         return Result.OK(dataList);
     }
 }

@@ -26,8 +26,6 @@ import net.csibio.propro.service.TaskService;
 import net.csibio.propro.utils.FileUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -229,18 +227,17 @@ public class LibraryServiceImpl implements LibraryService {
         return Result.OK();
     }
 
-//    @Cacheable(cacheNames = "libraryGetId", key = "#id")
+    //    @Cacheable(cacheNames = "libraryGetId", key = "#id")
     @Override
     public LibraryDO getById(String id) {
         try {
-            log.info("执行getById方法");
             return getBaseDAO().getById(id);
         } catch (Exception e) {
             return null;
         }
     }
 
-//    @CacheEvict(cacheNames = "libraryGetId", key = "#libraryDO.id")
+    //    @CacheEvict(cacheNames = "libraryGetId", key = "#libraryDO.id")
     @Override
     public Result<LibraryDO> update(LibraryDO libraryDO) {
         try {
@@ -254,7 +251,7 @@ public class LibraryServiceImpl implements LibraryService {
         }
     }
 
-//    @CacheEvict(allEntries = true)
+    //    @CacheEvict(allEntries = true)
     @Override
     public Result<List<LibraryDO>> update(List<LibraryDO> libraryDOS) {
         try {
@@ -275,11 +272,10 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     public List<LibraryDO> getAll(LibraryQuery libraryQuery) {
-        log.info("执行getById方法");
         return getBaseDAO().getAll(libraryQuery);
     }
 
-//    @CacheEvict(cacheNames = "libraryGetId", key = "#id")
+    //    @CacheEvict(cacheNames = "libraryGetId", key = "#id")
     @Override
     public Result removeById(String id) {
         if (id == null || id.isEmpty()) {

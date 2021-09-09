@@ -85,7 +85,7 @@ public class OverviewDO extends BaseDO {
      * 关于本次分析的统计数据
      */
     HashMap<String, Object> statistic = new HashMap<>();
-    
+
     /**
      * 备忘录
      */
@@ -95,4 +95,9 @@ public class OverviewDO extends BaseDO {
      * KV值
      */
     HashMap featureMap;
+
+    public String buildUniqueTag() {
+        
+        return (insLibId != null ? insLibId : "NaN") + "-" + (anaLibId != null ? anaLibId : "NaN") + "-" + getParams().getMethod().getId();
+    }
 }

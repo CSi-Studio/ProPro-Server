@@ -18,8 +18,7 @@ public class ClinicPrepareDataVO {
     IdName insLib;
     IdName anaLib;
     MethodDO method;
-    //    Set<String> insProteins;
-    Set<String> anaProteins;
+    Set<String> proteins;
     List<IdNameAlias> expList;
     Map<String, List<OverviewV1>> overviewMap;
 }
