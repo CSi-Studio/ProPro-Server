@@ -1,13 +1,6 @@
 package net.csibio.propro.domain.bean.peptide;
 
-import lombok.Data;
+import java.util.List;
 
-@Data
-public class ProteinPeptide {
-
-    String protein;
-
-    String peptideRef;
-
-    Boolean isUnique;
+public record ProteinPeptide(List<String> proteins, String peptideRef, Boolean isUnique) {
 }

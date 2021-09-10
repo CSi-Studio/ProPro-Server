@@ -16,10 +16,7 @@ import net.csibio.propro.domain.vo.ClinicPrepareDataVO;
 import net.csibio.propro.service.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Comparator;
 import java.util.List;
@@ -86,5 +83,10 @@ public class ClinicController {
         data.setProteins(anaLib.getProteins());
         data.setOverviewMap(overviewMap);
         return Result.OK(data);
+    }
+
+    @PostMapping(value = "report")
+    Result report(@RequestParam("expIds") List<String> expIds) {
+        return overviewService.report(expIds);
     }
 }

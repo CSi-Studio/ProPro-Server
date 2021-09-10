@@ -32,4 +32,12 @@ public interface OverviewService extends BaseService<OverviewDO, OverviewQuery> 
      * @return
      */
     Result statistic(OverviewDO overview);
+
+    /**
+     * 统计若干个实验的结果矩阵
+     *
+     * @param expIds
+     * @return
+     */
+    Result report(List<String> expIds);
 }

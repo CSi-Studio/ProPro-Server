@@ -4,6 +4,7 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.peptide.PeptideV1;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.domain.query.LibraryQuery;
@@ -52,7 +53,7 @@ public class PeptideController extends XController<LibraryDO, LibraryQuery, Libr
     @GetMapping(value = "/getPeptideRefs")
     Result getPeptideRefs(@RequestParam(value = "libraryId") String libraryId,
                           @RequestParam(value = "protein") String protein) {
-        List<String> peptideList = peptideService.getAll(new PeptideQuery(libraryId).setProtein(protein)).stream().map(PeptideDO::getPeptideRef).toList();
+        List<PeptideV1> peptideList = peptideService.getAll(new PeptideQuery(libraryId).setProtein(protein), PeptideV1.class);
         return Result.OK(peptideList);
     }
 }

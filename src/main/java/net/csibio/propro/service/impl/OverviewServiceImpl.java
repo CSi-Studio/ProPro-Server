@@ -7,18 +7,21 @@ import net.csibio.propro.dao.BaseDAO;
 import net.csibio.propro.dao.OverviewDAO;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
+import net.csibio.propro.domain.bean.peptide.ProteinPeptide;
+import net.csibio.propro.domain.bean.report.PeptideRow;
+import net.csibio.propro.domain.bean.report.PeptideSum;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.domain.query.DataSumQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
+import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.exceptions.XException;
-import net.csibio.propro.service.DataService;
-import net.csibio.propro.service.DataSumService;
-import net.csibio.propro.service.OverviewService;
+import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service("overviewService")
@@ -30,6 +33,10 @@ public class OverviewServiceImpl implements OverviewService {
     DataService dataService;
     @Autowired
     DataSumService dataSumService;
+    @Autowired
+    LibraryService libraryService;
+    @Autowired
+    PeptideService peptideService;
 
     @Override
     public BaseDAO<OverviewDO, OverviewQuery> getBaseDAO() {
@@ -117,7 +124,6 @@ public class OverviewServiceImpl implements OverviewService {
 
     @Override
     public Result statistic(OverviewDO overview) {
-
         int matchedUniqueProteinsCount = dataSumService.countMatchedProteins(overview.getId(), overview.getProjectId(), true, 1);
         int matchedTotalProteinsCount = dataSumService.countMatchedProteins(overview.getId(), overview.getProjectId(), false, 1);
         int matchedUniquePeptidesCount = dataSumService.countMatchedPeptide(overview.getId(), overview.getProjectId(), true);
@@ -132,5 +138,49 @@ public class OverviewServiceImpl implements OverviewService {
         overview.getStatistic().put(StatConst.MATCHED_UNIQUE_PEPTIDE_COUNT, matchedUniquePeptidesCount);
         overview.getStatistic().put(StatConst.MATCHED_TOTAL_PEPTIDE_COUNT, matchedTotalPeptidesCount);
         return update(overview);
+    }
+
+    @Override
+    public Result report(List<String> expIds) {
+        if (expIds.size() == 0) {
+            return Result.Error(ResultCode.EXPERIMENT_ID_CANNOT_BE_EMPTY);
+        }
+        Map<String, OverviewDO> overviewMap = getDefaultOverviews(expIds);
+        if (overviewMap.size() != expIds.size()) {
+            return Result.Error(ResultCode.SOME_EXPERIMENT_HAVE_NO_DEFAULT_OVERVIEW);
+        }
+        if (overviewMap.values().stream().map(OverviewDO::getInsLibId).collect(Collectors.toSet()).size() > 1) {
+            return Result.Error(ResultCode.OVERVIEWS_MUST_USE_THE_SAME_INS_LIBRARY);
+        }
+        if (overviewMap.values().stream().map(OverviewDO::getAnaLibId).collect(Collectors.toSet()).size() > 1) {
+            return Result.Error(ResultCode.OVERVIEWS_MUST_USE_THE_SAME_ANA_LIBRARY);
+        }
+
+        List<OverviewDO> overviews = new ArrayList<>(overviewMap.values());
+        String anaLibId = overviews.get(0).getAnaLibId();
+        List<ProteinPeptide> ppList = peptideService.getAll(new PeptideQuery(anaLibId), ProteinPeptide.class);
+        List<PeptideRow<Double>> rowList = new ArrayList<>();
+        for (int i = 0; i < ppList.size(); i++) {
+            PeptideRow<Double> row = new PeptideRow<Double>();
+            row.setPeptide(ppList.get(i).peptideRef());
+            row.setProteins(String.join(",", ppList.get(i).proteins()));
+            rowList.add(row);
+        }
+
+        for (int i = 0; i < overviews.size(); i++) {
+            log.info("开始构建第" + (i + 1) + "个overview,一共有" + overviews.size() + "个需要处理");
+            OverviewDO overview = overviews.get(i);
+            List<PeptideSum> sumList = dataSumService.getAll(new DataSumQuery(overview.getId()).setDecoy(false), PeptideSum.class, overview.getProjectId());
+            Map<String, Double> peptideSumMap = new HashMap<>();
+            if (sumList != null) {
+                peptideSumMap = sumList.stream().collect(Collectors.toMap(PeptideSum::peptideRef, PeptideSum::sum));
+            }
+            Map<String, Double> finalPeptideSumMap = peptideSumMap;
+            rowList.forEach(row -> {
+                row.getDataList().add(finalPeptideSumMap.get(row.getPeptide()));
+            });
+        }
+        rowList = rowList.stream().sorted(Comparator.comparing(PeptideRow::getProteins)).toList();
+        return Result.OK(rowList);
     }
 }
