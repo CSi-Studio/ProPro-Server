@@ -23,7 +23,6 @@ import java.util.*;
 public class MultiGaussianFitter extends AbstractCurveFitter {
 
     public static final Logger logger = LoggerFactory.getLogger(MultiGaussianFitter.class);
-
     private final double[] initialGuess;
     private final int maxIter;
     private final int count;
