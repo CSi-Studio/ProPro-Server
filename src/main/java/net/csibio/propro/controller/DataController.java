@@ -2,12 +2,14 @@ package net.csibio.propro.controller;
 
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import net.csibio.propro.algorithm.peak.GaussFilter;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.data.BaseData;
 import net.csibio.propro.domain.bean.overview.OverviewV1;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.OverviewDO;
+import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.domain.query.DataSumQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.domain.vo.ExpDataVO;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Api(tags = {"Data Module"})
@@ -86,6 +89,18 @@ public class DataController {
             ExpDataVO data = dataService.getData(projectId, expId, overview.id(), peptideRef);
             dataList.add(data);
         });
+       if(smooth){
+           dataList.forEach(data ->{
+               SigmaSpacing ss = SigmaSpacing.create();
+               HashMap<String, float[]> smoothInt = GaussFilter.filter(data.getRtArray(), (HashMap<String, float[]>) data.getIntMap(),ss);
+               data.setIntMap(smoothInt);
+           });
+       }
+       if(denoise){
+           dataList.forEach(data ->{
+
+           });
+       }
         return Result.OK(dataList);
     }
 }

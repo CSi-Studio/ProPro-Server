@@ -47,7 +47,42 @@ public class GaussFilter {
      * @param sigmaSpacing
      * @return
      */
-    public HashMap<String, Double[]> filter(Double[] rtArray, HashMap<String, Double[]> intensitiesMap, SigmaSpacing sigmaSpacing) {
+    public static HashMap<String, float[]> filter(float[] rtArray, HashMap<String, float[]> intensitiesMap, SigmaSpacing sigmaSpacing) {
+        Double[] rts = new Double[rtArray.length];
+        for (int i = 0; i < rts.length; i++) {
+            rts[i] = Double.valueOf(rtArray[i]);
+        }
+
+        HashMap<String, Double[]> doubleMap = new HashMap<>();
+        for (HashMap.Entry<String, float[]> entry : intensitiesMap.entrySet()) {
+            float[] intensity = entry.getValue();
+            Double[] doubleInt = new Double[intensity.length];
+            for (int i = 0; i < intensity.length; i++) {
+                doubleInt[i] = Double.valueOf(intensity[i]);
+            }
+            doubleMap.put(entry.getKey(), doubleInt);
+        }
+
+        HashMap<String, Double[]> smoothMap = filter(rts,doubleMap,sigmaSpacing);
+        HashMap<String, float[]> floatMap = new HashMap<>();
+        for (HashMap.Entry<String, Double[]> entry : smoothMap.entrySet()) {
+            Double[] intensity = entry.getValue();
+            float[] floatInt = new float[intensity.length];
+            for (int i = 0; i < intensity.length; i++) {
+                floatInt[i] = Float.parseFloat(intensity[i].toString());
+            }
+            floatMap.put(entry.getKey(), floatInt);
+        }
+        return floatMap;
+    }
+
+    /**
+     * @param rtArray
+     * @param intensitiesMap
+     * @param sigmaSpacing
+     * @return
+     */
+    public static HashMap<String, Double[]> filter(Double[] rtArray, HashMap<String, Double[]> intensitiesMap, SigmaSpacing sigmaSpacing) {
 
         Double spacing = sigmaSpacing.getSpacingDouble();
         //coeffs: 以0为中心，sigma为标准差的正态分布参数
