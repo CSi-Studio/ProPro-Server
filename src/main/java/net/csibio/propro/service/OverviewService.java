@@ -1,6 +1,7 @@
 package net.csibio.propro.service;
 
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.report.PeptideRow;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.OverviewQuery;
 
@@ -39,5 +40,5 @@ public interface OverviewService extends BaseService<OverviewDO, OverviewQuery> 
      * @param expIds
      * @return
      */
-    Result report(List<String> expIds);
+    Result<List<PeptideRow>> report(List<String> expIds);
 }

@@ -9,7 +9,7 @@ import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.peptide.ProteinPeptide;
 import net.csibio.propro.domain.bean.report.PeptideRow;
-import net.csibio.propro.domain.bean.report.PeptideSum;
+import net.csibio.propro.domain.bean.report.PeptideSumStatus;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.domain.query.DataSumQuery;
@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -141,7 +142,7 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public Result report(List<String> expIds) {
+    public Result<List<PeptideRow>> report(List<String> expIds) {
         if (expIds.size() == 0) {
             return Result.Error(ResultCode.EXPERIMENT_ID_CANNOT_BE_EMPTY);
         }
@@ -159,28 +160,36 @@ public class OverviewServiceImpl implements OverviewService {
         List<OverviewDO> overviews = new ArrayList<>(overviewMap.values());
         String anaLibId = overviews.get(0).getAnaLibId();
         List<ProteinPeptide> ppList = peptideService.getAll(new PeptideQuery(anaLibId), ProteinPeptide.class);
-        List<PeptideRow<Double>> rowList = new ArrayList<>();
+        List<PeptideRow> rowList = new ArrayList<PeptideRow>();
         for (int i = 0; i < ppList.size(); i++) {
-            PeptideRow<Double> row = new PeptideRow<Double>();
+            PeptideRow row = new PeptideRow();
             row.setPeptide(ppList.get(i).peptideRef());
-            row.setProteins(String.join(",", ppList.get(i).proteins()));
+            row.setProteins(ppList.get(i).proteins());
             rowList.add(row);
         }
 
         for (int i = 0; i < overviews.size(); i++) {
             log.info("开始构建第" + (i + 1) + "个overview,一共有" + overviews.size() + "个需要处理");
             OverviewDO overview = overviews.get(i);
-            List<PeptideSum> sumList = dataSumService.getAll(new DataSumQuery(overview.getId()).setDecoy(false), PeptideSum.class, overview.getProjectId());
-            Map<String, Double> peptideSumMap = new HashMap<>();
+            List<PeptideSumStatus> sumList = dataSumService.getAll(new DataSumQuery(overview.getId()).setDecoy(false), PeptideSumStatus.class, overview.getProjectId());
+            Map<String, PeptideSumStatus> peptideMap = new HashMap<>();
             if (sumList != null) {
-                peptideSumMap = sumList.stream().collect(Collectors.toMap(PeptideSum::peptideRef, PeptideSum::sum));
+                peptideMap = sumList.stream().collect(Collectors.toMap(PeptideSumStatus::peptideRef, Function.identity()));
             }
-            Map<String, Double> finalPeptideSumMap = peptideSumMap;
+            Map<String, PeptideSumStatus> finalPeptideMap = peptideMap;
             rowList.forEach(row -> {
-                row.getDataList().add(finalPeptideSumMap.get(row.getPeptide()));
+                String peptideRef = row.getPeptide();
+                PeptideSumStatus sumStatus = finalPeptideMap.get(peptideRef);
+                if (sumStatus != null) {
+                    row.getSumList().add(sumStatus.sum());
+                    row.getStatusList().add(sumStatus.status());
+                } else {
+                    row.getSumList().add(null);
+                    row.getStatusList().add(null);
+                }
             });
         }
-        rowList = rowList.stream().sorted(Comparator.comparing(PeptideRow::getProteins)).toList();
+        rowList = rowList.stream().sorted(Comparator.comparing(row -> row.getProteins().get(0))).toList();
         return Result.OK(rowList);
     }
 }

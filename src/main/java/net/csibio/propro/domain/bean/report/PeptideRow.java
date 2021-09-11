@@ -6,12 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class PeptideRow<T> {
+public class PeptideRow {
 
-    String proteins;
+    List<String> proteins;
 
     String peptide;
 
-    //每一个overview对应的结果
-    List<T> dataList = new ArrayList<>();
+    //每一个exp-overview对应的定量
+    List<Double> sumList = new ArrayList<>();
+
+    //每一个exp-overveiw对应的鉴定状态
+    List<Integer> statusList = new ArrayList<>();
 }
