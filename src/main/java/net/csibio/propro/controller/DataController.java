@@ -3,6 +3,7 @@ package net.csibio.propro.controller;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.peak.GaussFilter;
+import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.data.BaseData;
@@ -44,6 +45,8 @@ public class DataController {
     DataService dataService;
     @Autowired
     DataSumService dataSumService;
+    @Autowired
+    SignalToNoiseEstimator signalToNoiseEstimator;
 
     @GetMapping(value = "/list")
     Result list(DataSumQuery dataQuery) {
@@ -89,18 +92,28 @@ public class DataController {
             ExpDataVO data = dataService.getData(projectId, expId, overview.id(), peptideRef);
             dataList.add(data);
         });
-       if(smooth){
-           dataList.forEach(data ->{
-               SigmaSpacing ss = SigmaSpacing.create();
-               HashMap<String, float[]> smoothInt = GaussFilter.filter(data.getRtArray(), (HashMap<String, float[]>) data.getIntMap(),ss);
-               data.setIntMap(smoothInt);
-           });
-       }
-       if(denoise){
-           dataList.forEach(data ->{
-
-           });
-       }
+        if (smooth) {
+            dataList.forEach(data -> {
+                SigmaSpacing ss = SigmaSpacing.create();
+                HashMap<String, float[]> smoothInt = GaussFilter.filter(data.getRtArray(), (HashMap<String, float[]>) data.getIntMap(), ss);
+                data.setIntMap(smoothInt);
+            });
+        }
+        if (denoise) {
+            dataList.forEach(data -> {
+                HashMap<String, float[]> denoiseIntMap = new HashMap<>();
+                float[] rt = data.getRtArray();
+                for (String cutInfo : data.getIntMap().keySet()) {
+                    double[] noises200 = signalToNoiseEstimator.computeSTN(rt, data.getIntMap().get(cutInfo), 200, 30);
+                    float[] denoiseInt = new float[noises200.length];
+                    for (int i = 0; i < noises200.length; i++) {
+                        denoiseInt[i] = (float) (data.getIntMap().get(cutInfo)[i] * noises200[i] / (noises200[i] + 1));
+                    }
+                    denoiseIntMap.put(cutInfo, denoiseInt);
+                }
+                data.setIntMap(denoiseIntMap);
+            });
+        }
         return Result.OK(dataList);
     }
 }
