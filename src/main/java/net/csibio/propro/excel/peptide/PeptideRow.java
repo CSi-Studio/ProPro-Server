@@ -1,4 +1,4 @@
-package net.csibio.propro.domain.bean.report;
+package net.csibio.propro.excel.peptide;
 
 import lombok.Data;
 
