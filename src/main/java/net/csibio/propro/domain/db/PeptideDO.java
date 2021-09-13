@@ -1,6 +1,7 @@
 package net.csibio.propro.domain.db;
 
 import lombok.Data;
+import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.domain.BaseDO;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
@@ -121,5 +122,25 @@ public class PeptideDO extends BaseDO {
         tp.setDecoyUnimodMap(decoyUnimodMap);
         tp.setDecoyFragments(decoyFragments);
         return tp;
+    }
+
+    /**
+     * 根据新的带电量生成新的肽段PeptideRef
+     *
+     * @param newCharge
+     * @return
+     */
+    public PeptideDO buildBrother(int newCharge) {
+        PeptideDO peptide = new PeptideDO();
+        peptide.setIsUnique(isUnique);
+        peptide.setUnimodMap(unimodMap);
+        peptide.setFullName(fullName);
+        peptide.setCharge(newCharge);
+        peptide.setProteins(proteins);
+        peptide.setSequence(sequence);
+        peptide.setRt(rt);
+        peptide.setPeptideRef(fullName + SymbolConst.UNDERLINE + newCharge);
+        peptide.setMz(mz * charge / newCharge);
+        return peptide;
     }
 }

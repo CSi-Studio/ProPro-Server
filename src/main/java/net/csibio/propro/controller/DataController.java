@@ -9,6 +9,7 @@ import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.data.BaseData;
 import net.csibio.propro.domain.bean.overview.OverviewV1;
 import net.csibio.propro.domain.db.DataSumDO;
+import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.domain.query.DataSumQuery;
@@ -77,7 +78,9 @@ public class DataController {
 
     @PostMapping(value = "/getExpData")
     Result getExpData(@RequestParam("projectId") String projectId,
+                      @RequestParam(value = "libraryId", required = false) String libraryId,
                       @RequestParam("peptideRef") String peptideRef,
+                      @RequestParam("predict") Boolean predict,
                       @RequestParam("onlyDefault") Boolean onlyDefault,
                       @RequestParam(value = "smooth", required = false) Boolean smooth,
                       @RequestParam(value = "denoise", required = false) Boolean denoise,
@@ -89,7 +92,14 @@ public class DataController {
                 query.setDefaultOne(true);
             }
             OverviewV1 overview = overviewService.getOne(query, OverviewV1.class);
-            ExpDataVO data = dataService.getData(projectId, expId, overview.id(), peptideRef);
+            ExpDataVO data = null;
+            //如果使用预测方法,则进行实时EIC获取
+            if (predict) {
+                ExperimentDO exp = experimentService.getById(expId);
+                data = dataService.buildData(exp, libraryId, peptideRef);
+            } else {
+                data = dataService.getData(projectId, expId, overview.id(), peptideRef);
+            }
             dataList.add(data);
         });
         if (smooth) {
@@ -113,6 +123,9 @@ public class DataController {
                 }
                 data.setIntMap(denoiseIntMap);
             });
+        }
+        if (predict) {
+            log.info("EIC实时获取完毕");
         }
         return Result.OK(dataList);
     }

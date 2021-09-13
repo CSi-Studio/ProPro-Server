@@ -99,7 +99,7 @@ public class AnalyzeController {
         LibraryDO finalInsLib = insLib;
 
         if (onlyIrt) {
-            TaskDO task = new TaskDO(TaskTemplate.IRT, "Analyze-");
+            TaskDO task = new TaskDO(TaskTemplate.IRT, "Analyze-IRT" + project.getName());
             taskService.insert(task);
             AnalyzeParams params = new AnalyzeParams(method);
             params.setAnaLibId(anaLib.getId());
@@ -109,7 +109,7 @@ public class AnalyzeController {
             experimentTask.doIrt(task, experimentList, params);
         } else {
             experimentList.forEach(exp -> {
-                TaskDO task = new TaskDO(TaskTemplate.EXTRACT_PEAKPICK_SCORE, "Analyze-EPPS-");
+                TaskDO task = new TaskDO(TaskTemplate.EXTRACT_PEAKPICK_SCORE, "Analyze-EPPS-" + project.getName());
                 taskService.insert(task);
                 AnalyzeParams params = new AnalyzeParams(method);
                 params.setAnaLibId(anaLib.getId());

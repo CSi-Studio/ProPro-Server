@@ -10,8 +10,8 @@ import net.csibio.propro.service.SimulateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -62,13 +62,8 @@ public class SimulateServiceImpl implements SimulateService {
     }
 
     @Override
-    public List<FragmentInfo> predictFragment(String peptideId, String spModel, boolean iso, int limit) {
-        PeptideDO peptideDO = peptideDAO.getById(peptideId);
-        //The model only supports peptides with 2 charges
-//        if(peptideDO.getCharge()!=2){
-//            throw new XException(ResultCode.PREDICT_MODEL_ONLY_FOR_TWO_CHARGE_PEPTIDE);
-//        }
-        if (spModel.equals("HCD")) {
+    public List<FragmentInfo> predictFragment(PeptideDO peptideDO, String spModel, boolean iso, int limit) {
+        if (spModel.equals(SpModelConstant.HCD)) {
             staticValue.parameter = new Parameters1();
         } else {
             staticValue.parameter = new Parameters2();
@@ -82,7 +77,7 @@ public class SimulateServiceImpl implements SimulateService {
         } else {
             peak_group = simu.getYList();
         }
-        List<FragmentInfo> fragments = new LinkedList<>();
+        List<FragmentInfo> fragments = new ArrayList<>();
         for (int i = 0; i <= peak_group.length - 1; i++) {
             FragmentInfo fragment = new FragmentInfo();
             fragment.setMz((double) peak_group[i][0]);
@@ -93,12 +88,7 @@ public class SimulateServiceImpl implements SimulateService {
             fragment.setAnnotations("y" + (i + 1));
             fragments.add(fragment);
         }
-        fragments.sort(new Comparator<FragmentInfo>() {
-            @Override
-            public int compare(FragmentInfo o1, FragmentInfo o2) {
-                return o2.getIntensity().compareTo(o1.getIntensity());
-            }
-        });
+        fragments.sort(Comparator.comparing(FragmentInfo::getIntensity).reversed());
         if (limit < fragments.size()) {
             return fragments.subList(0, limit);
         } else {
@@ -108,7 +98,7 @@ public class SimulateServiceImpl implements SimulateService {
 
     @Override
     public Set<FragmentInfo> singlePredictFragment(PeptideDO peptideDO, String spModel, boolean iso) {
-        if (spModel.equals("HCD")) {
+        if (spModel.equals(SpModelConstant.HCD)) {
             staticValue.parameter = new Parameters1();
         } else {
             staticValue.parameter = new Parameters2();
