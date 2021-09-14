@@ -43,8 +43,7 @@ public class Simulator extends PeptideSpectrumPair {
             ionList.add(peptide.getYion_iso(i, 1));
 
             ionList.add(peptide.getYion_iso(i, 1));
-
-
+            
             float[] iso_ratio = peptide.getYion_iso_ratio(i);
 
             if (Float.isNaN(inten)) {
