@@ -9,6 +9,7 @@ public class ProjectUpdateVO {
 
     String id;
     String name;
+    String group;
     String type;
     String alias;
     String owner;

@@ -39,6 +39,9 @@ public class ProjectDO extends BaseDO {
     @Indexed
     String type;
 
+    @Indexed
+    String group;
+    
     /**
      * 项目负责人名称
      */

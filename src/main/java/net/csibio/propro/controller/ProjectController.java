@@ -112,6 +112,7 @@ public class ProjectController {
             return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
         }
         project.setDescription(projectUpdateVO.getDescription());
+        project.setGroup(projectUpdateVO.getGroup());
         project.setOwner(projectUpdateVO.getOwner());
         project.setType(projectUpdateVO.getType());
         project.setAnaLibId(projectUpdateVO.getAnaLibId());

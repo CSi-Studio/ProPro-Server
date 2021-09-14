@@ -9,6 +9,8 @@ public class ProjectQuery extends PageQuery {
 
     String id;
 
+    String group;
+    
     String name;
 
     String alias;

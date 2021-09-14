@@ -17,6 +17,11 @@ public class ProjectVO {
     String name;
 
     /**
+     * 分组信息
+     */
+    String group;
+    
+    /**
      * 项目别名
      */
     String alias;
