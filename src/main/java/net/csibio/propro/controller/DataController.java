@@ -124,9 +124,6 @@ public class DataController {
                 data.setIntMap(denoiseIntMap);
             });
         }
-        if (predict) {
-            log.info("EIC实时获取完毕");
-        }
         return Result.OK(dataList);
     }
 }
