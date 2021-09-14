@@ -26,7 +26,6 @@ public class PeptideSpectrumPair {
         ArrayList<PeakLabeled> tempPeaks = new Simulator(pep, parameter).labelPeaks;
         for (int i = 0; i < tempPeaks.size(); i++) {
             this.addPeakList(tempPeaks.get(i));
-
         }
     }
 

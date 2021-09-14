@@ -48,8 +48,7 @@ public class Simulator extends PeptideSpectrumPair {
             float[] iso_ratio = peptide.getYion_iso_ratio(i);
 
             if (Float.isNaN(inten)) {
-                System.err.println(peptide.seqAA + "'s " + i
-                        + "th Y peak error!");
+                System.err.println(peptide.seqAA + "'s " + i + "th Y peak error!");
                 return;
             }
             float addedInten = inten;
