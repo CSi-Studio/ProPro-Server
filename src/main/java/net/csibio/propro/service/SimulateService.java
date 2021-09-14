@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface SimulateService {
+
     void predictFragment(String libraryId, String spModel, boolean iso);
 
     /**

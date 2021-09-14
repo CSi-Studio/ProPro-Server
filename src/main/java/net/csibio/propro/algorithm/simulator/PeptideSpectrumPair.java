@@ -6,6 +6,7 @@ import java.util.ArrayList;
 public class PeptideSpectrumPair {
     public Peptide peptide;
     public Spectrum spectrum;
+    public Parameter parameter;
     float fragmentError;
     float precusorError;
     float intensityThres;
@@ -22,7 +23,7 @@ public class PeptideSpectrumPair {
         this.precusorError = ConstantValue.precusorDelta;
         this.intensityThres = ConstantValue.intensityTres;
         this.peptide = pep;
-        ArrayList<PeakLabeled> tempPeaks = new Simulator(pep).labelPeaks;
+        ArrayList<PeakLabeled> tempPeaks = new Simulator(pep, parameter).labelPeaks;
         for (int i = 0; i < tempPeaks.size(); i++) {
             this.addPeakList(tempPeaks.get(i));
 
@@ -260,14 +261,14 @@ public class PeptideSpectrumPair {
             }
         }
     }
-
-    public static void main(String[] args) {
-        staticValue.parameter = new Parameters1();
-        String sequence = "AEIVQLDLGNLPEGALALEK";
-        Peptide peptide = new Peptide(sequence, 2);
-        Simulator simu = new Simulator(peptide);
-        float[][] peak_group = simu.getYisoList();
-        System.out.println();
-    }
+//
+//    public static void main(String[] args) {
+//        SimuConst.parameter = new Parameters1();
+//        String sequence = "AEIVQLDLGNLPEGALALEK";
+//        Peptide peptide = new Peptide(sequence, 2);
+//        Simulator simu = new Simulator(peptide);
+//        float[][] peak_group = simu.getYisoList();
+//        System.out.println();
+//    }
 
 }
