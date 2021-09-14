@@ -79,7 +79,11 @@ public class ClinicController {
 
         ClinicPrepareDataVO data = new ClinicPrepareDataVO();
         data.setProject(project);
-        data.setExpList(expList);
+        if (expList.stream().filter(idNameAlias -> idNameAlias.alias() != null).count() == expList.size()) {
+            data.setExpList(expList.stream().sorted(Comparator.comparing(IdNameAlias::alias)).collect(Collectors.toList()));
+        } else {
+            data.setExpList(expList.stream().sorted(Comparator.comparing(IdNameAlias::name)).collect(Collectors.toList()));
+        }
         data.setInsLib(new IdName(insLib.getId(), insLib.getName()));
         data.setAnaLib(new IdName(anaLib.getId(), anaLib.getName()));
         data.setMethod(method);

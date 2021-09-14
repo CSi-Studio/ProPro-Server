@@ -82,6 +82,7 @@ public class MethodController {
         BeanUtils.copyProperties(methodUpdateVO, score);
         BeanUtils.copyProperties(methodUpdateVO, classifier);
 
+        existedMethod.setName(methodUpdateVO.getName());
         existedMethod.setDescription(methodUpdateVO.getDescription());
         existedMethod.setEic(eic);
         existedMethod.setIrt(irt);

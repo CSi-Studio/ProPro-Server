@@ -86,12 +86,16 @@ public class DataController {
                       @RequestParam(value = "denoise", required = false) Boolean denoise,
                       @RequestParam("expIds") List<String> expIds) {
         List<ExpDataVO> dataList = new ArrayList<>();
-        expIds.forEach(expId -> {
+        for (int i = 0; i < expIds.size(); i++) {
+            String expId = expIds.get(i);
             OverviewQuery query = new OverviewQuery(projectId).setExpId(expId);
             if (onlyDefault) {
                 query.setDefaultOne(true);
             }
             OverviewV1 overview = overviewService.getOne(query, OverviewV1.class);
+            if (overview == null) {
+                continue;
+            }
             ExpDataVO data = null;
             //如果使用预测方法,则进行实时EIC获取
             if (predict) {
@@ -101,7 +105,8 @@ public class DataController {
                 data = dataService.getData(projectId, expId, overview.id(), peptideRef);
             }
             dataList.add(data);
-        });
+        }
+
         if (smooth) {
             dataList.forEach(data -> {
                 SigmaSpacing ss = SigmaSpacing.create();

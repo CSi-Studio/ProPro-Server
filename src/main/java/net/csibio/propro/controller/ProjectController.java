@@ -18,6 +18,7 @@ import net.csibio.propro.domain.vo.ProjectVO;
 import net.csibio.propro.service.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,6 +43,8 @@ public class ProjectController {
 
     @GetMapping(value = "/list")
     Result list(ProjectQuery query) {
+        query.setSortColumn("group");
+        query.setOrderBy(Sort.Direction.ASC);
         Result<List<ProjectVO>> result = projectService.getList(query, ProjectVO.class);
         if (result.isSuccess()) {
             result.getData().forEach(projectVO -> {
