@@ -40,22 +40,33 @@ public class SimulateServiceImpl implements SimulateService {
             Peptide peptide = new Peptide(sequence, 2);
             Simulator simu = new Simulator(peptide);
             float[][] peak_group;
+            Set<FragmentInfo> fragments = peptideDO.getFragments();
             if (iso) {
                 peak_group = simu.getYisoList();
+                for (int i = 0; i <= peak_group.length - 1; i++) {
+                    FragmentInfo fragment = new FragmentInfo();
+                    fragment.setMz((double) peak_group[i][0]);
+                    fragment.setIntensity((double) peak_group[i][1]);
+                    fragment.setPredict(true);
+                    fragment.setCharge(1);
+                    fragment.setCutInfo("y" + (i/3 + 1));
+                    fragment.setAnnotations("y" + (i/3 + 1));
+                    fragments.add(fragment);
+                }
             } else {
                 peak_group = simu.getYList();
+                for (int i = 0; i <= peak_group.length - 1; i++) {
+                    FragmentInfo fragment = new FragmentInfo();
+                    fragment.setMz((double) peak_group[i][0]);
+                    fragment.setIntensity((double) peak_group[i][1]);
+                    fragment.setPredict(true);
+                    fragment.setCharge(1);
+                    fragment.setCutInfo("y" + (i + 1));
+                    fragment.setAnnotations("y" + (i + 1));
+                    fragments.add(fragment);
+                }
             }
-            Set<FragmentInfo> fragments = peptideDO.getFragments();
-            for (int i = 0; i <= peak_group.length - 1; i++) {
-                FragmentInfo fragment = new FragmentInfo();
-                fragment.setMz((double) peak_group[i][0]);
-                fragment.setIntensity((double) peak_group[i][1]);
-                fragment.setPredict(true);
-                fragment.setCharge(1);
-                fragment.setCutInfo("y" + (i + 1));
-                fragment.setAnnotations("y" + (i + 1));
-                fragments.add(fragment);
-            }
+
             peptideDO.setFragments(fragments);
             peptideService.update(peptideDO);
         }
