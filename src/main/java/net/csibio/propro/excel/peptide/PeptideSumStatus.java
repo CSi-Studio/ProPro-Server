@@ -1,4 +1,4 @@
-package net.csibio.propro.domain.bean.report;
+package net.csibio.propro.excel.peptide;
 
 public record PeptideSumStatus(String peptideRef, Double sum, Integer status) {
 }

@@ -12,6 +12,8 @@ public enum IdentifyStatus {
     NO_ENOUGH_FRAGMENTS(3, "NO_ENOUGH_FRAGMENTS"),
     //NO_PEAK_GROUP_FIND
     NO_PEAK_GROUP_FIND(4, "NO_PEAK_GROUP_FIND"),
+    //仅在导出的时候会使用的状态,未进入打分轮,没有EIC信号
+    NO_EIC_FIND(5, "NO_EIC_FIND"),
     ;
 
     int code;

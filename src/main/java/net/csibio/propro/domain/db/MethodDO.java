@@ -39,6 +39,19 @@ public class MethodDO extends BaseDO {
 
     Date lastModifiedDate;
 
+    public MethodDO() {
+    }
+
+    public MethodDO init() {
+        this.eic = new EicOptions();
+        this.irt = new IrtOptions();
+        this.peakFinding = new PeakFindingOptions();
+        this.quickFilter = new QuickFilterOptions();
+        this.score = new ScoreOptions();
+        this.classifier = new ClassifierOptions();
+        return this;
+    }
+
     public Method toMethod() {
         Method method = new Method();
         BeanUtils.copyProperties(this, method);

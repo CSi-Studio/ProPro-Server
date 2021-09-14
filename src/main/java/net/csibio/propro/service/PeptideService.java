@@ -41,6 +41,13 @@ public interface PeptideService extends BaseService<PeptideDO, PeptideQuery> {
      */
     Long countByProteinName(String libraryId);
 
+    /**
+     * 根据库构建用于进行irt计算的坐标数组
+     *
+     * @param libraryId
+     * @param mzRange
+     * @return
+     */
     List<PeptideCoord> buildCoord4Irt(String libraryId, WindowRange mzRange);
 
     /**
@@ -66,7 +73,16 @@ public interface PeptideService extends BaseService<PeptideDO, PeptideQuery> {
     PeptideDO buildWithPeptideRef(String peptideRef, int minLength, List<String> ionTypes, List<Integer> chargeTypes);
 
 
-    Result<Map<String,List<Object>>> getPeptideLink(String libraryId, String proteinName, double range, List<WindowRange> windowRanges);
+    /**
+     * 构建蛋白质干扰图
+     *
+     * @param libraryId
+     * @param proteinName
+     * @param range
+     * @param windowRanges
+     * @return
+     */
+    Result<Map<String, List<Object>>> getPeptideLink(String libraryId, String proteinName, double range, List<WindowRange> windowRanges);
 
 
 }

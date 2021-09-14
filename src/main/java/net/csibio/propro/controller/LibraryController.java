@@ -8,9 +8,11 @@ import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.constants.enums.TaskTemplate;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.db.*;
+import net.csibio.propro.domain.db.ExperimentDO;
+import net.csibio.propro.domain.db.LibraryDO;
+import net.csibio.propro.domain.db.ProjectDO;
+import net.csibio.propro.domain.db.TaskDO;
 import net.csibio.propro.domain.query.LibraryQuery;
-import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.domain.vo.LibraryUpdateVO;
 import net.csibio.propro.service.*;
 import net.csibio.propro.task.LibraryTask;
@@ -46,6 +48,7 @@ public class LibraryController extends XController<LibraryDO, LibraryQuery, Libr
     ProjectService projectService;
     @Autowired
     ExperimentService experimentService;
+
     @GetMapping(value = "/list")
     Result list(LibraryQuery query) {
         Result<List<LibraryDO>> result = libraryService.getList(query);
@@ -186,8 +189,8 @@ public class LibraryController extends XController<LibraryDO, LibraryQuery, Libr
         return result;
     }
 
-    @GetMapping(value ="/getProteins")
-    Result getProteins(@RequestParam(value = "projectId") String projectId){
+    @GetMapping(value = "/getProteins")
+    Result getProteins(@RequestParam(value = "projectId") String projectId) {
 
         ProjectDO project = projectService.getById(projectId);
         LibraryDO library = libraryService.getById(project.getAnaLibId());
@@ -197,12 +200,11 @@ public class LibraryController extends XController<LibraryDO, LibraryQuery, Libr
     @GetMapping(value = "/getPeptide")
     Result getPeptide(@RequestParam(value = "projectId") String projectId,
                       @RequestParam(value = "proteinName") String proteinName,
-                      @RequestParam(value = "range") double range
-                     ){
+                      @RequestParam(value = "range") double range) {
         ProjectDO project = projectService.getById(projectId);
         List<ExperimentDO> experiments = experimentService.getAllByProjectId(projectId);
         List<WindowRange> windowRanges = experiments.get(0).getWindowRanges();
-        Result<Map<String, List<Object>>> peptideLink = peptideService.getPeptideLink(project.getAnaLibId(), proteinName,range,windowRanges);
+        Result<Map<String, List<Object>>> peptideLink = peptideService.getPeptideLink(project.getAnaLibId(), proteinName, range, windowRanges);
         peptideLink.setSuccess(true);
         return peptideLink;
     }

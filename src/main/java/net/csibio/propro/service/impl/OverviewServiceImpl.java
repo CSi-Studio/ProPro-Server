@@ -2,19 +2,17 @@ package net.csibio.propro.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.stat.StatConst;
+import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.dao.BaseDAO;
 import net.csibio.propro.dao.OverviewDAO;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.peptide.ProteinPeptide;
-import net.csibio.propro.domain.bean.report.PeptideRow;
-import net.csibio.propro.domain.bean.report.PeptideSumStatus;
 import net.csibio.propro.domain.db.OverviewDO;
-import net.csibio.propro.domain.query.DataQuery;
-import net.csibio.propro.domain.query.DataSumQuery;
-import net.csibio.propro.domain.query.OverviewQuery;
-import net.csibio.propro.domain.query.PeptideQuery;
+import net.csibio.propro.domain.query.*;
+import net.csibio.propro.excel.peptide.PeptideRow;
+import net.csibio.propro.excel.peptide.PeptideSumStatus;
 import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +36,8 @@ public class OverviewServiceImpl implements OverviewService {
     LibraryService libraryService;
     @Autowired
     PeptideService peptideService;
+    @Autowired
+    ExperimentService experimentService;
 
     @Override
     public BaseDAO<OverviewDO, OverviewQuery> getBaseDAO() {
@@ -142,6 +142,12 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
+    public Result<List<PeptideRow>> report(String projectId) {
+        List<IdName> idNameList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId), IdName.class);
+        return report(idNameList.stream().map(IdName::id).toList());
+    }
+
+    @Override
     public Result<List<PeptideRow>> report(List<String> expIds) {
         if (expIds.size() == 0) {
             return Result.Error(ResultCode.EXPERIMENT_ID_CANNOT_BE_EMPTY);
@@ -184,8 +190,8 @@ public class OverviewServiceImpl implements OverviewService {
                     row.getSumList().add(sumStatus.sum());
                     row.getStatusList().add(sumStatus.status());
                 } else {
-                    row.getSumList().add(null);
-                    row.getStatusList().add(null);
+                    row.getSumList().add(0d);
+                    row.getStatusList().add(IdentifyStatus.NO_EIC_FIND.getCode());
                 }
             });
         }

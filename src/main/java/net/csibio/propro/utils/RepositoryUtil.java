@@ -29,6 +29,10 @@ public class RepositoryUtil {
      */
     public static String FASTA_LIBRARY_ROOT = "Fasta";
 
+    /**
+     * 文件导出文件夹
+     */
+    public static String EXPORT = "Export";
 
     public static String repository;
 
@@ -56,8 +60,8 @@ public class RepositoryUtil {
         return FilenameUtils.concat(FilenameUtils.concat(repository, LIBRARY_ROOT), FASTA_LIBRARY_ROOT);
     }
 
-    public static String getProjectTempRepo(String projectName) {
-        return FilenameUtils.concat(getProjectRepo(projectName), "temp");
+    public static String getExport(String projectName) {
+        return FilenameUtils.concat(FilenameUtils.concat(repository, EXPORT), projectName);
     }
 
     public static String buildOutputPath(String projectName, String fileName) {

@@ -9,7 +9,24 @@ import java.util.Set;
 public interface SimulateService {
     void predictFragment(String libraryId, String spModel, boolean iso);
 
-    List<FragmentInfo> predictFragment(String peptideId, String spModel, boolean iso, int limit);
+    /**
+     * 预测肽段碎片
+     *
+     * @param peptide 原有的肽段信息
+     * @param spModel @see SpModelConstant
+     * @param iso     是否考虑同位素
+     * @param limit   按照intensity从高到低排序以后取强度前limit的碎片
+     * @return
+     */
+    List<FragmentInfo> predictFragment(PeptideDO peptide, String spModel, boolean iso, int limit);
 
-    Set<FragmentInfo> singlePredictFragment(PeptideDO peptideDO, String spModel, boolean iso);
+    /**
+     * 预测肽段碎片,不做限制
+     *
+     * @param peptide 原有的肽段信息
+     * @param spModel @see SpModelConstant
+     * @param iso     是否考虑同位素
+     * @return
+     */
+    Set<FragmentInfo> singlePredictFragment(PeptideDO peptide, String spModel, boolean iso);
 }

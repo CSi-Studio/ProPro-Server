@@ -7,6 +7,7 @@ public class SymbolConst {
     public static final String RETURN = "\r";
     public static final String DOT = ".";
     public static final String DELIMITER = "-";
+    public static final String UNDERLINE = "_";
     public static final String BAR = "|";
     public static final String SPACE = " ";
     public static final String LEFT_SLASH = "/";
