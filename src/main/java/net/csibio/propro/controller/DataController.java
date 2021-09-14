@@ -76,6 +76,21 @@ public class DataController {
         return result;
     }
 
+    /**
+     * Core API
+     * 1. If the EIC data exist. Get the data directly from the database
+     * 2. Else predict the Y-Ion for the target peptide and analyze the EIC data from the Aird file
+     *
+     * @param projectId
+     * @param libraryId
+     * @param peptideRef
+     * @param predict
+     * @param onlyDefault
+     * @param smooth
+     * @param denoise
+     * @param expIds
+     * @return
+     */
     @PostMapping(value = "/getExpData")
     Result getExpData(@RequestParam("projectId") String projectId,
                       @RequestParam(value = "libraryId", required = false) String libraryId,

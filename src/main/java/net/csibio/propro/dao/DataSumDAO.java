@@ -64,7 +64,10 @@ public class DataSumDAO extends BaseMultiDAO<DataSumDO, DataSumQuery> {
 //        if (dataSumQuery.getQValueStart() != null || dataSumQuery.getQValueEnd() != null) {
 //            query.addCriteria(where("qValue").gte(dataSumQuery.getQValueStart() == null ? 0 : dataSumQuery.getQValueStart()).lte(dataSumQuery.getQValueEnd() == null ? 1 : dataSumQuery.getQValueEnd()));
 //        }
-        if (dataSumQuery.getStatusList() != null) {
+
+        if (dataSumQuery.getStatus() != null) {
+            query.addCriteria(where("status").is(dataSumQuery.getStatus()));
+        } else if (dataSumQuery.getStatusList() != null) {
             query.addCriteria(where("status").in(dataSumQuery.getStatusList()));
         }
         return query;

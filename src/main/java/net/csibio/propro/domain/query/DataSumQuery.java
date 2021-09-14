@@ -22,6 +22,8 @@ public class DataSumQuery extends PageQuery {
 
     Boolean decoy;
 
+    Integer status;
+    
     List<Integer> statusList;
 
     Double fdrStart;

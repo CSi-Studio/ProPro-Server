@@ -159,4 +159,9 @@ public class ProjectController {
     Result remove(@RequestParam("projectId") String projectId) {
         return projectService.removeById(projectId);
     }
+
+    @GetMapping(value = "/peptideRatio")
+    Result peptideRatio(@RequestParam("projectId") String projectId) {
+        return projectService.removeById(projectId);
+    }
 }
