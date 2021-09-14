@@ -39,6 +39,9 @@ public class ExperimentDAO extends BaseDAO<ExperimentDO, ExperimentQuery> {
         if (StringUtils.isNotEmpty(query.getName())) {
             dbQuery.addCriteria(where("name").regex(query.getName(), "i"));
         }
+        if (StringUtils.isNotEmpty(query.getLabel())) {
+            dbQuery.addCriteria(where("label").is(query.getName()));
+        }
         if (StringUtils.isNotEmpty(query.getProjectId())) {
             dbQuery.addCriteria(where("projectId").is(query.getProjectId()));
         }

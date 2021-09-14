@@ -14,6 +14,8 @@ public class ExperimentQuery extends PageQuery {
     List<String> ids;
 
     String name;
+    
+    String label;
 
     String projectName;
 

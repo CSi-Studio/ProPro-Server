@@ -11,6 +11,8 @@ public class ExpVO {
 
     String name;
 
+    String label;
+    
     String alias;
 
     //DIA_SWATH, PRM, SCANNING_SWATH @see ExpType

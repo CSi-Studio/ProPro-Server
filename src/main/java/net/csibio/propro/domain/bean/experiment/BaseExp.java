@@ -29,10 +29,20 @@ public class BaseExp {
     String name;
 
     /**
+     * 标注,用于数据分类学习
+     */
+    String label;
+
+    /**
+     * 标签,用于多维度的分类学习
+     */
+    List<String> tags;
+
+    /**
      * 实验别名
      */
     String alias;
-    
+
     /**
      * 项目名称
      */

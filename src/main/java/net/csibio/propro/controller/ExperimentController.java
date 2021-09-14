@@ -79,12 +79,17 @@ public class ExperimentController {
     }
 
     @PostMapping(value = "/edit")
-    Result<ExperimentDO> edit(@RequestParam("id") String id, @RequestParam("alias") String alias) {
+    Result<ExperimentDO> edit(@RequestParam("id") String id,
+                              @RequestParam(value = "alias", required = false) String alias,
+                              @RequestParam(value = "label", required = false) String label,
+                              @RequestParam(value = "tags", required = false) List<String> tags) {
         ExperimentDO exp = experimentService.getById(id);
         if (exp == null) {
             return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
         }
         exp.setAlias(alias);
+        exp.setLabel(label);
+        exp.setTags(tags);
         experimentService.update(exp);
         return Result.OK(exp);
     }

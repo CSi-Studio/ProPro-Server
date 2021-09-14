@@ -19,6 +19,8 @@ public class ExpDataVO {
 
     String expId;
 
+    String label;
+    
     Boolean decoy;
 
     String overviewId;
