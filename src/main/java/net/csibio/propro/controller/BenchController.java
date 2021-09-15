@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
-@Api(tags = {"Bench"})
+@Api(tags = {"LFQBench"})
 @RestController
 @RequestMapping("/bench")
-public class LfqBenchController {
+public class BenchController {
 
     @Autowired
     ProjectService projectService;
