@@ -10,8 +10,13 @@ public class BenchStat<T> {
 
     //A组鉴定数(唯一肽段)
     long identifyNumA;
+    //A组缺失率,缺失值/总数
+    long missingRatioA;
+
     //B组鉴定数(唯一肽段)
     long identifyNumB;
+    //B组缺失率,缺失值/总数
+    long missingRatioB;
 
     double humanCV;  //标准偏差
     double humanAvg; //均值

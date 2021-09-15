@@ -2,7 +2,7 @@ package net.csibio.propro.controller;
 
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import net.csibio.propro.algorithm.lfqbench.Bench;
+import net.csibio.propro.algorithm.lfqbench.LfqBench;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.db.ProjectDO;
@@ -22,7 +22,7 @@ public class BenchController {
     @Autowired
     ProjectService projectService;
     @Autowired
-    Bench bench;
+    LfqBench lfqBench;
 
     @GetMapping(value = "/peptideRatio")
     Result peptideRatio(@RequestParam("projectId") String projectId) {
@@ -31,6 +31,6 @@ public class BenchController {
             return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
         }
 
-        return bench.buildPeptideRatio(project);
+        return lfqBench.buildPeptideRatio(project);
     }
 }
