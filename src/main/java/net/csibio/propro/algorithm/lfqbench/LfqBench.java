@@ -3,9 +3,9 @@ package net.csibio.propro.algorithm.lfqbench;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.batch.BatchFitter;
 import net.csibio.propro.algorithm.batch.bean.DataSum;
+import net.csibio.propro.algorithm.batch.bean.GroupStat;
 import net.csibio.propro.algorithm.lfqbench.bean.BenchStat;
 import net.csibio.propro.algorithm.lfqbench.bean.PeptideRatio;
-import net.csibio.propro.algorithm.lfqbench.bean.ProteinRatio;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.experiment.BaseExp;
@@ -53,14 +53,14 @@ public class LfqBench {
         if (overviewMap.size() != expList.size()) {
             return Result.Error(ResultCode.SOME_EXPERIMENT_HAVE_NO_DEFAULT_OVERVIEW);
         }
-        Map<String, DataSum> dataMapForA = batchFitter.merge(project, expAList, overviewMap);
-        Map<String, DataSum> dataMapForB = batchFitter.merge(project, expBList, overviewMap);
+        GroupStat statForA = batchFitter.merge(project, expAList, overviewMap);
+        GroupStat statForB = batchFitter.merge(project, expBList, overviewMap);
         List<PeptideRatio> humanPoints = new ArrayList<>();
         List<PeptideRatio> yeastPoints = new ArrayList<>();
         List<PeptideRatio> ecoliPoints = new ArrayList<>();
-        dataMapForA.forEach((key, a) -> {
-            if (dataMapForB.containsKey(key)) {
-                DataSum b = dataMapForB.get(key);
+        statForA.getDataMap().forEach((key, a) -> {
+            if (statForB.getDataMap().containsKey(key)) {
+                DataSum b = statForB.getDataMap().get(key);
                 PeptideRatio peptideRatio = new PeptideRatio(key, Math.log(b.getSum()) / Math.log(2), Math.log(a.getSum() / b.getSum()) / Math.log(2));
                 if (a.getProteins().get(0).endsWith(HUMAN)) {
                     humanPoints.add(peptideRatio);
@@ -82,16 +82,23 @@ public class LfqBench {
         DescriptiveStatistics ecoli = new DescriptiveStatistics();
         ecoliPoints.forEach(p -> ecoli.addValue(p.y()));
 
-        points.setIdentifyNumA(dataMapForA.size());
-        points.setIdentifyNumB(dataMapForB.size());
+        points.setIdentifyNumA(statForA.getDataMap().size());
+        points.setMissingRatioA(statForA.getMissingRatio());
+        points.setHit1A(statForA.getHit1());
+        points.setHit2A(statForA.getHit2());
+        points.setHit3A(statForA.getHit3());
+        points.setIdentifyProteinNumA(statForA.getProteins());
+
+        points.setIdentifyNumB(statForB.getDataMap().size());
+        points.setMissingRatioB(statForB.getMissingRatio());
+        points.setHit1B(statForB.getHit1());
+        points.setHit2B(statForB.getHit2());
+        points.setHit3B(statForB.getHit3());
+        points.setIdentifyProteinNumB(statForB.getProteins());
+
         points.setHumanStat(human);
         points.setYeastStat(yeast);
         points.setEcoliStat(ecoli);
         return Result.OK(points);
     }
-
-    public Result<BenchStat<ProteinRatio>> buildProteinRatio(ProjectDO project) {
-        return null;
-    }
-
 }

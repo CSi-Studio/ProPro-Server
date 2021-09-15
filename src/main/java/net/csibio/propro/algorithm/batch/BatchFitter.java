@@ -1,8 +1,9 @@
 package net.csibio.propro.algorithm.batch;
 
 import lombok.extern.slf4j.Slf4j;
-import net.csibio.propro.algorithm.batch.bean.BatchDataSum;
 import net.csibio.propro.algorithm.batch.bean.DataSum;
+import net.csibio.propro.algorithm.batch.bean.GroupStat;
+import net.csibio.propro.algorithm.batch.bean.MergedDataSum;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
@@ -42,18 +43,18 @@ public class BatchFitter {
      * @param groupLabel
      * @return
      */
-    public Result<Map<String, DataSum>> merge(ProjectDO project, String groupLabel) {
+    public Result<GroupStat> merge(ProjectDO project, String groupLabel) {
         List<BaseExp> expList = experimentService.getAll(new ExperimentQuery().setProjectId(project.getId()).setLabel(groupLabel), BaseExp.class);
         Map<String, OverviewDO> overviewMap = overviewService.getDefaultOverviews(expList.stream().map(BaseExp::getId).collect(Collectors.toList()));
         if (overviewMap.size() != expList.size()) {
             return Result.Error(ResultCode.SOME_EXPERIMENT_HAVE_NO_DEFAULT_OVERVIEW);
         }
-        Map<String, DataSum> dataMap = merge(project, expList, overviewMap);
-        return Result.OK(dataMap);
+        GroupStat stat = merge(project, expList, overviewMap);
+        return Result.OK(stat);
     }
 
-    public Map<String, DataSum> merge(ProjectDO project, List<BaseExp> expList, Map<String, OverviewDO> overviewMap) {
-        Map<String, BatchDataSum> dataMap = new HashMap<>();
+    public GroupStat merge(ProjectDO project, List<BaseExp> expList, Map<String, OverviewDO> overviewMap) {
+        Map<String, MergedDataSum> dataMap = new HashMap<>();
         Map<String, DataSum> dataResultMap = new HashMap<>();
         for (BaseExp exp : expList) {
             log.info("开始处理实验" + exp.getAlias());
@@ -64,15 +65,15 @@ public class BatchFitter {
                                     .setStatus(IdentifyStatus.SUCCESS.getCode()), DataSum.class, project.getId())
                     .stream().filter(data -> !data.getProteins().get(0).startsWith("reverse")).collect(Collectors.toList());
             if (dataMap.isEmpty()) {
-                dataMap = dataList.stream().collect(Collectors.toMap(DataSum::getPeptideRef, data -> new BatchDataSum(data, 1)));
+                dataMap = dataList.stream().collect(Collectors.toMap(DataSum::getPeptideRef, data -> new MergedDataSum(data, 1)));
             } else {
                 for (DataSum dataSum : dataList) {
-                    BatchDataSum batchDataSum = dataMap.get(dataSum.getPeptideRef());
-                    if (batchDataSum == null) { //如果之前没有相关的信息,则加入到Map中
-                        dataMap.put(dataSum.getPeptideRef(), new BatchDataSum(dataSum, 1));
+                    MergedDataSum mergedDataSum = dataMap.get(dataSum.getPeptideRef());
+                    if (mergedDataSum == null) { //如果之前没有相关的信息,则加入到Map中
+                        dataMap.put(dataSum.getPeptideRef(), new MergedDataSum(dataSum, 1));
                     } else {
-                        batchDataSum.getData().setSum(batchDataSum.getData().getSum() + dataSum.getSum());
-                        batchDataSum.setEffectNum(batchDataSum.getEffectNum() + 1); //记录有效实验的数目,用于计算平均值
+                        mergedDataSum.getData().setSum(mergedDataSum.getData().getSum() + dataSum.getSum());
+                        mergedDataSum.setEffectNum(mergedDataSum.getEffectNum() + 1); //记录有效实验的数目,用于计算平均值
                     }
                 }
             }
@@ -81,6 +82,16 @@ public class BatchFitter {
             value.getData().setSum(value.getData().getSum() / value.getEffectNum());
             dataResultMap.put(key, value.getData());
         });
-        return dataResultMap;
+        GroupStat stat = new GroupStat();
+        stat.setDataMap(dataResultMap);
+        int validNum = dataMap.values().stream().mapToInt(MergedDataSum::getEffectNum).sum();
+
+        int proteins = dataMap.values().stream().map(data -> data.getData().getProteins().get(0)).collect(Collectors.toSet()).size();
+        stat.setMissingRatio(1 - validNum * 1.0 / (expList.size() * dataResultMap.size()));
+        stat.setHit1((int) dataMap.values().stream().filter(data -> data.getEffectNum() == 1).count());
+        stat.setHit2((int) dataMap.values().stream().filter(data -> data.getEffectNum() == 2).count());
+        stat.setHit3((int) dataMap.values().stream().filter(data -> data.getEffectNum() == 3).count());
+        stat.setProteins(proteins);
+        return stat;
     }
 }
