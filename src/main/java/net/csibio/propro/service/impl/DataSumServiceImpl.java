@@ -63,7 +63,7 @@ public class DataSumServiceImpl implements DataSumService {
             sum.setRealRt(sfs.getRt());
             sum.setPeptideRef(sfs.getPeptideRef());
             sum.setSum(sfs.getIntensitySum());
-            sum.setMainScore(sfs.getMainScore());
+            sum.setTotalScore(sfs.getMainScore());
             if (sfs.getFdr() != null && sfs.getFdr() <= 0.01) {
                 sum.setStatus(IdentifyStatus.SUCCESS.getCode());
             } else {
@@ -71,8 +71,8 @@ public class DataSumServiceImpl implements DataSumService {
             }
             sumList.add(sum);
         });
-        Double minMainScore = sumList.stream().filter(data -> data.getDecoy() && data.getStatus() == 1).min(Comparator.comparing(DataSumDO::getMainScore)).get().getMainScore();
-        overview.setMinMainScore(minMainScore);
+        Double minTotalScore = sumList.stream().filter(data -> data.getDecoy() && data.getStatus() == 1).min(Comparator.comparing(DataSumDO::getTotalScore)).get().getTotalScore();
+        overview.setMinTotalScore(minTotalScore);
         overviewService.update(overview);
         insert(sumList, projectId);
     }
