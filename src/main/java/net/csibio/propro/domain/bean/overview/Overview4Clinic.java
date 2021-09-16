@@ -10,5 +10,8 @@
 
 package net.csibio.propro.domain.bean.overview;
 
-public record OverviewV1(String id, String name, String expId, Boolean defaultOne) {
+import java.util.HashMap;
+
+public record Overview4Clinic(String id, String name, String expId, Boolean defaultOne,
+                              HashMap<String, Double> weights) {
 }

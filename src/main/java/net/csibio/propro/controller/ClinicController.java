@@ -6,7 +6,7 @@ import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.common.IdNameAlias;
-import net.csibio.propro.domain.bean.overview.OverviewV1;
+import net.csibio.propro.domain.bean.overview.Overview4Clinic;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.MethodDO;
 import net.csibio.propro.domain.db.ProjectDO;
@@ -71,10 +71,10 @@ public class ClinicController {
             return Result.Error(ResultCode.METHOD_NOT_EXISTED);
         }
         List<IdNameAlias> expList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId), IdNameAlias.class);
-        List<OverviewV1> totalOverviewList = overviewService.getAll(new OverviewQuery(projectId), OverviewV1.class);
-        Map<String, List<OverviewV1>> overviewMap = totalOverviewList.stream().collect(Collectors.groupingBy(OverviewV1::expId));
+        List<Overview4Clinic> totalOverviewList = overviewService.getAll(new OverviewQuery(projectId), Overview4Clinic.class);
+        Map<String, List<Overview4Clinic>> overviewMap = totalOverviewList.stream().collect(Collectors.groupingBy(Overview4Clinic::expId));
         overviewMap.values().forEach(overviews -> {
-            overviews = overviews.stream().sorted(Comparator.nullsLast(Comparator.comparing(OverviewV1::defaultOne))).toList();
+            overviews = overviews.stream().sorted(Comparator.nullsLast(Comparator.comparing(Overview4Clinic::defaultOne))).toList();
         });
 
         ClinicPrepareDataVO data = new ClinicPrepareDataVO();

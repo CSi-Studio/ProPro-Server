@@ -7,7 +7,7 @@ import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.data.BaseData;
-import net.csibio.propro.domain.bean.overview.OverviewV1;
+import net.csibio.propro.domain.bean.overview.Overview4Clinic;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.OverviewDO;
@@ -107,7 +107,7 @@ public class DataController {
             if (onlyDefault) {
                 query.setDefaultOne(true);
             }
-            OverviewV1 overview = overviewService.getOne(query, OverviewV1.class);
+            Overview4Clinic overview = overviewService.getOne(query, Overview4Clinic.class);
             if (overview == null) {
                 continue;
             }
