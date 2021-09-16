@@ -1,15 +1,15 @@
 package net.csibio.propro.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import net.csibio.propro.constants.enums.LibraryType;
+import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.db.LibraryDO;
+import net.csibio.propro.domain.db.DataSumDO;
+import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.PeptideDO;
-import net.csibio.propro.domain.db.ProteinDO;
+import net.csibio.propro.domain.query.DataSumQuery;
+import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.domain.query.PeptideQuery;
-import net.csibio.propro.service.LibraryService;
-import net.csibio.propro.service.PeptideService;
-import net.csibio.propro.service.ProteinService;
+import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -32,16 +31,18 @@ public class TestController {
     LibraryService libraryService;
     @Autowired
     PeptideService peptideService;
+    @Autowired
+    OverviewService overviewService;
+    @Autowired
+    DataSumService dataSumService;
 
     @GetMapping(value = "/lms")
-    Result lms() throws IOException {
-        File[] proteinFiles = getFiles("dbfile/fasta");
-        log.info("正在初始化fasta文件:" + proteinFiles[2].getName());
-        FileInputStream inputStream = new FileInputStream(proteinFiles[2]);
-        List<ProteinDO> pList = proteinService.importFromLocalFasta(inputStream, proteinFiles[2].getName(), true);
-        LibraryDO lib = new LibraryDO("TestForFasta", LibraryType.ANA.getName());
-        libraryService.insert(lib);
-        proteinService.proteinToPeptide(lib.getId(), pList, 10, 100, "HCD", false);
+    Result lms() {
+        List<OverviewDO> overviewList = overviewService.getAll(new OverviewQuery());
+        overviewList.forEach(overview -> {
+            List<DataSumDO> dataSumList = dataSumService.getAll(new DataSumQuery().setOverviewId(overview.getId()).setStatus(IdentifyStatus.SUCCESS.getCode()).setDecoy(true), overview.getProjectId());
+
+        });
 
         return Result.OK();
     }

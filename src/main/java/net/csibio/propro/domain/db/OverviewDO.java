@@ -81,6 +81,7 @@ public class OverviewDO extends BaseDO {
      */
     HashMap<String, Double> weights = new HashMap<>();
 
+    Double minMainScore;
     /**
      * 关于本次分析的统计数据
      */

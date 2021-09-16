@@ -27,6 +27,7 @@ public class StatConst {
     public static String MATCHED_TOTAL_PEPTIDE_COUNT = "MATCHED_TOTAL_PEPTIDE_COUNT";
     public static String MATCHED_UNIQUE_PROTEIN_COUNT = "MATCHED_UNIQUE_PROTEIN_COUNT";
     public static String MATCHED_TOTAL_PROTEIN_COUNT = "MATCHED_TOTAL_PROTEIN_COUNT";
+
     public static String TARGET_DIST = "TARGET_DIST";
     public static String DECOY_DIST = "DECOY_DIST";
 }

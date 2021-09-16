@@ -138,9 +138,7 @@ public class ClinicController {
             //如果使用预测方法,则进行实时EIC获取
             if (predict) {
                 ExperimentDO exp = experimentService.getById(expId);
-                long start = System.currentTimeMillis();
                 data = dataService.buildData(exp, libraryId, peptideRef);
-                log.info("Cost:" + (System.currentTimeMillis() - start));
                 data.setExpId(exp.getId());
             } else {
                 data = dataService.getData(projectId, expId, overview.id(), peptideRef);
@@ -149,12 +147,13 @@ public class ClinicController {
         }
 
         if (smooth) {
+            SigmaSpacing ss = SigmaSpacing.create();
             dataList.forEach(data -> {
-                SigmaSpacing ss = SigmaSpacing.create();
                 HashMap<String, float[]> smoothInt = GaussFilter.filter(data.getRtArray(), (HashMap<String, float[]>) data.getIntMap(), ss);
                 data.setIntMap(smoothInt);
             });
         }
+
         if (denoise) {
             dataList.forEach(data -> {
                 HashMap<String, float[]> denoiseIntMap = new HashMap<>();

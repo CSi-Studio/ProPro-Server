@@ -6,13 +6,16 @@ import net.csibio.propro.dao.BaseMultiDAO;
 import net.csibio.propro.dao.DataSumDAO;
 import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
 import net.csibio.propro.domain.db.DataSumDO;
+import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.DataSumQuery;
 import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.DataSumService;
+import net.csibio.propro.service.OverviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -22,6 +25,8 @@ public class DataSumServiceImpl implements DataSumService {
 
     @Autowired
     DataSumDAO dataSumDAO;
+    @Autowired
+    OverviewService overviewService;
 
     @Override
     public BaseMultiDAO<DataSumDO, DataSumQuery> getBaseDAO() {
@@ -44,11 +49,11 @@ public class DataSumServiceImpl implements DataSumService {
     }
 
     @Override
-    public void buildDataSumList(List<FinalPeakGroupScore> sfsList, Double fdr, String overviewId, String projectId) {
+    public void buildDataSumList(List<FinalPeakGroupScore> sfsList, Double fdr, OverviewDO overview, String projectId) {
         List<DataSumDO> sumList = new ArrayList<>();
         sfsList.forEach(sfs -> {
             DataSumDO sum = new DataSumDO();
-            sum.setOverviewId(overviewId);
+            sum.setOverviewId(overview.getId());
             sum.setId(sfs.getId());
             sum.setProteins(sfs.getProteins());
             sum.setDecoy(sfs.getDecoy());
@@ -58,6 +63,7 @@ public class DataSumServiceImpl implements DataSumService {
             sum.setRealRt(sfs.getRt());
             sum.setPeptideRef(sfs.getPeptideRef());
             sum.setSum(sfs.getIntensitySum());
+            sum.setMainScore(sfs.getMainScore());
             if (sfs.getFdr() != null && sfs.getFdr() <= 0.01) {
                 sum.setStatus(IdentifyStatus.SUCCESS.getCode());
             } else {
@@ -65,6 +71,9 @@ public class DataSumServiceImpl implements DataSumService {
             }
             sumList.add(sum);
         });
+        Double minMainScore = sumList.stream().filter(data -> data.getDecoy() && data.getStatus() == 1).min(Comparator.comparing(DataSumDO::getMainScore)).get().getMainScore();
+        overview.setMinMainScore(minMainScore);
+        overviewService.update(overview);
         insert(sumList, projectId);
     }
 

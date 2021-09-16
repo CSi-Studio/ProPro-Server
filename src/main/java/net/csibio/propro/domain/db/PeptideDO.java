@@ -117,6 +117,7 @@ public class PeptideDO extends BaseDO {
         tp.setRt(rt);
         tp.setFragments(fragments);
         tp.setMz(mz);
+        tp.setSequence(sequence);
         tp.setUnimodMap(unimodMap);
         tp.setDecoySequence(decoySequence);
         tp.setDecoyUnimodMap(decoyUnimodMap);

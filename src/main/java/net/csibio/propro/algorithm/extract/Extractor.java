@@ -121,7 +121,7 @@ public class Extractor {
      * @param coord
      * @return
      */
-    public Result<DataDO> extractOne(ExperimentDO exp, PeptideCoord coord, AnalyzeParams params) {
+    public Result<DataDO> eppsOne(ExperimentDO exp, PeptideCoord coord, AnalyzeParams params) {
         Double rt = coord.getRt();
         if (params.getMethod().getEic().getRtWindow() == -1) {
             coord.setRtStart(-1);
@@ -141,7 +141,8 @@ public class Extractor {
         if (dataDO == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }
-
+        //进行实时打分
+        scorer.scoreForOne(exp, dataDO, coord, rtMapResult.getData(), params);
         return Result.OK(dataDO);
     }
 
@@ -157,7 +158,7 @@ public class Extractor {
      */
     public void extract4Irt(List<DataDO> finalList, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         for (PeptideCoord coord : coordinates) {
-            DataDO data = extractOne(coord, rtMap, params);
+            DataDO data = eppsOne(coord, rtMap, params);
             if (data != null) {
                 finalList.add(data);
             }
@@ -188,7 +189,7 @@ public class Extractor {
         }
     }
 
-    public DataDO extractOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public DataDO eppsOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         return coreFunc.extractOne(coord, rtMap, params, null);
     }
 

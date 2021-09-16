@@ -8,6 +8,7 @@ import net.csibio.propro.dao.BaseMultiDAO;
 import net.csibio.propro.dao.DataDAO;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.DataQuery;
@@ -18,7 +19,6 @@ import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -74,30 +74,6 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public List<ExpDataVO> buildData(List<String> expIds, String libraryId, String brotherPeptideRef, int newCharge) {
-        PeptideDO brother = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(brotherPeptideRef), PeptideDO.class);
-        if (brother == null) {
-            return null;
-        }
-        List<ExpDataVO> eicDataList = new ArrayList<>();
-        //如果是带两个点的就改为3个点,如果不是2个电的就改为2个电
-        PeptideDO newGuy = brother.buildBrother(newCharge);
-        List<FragmentInfo> fragmentInfos = simulateService.predictFragment(brother, SpModelConstant.HCD, true, 5);
-        newGuy.setFragments(new HashSet<>(fragmentInfos));
-        AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
-        expIds.forEach(expId -> {
-            ExperimentDO exp = experimentService.getById(expId);
-            Result<DataDO> result = extractor.extractOne(exp, newGuy.toTargetPeptide(), params);
-            if (result.isSuccess()) {
-                ExpDataVO data = new ExpDataVO();
-                data.merge(result.getData(), null);
-                eicDataList.add(data);
-            }
-        });
-        return eicDataList;
-    }
-
-    @Override
     public ExpDataVO buildData(ExperimentDO exp, String libraryId, String originalPeptide) {
         PeptideDO brother = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(originalPeptide), PeptideDO.class);
         if (brother == null) {
@@ -109,8 +85,10 @@ public class DataServiceImpl implements DataService {
         newGuy.setFragments(new HashSet<>(fragmentInfos));
         AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
 
-        Result<DataDO> result = extractor.extractOne(exp, newGuy.toTargetPeptide(), params);
+        PeptideCoord coord = newGuy.toTargetPeptide();
+        Result<DataDO> result = extractor.eppsOne(exp, coord, params);
         if (result.isSuccess()) {
+
             ExpDataVO data = new ExpDataVO();
             data.merge(result.getData(), null);
             return data;

@@ -103,7 +103,7 @@ public class SemiSupervise {
 
         long start = System.currentTimeMillis();
         //插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
-        dataSumService.buildDataSumList(featureScoresList, params.getFdr(), overviewId, overview.getProjectId());
+        dataSumService.buildDataSumList(featureScoresList, params.getFdr(), overview, overview.getProjectId());
         log.info("插入Sum数据" + featureScoresList.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
         overview.setWeights(weightsMap);
         overviewService.update(overview);

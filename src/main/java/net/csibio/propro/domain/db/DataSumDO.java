@@ -36,6 +36,9 @@ public class DataSumDO extends BaseDO {
     //最终鉴定的时间
     Double realRt;
 
+    //对应的最终的主峰的打分
+    Double mainScore;
+
     //Intensity Sum
     Double sum;
 
