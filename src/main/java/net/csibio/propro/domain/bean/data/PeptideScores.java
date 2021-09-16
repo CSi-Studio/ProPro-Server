@@ -2,6 +2,7 @@ package net.csibio.propro.domain.bean.data;
 
 import lombok.Data;
 import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.db.DataDO;
 
 import java.util.List;
 
@@ -21,4 +22,15 @@ public class PeptideScores {
     Boolean decoy = false;
     //所有峰组的打分情况
     List<PeakGroupScores> scoreList;
+
+    public PeptideScores() {
+    }
+
+    public PeptideScores(DataDO data) {
+        this.id = data.getId();
+        this.proteins = data.getProteins();
+        this.peptideRef = data.getPeptideRef();
+        this.decoy = data.getDecoy();
+        this.scoreList = data.getScoreList();
+    }
 }

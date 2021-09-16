@@ -6,10 +6,14 @@ import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.aird.bean.WindowRange;
 import net.csibio.aird.parser.DIAParser;
 import net.csibio.propro.algorithm.core.CoreFunc;
+import net.csibio.propro.algorithm.learner.classifier.Lda;
+import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
+import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.data.PeptideScores;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
@@ -48,6 +52,8 @@ public class Extractor {
     TaskService taskService;
     @Autowired
     CoreFunc coreFunc;
+    @Autowired
+    Lda lda;
 
     /**
      * 根据coord肽段坐标读取exp对应的aird文件中涉及的相关光谱图
@@ -143,6 +149,32 @@ public class Extractor {
         }
         //进行实时打分
         scorer.scoreForOne(exp, dataDO, coord, rtMapResult.getData(), params);
+        if (dataDO.getScoreList() == null) {
+            return Result.OK(dataDO);
+        }
+        if (params.getOverviewId() != null) {
+            PeptideScores ps = new PeptideScores(dataDO);
+            OverviewDO overview = overviewService.getById(params.getOverviewId());
+            List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
+            lda.score(ps, overview.getWeights(), scoreTypes);
+            Double bestTotalScore = null;
+            Double bestRt = null;
+            for (int i = 0; i < ps.getScoreList().size(); i++) {
+                double currentTotalScore = ps.getScoreList().get(i).get(ScoreType.WeightedTotalScore, scoreTypes);
+                if (bestTotalScore == null) {
+                    bestTotalScore = currentTotalScore;
+                } else if (currentTotalScore > bestTotalScore) {
+                    bestTotalScore = currentTotalScore;
+                }
+            }
+            if (bestTotalScore > overview.getMinTotalScore()) {
+                dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
+            } else {
+                dataDO.setStatus(IdentifyStatus.FAILED.getCode());
+            }
+        }
+
+
         return Result.OK(dataDO);
     }
 

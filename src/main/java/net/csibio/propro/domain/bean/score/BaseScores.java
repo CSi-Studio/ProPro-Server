@@ -83,4 +83,6 @@ public class BaseScores {
             scores[index] = null;
         }
     }
+
+//    public void totalScore
 }

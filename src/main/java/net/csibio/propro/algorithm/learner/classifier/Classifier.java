@@ -53,6 +53,20 @@ public abstract class Classifier {
         }
     }
 
+    public void score(PeptideScores score, HashMap<String, Double> weightsMap, List<String> scoreTypes) {
+        Set<Map.Entry<String, Double>> entries = weightsMap.entrySet();
+        if (score.getScoreList() == null) {
+            return;
+        }
+        for (PeakGroupScores peakGroupScores : score.getScoreList()) {
+            double addedScore = 0;
+            for (Map.Entry<String, Double> entry : entries) {
+                addedScore += peakGroupScores.get(entry.getKey(), scoreTypes) * entry.getValue();
+            }
+            peakGroupScores.put(ScoreType.WeightedTotalScore.getName(), addedScore, scoreTypes);
+        }
+    }
+
     public TrainPeaks selectTrainPeaks(TrainData trainData, String usedScoreType, LearningParams learningParams, Double cutoff) {
 
         List<FinalPeakGroupScore> topTargetPeaks = ProProUtil.findTopFeatureScores(trainData.getTargets(), usedScoreType, learningParams.getScoreTypes(), true);

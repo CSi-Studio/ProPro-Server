@@ -74,7 +74,7 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public ExpDataVO buildData(ExperimentDO exp, String libraryId, String originalPeptide) {
+    public ExpDataVO buildData(ExperimentDO exp, String libraryId, String originalPeptide, String overviewId) {
         PeptideDO brother = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(originalPeptide), PeptideDO.class);
         if (brother == null) {
             return null;
@@ -84,11 +84,10 @@ public class DataServiceImpl implements DataService {
         List<FragmentInfo> fragmentInfos = simulateService.predictFragment(brother, SpModelConstant.CID, true, 6);
         newGuy.setFragments(new HashSet<>(fragmentInfos));
         AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
-
+        params.setOverviewId(overviewId);
         PeptideCoord coord = newGuy.toTargetPeptide();
         Result<DataDO> result = extractor.eppsOne(exp, coord, params);
         if (result.isSuccess()) {
-
             ExpDataVO data = new ExpDataVO();
             data.merge(result.getData(), null);
             return data;
