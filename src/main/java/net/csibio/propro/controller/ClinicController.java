@@ -139,7 +139,7 @@ public class ClinicController {
             if (predict) {
                 ExperimentDO exp = experimentService.getById(expId);
                 data = dataService.buildData(exp, libraryId, peptideRef, overview.id());
-                data.setExpId(exp.getId());
+                //data.setExpId(exp.getId());
             } else {
                 data = dataService.getData(projectId, expId, overview.id(), peptideRef);
             }

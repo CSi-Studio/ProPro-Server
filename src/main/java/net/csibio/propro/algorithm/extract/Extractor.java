@@ -140,7 +140,7 @@ public class Extractor {
 
         Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(exp, coord);
         if (rtMapResult.isFailed()) {
-            return Result.Error(ResultCode.PARSE_ERROR);
+            return Result.Error(rtMapResult.getErrorCode());
         }
 
         DataDO dataDO = coreFunc.extractOne(coord, rtMapResult.getData(), params, null);

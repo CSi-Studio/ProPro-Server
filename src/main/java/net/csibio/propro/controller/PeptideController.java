@@ -77,7 +77,7 @@ public class PeptideController extends XController<LibraryDO, LibraryQuery, Libr
         if (!Objects.equals(spModel, "CID") && !Objects.equals(spModel, "HCD")) {
             return Result.Error(ResultCode.UNSUPPORTED_FRAGMENTATION_MODEL);
         }
-        List<FragmentInfo> fragmentInfos = simulateService.predictFragment(peptide, spModel, iso, limit);
+        List<FragmentInfo> fragmentInfos = simulateService.predictFragment(peptide.getSequence(), spModel, iso, limit);
         return Result.OK(fragmentInfos);
     }
 

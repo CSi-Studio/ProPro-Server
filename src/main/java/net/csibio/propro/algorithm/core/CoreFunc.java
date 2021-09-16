@@ -66,6 +66,8 @@ public class CoreFunc {
         data.setDecoy(coord.isDecoy());
         data.setLibRt(coord.getRt());
         data.setIrt(coord.getIrt());
+
+        
         try {
             data.setCutInfoMap(coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getMz().floatValue())));
         } catch (Exception e) {

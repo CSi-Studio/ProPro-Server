@@ -81,7 +81,7 @@ public class DataServiceImpl implements DataService {
         }
         //如果是带两个点的就改为3个点,如果不是2个电的就改为2个电
         PeptideDO newGuy = brother.buildBrother(2);
-        List<FragmentInfo> fragmentInfos = simulateService.predictFragment(brother, SpModelConstant.CID, true, 6);
+        List<FragmentInfo> fragmentInfos = simulateService.predictFragment(brother.getSequence(), SpModelConstant.CID, true, 6);
         newGuy.setFragments(new HashSet<>(fragmentInfos));
         AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
         params.setOverviewId(overviewId);

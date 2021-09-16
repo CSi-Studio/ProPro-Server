@@ -8,6 +8,7 @@ import net.csibio.propro.constants.constant.CutInfoConst;
 import net.csibio.propro.constants.constant.SpModelConstant;
 import net.csibio.propro.dao.PeptideDAO;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
+import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.service.PeptideService;
 import net.csibio.propro.service.SimulateService;
@@ -25,22 +26,22 @@ public class SimulateServiceImpl implements SimulateService {
     PeptideService peptideService;
 
     @Override
-    public void predictFragment(String libraryId, String spModel, boolean iso) {
-        List<PeptideDO> peptideDOList = peptideDAO.getAllByLibraryId(libraryId);
+    public void predictFragment(LibraryDO library, String spModel, boolean iso) {
+        List<PeptideDO> peptideDOList = peptideDAO.getAllByLibraryId(library.getId());
         for (PeptideDO peptideDO : peptideDOList) {
             //The model only supports peptides with 2 charges
             if (peptideDO.getCharge() != 2) {
                 continue;
             }
-            peptideDO.getFragments().addAll(buildFragmentInfos(peptideDO.getSequence(), spModel, iso));
+            peptideDO.getFragments().addAll(predictFragment(peptideDO.getSequence(), spModel, iso));
             peptideService.update(peptideDO);
         }
     }
 
 
     @Override
-    public List<FragmentInfo> predictFragment(PeptideDO oldPeptide, String spModel, boolean iso, int limit) {
-        Set<FragmentInfo> fragmentsSet = buildFragmentInfos(oldPeptide.getSequence(), spModel, iso);
+    public List<FragmentInfo> predictFragment(String sequence, String spModel, boolean iso, int limit) {
+        Set<FragmentInfo> fragmentsSet = predictFragment(sequence, spModel, iso);
         List<FragmentInfo> fragments = new ArrayList<>(fragmentsSet);
         fragments.sort(Comparator.comparing(FragmentInfo::getIntensity).reversed());
         if (limit < fragments.size()) {
@@ -51,15 +52,7 @@ public class SimulateServiceImpl implements SimulateService {
     }
 
     @Override
-    public Set<FragmentInfo> singlePredictFragment(PeptideDO peptideDO, String spModel, boolean iso) {
-        if (peptideDO.getCharge() != 2) {
-            return null;
-        }
-        Set<FragmentInfo> fragments = buildFragmentInfos(peptideDO.getSequence(), spModel, iso);
-        return fragments;
-    }
-
-    private Set<FragmentInfo> buildFragmentInfos(String sequence, String spModel, boolean iso) {
+    public Set<FragmentInfo> predictFragment(String sequence, String spModel, boolean iso) {
         Peptide peptide = new Peptide(sequence, 2);
         Simulator simu = new Simulator(peptide, spModel.equals(SpModelConstant.HCD) ? new Parameters1() : new Parameters2());
         float[][] peakGroup = iso ? simu.getYisoList() : simu.getYList();
@@ -78,5 +71,16 @@ public class SimulateServiceImpl implements SimulateService {
         }
         return fragments;
     }
+
+    @Override
+    public Set<FragmentInfo> singlePredictFragment(PeptideDO peptideDO, String spModel, boolean iso) {
+        if (peptideDO.getCharge() != 2) {
+            return null;
+        }
+        Set<FragmentInfo> fragments = predictFragment(peptideDO.getSequence(), spModel, iso);
+        return fragments;
+    }
+
+
 }
 
