@@ -68,7 +68,7 @@ public class Extractor {
 
         //Step1.获取窗口信息
         TreeMap<Float, MzIntensityPairs> rtMap;
-        BlockIndexDO index = blockIndexService.getOne(exp.getId(), coord.getMz().floatValue());
+        BlockIndexDO index = blockIndexService.getOne(exp.getId(), coord.getMz());
         if (index == null) {
             return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
         }

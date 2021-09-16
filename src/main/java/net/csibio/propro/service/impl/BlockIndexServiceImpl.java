@@ -57,7 +57,7 @@ public class BlockIndexServiceImpl implements BlockIndexService {
     }
 
     @Override
-    public BlockIndexDO getOne(String expId, Float mz) {
+    public BlockIndexDO getOne(String expId, Double mz) {
         BlockIndexQuery query = new BlockIndexQuery(expId, 2);
         query.setMz(mz);
         return blockIndexDAO.getOne(query);
@@ -74,16 +74,16 @@ public class BlockIndexServiceImpl implements BlockIndexService {
      * @return
      */
     @Override
-    public List<BlockIndexDO> getLinkedBlockIndex(String expId, Float mz, Double deltaMz, Integer collectedNumber) {
+    public List<BlockIndexDO> getLinkedBlockIndex(String expId, Double mz, Double deltaMz, Integer collectedNumber) {
         List<BlockIndexDO> indexList = new ArrayList<>();
         BlockIndexDO index0 = getOne(expId, mz);
         indexList.add(index0);
         for (int i = 1; i <= collectedNumber; i++) {
-            BlockIndexDO index1 = getOne(expId, (float) (mz - deltaMz * i));
+            BlockIndexDO index1 = getOne(expId, mz - deltaMz * i);
             if (index1 != null) {
                 indexList.add(index1);
             }
-            BlockIndexDO index2 = getOne(expId, (float) (mz + deltaMz * i));
+            BlockIndexDO index2 = getOne(expId, mz + deltaMz * i);
             if (index2 != null) {
                 indexList.add(index2);
             }

@@ -15,7 +15,7 @@ public interface BlockIndexService extends BaseService<BlockIndexDO, BlockIndexQ
 
     MzIntensityPairs getNearestSpectrumByRt(TreeMap<Float, MzIntensityPairs> rtMap, Double rt);
 
-    BlockIndexDO getOne(String expId, Float mz);
+    BlockIndexDO getOne(String expId, Double mz);
 
-    List<BlockIndexDO> getLinkedBlockIndex(String expId, Float mz, Double deltaMz, Integer collectedNumber);
+    List<BlockIndexDO> getLinkedBlockIndex(String expId, Double mz, Double deltaMz, Integer collectedNumber);
 }

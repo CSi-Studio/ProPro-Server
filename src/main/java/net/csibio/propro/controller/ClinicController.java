@@ -6,6 +6,7 @@ import net.csibio.propro.algorithm.peak.GaussFilter;
 import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.common.FloatPairs;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.common.IdNameAlias;
 import net.csibio.propro.domain.bean.overview.Overview4Clinic;
@@ -50,7 +51,11 @@ public class ClinicController {
     DataSumService dataSumService;
     @Autowired
     SignalToNoiseEstimator signalToNoiseEstimator;
-    
+    @Autowired
+    PeptideService peptideService;
+    @Autowired
+    BlockIndexService blockIndexService;
+
     @GetMapping(value = "prepare")
     Result<ClinicPrepareDataVO> prepare(@RequestParam("projectId") String projectId) {
         ProjectDO project = projectService.getById(projectId);
@@ -164,5 +169,14 @@ public class ClinicController {
             });
         }
         return Result.OK(dataList);
+    }
+
+    @PostMapping(value = "/getSpectra")
+    Result getSpectra(@RequestParam("expId") String expId,
+                      @RequestParam("mz") Double mz,
+                      @RequestParam("rt") Float rt) {
+        ExperimentDO exp = experimentService.getById(expId);
+        FloatPairs pairs = experimentService.getSpectrum(exp, mz, rt);
+        return Result.OK(pairs);
     }
 }

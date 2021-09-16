@@ -3,11 +3,15 @@ package net.csibio.propro.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import net.csibio.aird.bean.AirdInfo;
 import net.csibio.aird.bean.BlockIndex;
+import net.csibio.aird.bean.Compressor;
+import net.csibio.aird.bean.MzIntensityPairs;
+import net.csibio.aird.parser.DIAParser;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.constants.enums.TaskStatus;
 import net.csibio.propro.dao.BaseDAO;
 import net.csibio.propro.dao.ExperimentDAO;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.common.FloatPairs;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.experiment.ExpIrt;
 import net.csibio.propro.domain.db.BlockIndexDO;
@@ -138,6 +142,26 @@ public class ExperimentServiceImpl implements ExperimentService {
             taskDO.finish(TaskStatus.FAILED.getName());
             taskService.update(taskDO);
         }
+    }
+
+    @Override
+    public FloatPairs getSpectrum(ExperimentDO exp, Double mz, Float rt) {
+        BlockIndexDO blockIndex = blockIndexService.getOne(exp.getId(), mz);
+        if (blockIndex == null) {
+            return null;
+        }
+
+        return getSpectrum(exp, blockIndex, rt);
+
+    }
+
+    @Override
+    public FloatPairs getSpectrum(ExperimentDO exp, BlockIndexDO blockIndex, Float rt) {
+        Compressor mzCompressor = exp.fetchCompressor(Compressor.TARGET_MZ);
+        DIAParser parser = new DIAParser(exp.getAirdPath(), mzCompressor, exp.fetchCompressor(Compressor.TARGET_INTENSITY), mzCompressor.getPrecision());
+        MzIntensityPairs pairs = parser.getSpectrumByRt(blockIndex.getStartPtr(), blockIndex.getRts(), blockIndex.getMzs(), blockIndex.getInts(), rt);
+        parser.close();
+        return new FloatPairs(pairs.getMzArray(), pairs.getIntensityArray());
     }
 
     @Override

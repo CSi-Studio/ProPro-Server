@@ -9,7 +9,6 @@ import net.csibio.propro.constants.constant.SmoothConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.blockindex.BlockIndexVO;
-import net.csibio.propro.domain.bean.common.DoublePairs;
 import net.csibio.propro.domain.bean.common.DoubleTreble;
 import net.csibio.propro.domain.bean.common.FloatPairs;
 import net.csibio.propro.domain.db.BlockIndexDO;
@@ -68,16 +67,13 @@ public class BlockIndexController {
             return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
         }
 
-        ExperimentDO experiment = experimentService.getById(blockIndex.getExpId());
-        if (experiment == null) {
+        ExperimentDO exp = experimentService.getById(blockIndex.getExpId());
+        if (exp == null) {
             return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
         }
 
-        Compressor mzCompressor = experiment.fetchCompressor(Compressor.TARGET_MZ);
-        DIAParser parser = new DIAParser(experiment.getAirdPath(), mzCompressor, experiment.fetchCompressor(Compressor.TARGET_INTENSITY), mzCompressor.getPrecision());
-        MzIntensityPairs pairs = parser.getSpectrumByRt(blockIndex.getStartPtr(), blockIndex.getRts(), blockIndex.getMzs(), blockIndex.getInts(), rt);
-        parser.close();
-        return Result.OK(new FloatPairs(pairs.getMzArray(), pairs.getIntensityArray()));
+        FloatPairs pairs = experimentService.getSpectrum(exp, blockIndex, rt);
+        return Result.OK(pairs);
     }
 
     @GetMapping(value = "/spectrums")
@@ -112,7 +108,7 @@ public class BlockIndexController {
     @GetMapping(value = "/spectrumGauss")
     Result spectrumGauss(@RequestParam("blockIndexId") String blockIndexId,
                          @RequestParam("rt") float rt,
-                         @RequestParam("pointNum")int pointNum) {
+                         @RequestParam("pointNum") int pointNum) {
         BlockIndexDO blockIndex = blockIndexService.getById(blockIndexId);
         if (blockIndex == null) {
             return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);

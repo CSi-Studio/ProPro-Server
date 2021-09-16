@@ -16,13 +16,13 @@ public class BlockIndexQuery extends PageQuery {
     Integer level;
 
     //前体的荷质比窗口开始位置,已经经过overlap参数调整
-    Float mzStart;
+    Double mzStart;
 
     //前体的荷质比窗口结束位置,已经经过overlap参数调整
-    Float mzEnd;
+    Double mzEnd;
 
     //根据目标的前体MZ获取相关的窗口
-    Float mz;
+    Double mz;
 
     public BlockIndexQuery() {
 
