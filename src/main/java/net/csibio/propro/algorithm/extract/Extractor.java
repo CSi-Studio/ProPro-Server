@@ -75,7 +75,7 @@ public class Extractor {
         DIAParser parser = null;
         try {
             parser = new DIAParser(exp.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
-            rtMap = parser.getSpectrums(index.getStartPtr(), index.getEndPtr(), index.getRts(), index.getMzs(), index.getInts());
+            rtMap = parser.getSpectrumsByRtRange(index.getStartPtr(), index.getRts(), index.getMzs(), index.getInts(), (float) coord.getRtStart(), (float) coord.getRtEnd());
         } catch (Exception e) {
             log.error(e.getMessage());
             return Result.Error(ResultCode.PARSE_ERROR);
@@ -122,11 +122,6 @@ public class Extractor {
      * @return
      */
     public Result<DataDO> extractOne(ExperimentDO exp, PeptideCoord coord, AnalyzeParams params) {
-        Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(exp, coord);
-        if (rtMapResult.isFailed()) {
-            return Result.Error(ResultCode.PARSE_ERROR);
-        }
-
         Double rt = coord.getRt();
         if (params.getMethod().getEic().getRtWindow() == -1) {
             coord.setRtStart(-1);
@@ -135,6 +130,11 @@ public class Extractor {
             Double targetRt = exp.getIrt().getSi().realRt(rt);
             coord.setRtStart(targetRt - params.getMethod().getEic().getRtWindow());
             coord.setRtEnd(targetRt + params.getMethod().getEic().getRtWindow());
+        }
+
+        Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(exp, coord);
+        if (rtMapResult.isFailed()) {
+            return Result.Error(ResultCode.PARSE_ERROR);
         }
 
         DataDO dataDO = coreFunc.extractOne(coord, rtMapResult.getData(), params, null);

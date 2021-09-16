@@ -138,7 +138,9 @@ public class ClinicController {
             //如果使用预测方法,则进行实时EIC获取
             if (predict) {
                 ExperimentDO exp = experimentService.getById(expId);
+                long start = System.currentTimeMillis();
                 data = dataService.buildData(exp, libraryId, peptideRef);
+                log.info("Cost:" + (System.currentTimeMillis() - start));
                 data.setExpId(exp.getId());
             } else {
                 data = dataService.getData(projectId, expId, overview.id(), peptideRef);
