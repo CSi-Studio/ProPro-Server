@@ -209,7 +209,6 @@ public class CoreFunc {
 
             //Step2. 常规选峰及打分,未满足条件的直接忽略
             scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
-
             dataList.add(dataDO);
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
             DataUtil.compress(dataDO);

@@ -1,6 +1,7 @@
 package net.csibio.propro.domain.vo;
 
 import lombok.Data;
+import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.data.BaseData;
 import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import net.csibio.propro.domain.db.DataDO;
@@ -20,7 +21,7 @@ public class ExpDataVO {
     String expId;
 
     String label;
-    
+
     Boolean decoy;
 
     String overviewId;
@@ -79,6 +80,7 @@ public class ExpDataVO {
             BeanUtils.copyProperties(dataSum, this);
             if (data != null && data.getScoreList() != null && dataSum.getRealRt() != null) {
                 this.selectIndex = scoreList.stream().map(PeakGroupScores::getRt).toList().indexOf(dataSum.getRealRt());
+                data.getScoreList().get(selectIndex).put(ScoreType.WeightedTotalScore, dataSum.getTotalScore(), ScoreType.getAllTypesName());
             }
         }
         return this;
@@ -92,6 +94,7 @@ public class ExpDataVO {
             BeanUtils.copyProperties(dataSum, this);
             if (data != null && data.getScoreList() != null && dataSum.getRealRt() != null) {
                 this.selectIndex = scoreList.stream().map(PeakGroupScores::getRt).toList().indexOf(dataSum.getRealRt());
+                data.getScoreList().get(selectIndex).put(ScoreType.WeightedTotalScore, dataSum.getTotalScore(), ScoreType.getAllTypesName());
             }
         }
         return this;

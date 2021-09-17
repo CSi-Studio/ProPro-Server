@@ -105,7 +105,7 @@ public class Lda extends Classifier {
             PeakGroupScores topDecoy = null;
             double maxMainScore = -Double.MAX_VALUE;
             for (PeakGroupScores peakGroupScores : peptideScores.getScoreList()) {
-                double mainScore = peakGroupScores.get(ScoreType.MainScore.getName(), scoreTypes);
+                double mainScore = peakGroupScores.get(ScoreType.InitScore.getName(), scoreTypes);
                 if (mainScore > maxMainScore) {
                     maxMainScore = mainScore;
                     topDecoy = peakGroupScores;

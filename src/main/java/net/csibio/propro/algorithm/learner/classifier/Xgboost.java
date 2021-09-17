@@ -60,7 +60,7 @@ public class Xgboost extends Classifier {
         Booster booster = learnRandomized(scores, learningParams);
         try {
             logger.info("开始最终打分");
-            predictAll(booster, scores, ScoreType.MainScore.getName(), learningParams.getScoreTypes());
+            predictAll(booster, scores, ScoreType.InitScore.getName(), learningParams.getScoreTypes());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -119,7 +119,7 @@ public class Xgboost extends Classifier {
 
     public void predictAll(Booster booster, List<PeptideScores> scores, String skipScoreType, List<String> scoreTypes) throws XGBoostError {
         int scoreTypesCount = scoreTypes.size();
-        if (skipScoreType.equals(ScoreType.MainScore.getName())) {
+        if (skipScoreType.equals(ScoreType.InitScore.getName())) {
             scoreTypesCount -= 1;
         } else {
             scoreTypesCount -= 2;
@@ -134,7 +134,7 @@ public class Xgboost extends Classifier {
                 float[] testData = new float[scoreTypesCount];
                 int tempIndex = 0;
                 for (String scoreName : scoreTypes) {
-                    if (scoreName.equals(ScoreType.WeightedTotalScore.getName()) || scoreName.equals(ScoreType.MainScore.getName())) {
+                    if (scoreName.equals(ScoreType.WeightedTotalScore.getName()) || scoreName.equals(ScoreType.InitScore.getName())) {
                         continue;
                     }
                     testData[tempIndex] = peakGroupScores.get(scoreName, scoreTypes).floatValue();
@@ -151,7 +151,7 @@ public class Xgboost extends Classifier {
     public DMatrix trainPeaksToDMatrix(TrainPeaks trainPeaks, String skipScoreType, List<String> scoreTypes) throws XGBoostError {
         int totalLength = trainPeaks.getBestTargets().size() + trainPeaks.getTopDecoys().size();
         int scoreTypesCount = scoreTypes.size();
-        if (skipScoreType.equals(ScoreType.MainScore.getName())) {
+        if (skipScoreType.equals(ScoreType.InitScore.getName())) {
             scoreTypesCount -= 1;
         } else {
             scoreTypesCount -= 2;
@@ -162,7 +162,7 @@ public class Xgboost extends Classifier {
         int dataIndex = 0, labelIndex = 0;
         for (FinalPeakGroupScore sample : trainPeaks.getBestTargets()) {
             for (String scoreName : scoreTypes) {
-                if (scoreName.equals(skipScoreType) || scoreName.equals(ScoreType.MainScore.getName())) {
+                if (scoreName.equals(skipScoreType) || scoreName.equals(ScoreType.InitScore.getName())) {
                     continue;
                 }
                 trainData[dataIndex] = sample.get(scoreName, scoreTypes).floatValue();
@@ -173,7 +173,7 @@ public class Xgboost extends Classifier {
         }
         for (FinalPeakGroupScore sample : trainPeaks.getTopDecoys()) {
             for (String scoreName : scoreTypes) {
-                if (scoreName.equals(skipScoreType) || scoreName.equals(ScoreType.MainScore.getName())) {
+                if (scoreName.equals(skipScoreType) || scoreName.equals(ScoreType.InitScore.getName())) {
                     continue;
                 }
                 trainData[dataIndex] = sample.get(scoreName, scoreTypes).floatValue();

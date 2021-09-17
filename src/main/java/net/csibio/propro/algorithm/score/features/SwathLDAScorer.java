@@ -51,7 +51,7 @@ public class SwathLDAScorer {
         Double logSnScore = scores.get(ScoreType.LogSnScore.getName(), scoreTypes);
         logSnScore = (logSnScore == null ? 0 : logSnScore);
 
-        scores.put(ScoreType.MainScore.getName(),
+        scores.put(ScoreType.InitScore.getName(),
                 (0.19011762) * libraryCorr +
                         (-2.47298914) * libraryRsmd +
                         (-5.63906731) * normRtScore +
