@@ -57,7 +57,6 @@ public class BatchFitter {
         Map<String, MergedDataSum> dataMap = new HashMap<>();
         Map<String, DataSum> dataResultMap = new HashMap<>();
         for (BaseExp exp : expList) {
-            log.info("开始处理实验" + exp.getAlias());
             List<DataSum> dataList = dataSumService.getAll(
                             new DataSumQuery().setOverviewId(overviewMap.get(exp.getId()).getId())
                                     .setDecoy(false)
@@ -80,7 +79,7 @@ public class BatchFitter {
         }
         dataMap.forEach((key, value) -> {
             value.getData().setSum(value.getData().getSum() / value.getEffectNum());
-            dataResultMap.put(key, value.getData());
+            dataResultMap.put(value.getData().getProteins().get(0) + "-" + key, value.getData());
         });
         GroupStat stat = new GroupStat();
         stat.setDataMap(dataResultMap);

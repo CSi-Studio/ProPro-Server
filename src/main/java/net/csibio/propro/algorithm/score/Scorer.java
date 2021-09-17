@@ -70,7 +70,7 @@ public class Scorer {
 
     public void scoreForOne(ExperimentDO exp, DataDO dataDO, PeptideCoord peptide, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
 
-        if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= peptide.getFragments().size() / 2) {
+        if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= peptide.getFragments().size() / 2)) {
             dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
             return;
         }
@@ -103,10 +103,13 @@ public class Scorer {
             PeakGroupScores peakGroupScores = new PeakGroupScores(params.getMethod().getScore().getScoreTypes().size());
             chromatographicScorer.calculateChromatographicScores(peakGroupFeature, normedLibIntMap, peakGroupScores, params.getMethod().getScore().getScoreTypes());
             Double shapeScore = peakGroupScores.get(ScoreType.XcorrShape, params.getMethod().getScore().getScoreTypes());
-            Double shapeScoreWeighted = peakGroupScores.get(ScoreType.XcorrShapeWeighted, params.getMethod().getScore().getScoreTypes());
-            if (!dataDO.getDecoy()
-                    && ((shapeScoreWeighted != null && shapeScoreWeighted < params.getMethod().getQuickFilter().getMinShapeWeightScore())
-                    || (shapeScore != null && shapeScore < params.getMethod().getQuickFilter().getMinShapeScore()))) {
+//            Double shapeScoreWeighted = peakGroupScores.get(ScoreType.XcorrShapeWeighted, params.getMethod().getScore().getScoreTypes());
+//            if (!dataDO.getDecoy()
+//                    && ((shapeScoreWeighted != null && shapeScoreWeighted < params.getMethod().getQuickFilter().getMinShapeWeightScore())
+//                    || (shapeScore != null && shapeScore < params.getMethod().getQuickFilter().getMinShapeScore()))) {
+//                continue;
+//            }
+            if (!dataDO.getDecoy() && ((shapeScore != null && shapeScore < params.getMethod().getQuickFilter().getMinShapeScore()))) {
                 continue;
             }
             //根据RT时间和前体m/z获取最近的一个原始谱图

@@ -127,15 +127,15 @@ public class Extractor {
      * @param coord
      * @return
      */
-    public Result<DataDO> eppsOne(ExperimentDO exp, PeptideCoord coord, AnalyzeParams params) {
+    public Result<DataDO> eppsPredictOne(ExperimentDO exp, PeptideCoord coord, AnalyzeParams params) {
         Double rt = coord.getRt();
         if (params.getMethod().getEic().getRtWindow() == -1) {
             coord.setRtStart(-1);
             coord.setRtEnd(99999);
         } else {
-            Double targetRt = exp.getIrt().getSi().realRt(rt);
-            coord.setRtStart(targetRt - params.getMethod().getEic().getRtWindow());
-            coord.setRtEnd(targetRt + params.getMethod().getEic().getRtWindow());
+            double targetRt = exp.getIrt().getSi().realRt(rt);
+            coord.setRtStart(targetRt - 500);
+            coord.setRtEnd(targetRt + 500);
         }
 
         Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(exp, coord);
@@ -143,10 +143,11 @@ public class Extractor {
             return Result.Error(rtMapResult.getErrorCode());
         }
 
-        DataDO dataDO = coreFunc.extractOne(coord, rtMapResult.getData(), params, null);
+        DataDO dataDO = coreFunc.extractPredictOne(coord, rtMapResult.getData(), params, null);
         if (dataDO == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }
+        
         //进行实时打分
         scorer.scoreForOne(exp, dataDO, coord, rtMapResult.getData(), params);
         if (dataDO.getScoreList() == null) {
@@ -173,7 +174,6 @@ public class Extractor {
                 dataDO.setStatus(IdentifyStatus.FAILED.getCode());
             }
         }
-
 
         return Result.OK(dataDO);
     }

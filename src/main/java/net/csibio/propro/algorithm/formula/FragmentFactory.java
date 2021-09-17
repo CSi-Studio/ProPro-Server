@@ -8,6 +8,7 @@ import net.csibio.propro.constants.constant.ResidueType;
 import net.csibio.propro.domain.bean.peptide.Annotation;
 import net.csibio.propro.domain.bean.peptide.Fragment;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.BYSeries;
 import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.loader.AminoAcidLoader;
@@ -102,8 +103,26 @@ public class FragmentFactory {
      * @return
      */
     public Set<FragmentInfo> buildFragmentMap(PeptideDO peptideDO, int limitLength, List<String> ionTypes, List<Integer> chargeTypes) {
+        return buildFragmentMap(peptideDO.toTargetPeptide(), limitLength, ionTypes, chargeTypes);
+    }
+
+    public Set<FragmentInfo> buildFragmentMap(PeptideCoord coord, int limitLength) {
+        return buildFragmentMap(coord, limitLength, null, null);
+    }
+
+    public Set<FragmentInfo> buildFragmentMap(PeptideCoord coord, int limitLength, List<String> ionTypes, List<Integer> chargeTypes) {
+        if (ionTypes == null) {
+            ionTypes = new ArrayList<>();
+            ionTypes.add(ResidueType.BIon);
+            ionTypes.add(ResidueType.YIon);
+        }
+        if (chargeTypes == null) {
+            chargeTypes = new ArrayList<>();
+            chargeTypes.add(1);
+            chargeTypes.add(2);
+        }
         Set<FragmentInfo> fragmentSet = new HashSet<>();
-        String sequence = peptideDO.getSequence();
+        String sequence = coord.getSequence();
         int length = sequence.length();
         if (length < limitLength) {
             return null;
@@ -112,8 +131,8 @@ public class FragmentFactory {
             for (int i = limitLength; i < length; i++) {
                 String leftSubstring = sequence.substring(0, i);
                 String rightSubstring = sequence.substring(length - i, length);
-                List<String> leftUnimodIds = formulaCalculator.parseUnimodIds(peptideDO.getUnimodMap(), 0, i);
-                List<String> rightUnimodIds = formulaCalculator.parseUnimodIds(peptideDO.getUnimodMap(), length - i, length);
+                List<String> leftUnimodIds = formulaCalculator.parseUnimodIds(coord.getUnimodMap(), 0, i);
+                List<String> rightUnimodIds = formulaCalculator.parseUnimodIds(coord.getUnimodMap(), length - i, length);
 
                 if (ionTypes.contains(ResidueType.AIon)) {
                     String cutInfoA = "a" + i + (charge == 1 ? "" : ("^" + charge));

@@ -2,6 +2,8 @@ package net.csibio.propro.domain.db;
 
 import lombok.Data;
 import net.csibio.propro.domain.BaseDO;
+import net.csibio.propro.domain.bean.peptide.FragmentInfo;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -12,6 +14,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Data
 @CompoundIndexes({
@@ -58,5 +61,17 @@ public class DataDO extends BaseDO {
     Map<String, float[]> intMap = new HashMap<>();  //key为cutInfo, value为对应的intensity值列表(也即该碎片的光谱图信息)
     @Transient
     Map<String, Float> cutInfoMap; //冗余的peptide切片信息,key为cutInfo,value为mz
+
+    public DataDO() {
+    }
+
+    public DataDO(PeptideCoord coord) {
+        this.setProteins(coord.getProteins());
+        this.setPeptideRef(coord.getPeptideRef());
+        this.setDecoy(coord.isDecoy());
+        this.setLibRt(coord.getRt());
+        this.setIrt(coord.getIrt());
+        this.setCutInfoMap(coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getMz().floatValue())));
+    }
 
 }

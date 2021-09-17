@@ -16,8 +16,9 @@ public interface DataService extends BaseMultiService<DataDO, DataQuery> {
      * @param exp                数据所属实验
      * @param libraryId          原肽段所属库
      * @param originalPeptideRef 原肽段PeptideRef
+     * @param changeCharge       使用异电肽段
      * @param overviewId         原肽段检测结果对应的overviewId
      * @return
      */
-    ExpDataVO buildData(ExperimentDO exp, String libraryId, String originalPeptideRef, String overviewId);
+    ExpDataVO buildData(ExperimentDO exp, String libraryId, String originalPeptideRef, Boolean changeCharge, String overviewId);
 }

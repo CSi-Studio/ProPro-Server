@@ -13,6 +13,11 @@ public class AnalyzeParams {
     String overviewId; //分析概览ID
 
     /**
+     * 是否为预测
+     */
+    Boolean predict = false;
+    
+    /**
      * 是否强制执行Irt,如果是那么即便exp自带了irt结果也会强制重新计算irt并且把新计算的结果赋值给exp
      */
     Boolean forceIrt = false;
@@ -51,7 +56,7 @@ public class AnalyzeParams {
     //    HashMap<String, Object> resultMap = new HashMap<>();
 
     public AnalyzeParams() {
-        
+
     }
 
     public AnalyzeParams(MethodDO method) {

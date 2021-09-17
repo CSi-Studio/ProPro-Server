@@ -119,6 +119,7 @@ public class ClinicController {
                       @RequestParam(value = "libraryId", required = false) String libraryId,
                       @RequestParam("peptideRef") String peptideRef,
                       @RequestParam("predict") Boolean predict,
+                      @RequestParam(value = "changeCharge", required = false) Boolean changeCharge,
                       @RequestParam("onlyDefault") Boolean onlyDefault,
                       @RequestParam(value = "smooth", required = false) Boolean smooth,
                       @RequestParam(value = "denoise", required = false) Boolean denoise,
@@ -138,8 +139,11 @@ public class ClinicController {
             //如果使用预测方法,则进行实时EIC获取
             if (predict) {
                 ExperimentDO exp = experimentService.getById(expId);
-                data = dataService.buildData(exp, libraryId, peptideRef, overview.id());
-                //data.setExpId(exp.getId());
+                data = dataService.buildData(exp, libraryId, peptideRef, changeCharge, overview.id());
+                if (data != null) {
+                    data.setExpId(exp.getId());
+                    data.setSum(data.getSum());
+                }
             } else {
                 data = dataService.getData(projectId, expId, overview.id(), peptideRef);
             }
@@ -173,9 +177,9 @@ public class ClinicController {
     }
 
     @PostMapping(value = "/getSpectra")
-    Result getSpectra(@RequestParam("expId") String expId,
-                      @RequestParam("mz") Double mz,
-                      @RequestParam("rt") Float rt) {
+    Result getSpectra(@RequestParam(value = "expId", required = false) String expId,
+                      @RequestParam(value = "mz", required = false) Double mz,
+                      @RequestParam(value = "rt", required = false) Float rt) {
         ExperimentDO exp = experimentService.getById(expId);
         FloatPairs pairs = experimentService.getSpectrum(exp, mz, rt);
         return Result.OK(pairs);

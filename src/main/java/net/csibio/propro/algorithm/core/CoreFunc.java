@@ -2,23 +2,23 @@ package net.csibio.propro.algorithm.core;
 
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
+import net.csibio.propro.algorithm.extract.IonStat;
+import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
+import net.csibio.propro.service.SimulateService;
 import net.csibio.propro.utils.ConvolutionUtil;
 import net.csibio.propro.utils.DataUtil;
 import net.csibio.propro.utils.LogUtil;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Slf4j
 @Component("coreFunc")
@@ -26,6 +26,10 @@ public class CoreFunc {
 
     @Autowired
     Scorer scorer;
+    @Autowired
+    SimulateService simulateService;
+    @Autowired
+    FragmentFactory fragmentFactory;
 
     /**
      * EIC Core Function
@@ -58,21 +62,9 @@ public class CoreFunc {
             rtArray[i] = rtList.get(i);
         }
 
-        DataDO data = new DataDO();
-        data.setProteins(coord.getProteins());
+        DataDO data = new DataDO(coord);
         data.setRtArray(rtArray);
         data.setOverviewId(overviewId);
-        data.setPeptideRef(coord.getPeptideRef());
-        data.setDecoy(coord.isDecoy());
-        data.setLibRt(coord.getRt());
-        data.setIrt(coord.getIrt());
-
-        
-        try {
-            data.setCutInfoMap(coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getMz().floatValue())));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         boolean isHit = false;
         float window = params.getMethod().getEic().getMzWindow().floatValue();
@@ -106,7 +98,6 @@ public class CoreFunc {
             if (isAllZero) {
                 //如果该cutInfo没有XIC到任何数据,则不存入IntMap中,这里专门写这个if逻辑是为了帮助后续阅读代码的时候更加容易理解.我们在这边是特地没有将未检测到的碎片放入map的
                 continue;
-                // data.getIntMap().put(fi.getCutInfo(), null);
             } else {
                 isHit = true;
                 data.getIntMap().put(fi.getCutInfo(), intArray); //记录每一个碎片的光谱图
@@ -118,6 +109,75 @@ public class CoreFunc {
             return null;
         }
 
+        return data;
+    }
+
+    /**
+     * EIC Predict Peptide
+     * 核心EIC函数
+     * <p>
+     * 本函数为整个分析过程中最耗时的步骤
+     *
+     * @param coord
+     * @param rtMap
+     * @param params
+     * @param overviewId
+     * @return
+     */
+    public DataDO extractPredictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params, String overviewId) {
+
+        Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 4);
+        proproFiList.forEach(fi -> fi.setIntensity(10000d));
+//        List<FragmentInfo> fragmentInfos = simulateService.predictFragment(coord.getSequence(), SpModelConstant.CID, true, 10);
+//        proproFiList.addAll(new HashSet<>(fragmentInfos));
+        coord.setFragments(proproFiList);
+
+        DataDO data = extractOne(coord, rtMap, params, overviewId);
+        List<IonStat> statList = new ArrayList<>();
+
+        List<IonStat> finalStatList = statList;
+        data.getIntMap().forEach((key, value) -> {
+            float[] fArray = data.getIntMap().get(key);
+            Double[][] sumArray = new Double[fArray.length][2];
+            List<Double> dList = new ArrayList<>();
+            for (int i = 0; i < fArray.length; i++) {
+                if (i == 0) {
+                    Double[] d = new Double[2];
+                    d[0] = 1d;
+                    d[1] = (double) fArray[i];
+                    sumArray[i] = d;
+                } else {
+                    Double[] d = new Double[2];
+                    d[0] = (double) i + 1;
+                    d[1] = sumArray[i - 1][1] + fArray[i];
+                    sumArray[i] = d;
+                }
+                if (fArray[i] != 0f) {
+                    dList.add((double) fArray[i]);
+                }
+            }
+            double[] dArray = new double[dList.size()];
+            for (int i = 0; i < dList.size(); i++) {
+                dArray[i] = dList.get(i);
+            }
+            DescriptiveStatistics stat = new DescriptiveStatistics(dArray);
+            int[] xArray = new int[sumArray.length];
+            for (int i = 0; i < sumArray.length; i++) {
+                xArray[i] = i + 1;
+            }
+            double cv = stat.getStandardDeviation() / stat.getMean();
+            finalStatList.add(new IonStat(key, cv));
+        });
+        statList = statList.stream().sorted(Comparator.comparing(IonStat::stat).reversed()).toList().subList(0, 8);
+        HashMap<String, float[]> newIntMap = new HashMap<>();
+        HashMap<String, Float> newCutInfoMap = new HashMap<>();
+        statList.forEach(ionStat -> {
+            newIntMap.put(ionStat.cutInfo(), data.getIntMap().get(ionStat.cutInfo()));
+            newCutInfoMap.put(ionStat.cutInfo(), data.getCutInfoMap().get(ionStat.cutInfo()));
+        });
+
+        data.setIntMap(newIntMap);
+        data.setCutInfoMap(newCutInfoMap);
         return data;
     }
 
@@ -149,10 +209,12 @@ public class CoreFunc {
 
             //Step2. 常规选峰及打分,未满足条件的直接忽略
             scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+
             dataList.add(dataDO);
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
             DataUtil.compress(dataDO);
-            //如果没有打分数据,那么对应的decoy也不再计算,以保持target与decoy 1:1的混合比例
+
+            //如果没有打分数据,那么对应的decoy也不再计算,以保持target与decoy 1:1的混合比例,这里需要注意的是,即便是scoreList是空,也需要将DataDO存储到数据库中,以便后续的重新统计和分析
             if (dataDO.getScoreList() == null) {
                 return;
             }
