@@ -10,8 +10,17 @@
 
 package net.csibio.propro.domain.bean.overview;
 
+import lombok.Data;
+
 import java.util.HashMap;
 
-public record Overview4Clinic(String id, String name, String expId, Boolean defaultOne,
-                              HashMap<String, Double> weights) {
+@Data
+public class Overview4Clinic {
+
+    String id;
+    String name;
+    String expId;
+    Boolean defaultOne;
+    HashMap<String, Double> weights;
+    String minTotalScore;
 }

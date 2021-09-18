@@ -92,8 +92,6 @@ public abstract class Irt {
         List<Double> compoundRt = new ArrayList<>();
         double minGroupRt = Double.MAX_VALUE;
         double maxGroupRt = -Double.MAX_VALUE;
-        //得分排名第一第二的两个峰组的得分分差,如果仅有一个峰组,那么分差就是自己, key为libRt,value为第一第二峰组分差
-        List<Pair> diffPairs = new ArrayList<>();
         dataList = dataList.stream().sorted(Comparator.comparing(DataDO::getLibRt)).toList();
         for (DataDO data : dataList) {
             PeptideCoord coord = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
@@ -113,19 +111,13 @@ public abstract class Irt {
             if (scoreRtPairs.size() == 0) {
                 continue;
             }
-            //显著性因素, 得分排名第一第二的两个峰组的得分分差,如果仅有一个组,那么分差就是自己
-            if (scoreRtPairs.size() >= 2) {
-                diffPairs.add(new Pair(groupRt, scoreRtPairs.get(0).getScore() - scoreRtPairs.get(1).getScore()));
-            } else {
-                diffPairs.add(new Pair(groupRt, scoreRtPairs.get(0).getScore()));
-            }
             scoreRtList.add(scoreRtPairs);
             compoundRt.add(groupRt);
         }
 
         List<Pair> pairs = findBestFeature(scoreRtList, compoundRt);
         double delta = (maxGroupRt - minGroupRt) / 30d;
-        List<Pair> pairsCorrected = selectPairs(pairs, delta, diffPairs);
+        List<Pair> pairsCorrected = selectPairs(pairs, delta);
 
         log.info("choose finish ------------------------");
         IrtResult irtResult = new IrtResult();
@@ -187,13 +179,12 @@ public abstract class Irt {
      *
      * @param rtPairsList 所有入选的点列表,每一个Pair<Double, Double>都代表该肽段的所有的峰得分
      * @param delta
-     * @param diffList    得分中排名第一的和第二的两个峰得分的分差,left为libRt,right为分差
      * @return
      * @throws Exception
      */
-    protected List<Pair> selectPairs(List<Pair> rtPairsList, double delta, List<Pair> diffList) throws Exception {
+    protected List<Pair> selectPairs(List<Pair> rtPairsList, double delta) throws Exception {
         List<Pair> rtPairsCorrected = new ArrayList<>(rtPairsList);
-        preprocessRtPairs(rtPairsCorrected, diffList, 50d);
+        preprocessRtPairs(rtPairsCorrected, 50d);
         SlopeIntercept slopeIntercept = linearFitter.huberFit(rtPairsCorrected, delta);
         while (MathUtil.getRsq(rtPairsCorrected) < 0.95 && rtPairsCorrected.size() >= 2) {
             int maxErrorIndex = findMaxErrorIndex(slopeIntercept, rtPairsCorrected);
@@ -216,7 +207,7 @@ public abstract class Irt {
         return maxIndex;
     }
 
-    protected void preprocessRtPairs(List<Pair> rtPairs, List<Pair> diffList, double tolerance) {
+    protected void preprocessRtPairs(List<Pair> rtPairs, double tolerance) {
         try {
             SlopeIntercept initSlopeIntercept = linearFitter.getInitSlopeIntercept(rtPairs);
             for (int i = rtPairs.size() - 1; i >= 0; i--) {

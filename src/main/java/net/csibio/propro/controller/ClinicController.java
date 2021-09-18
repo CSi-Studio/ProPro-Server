@@ -79,9 +79,9 @@ public class ClinicController {
         }
         List<IdNameAlias> expList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId), IdNameAlias.class);
         List<Overview4Clinic> totalOverviewList = overviewService.getAll(new OverviewQuery(projectId), Overview4Clinic.class);
-        Map<String, List<Overview4Clinic>> overviewMap = totalOverviewList.stream().collect(Collectors.groupingBy(Overview4Clinic::expId));
+        Map<String, List<Overview4Clinic>> overviewMap = totalOverviewList.stream().collect(Collectors.groupingBy(Overview4Clinic::getExpId));
         overviewMap.values().forEach(overviews -> {
-            overviews = overviews.stream().sorted(Comparator.nullsLast(Comparator.comparing(Overview4Clinic::defaultOne))).toList();
+            overviews = overviews.stream().sorted(Comparator.nullsLast(Comparator.comparing(Overview4Clinic::getDefaultOne))).toList();
         });
 
         ClinicPrepareDataVO data = new ClinicPrepareDataVO();
@@ -139,13 +139,13 @@ public class ClinicController {
             //如果使用预测方法,则进行实时EIC获取
             if (predict) {
                 ExperimentDO exp = experimentService.getById(expId);
-                data = dataService.predictDataFromFile(exp, libraryId, peptideRef, changeCharge, overview.id());
+                data = dataService.predictDataFromFile(exp, libraryId, peptideRef, changeCharge, overview.getId());
                 if (data != null) {
                     data.setExpId(exp.getId());
                     data.setSum(data.getSum());
                 }
             } else {
-                data = dataService.getDataFromDB(projectId, expId, overview.id(), peptideRef);
+                data = dataService.getDataFromDB(projectId, expId, overview.getId(), peptideRef);
             }
             dataList.add(data);
         }
