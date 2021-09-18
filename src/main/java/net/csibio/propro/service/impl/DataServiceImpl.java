@@ -57,7 +57,7 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public ExpDataVO getData(String projectId, String expId, String overviewId, String peptideRef) {
+    public ExpDataVO getDataFromDB(String projectId, String expId, String overviewId, String peptideRef) {
         ExpDataVO dataVO = new ExpDataVO(expId, overviewId, peptideRef);
         DataDO data = getOne(new DataQuery(overviewId).setPeptideRef(peptideRef).setDecoy(false), DataDO.class, projectId);
         if (data == null) {
@@ -69,7 +69,7 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public ExpDataVO buildData(ExperimentDO exp, String libraryId, String originalPeptide, Boolean changeCharge, String overviewId) {
+    public ExpDataVO predictDataFromFile(ExperimentDO exp, String libraryId, String originalPeptide, Boolean changeCharge, String overviewId) {
         PeptideDO brother = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(originalPeptide), PeptideDO.class);
         if (brother == null) {
             return null;

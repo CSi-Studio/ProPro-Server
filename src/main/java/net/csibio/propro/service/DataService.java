@@ -7,7 +7,7 @@ import net.csibio.propro.domain.vo.ExpDataVO;
 
 public interface DataService extends BaseMultiService<DataDO, DataQuery> {
 
-    ExpDataVO getData(String projectId, String expId, String overviewId, String peptideRef);
+    ExpDataVO getDataFromDB(String projectId, String expId, String overviewId, String peptideRef);
 
     /**
      * 根据一个肽段生成其预测 兄弟(2电)肽段并且构建其EIC谱图
@@ -20,5 +20,5 @@ public interface DataService extends BaseMultiService<DataDO, DataQuery> {
      * @param overviewId         原肽段检测结果对应的overviewId
      * @return
      */
-    ExpDataVO buildData(ExperimentDO exp, String libraryId, String originalPeptideRef, Boolean changeCharge, String overviewId);
+    ExpDataVO predictDataFromFile(ExperimentDO exp, String libraryId, String originalPeptideRef, Boolean changeCharge, String overviewId);
 }
