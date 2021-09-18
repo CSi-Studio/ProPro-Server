@@ -147,6 +147,7 @@ public class ClinicController {
             } else {
                 data = dataService.getDataFromDB(projectId, expId, overview.getId(), peptideRef);
             }
+            data.setMinTotalScore(overview.getMinTotalScore());
             dataList.add(data);
         }
 

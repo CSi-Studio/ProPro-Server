@@ -58,6 +58,10 @@ public class ExpDataVO {
     //最终的定量值
     String fragIntFeature;
 
+    //所在overview的最低分数阈值
+    Double minTotalScore;
+
+
     public ExpDataVO() {
     }
 

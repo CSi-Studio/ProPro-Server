@@ -22,5 +22,5 @@ public class Overview4Clinic {
     String expId;
     Boolean defaultOne;
     HashMap<String, Double> weights;
-    String minTotalScore;
+    Double minTotalScore;
 }
