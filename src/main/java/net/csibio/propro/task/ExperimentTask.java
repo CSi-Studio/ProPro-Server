@@ -92,7 +92,7 @@ public class ExperimentTask extends BaseTask {
      *
      * @return
      */
-    @Async(value = "extractorExecutor")
+    @Async(value = "eicExecutor")
     public void doProPro(TaskDO taskDO, ExperimentDO exp, AnalyzeParams params) {
         long start = System.currentTimeMillis();
         //如果还没有计算irt,先执行计算irt的步骤.
@@ -125,7 +125,7 @@ public class ExperimentTask extends BaseTask {
         taskService.update(taskDO);
     }
 
-    @Async(value = "extractorExecutor")
+    @Async(value = "eicExecutor")
     public void irt(TaskDO taskDO, List<ExperimentDO> exps, AnalyzeParams params) {
         long start = System.currentTimeMillis();
         doIrt(taskDO, exps, params);

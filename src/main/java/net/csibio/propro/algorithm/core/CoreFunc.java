@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component("coreFunc")
@@ -126,12 +128,13 @@ public class CoreFunc {
      */
     public DataDO extractPredictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params, String overviewId) {
 
-        Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 4);
-        proproFiList.forEach(fi -> fi.setIntensity(10000d));
-//        List<FragmentInfo> fragmentInfos = simulateService.predictFragment(coord.getSequence(), SpModelConstant.CID, true, 10);
-//        proproFiList.addAll(new HashSet<>(fragmentInfos));
-        coord.setFragments(proproFiList);
+        Map<String, FragmentInfo> oldFragmentsMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
 
+        Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 4);
+        proproFiList.forEach(fi -> fi.setIntensity(1d)); //给到一个任意的初始化强度
+        Map<String, FragmentInfo> predictFragmentMap = proproFiList.stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
+
+        coord.setFragments(proproFiList);
         DataDO data = extractOne(coord, rtMap, params, overviewId);
         List<IonStat> statList = new ArrayList<>();
 
@@ -165,10 +168,42 @@ public class CoreFunc {
             for (int i = 0; i < sumArray.length; i++) {
                 xArray[i] = i + 1;
             }
+            //计算强度的偏差值,在RT范围内的偏差值越大说明峰的显著程度越高
             double cv = stat.getStandardDeviation() / stat.getMean();
             finalStatList.add(new IonStat(key, cv));
         });
-        statList = statList.stream().sorted(Comparator.comparing(IonStat::stat).reversed()).toList().subList(0, 8);
+        //按照cv从大到小排序
+        statList = statList.stream().sorted(Comparator.comparing(IonStat::stat).reversed()).toList().subList(0, 6);
+        Set<FragmentInfo> finalFiSet = new HashSet<>();
+        double lastPointIntensity = 0;
+        FragmentInfo lastPredictPoint = null;
+        int oldNum = 0;
+        for (int i = 0; i < statList.size(); i++) {
+            IonStat ion = statList.get(i);
+            //如果原标准库中已经包含了该预测碎片,则直接使用库中的碎片信息
+            if (oldFragmentsMap.containsKey(ion.cutInfo())) {
+                oldNum++;
+                FragmentInfo info = oldFragmentsMap.get(ion.cutInfo());
+                info.setPredict(false);
+                finalFiSet.add(info);
+                //如果此时上一个预测锚点存在,则先将该锚点的值设置为本锚点与上一次锚点的平均值
+                if (lastPredictPoint != null) {
+                    lastPredictPoint.setIntensity((info.getIntensity() + lastPointIntensity) / 2);
+                    lastPredictPoint = null;
+                }
+                lastPointIntensity = oldFragmentsMap.get(ion.cutInfo()).getIntensity();
+            } else {
+                //如果原标准库中不存在该碎片,则将该点的预测强度填充为上一个预测点的一半
+                lastPredictPoint = predictFragmentMap.get(ion.cutInfo());
+                lastPredictPoint.setPredict(true);
+                lastPredictPoint.setIntensity(lastPointIntensity / 2);
+                finalFiSet.add(lastPredictPoint);
+            }
+        }
+        if (oldNum <= 1) {
+            log.warn("预测碎片命中率偏低");
+        }
+        coord.setFragments(finalFiSet);
         HashMap<String, float[]> newIntMap = new HashMap<>();
         HashMap<String, Float> newCutInfoMap = new HashMap<>();
         statList.forEach(ionStat -> {

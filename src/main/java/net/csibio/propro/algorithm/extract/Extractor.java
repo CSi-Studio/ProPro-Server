@@ -19,6 +19,7 @@ import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.BlockIndexQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
+import net.csibio.propro.domain.vo.ExpDataVO;
 import net.csibio.propro.service.*;
 import net.csibio.propro.utils.ConvolutionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,7 +128,7 @@ public class Extractor {
      * @param coord
      * @return
      */
-    public Result<DataDO> eppsPredictOne(ExperimentDO exp, PeptideCoord coord, AnalyzeParams params) {
+    public Result<ExpDataVO> eppsPredictOne(ExperimentDO exp, PeptideCoord coord, AnalyzeParams params) {
         Double rt = coord.getRt();
         if (params.getMethod().getEic().getRtWindow() == -1) {
             coord.setRtStart(-1);
@@ -144,38 +145,45 @@ public class Extractor {
         }
 
         DataDO dataDO = coreFunc.extractPredictOne(coord, rtMapResult.getData(), params, null);
+        DataSumDO dataSum = null;
         if (dataDO == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }
-        
+
         //进行实时打分
         scorer.scoreForOne(exp, dataDO, coord, rtMapResult.getData(), params);
         if (dataDO.getScoreList() == null) {
-            return Result.OK(dataDO);
+            return Result.OK(new ExpDataVO().merge(dataDO, dataSum));
         }
+
         if (params.getOverviewId() != null) {
             PeptideScores ps = new PeptideScores(dataDO);
             OverviewDO overview = overviewService.getById(params.getOverviewId());
             List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
             lda.score(ps, overview.getWeights(), scoreTypes);
-            Double bestTotalScore = null;
+            double bestTotalScore = -1d;
             Double bestRt = null;
+            int bestIndex = 0;
             for (int i = 0; i < ps.getScoreList().size(); i++) {
-                double currentTotalScore = ps.getScoreList().get(i).get(ScoreType.WeightedTotalScore, scoreTypes);
-                if (bestTotalScore == null) {
+                Double currentTotalScore = ps.getScoreList().get(i).get(ScoreType.WeightedTotalScore, scoreTypes);
+                if (currentTotalScore != null && currentTotalScore > bestTotalScore) {
+                    bestIndex = i;
                     bestTotalScore = currentTotalScore;
-                } else if (currentTotalScore > bestTotalScore) {
-                    bestTotalScore = currentTotalScore;
+                    bestRt = ps.getScoreList().get(i).getRt();
                 }
             }
+            dataSum = new DataSumDO();
             if (bestTotalScore > overview.getMinTotalScore()) {
-                dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
+                dataSum.setStatus(IdentifyStatus.SUCCESS.getCode());
             } else {
-                dataDO.setStatus(IdentifyStatus.FAILED.getCode());
+                dataSum.setStatus(IdentifyStatus.FAILED.getCode());
             }
+            dataSum.setSum(ps.getScoreList().get(bestIndex).getIntensitySum());
+            dataSum.setRealRt(bestRt);
+            dataSum.setTotalScore(bestTotalScore);
         }
 
-        return Result.OK(dataDO);
+        return Result.OK(new ExpDataVO().merge(dataDO, dataSum));
     }
 
     /**

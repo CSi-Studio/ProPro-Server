@@ -3,6 +3,7 @@ package net.csibio.propro.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.extract.Extractor;
 import net.csibio.propro.algorithm.score.Scorer;
+import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.dao.BaseMultiDAO;
 import net.csibio.propro.dao.DataDAO;
 import net.csibio.propro.domain.Result;
@@ -69,10 +70,10 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public ExpDataVO predictDataFromFile(ExperimentDO exp, String libraryId, String originalPeptide, Boolean changeCharge, String overviewId) {
+    public Result<ExpDataVO> predictDataFromFile(ExperimentDO exp, String libraryId, String originalPeptide, Boolean changeCharge, String overviewId) {
         PeptideDO brother = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(originalPeptide), PeptideDO.class);
         if (brother == null) {
-            return null;
+            return Result.Error(ResultCode.PEPTIDE_NOT_EXIST);
         }
         PeptideCoord coord = brother.toTargetPeptide();
         if (changeCharge) {
@@ -86,15 +87,7 @@ public class DataServiceImpl implements DataService {
         AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
         params.setOverviewId(overviewId);
         params.setPredict(true);
-        Result<DataDO> result = extractor.eppsPredictOne(exp, coord, params);
-        if (result.isSuccess()) {
-            ExpDataVO data = new ExpDataVO();
-            data.merge(result.getData(), null);
-            return data;
-        } else {
-            log.error(result.getErrorMessage());
-        }
-
-        return null;
+        Result<ExpDataVO> result = extractor.eppsPredictOne(exp, coord, params);
+        return result;
     }
 }

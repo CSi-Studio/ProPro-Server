@@ -62,6 +62,7 @@ public enum ResultCode implements Serializable {
     PEPTIDE_MZ_CANNOT_BE_NULL("PEPTIDE_MZ_CANNOT_BE_NULL", "mz不能为空"),
     PEPTIDE_SEQUENCE_CANNOT_BE_NULL("PEPTIDE_SEQUENCE_CANNOT_BE_NULL", "肽段Sequence不能为空"),
     PEPTIDE_CHARGE_CANNOT_BE_NULL("PEPTIDE_CHARGE_CANNOT_BE_NULL", "肽段Charge不能为空"),
+    PEPTIDE_NOT_EXIST("PEPTIDE_NOT_EXIST", "肽段不存在"),
     NO_DECOY("NO_DECOY", "不使用文件中的Decoy"),
 
     /**

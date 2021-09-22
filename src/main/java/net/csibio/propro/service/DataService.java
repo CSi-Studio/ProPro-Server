@@ -1,5 +1,6 @@
 package net.csibio.propro.service;
 
+import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.query.DataQuery;
@@ -20,5 +21,5 @@ public interface DataService extends BaseMultiService<DataDO, DataQuery> {
      * @param overviewId         原肽段检测结果对应的overviewId
      * @return
      */
-    ExpDataVO predictDataFromFile(ExperimentDO exp, String libraryId, String originalPeptideRef, Boolean changeCharge, String overviewId);
+    Result<ExpDataVO> predictDataFromFile(ExperimentDO exp, String libraryId, String originalPeptideRef, Boolean changeCharge, String overviewId);
 }

@@ -79,7 +79,7 @@ public class BatchFitter {
         }
         dataMap.forEach((key, value) -> {
             value.getData().setSum(value.getData().getSum() / value.getEffectNum());
-            dataResultMap.put(value.getData().getProteins().get(0) + "-" + key, value.getData());
+            dataResultMap.put(value.getData().getProteins().get(0) + "-->" + key, value.getData());
         });
         GroupStat stat = new GroupStat();
         stat.setDataMap(dataResultMap);

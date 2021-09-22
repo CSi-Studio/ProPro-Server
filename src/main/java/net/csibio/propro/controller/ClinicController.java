@@ -144,16 +144,18 @@ public class ClinicController {
             //如果使用预测方法,则进行实时EIC获取
             if (predict) {
                 ExperimentDO exp = experimentService.getById(expId);
-                data = dataService.predictDataFromFile(exp, libraryId, peptideRef, changeCharge, overview.getId());
-                if (data != null) {
+                Result<ExpDataVO> res = dataService.predictDataFromFile(exp, libraryId, peptideRef, changeCharge, overview.getId());
+                if (res.isSuccess()) {
+                    data = res.getData();
                     data.setExpId(exp.getId());
-                    data.setSum(data.getSum());
                 }
             } else {
                 data = dataService.getDataFromDB(projectId, expId, overview.getId(), peptideRef);
             }
-            data.setMinTotalScore(overview.getMinTotalScore());
-            dataList.add(data);
+            if (data != null) {
+                data.setMinTotalScore(overview.getMinTotalScore());
+                dataList.add(data);
+            }
         }
 
         if (smooth) {
