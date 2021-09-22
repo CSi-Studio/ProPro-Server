@@ -4,17 +4,22 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.peak.GaussFilter;
 import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
+import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.common.DoublePairs;
 import net.csibio.propro.domain.bean.common.FloatPairs;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.common.IdNameAlias;
+import net.csibio.propro.domain.bean.data.PeptideRt;
 import net.csibio.propro.domain.bean.overview.Overview4Clinic;
 import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.MethodDO;
 import net.csibio.propro.domain.db.ProjectDO;
 import net.csibio.propro.domain.options.SigmaSpacing;
+import net.csibio.propro.domain.query.DataQuery;
+import net.csibio.propro.domain.query.DataSumQuery;
 import net.csibio.propro.domain.query.ExperimentQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.domain.vo.ClinicPrepareDataVO;
@@ -178,11 +183,48 @@ public class ClinicController {
     }
 
     @PostMapping(value = "/getSpectra")
-    Result getSpectra(@RequestParam(value = "expId", required = false) String expId,
-                      @RequestParam(value = "mz", required = false) Double mz,
-                      @RequestParam(value = "rt", required = false) Float rt) {
+    Result<FloatPairs> getSpectra(@RequestParam(value = "expId", required = false) String expId,
+                                  @RequestParam(value = "mz", required = false) Double mz,
+                                  @RequestParam(value = "rt", required = false) Float rt) {
         ExperimentDO exp = experimentService.getById(expId);
         FloatPairs pairs = experimentService.getSpectrum(exp, mz, rt);
         return Result.OK(pairs);
+    }
+
+    @PostMapping(value = "/getRtPairs")
+    Result<HashMap<String, DoublePairs>> getRtPairs(@RequestParam("projectId") String projectId,
+                                                    @RequestParam("onlyDefault") Boolean onlyDefault,
+                                                    @RequestParam("expIds") List<String> expIds) {
+        HashMap<String, DoublePairs> map = new HashMap<>();
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < expIds.size(); i++) {
+            String expId = expIds.get(i);
+            OverviewQuery query = new OverviewQuery(projectId).setExpId(expId);
+            if (onlyDefault) {
+                query.setDefaultOne(true);
+            }
+            Overview4Clinic overview = overviewService.getOne(query, Overview4Clinic.class);
+            if (overview == null) {
+                continue;
+            }
+            List<PeptideRt> realRtList = dataSumService.getAll(new DataSumQuery(overview.getId()).setDecoy(false).setStatus(IdentifyStatus.SUCCESS.getCode()).setIsUnique(true), PeptideRt.class, projectId);
+            List<String> ids = realRtList.stream().map(PeptideRt::id).collect(Collectors.toList());
+            List<PeptideRt> libRtList = dataService.getAll(new DataQuery(overview.getId()).setIds(ids), PeptideRt.class, projectId);
+            if (realRtList.size() != libRtList.size()) {
+                log.error("数据异常,LibRt Size:" + libRtList.size() + ",RealRt Size:" + realRtList.size());
+            }
+            Map<String, Double> libRtMap = libRtList.stream().collect(Collectors.toMap(PeptideRt::peptideRef, PeptideRt::libRt));
+            //横坐标是libRt,纵坐标是realRt
+            double[] x = new double[realRtList.size()];
+            double[] y = new double[realRtList.size()];
+            realRtList = realRtList.stream().sorted(Comparator.comparingDouble(PeptideRt::realRt)).collect(Collectors.toList());
+            for (int j = 0; j < realRtList.size(); j++) {
+                x[j] = libRtMap.get(realRtList.get(j).peptideRef());
+                y[j] = realRtList.get(j).realRt();
+            }
+            map.put(expId, new DoublePairs(x, y));
+        }
+        log.info("rt坐标已渲染,耗时:" + (System.currentTimeMillis() - start));
+        return Result.OK(map);
     }
 }

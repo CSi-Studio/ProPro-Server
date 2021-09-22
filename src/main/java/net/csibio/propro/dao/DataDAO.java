@@ -37,7 +37,9 @@ public class DataDAO extends BaseMultiDAO<DataDO, DataQuery> {
     @Override
     protected Query buildQueryWithoutPage(DataQuery dataQuery) {
         Query query = new Query();
-        if (StringUtils.isNotEmpty(dataQuery.getId())) {
+        if (dataQuery.getIds() != null && dataQuery.getIds().size() > 0) {
+            query.addCriteria(where("id").in(dataQuery.getIds()));
+        } else if (StringUtils.isNotEmpty(dataQuery.getId())) {
             query.addCriteria(where("id").is(dataQuery.getId()));
         }
         if (StringUtils.isNotEmpty(dataQuery.getOverviewId())) {

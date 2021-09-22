@@ -3,11 +3,15 @@ package net.csibio.propro.domain.query;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.List;
+
 @Data
 @Accessors(chain = true)
 public class DataQuery extends PageQuery {
 
     String id;
+
+    List<String> ids;
 
     //路由id
     String projectId;

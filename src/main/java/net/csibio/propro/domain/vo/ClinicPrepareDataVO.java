@@ -20,5 +20,5 @@ public class ClinicPrepareDataVO {
     MethodDO method;
     Set<String> proteins;
     List<IdNameAlias> expList;
-    Map<String, List<Overview4Clinic>> overviewMap;
+    Map<String, List<Overview4Clinic>> overviewMap; //key为expId
 }

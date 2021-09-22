@@ -36,17 +36,15 @@ public class DataDO extends BaseDO {
     @Indexed
     List<String> proteins;
 
-    //经过了irt转换以后的库rt时间
-    Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得,并且经过了irt转换
+    Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得
 
-    //经过校准以后的rt时间
-    Double irt;
+    Double irt; //该肽段的理论rt值,从标准库中冗余所得,并且经过了irt校准
 
     @Indexed
     Integer status; //鉴定态
 
     String cutInfosFeature; //由cutInfoMap转换所得
-
+    
     List<PeakGroupScores> scoreList;
 
     //压缩后的rt列表,对应rtArray
