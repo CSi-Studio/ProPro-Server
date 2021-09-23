@@ -68,6 +68,10 @@ public class PeptideDAO extends BaseDAO<PeptideDO, PeptideQuery> {
         if (peptideQuery.getRtStart() != null) {
             query.addCriteria(where("rt").gte(peptideQuery.getRtStart()).lt(peptideQuery.getRtEnd()));
         }
+        if (peptideQuery.getDisable() != null) {
+            query.addCriteria(where("disable").is(peptideQuery.getDisable()));
+        }
+
         return query;
     }
 

@@ -21,6 +21,11 @@ public class PeptideQuery extends PageQuery {
     Boolean isUnique;
 
     /**
+     * query默认不查询disable为true的肽段
+     */
+    Boolean disable = false;
+
+    /**
      * 对应肽段序列
      */
     String sequence;

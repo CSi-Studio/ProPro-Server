@@ -129,8 +129,8 @@ public class CoreFunc {
     public DataDO extractPredictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params, String overviewId) {
 
         Map<String, FragmentInfo> oldFragmentsMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
-
-        Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 4);
+        List<FragmentInfo> oldFragments = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
+        Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 3);
         proproFiList.forEach(fi -> fi.setIntensity(1d)); //给到一个任意的初始化强度
         Map<String, FragmentInfo> predictFragmentMap = proproFiList.stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
 
@@ -173,16 +173,32 @@ public class CoreFunc {
             finalStatList.add(new IonStat(key, cv));
         });
         //按照cv从大到小排序
-        statList = statList.stream().sorted(Comparator.comparing(IonStat::stat).reversed()).toList().subList(0, 6);
+        statList = statList.stream().sorted(Comparator.comparing(IonStat::stat).reversed()).toList();
+
+        int minIndex = Integer.MAX_VALUE;
+
+        for (FragmentInfo fragment : oldFragments) {
+            IonStat maxIonStat = statList.stream().filter(stat -> stat.cutInfo().equals(fragment.getCutInfo())).findFirst().get();
+            int index = statList.indexOf(maxIonStat);
+            if (index < minIndex) {
+                minIndex = index;
+            }
+        }
+
+        statList = statList.subList(minIndex, minIndex + 15);
         Set<FragmentInfo> finalFiSet = new HashSet<>();
-        double lastPointIntensity = 0;
-        FragmentInfo lastPredictPoint = null;
-        int oldNum = 0;
         for (int i = 0; i < statList.size(); i++) {
             IonStat ion = statList.get(i);
+            FragmentInfo predict = predictFragmentMap.get(ion.cutInfo());
+            if (i < oldFragments.size() - 1) {
+                predict.setIntensity(oldFragments.get(i).getIntensity());
+            } else {
+                predict.setIntensity(oldFragments.get(oldFragments.size() - 1).getIntensity() / 3);
+            }
+            FragmentInfo lastPredictPoint = null;
+            double lastPointIntensity = 0d;
             //如果原标准库中已经包含了该预测碎片,则直接使用库中的碎片信息
             if (oldFragmentsMap.containsKey(ion.cutInfo())) {
-                oldNum++;
                 FragmentInfo info = oldFragmentsMap.get(ion.cutInfo());
                 info.setPredict(false);
                 finalFiSet.add(info);
@@ -199,9 +215,7 @@ public class CoreFunc {
                 lastPredictPoint.setIntensity(lastPointIntensity / 2);
                 finalFiSet.add(lastPredictPoint);
             }
-        }
-        if (oldNum <= 1) {
-            log.warn("预测碎片命中率偏低");
+            finalFiSet.add(predict);
         }
         coord.setFragments(finalFiSet);
         HashMap<String, float[]> newIntMap = new HashMap<>();

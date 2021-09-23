@@ -23,6 +23,11 @@ public class PeptideUpdateVO {
     Double mz;
 
     /**
+     * 是否失效
+     */
+    Boolean disable = false;
+
+    /**
      * 肽段的归一化RT
      */
     Double rt;

@@ -75,6 +75,7 @@ public class TraMLParser extends BaseLibraryParser {
     public Result<PeptideDO> parseTransition(Transition transition, HashMap<String, Peptide> peptideMap, LibraryDO library) {
         Result<PeptideDO> result = new Result<>(true);
         PeptideDO peptideDO = new PeptideDO();
+        peptideDO.setDisable(false);
         peptideDO.setLibraryId(library.getId());
 
         FragmentInfo fi = new FragmentInfo();

@@ -56,6 +56,11 @@ public class PeptideDO extends BaseDO {
     Boolean isUnique = true;
 
     /**
+     * 是否禁用
+     */
+    Boolean disable = false;
+
+    /**
      * 肽段的归一化RT
      */
     Double rt;

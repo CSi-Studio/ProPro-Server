@@ -80,10 +80,10 @@ public class DataServiceImpl implements DataService {
             if (brother.getCharge() == 2) {
                 coord.setMz(coord.getMz() * 2 / 3);
             } else {
-                coord.setMz(coord.getMz() * 3 / 2);
+                coord.setMz(coord.getMz() * 3 / 4);
             }
         }
-
+        coord.setMz(coord.getMz() * 3 / 4);
         AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
         params.setOverviewId(overviewId);
         params.setPredict(true);

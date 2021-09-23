@@ -131,12 +131,10 @@ public class Extractor {
     public Result<ExpDataVO> eppsPredictOne(ExperimentDO exp, PeptideCoord coord, AnalyzeParams params) {
         Double rt = coord.getRt();
         if (params.getMethod().getEic().getRtWindow() == -1) {
-            coord.setRtStart(-1);
-            coord.setRtEnd(99999);
+            coord.setRtRange(-1, 99999);
         } else {
             double targetRt = exp.getIrt().getSi().realRt(rt);
-            coord.setRtStart(targetRt - 500);
-            coord.setRtEnd(targetRt + 500);
+            coord.setRtRange(targetRt - 500, targetRt + 500);
         }
 
         Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(exp, coord);
@@ -145,12 +143,12 @@ public class Extractor {
         }
 
         DataDO dataDO = coreFunc.extractPredictOne(coord, rtMapResult.getData(), params, null);
-        DataSumDO dataSum = null;
         if (dataDO == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }
 
         //进行实时打分
+        DataSumDO dataSum = null;
         scorer.scoreForOne(exp, dataDO, coord, rtMapResult.getData(), params);
         if (dataDO.getScoreList() == null) {
             return Result.OK(new ExpDataVO().merge(dataDO, dataSum));

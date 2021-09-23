@@ -103,7 +103,7 @@ public abstract class BaseDAO<T, Q extends PageQuery> {
     }
 
     public boolean updateAll(HashMap<String, Object> queryMap, HashMap<String, Object> fieldMap) {
-        if (queryMap == null || queryMap.size() == 0 || fieldMap == null || fieldMap.size() == 0) {
+        if (fieldMap == null || fieldMap.size() == 0) {
             return false;
         }
 

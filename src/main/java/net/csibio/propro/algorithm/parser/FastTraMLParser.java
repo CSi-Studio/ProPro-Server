@@ -161,6 +161,7 @@ public class FastTraMLParser extends BaseLibraryParser {
             HashMap<String, PeptideDO> peptideMap = new HashMap<>();
             String line, filePepRef = "";
             PeptideDO peptideDO = new PeptideDO();
+            peptideDO.setDisable(false);
             while ((line = reader.readLine()) != null) {
                 if (line.contains(TransitionListBeginMarker)) {
                     break;

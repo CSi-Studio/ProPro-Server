@@ -33,6 +33,7 @@ public class PeptideController extends XController<LibraryDO, LibraryQuery, Libr
 
     @GetMapping(value = "/list")
     Result list(PeptideQuery query) {
+        query.setDisable(null); //只有在Peptide列表界面会查看所有的肽段(包含失效肽段)
         Result<List<PeptideDO>> result = peptideService.getList(query);
         return result;
     }
@@ -43,6 +44,7 @@ public class PeptideController extends XController<LibraryDO, LibraryQuery, Libr
         if (peptide == null) {
             return Result.Error(ResultCode.OBJECT_NOT_EXISTED);
         }
+        peptide.setDisable(peptideUpdateVO.getDisable());
         peptide.setMz(peptideUpdateVO.getMz());
         peptide.setRt(peptideUpdateVO.getRt());
         peptide.setProteins(peptideUpdateVO.getProteins());
