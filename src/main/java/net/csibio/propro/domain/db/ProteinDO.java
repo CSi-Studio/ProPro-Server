@@ -1,7 +1,6 @@
 package net.csibio.propro.domain.db;
 
 import lombok.Data;
-import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.domain.BaseDO;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -36,6 +35,7 @@ public class ProteinDO extends BaseDO {
      * 蛋白质名称
      * 例如: tRNA-2-methylthio-N(6)-dimethylallyladenosine synthase
      */
+    @Indexed
     List<String> names;
 
     @Indexed
@@ -61,7 +61,7 @@ public class ProteinDO extends BaseDO {
 
     public String getAlphaFoldLink() {
         if (identifier != null) {
-            String[] identifiers = identifier.split("\\|",-1);
+            String[] identifiers = identifier.split("\\|", -1);
             if (identifiers.length == 3) {
                 return "https://www.alphafold.ebi.ac.uk/entry/" + identifiers[1];
             } else {
