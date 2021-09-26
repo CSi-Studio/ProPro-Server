@@ -571,4 +571,15 @@ public class ArrayUtil {
         return fArray;
     }
 
+    public static double[] toPrimitive(List<Double> doubleList) {
+        if (doubleList.size() == 0) {
+            return new double[0];
+        }
+        double[] dArray = new double[doubleList.size()];
+        for (int i = 0; i < doubleList.size(); i++) {
+            dArray[i] = doubleList.get(i);
+        }
+
+        return dArray;
+    }
 }

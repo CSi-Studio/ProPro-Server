@@ -7,10 +7,10 @@ import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.common.DoublePairs;
 import net.csibio.propro.domain.bean.common.FloatPairs;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.common.IdNameAlias;
+import net.csibio.propro.domain.bean.common.PeptideRtPairs;
 import net.csibio.propro.domain.bean.data.PeptideRt;
 import net.csibio.propro.domain.bean.overview.Overview4Clinic;
 import net.csibio.propro.domain.db.ExperimentDO;
@@ -194,13 +194,14 @@ public class ClinicController {
     }
 
     @PostMapping(value = "/getRtPairs")
-    Result<HashMap<String, DoublePairs>> getRtPairs(@RequestParam("projectId") String projectId,
-                                                    @RequestParam("onlyDefault") Boolean onlyDefault,
-                                                    @RequestParam("expIds") List<String> expIds) {
-        HashMap<String, DoublePairs> map = new HashMap<>();
+    Result<HashMap<String, PeptideRtPairs>> getRtPairs(@RequestParam("projectId") String projectId,
+                                                       @RequestParam("onlyDefault") Boolean onlyDefault,
+                                                       @RequestParam("expIds") List<String> expIds) {
+        HashMap<String, PeptideRtPairs> map = new HashMap<>();
         long start = System.currentTimeMillis();
         for (int i = 0; i < expIds.size(); i++) {
             String expId = expIds.get(i);
+            ExperimentDO exp = experimentService.getById(expId);
             OverviewQuery query = new OverviewQuery(projectId).setExpId(expId);
             if (onlyDefault) {
                 query.setDefaultOne(true);
@@ -217,14 +218,16 @@ public class ClinicController {
             }
             Map<String, Double> libRtMap = libRtList.stream().collect(Collectors.toMap(PeptideRt::peptideRef, PeptideRt::libRt));
             //横坐标是libRt,纵坐标是realRt
+            String[] peptideRefs = new String[realRtList.size()];
             double[] x = new double[realRtList.size()];
             double[] y = new double[realRtList.size()];
             realRtList = realRtList.stream().sorted(Comparator.comparingDouble(PeptideRt::realRt)).collect(Collectors.toList());
             for (int j = 0; j < realRtList.size(); j++) {
-                x[j] = libRtMap.get(realRtList.get(j).peptideRef());
+                peptideRefs[j] = realRtList.get(j).peptideRef();
+                x[j] = libRtMap.get(peptideRefs[j]);
                 y[j] = realRtList.get(j).realRt();
             }
-            map.put(expId, new DoublePairs(x, y));
+            map.put(expId, new PeptideRtPairs(peptideRefs, x, y));
         }
         log.info("rt坐标已渲染,耗时:" + (System.currentTimeMillis() - start));
         return Result.OK(map);
