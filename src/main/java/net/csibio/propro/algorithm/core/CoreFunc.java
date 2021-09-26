@@ -185,7 +185,7 @@ public class CoreFunc {
             }
         }
 
-        statList = statList.subList(minIndex, minIndex + 15);
+        statList = statList.subList(minIndex, minIndex + 6);
         Set<FragmentInfo> finalFiSet = new HashSet<>();
         for (int i = 0; i < statList.size(); i++) {
             IonStat ion = statList.get(i);

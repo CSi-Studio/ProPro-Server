@@ -225,7 +225,7 @@ public class ClinicController {
             for (int j = 0; j < realRtList.size(); j++) {
                 peptideRefs[j] = realRtList.get(j).peptideRef();
                 x[j] = libRtMap.get(peptideRefs[j]);
-                y[j] = realRtList.get(j).realRt();
+                y[j] = realRtList.get(j).realRt() - exp.getIrt().getSi().realRt(x[j]);
             }
             map.put(expId, new PeptideRtPairs(peptideRefs, x, y));
         }
