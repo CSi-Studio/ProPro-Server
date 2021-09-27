@@ -14,10 +14,7 @@ import net.csibio.propro.service.OverviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service("dataSumService")
@@ -71,7 +68,11 @@ public class DataSumServiceImpl implements DataSumService {
             }
             sumList.add(sum);
         });
-        Double minTotalScore = sumList.stream().filter(data -> data.getDecoy() && data.getStatus() == 1).min(Comparator.comparing(DataSumDO::getTotalScore)).get().getTotalScore();
+        Optional<DataSumDO> op = sumList.stream().filter(data -> data.getDecoy() && data.getStatus() == 1).min(Comparator.comparing(DataSumDO::getTotalScore));
+        Double minTotalScore = -9999d;
+        if (op.isPresent()) {
+            minTotalScore = op.get().getTotalScore();
+        }
         overview.setMinTotalScore(minTotalScore);
         overviewService.update(overview);
         insert(sumList, projectId);

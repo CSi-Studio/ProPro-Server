@@ -1,14 +1,15 @@
 package net.csibio.propro.algorithm.core;
 
-import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.algorithm.extract.IonStat;
 import net.csibio.propro.algorithm.formula.FragmentFactory;
+import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.DataDO;
+import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
@@ -129,57 +130,83 @@ public class CoreFunc {
      * @param params
      * @return
      */
-    public DataDO predictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, OverviewDO overview, AnalyzeParams params) {
-
-        //Step1. 对库中的碎片进行排序
+    public DataDO predictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
+        log.info("实验:" + exp.getAlias() + "开始预测:" + coord.getPeptideRef());
+        //Step1.对库中的碎片进行排序
         Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
         List<FragmentInfo> sortedLibFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
-
-        //Step2. 生成BY碎片离子,碎片最大带电量为母离子的带电量,最小碎片长度为3
+        List<String> libIons = sortedLibFrags.stream().map(FragmentInfo::getCutInfo).toList();
+        //Step2.生成BY碎片离子,碎片最大带电量为母离子的带电量,最小碎片长度为3
         Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 3);
-        proproFiList.forEach(fi -> fi.setIntensity(1d)); //给到一个任意的初始化强度
+        proproFiList.forEach(fi -> fi.setIntensity(1000d)); //给到一个任意的初始化强度
         Map<String, FragmentInfo> predictFragmentMap = proproFiList.stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
-
+        libFragMap.keySet().forEach(cutInfo -> {
+            predictFragmentMap.put(cutInfo, libFragMap.get(cutInfo));
+        });
+        //Step3.对所有碎片进行EIC计算
         coord.setFragments(proproFiList);
         DataDO data = extractOne(coord, rtMap, params);
-        List<IonStat> statList = new ArrayList<>();
+        Map<String, float[]> intMap = data.getIntMap();
 
-        List<IonStat> finalStatList = statList;
-        data.getIntMap().forEach((key, value) -> {
-            float[] fArray = data.getIntMap().get(key);
-            Double[][] sumArray = new Double[fArray.length][2];
-            List<Double> dList = new ArrayList<>();
-            for (int i = 0; i < fArray.length; i++) {
-                if (i == 0) {
-                    Double[] d = new Double[2];
-                    d[0] = 1d;
-                    d[1] = (double) fArray[i];
-                    sumArray[i] = d;
-                } else {
-                    Double[] d = new Double[2];
-                    d[0] = (double) i + 1;
-                    d[1] = sumArray[i - 1][1] + fArray[i];
-                    sumArray[i] = d;
+        //Step4.获取所有碎片的统计分,并按照CV值进行排序,记录前15的碎片
+        List<IonStat> statList = buildIonStat(intMap);
+//        if (statList.size() > 20) {
+//            statList = statList.subList(0, 15);
+//        }
+        List<String> totalIonList = statList.stream().map(IonStat::cutInfo).toList();
+
+        //Step5.开始全枚举所有的组合分
+//        List<List<String>> allPossibleIonsGroup = Generator.combination(totalIons).simple(6).stream().collect(Collectors.toList());
+
+        double bestScore = -99999d;
+        Double bestRt = null;
+        DataDO bestData = null;
+        Set<FragmentInfo> bestIonGroup = null;
+        List<String> types = ScoreType.getAllTypesName();
+//        for (int i = 0; i < allPossibleIonsGroup.size(); i++) {
+//            List<String> ionsGroup = allPossibleIonsGroup.get(i);
+//            DataDO buildData = buildData(data, ionsGroup);
+//            coord.setFragments(selectFragments(predictFragmentMap, ionsGroup));
+//            scorer.baseScoreForOne(buildData, coord);
+//            if (buildData.getScoreList() != null) {
+//                PeakGroupScores peakScore = scorer.getBestTargetPeak(buildData, ScoreType.XcorrShape.getName());
+//                double shapeScore = peakScore.get(ScoreType.XcorrShape.getName(), types);
+//                if (shapeScore > bestShapeScore) {
+//                    bestShapeScore = shapeScore;
+//                    bestPeak = peakScore;
+//                    bestData = buildData;
+//                }
+//            }
+//        }
+//        List<String> subIonList = libIons.subList(0, libIons.size());
+        for (int i = 0; i < totalIonList.size(); i++) {
+            String ion = totalIonList.get(i);
+            List<String> ions = new ArrayList<>(libIons.subList(0, libIons.size() - 1));
+            ions.add(ion);
+            DataDO buildData = buildData(data, ions);
+            Set<FragmentInfo> selectFragments = selectFragments(predictFragmentMap, ions);
+            coord.setFragments(selectFragments);
+            scorer.scoreForOne(exp, buildData, coord, rtMap, params);
+            if (buildData.getScoreList() != null) {
+                DataSumDO dataSum = scorer.getBestTotalScore(buildData, overview);
+                if (dataSum.getTotalScore() > bestScore) {
+                    bestScore = dataSum.getTotalScore();
+                    bestRt = dataSum.getRealRt();
+                    bestData = buildData;
+                    bestIonGroup = selectFragments;
                 }
-                if (fArray[i] != 0f) {
-                    dList.add((double) fArray[i]);
-                }
             }
-            double[] dArray = new double[dList.size()];
-            for (int i = 0; i < dList.size(); i++) {
-                dArray[i] = dList.get(i);
-            }
-            DescriptiveStatistics stat = new DescriptiveStatistics(dArray);
-            int[] xArray = new int[sumArray.length];
-            for (int i = 0; i < sumArray.length; i++) {
-                xArray[i] = i + 1;
-            }
-            //计算强度的偏差值,在RT范围内的偏差值越大说明峰的显著程度越高
-            double cv = stat.getStandardDeviation() / stat.getMean();
-            finalStatList.add(new IonStat(key, cv));
-        });
-        //按照cv从大到小排序
-        statList = statList.stream().sorted(Comparator.comparing(IonStat::stat).reversed()).toList();
+        }
+
+        if (bestData == null) {
+            log.info("居然一个可能的组都没有");
+            return null;
+        }
+        coord.setFragments(bestIonGroup); //这里必须要将coord置为最佳峰组
+//        log.info("库中的碎片组为:" + libIons);
+        log.info("最终选中的碎片组为:" + coord.getFragments().stream().map(FragmentInfo::getCutInfo).collect(Collectors.toSet()));
+        log.info("最终的打分:" + bestScore);
+        log.info("选择的峰RT为:" + bestRt);
 
 //        int minIndex = Integer.MAX_VALUE;
 //
@@ -190,51 +217,50 @@ public class CoreFunc {
 //                minIndex = index;
 //            }
 //        }
-        log.info(JSON.toJSONString(statList));
-        int minIndex = 0;
-        statList = statList.subList(minIndex, minIndex + 12);
-        Set<FragmentInfo> finalFiSet = new HashSet<>();
-        for (int i = 0; i < statList.size(); i++) {
-            IonStat ion = statList.get(i);
-            FragmentInfo predict = predictFragmentMap.get(ion.cutInfo());
-            if (i < sortedLibFrags.size() - 1) {
-                predict.setIntensity(sortedLibFrags.get(i).getIntensity());
-            } else {
-                predict.setIntensity(sortedLibFrags.get(sortedLibFrags.size() - 1).getIntensity() / 3);
-            }
-            FragmentInfo lastPredictPoint = null;
-            double lastPointIntensity = 0d;
-            //如果原标准库中已经包含了该预测碎片,则直接使用库中的碎片信息
-            if (libFragMap.containsKey(ion.cutInfo())) {
-                FragmentInfo info = libFragMap.get(ion.cutInfo());
-                info.setPredict(false);
-                finalFiSet.add(info);
-                //如果此时上一个预测锚点存在,则先将该锚点的值设置为本锚点与上一次锚点的平均值
-                if (lastPredictPoint != null) {
-                    lastPredictPoint.setIntensity((info.getIntensity() + lastPointIntensity) / 2);
-                    lastPredictPoint = null;
-                }
-                lastPointIntensity = libFragMap.get(ion.cutInfo()).getIntensity();
-            } else {
-                //如果原标准库中不存在该碎片,则将该点的预测强度填充为上一个预测点的一半
-                lastPredictPoint = predictFragmentMap.get(ion.cutInfo());
-                lastPredictPoint.setPredict(true);
-                lastPredictPoint.setIntensity(lastPointIntensity / 2);
-                finalFiSet.add(lastPredictPoint);
-            }
-            finalFiSet.add(predict);
-        }
-        coord.setFragments(finalFiSet);
-        HashMap<String, float[]> newIntMap = new HashMap<>();
-        HashMap<String, Float> newCutInfoMap = new HashMap<>();
-        statList.forEach(ionStat -> {
-            newIntMap.put(ionStat.cutInfo(), data.getIntMap().get(ionStat.cutInfo()));
-            newCutInfoMap.put(ionStat.cutInfo(), data.getCutInfoMap().get(ionStat.cutInfo()));
-        });
 
-        data.setIntMap(newIntMap);
-        data.setCutInfoMap(newCutInfoMap);
-        return data;
+//        int minIndex = 0;
+//        statList = statList.subList(minIndex, minIndex + 12);
+//        Set<FragmentInfo> finalFiSet = new HashSet<>();
+//        for (int i = 0; i < statList.size(); i++) {
+//            IonStat ion = statList.get(i);
+//            FragmentInfo predict = predictFragmentMap.get(ion.cutInfo());
+//            if (i < sortedLibFrags.size() - 1) {
+//                predict.setIntensity(sortedLibFrags.get(i).getIntensity());
+//            } else {
+//                predict.setIntensity(sortedLibFrags.get(sortedLibFrags.size() - 1).getIntensity() / 3);
+//            }
+//            FragmentInfo lastPredictPoint = null;
+//            double lastPointIntensity = 0d;
+//            //如果原标准库中已经包含了该预测碎片,则直接使用库中的碎片信息
+//            if (libFragMap.containsKey(ion.cutInfo())) {
+//                FragmentInfo info = libFragMap.get(ion.cutInfo());
+//                info.setPredict(false);
+//                finalFiSet.add(info);
+//                //如果此时上一个预测锚点存在,则先将该锚点的值设置为本锚点与上一次锚点的平均值
+//                if (lastPredictPoint != null) {
+//                    lastPredictPoint.setIntensity((info.getIntensity() + lastPointIntensity) / 2);
+//                    lastPredictPoint = null;
+//                }
+//                lastPointIntensity = libFragMap.get(ion.cutInfo()).getIntensity();
+//            } else {
+//                //如果原标准库中不存在该碎片,则将该点的预测强度填充为上一个预测点的一半
+//                lastPredictPoint = predictFragmentMap.get(ion.cutInfo());
+//                lastPredictPoint.setPredict(true);
+//                lastPredictPoint.setIntensity(lastPointIntensity / 2);
+//                finalFiSet.add(lastPredictPoint);
+//            }
+//            finalFiSet.add(predict);
+//        }
+//        HashMap<String, float[]> selectedIntMap = new HashMap<>();
+//        HashMap<String, Float> selectedCutInfoMap = new HashMap<>();
+//        statList.forEach(ionStat -> {
+//            selectedIntMap.put(ionStat.cutInfo(), data.getIntMap().get(ionStat.cutInfo()));
+//            selectedCutInfoMap.put(ionStat.cutInfo(), data.getCutInfoMap().get(ionStat.cutInfo()));
+//        });
+//
+//        data.setIntMap(selectedIntMap);
+//        data.setCutInfoMap(selectedCutInfoMap);
+        return bestData;
     }
 
     /**
@@ -246,7 +272,8 @@ public class CoreFunc {
      * @param params
      * @return
      */
-    public List<DataDO> epps(ExperimentDO exp, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public List<DataDO> epps(ExperimentDO
+                                     exp, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
         long start = System.currentTimeMillis();
         if (coordinates == null || coordinates.size() == 0) {
@@ -293,5 +320,52 @@ public class CoreFunc {
             log.info("居然有问题");
         }
         return dataList;
+    }
+
+    private Set<FragmentInfo> selectFragments(Map<String, FragmentInfo> fragMap, List<String> selectedIons) {
+        Set<FragmentInfo> fragmentInfos = new HashSet<>();
+        for (String selectedIon : selectedIons) {
+            fragmentInfos.add(fragMap.get(selectedIon));
+        }
+        return fragmentInfos;
+    }
+
+    private DataDO buildData(DataDO data, List<String> selectedIons) {
+        HashMap<String, float[]> selectedIntMap = new HashMap<>();
+        HashMap<String, Float> selectedCutInfoMap = new HashMap<>();
+        selectedIons.forEach(cutInfo -> {
+            selectedIntMap.put(cutInfo, data.getIntMap().get(cutInfo));
+            selectedCutInfoMap.put(cutInfo, data.getCutInfoMap().get(cutInfo));
+        });
+        DataDO newData = data.clone();
+        newData.setIntMap(selectedIntMap);
+        newData.setCutInfoMap(selectedCutInfoMap);
+        return newData;
+    }
+
+    private List<IonStat> buildIonStat(Map<String, float[]> intMap) {
+        List<IonStat> statList = new ArrayList<>();
+        List<IonStat> finalStatList = statList;
+        intMap.forEach((key, fArray) -> {
+            double[][] sumArray = new double[fArray.length][2];
+            List<Double> dList = new ArrayList<>();
+            for (int i = 0; i < fArray.length; i++) {
+                sumArray[i] = (i == 0) ? new double[]{1d, (double) fArray[i]} : new double[]{(double) i + 1, sumArray[i - 1][1] + fArray[i]};
+                if (fArray[i] != 0f) {
+                    dList.add((double) fArray[i]);
+                }
+            }
+            double[] dArray = new double[dList.size()];
+            for (int i = 0; i < dList.size(); i++) {
+                dArray[i] = dList.get(i);
+            }
+            DescriptiveStatistics stat = new DescriptiveStatistics(dArray);
+            //计算强度的偏差值,在RT范围内的偏差值越大说明峰的显著程度越高
+            double cv = stat.getStandardDeviation() / stat.getMean();
+            finalStatList.add(new IonStat(key, cv));
+        });
+        //按照cv从大到小排序
+        statList = statList.stream().sorted(Comparator.comparing(IonStat::stat).reversed()).toList();
+        return statList;
     }
 }

@@ -5,6 +5,7 @@ import net.csibio.propro.domain.BaseDO;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -44,7 +45,7 @@ public class DataDO extends BaseDO {
     Integer status; //鉴定态
 
     String cutInfosFeature; //由cutInfoMap转换所得
-    
+
     List<PeakGroupScores> scoreList;
 
     //压缩后的rt列表,对应rtArray
@@ -70,6 +71,12 @@ public class DataDO extends BaseDO {
         this.setLibRt(coord.getRt());
         this.setIrt(coord.getIrt());
         this.setCutInfoMap(coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getMz().floatValue())));
+    }
+
+    public DataDO clone() {
+        DataDO clone = new DataDO();
+        BeanUtils.copyProperties(this, clone);
+        return clone;
     }
 
 }

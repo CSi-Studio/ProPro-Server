@@ -3,15 +3,19 @@ package net.csibio.propro.algorithm.score;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.algorithm.fitter.LinearFitter;
+import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.*;
 import net.csibio.propro.algorithm.score.features.*;
 import net.csibio.propro.constants.enums.IdentifyStatus;
+import net.csibio.propro.domain.bean.data.PeptideScores;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.PeakGroupList;
 import net.csibio.propro.domain.bean.score.PeakGroupScores;
 import net.csibio.propro.domain.db.DataDO;
+import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.ExperimentDO;
+import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.service.*;
@@ -67,10 +71,12 @@ public class Scorer {
     LinearFitter linearFitter;
     @Autowired
     BlockIndexService blockIndexService;
+    @Autowired
+    Lda lda;
 
-    public void scoreForOne(ExperimentDO exp, DataDO dataDO, PeptideCoord peptide, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public void scoreForOne(ExperimentDO exp, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
 
-        if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= peptide.getFragments().size() / 2)) {
+        if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
             dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
             return;
         }
@@ -78,7 +84,7 @@ public class Scorer {
 
         //获取标准库中对应的PeptideRef组
         //重要步骤,"或许是目前整个工程最重要的核心算法--选峰算法."--陆妙善
-        PeakGroupList peakGroupList = featureExtractor.getExperimentFeature(dataDO, peptide.buildIntensityMap(), params.getMethod().getIrt().getSs());
+        PeakGroupList peakGroupList = featureExtractor.getExperimentFeature(dataDO, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
         if (!peakGroupList.isFeatureFound()) {
             dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
             log.info("肽段没有被选中的特征：PeptideRef: " + dataDO.getPeptideRef());
@@ -96,8 +102,8 @@ public class Scorer {
             productMzMap.put(key, value);
         });
 
-        HashMap<Integer, String> unimodHashMap = peptide.getUnimodMap();
-        String sequence = peptide.getSequence();
+        HashMap<Integer, String> unimodHashMap = coord.getUnimodMap();
+        String sequence = coord.getSequence();
 
         for (PeakGroup peakGroupFeature : peakGroupFeatureList) {
             PeakGroupScores peakGroupScores = new PeakGroupScores(params.getMethod().getScore().getScoreTypes().size());
@@ -191,4 +197,88 @@ public class Scorer {
         dataDO.setScoreList(peakGroupScoresList);
     }
 
+    public void baseScoreForOne(DataDO data, PeptideCoord coord) {
+        if (data.getIntMap() == null || data.getIntMap().size() < coord.getFragments().size()) {
+            data.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
+            return;
+        }
+
+        SigmaSpacing ss = SigmaSpacing.create();
+        PeakGroupList peakGroupList = featureExtractor.getExperimentFeature(data, coord.buildIntensityMap(), ss);
+        if (!peakGroupList.isFeatureFound()) {
+            return;
+        }
+        List<String> types = ScoreType.getAllTypesName();
+        List<PeakGroupScores> peakGroupScoresList = new ArrayList<>();
+        List<PeakGroup> peakGroupFeatureList = peakGroupList.getList();
+        HashMap<String, Double> normedLibIntMap = peakGroupList.getNormedIntMap();
+        for (PeakGroup peakGroupFeature : peakGroupFeatureList) {
+            PeakGroupScores peakGroupScores = new PeakGroupScores(types.size());
+            chromatographicScorer.calculateChromatographicScores(peakGroupFeature, normedLibIntMap, peakGroupScores, types);
+            if (peakGroupScores.get(ScoreType.XcorrShape.getName(), types) < 0.6) {
+                continue;
+            }
+            peakGroupScores.setRt(peakGroupFeature.getApexRt());
+            peakGroupScoresList.add(peakGroupScores);
+        }
+
+        if (peakGroupScoresList.size() == 0) {
+            return;
+        }
+
+        data.setScoreList(peakGroupScoresList);
+    }
+
+    public DataSumDO getBestTotalScore(DataDO data, OverviewDO overview) {
+        DataSumDO dataSum = null;
+        if (data.getScoreList() == null) {
+            return null;
+        }
+
+        PeptideScores ps = new PeptideScores(data);
+
+        List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
+        lda.score(ps, overview.getWeights(), scoreTypes);
+        double bestTotalScore = -1d;
+        Double bestRt = null;
+        int bestIndex = 0;
+        for (int i = 0; i < ps.getScoreList().size(); i++) {
+            Double currentTotalScore = ps.getScoreList().get(i).get(ScoreType.WeightedTotalScore, scoreTypes);
+            if (currentTotalScore != null && currentTotalScore > bestTotalScore) {
+                bestIndex = i;
+                bestTotalScore = currentTotalScore;
+                bestRt = ps.getScoreList().get(i).getRt();
+            }
+        }
+        dataSum = new DataSumDO();
+        if (bestTotalScore > overview.getMinTotalScore()) {
+            dataSum.setStatus(IdentifyStatus.SUCCESS.getCode());
+        } else {
+            dataSum.setStatus(IdentifyStatus.FAILED.getCode());
+        }
+        dataSum.setSum(ps.getScoreList().get(bestIndex).getIntensitySum());
+        dataSum.setRealRt(bestRt);
+        dataSum.setTotalScore(bestTotalScore);
+        return dataSum;
+    }
+
+    public PeakGroupScores getBestTargetPeak(DataDO data, String typeName) {
+        if (data.getScoreList() == null) {
+            return null;
+        }
+
+        PeptideScores ps = new PeptideScores(data);
+
+        double bestTotalScore = -1d;
+        PeakGroupScores bestPeak = null;
+        for (int i = 0; i < ps.getScoreList().size(); i++) {
+            Double currentTotalScore = ps.getScoreList().get(i).get(typeName, ScoreType.getAllTypesName());
+            if (currentTotalScore != null && currentTotalScore > bestTotalScore) {
+                bestTotalScore = currentTotalScore;
+                bestPeak = ps.getScoreList().get(i);
+            }
+        }
+
+        return bestPeak;
+    }
 }

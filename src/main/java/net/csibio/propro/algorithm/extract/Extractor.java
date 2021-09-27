@@ -129,6 +129,7 @@ public class Extractor {
      * @return
      */
     public Result<ExpDataVO> predictOne(ExperimentDO exp, OverviewDO overview, PeptideCoord coord, AnalyzeParams params) {
+        params.setPredict(true);
         Double rt = coord.getRt();
         if (params.getMethod().getEic().getRtWindow() == -1) {
             coord.setRtRange(-1, 99999);
@@ -142,7 +143,7 @@ public class Extractor {
             return Result.Error(rtMapResult.getErrorCode());
         }
 
-        DataDO dataDO = coreFunc.predictOne(coord, rtMapResult.getData(), overview, params);
+        DataDO dataDO = coreFunc.predictOne(coord, rtMapResult.getData(), exp, overview, params);
         if (dataDO == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }

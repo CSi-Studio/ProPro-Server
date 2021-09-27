@@ -121,6 +121,13 @@
             <version>2.6</version>
         </dependency>
 
+        <!--用于计算排列组合的Java库-->
+        <dependency>
+            <groupId>com.github.dpaukov</groupId>
+            <artifactId>combinatoricslib3</artifactId>
+            <version>3.3.2</version>
+        </dependency>
+
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>

@@ -1,4 +1,4 @@
 package net.csibio.propro.algorithm.extract;
 
-public record IonStat(String cutInfo, Double stat) {
+public record IonStat(String cutInfo, double stat) {
 }
