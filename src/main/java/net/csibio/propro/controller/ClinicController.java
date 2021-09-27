@@ -4,6 +4,7 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.peak.GaussFilter;
 import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
+import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
@@ -101,6 +102,13 @@ public class ClinicController {
         data.setMethod(method);
         data.setProteins(anaLib.getProteins());
         data.setOverviewMap(overviewMap);
+        if (anaLib.getStatistic().get(StatConst.Peptide_Count) != null) {
+            data.setPeptideCount((Long) anaLib.getStatistic().get(StatConst.Peptide_Count));
+        }
+        if (anaLib.getStatistic().get(StatConst.Protein_Count) != null) {
+            data.setProteinCount((Long) anaLib.getStatistic().get(StatConst.Protein_Count));
+        }
+
         return Result.OK(data);
     }
 

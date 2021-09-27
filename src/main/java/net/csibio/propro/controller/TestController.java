@@ -1,8 +1,12 @@
 package net.csibio.propro.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.db.LibraryDO;
+import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.PeptideDO;
+import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -35,10 +38,14 @@ public class TestController {
     @GetMapping(value = "/lms")
     Result lms() {
 //        List<IdName> libIdNames = libraryService.getAll(new LibraryQuery(), IdName.class);
+        List<OverviewDO> overviewList = overviewService.getAll(new OverviewQuery());
+        overviewList.forEach(overview -> {
+            LibraryDO lib = libraryService.getById(overview.getAnaLibId());
+            overview.setPeptideCount((Long) lib.getStatistic().get(StatConst.Peptide_Count));
+            overview.setProteinCount((Long) lib.getStatistic().get(StatConst.Protein_Count));
+            overviewService.update(overview);
+        });
 
-        HashMap<String, Object> update = new HashMap<>();
-        update.put("disable", false);
-        peptideService.updateAll(new HashMap<>(), update);
         return Result.OK();
     }
 

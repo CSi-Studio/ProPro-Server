@@ -128,7 +128,7 @@ public class Extractor {
      * @param coord
      * @return
      */
-    public Result<ExpDataVO> eppsPredictOne(ExperimentDO exp, PeptideCoord coord, AnalyzeParams params) {
+    public Result<ExpDataVO> predictOne(ExperimentDO exp, OverviewDO overview, PeptideCoord coord, AnalyzeParams params) {
         Double rt = coord.getRt();
         if (params.getMethod().getEic().getRtWindow() == -1) {
             coord.setRtRange(-1, 99999);
@@ -142,7 +142,7 @@ public class Extractor {
             return Result.Error(rtMapResult.getErrorCode());
         }
 
-        DataDO dataDO = coreFunc.extractPredictOne(coord, rtMapResult.getData(), params, null);
+        DataDO dataDO = coreFunc.predictOne(coord, rtMapResult.getData(), overview, params);
         if (dataDO == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }
@@ -154,32 +154,31 @@ public class Extractor {
             return Result.OK(new ExpDataVO().merge(dataDO, dataSum));
         }
 
-        if (params.getOverviewId() != null) {
-            PeptideScores ps = new PeptideScores(dataDO);
-            OverviewDO overview = overviewService.getById(params.getOverviewId());
-            List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
-            lda.score(ps, overview.getWeights(), scoreTypes);
-            double bestTotalScore = -1d;
-            Double bestRt = null;
-            int bestIndex = 0;
-            for (int i = 0; i < ps.getScoreList().size(); i++) {
-                Double currentTotalScore = ps.getScoreList().get(i).get(ScoreType.WeightedTotalScore, scoreTypes);
-                if (currentTotalScore != null && currentTotalScore > bestTotalScore) {
-                    bestIndex = i;
-                    bestTotalScore = currentTotalScore;
-                    bestRt = ps.getScoreList().get(i).getRt();
-                }
+        PeptideScores ps = new PeptideScores(dataDO);
+
+        List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
+        lda.score(ps, overview.getWeights(), scoreTypes);
+        double bestTotalScore = -1d;
+        Double bestRt = null;
+        int bestIndex = 0;
+        for (int i = 0; i < ps.getScoreList().size(); i++) {
+            Double currentTotalScore = ps.getScoreList().get(i).get(ScoreType.WeightedTotalScore, scoreTypes);
+            if (currentTotalScore != null && currentTotalScore > bestTotalScore) {
+                bestIndex = i;
+                bestTotalScore = currentTotalScore;
+                bestRt = ps.getScoreList().get(i).getRt();
             }
-            dataSum = new DataSumDO();
-            if (bestTotalScore > overview.getMinTotalScore()) {
-                dataSum.setStatus(IdentifyStatus.SUCCESS.getCode());
-            } else {
-                dataSum.setStatus(IdentifyStatus.FAILED.getCode());
-            }
-            dataSum.setSum(ps.getScoreList().get(bestIndex).getIntensitySum());
-            dataSum.setRealRt(bestRt);
-            dataSum.setTotalScore(bestTotalScore);
         }
+        dataSum = new DataSumDO();
+        if (bestTotalScore > overview.getMinTotalScore()) {
+            dataSum.setStatus(IdentifyStatus.SUCCESS.getCode());
+        } else {
+            dataSum.setStatus(IdentifyStatus.FAILED.getCode());
+        }
+        dataSum.setSum(ps.getScoreList().get(bestIndex).getIntensitySum());
+        dataSum.setRealRt(bestRt);
+        dataSum.setTotalScore(bestTotalScore);
+
 
         return Result.OK(new ExpDataVO().merge(dataDO, dataSum));
     }
@@ -213,7 +212,7 @@ public class Extractor {
             if (coordinates.get(i).getSequence().length() <= 13) {
                 continue;
             }
-            DataDO dataDO = coreFunc.extractOne(coordinates.get(i), rtMap, params, null);
+            DataDO dataDO = coreFunc.extractOne(coordinates.get(i), rtMap, params);
             if (dataDO == null) {
                 continue;
             }
@@ -228,7 +227,7 @@ public class Extractor {
     }
 
     public DataDO eppsOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
-        return coreFunc.extractOne(coord, rtMap, params, null);
+        return coreFunc.extractOne(coord, rtMap, params);
     }
 
 

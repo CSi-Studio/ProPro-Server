@@ -42,7 +42,7 @@ public class ProjectDAO extends BaseDAO<ProjectDO, ProjectQuery> {
             dbQuery.addCriteria(where("name").regex(query.getName(), "i"));
         }
         if (StringUtils.isNotEmpty(query.getGroup())) {
-            dbQuery.addCriteria(where("group").is(query.getName()));
+            dbQuery.addCriteria(where("group").is(query.getGroup()));
         }
         if (StringUtils.isNotEmpty(query.getAlias())) {
             dbQuery.addCriteria(where("alias").regex(query.getAlias(), "i"));

@@ -5,6 +5,7 @@ import net.csibio.propro.algorithm.parser.model.chemistry.AminoAcid;
 import net.csibio.propro.algorithm.parser.model.chemistry.Unimod;
 import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.constants.constant.ResidueType;
+import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.domain.bean.peptide.Annotation;
 import net.csibio.propro.domain.bean.peptide.Fragment;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
@@ -115,11 +116,22 @@ public class FragmentFactory {
             ionTypes = new ArrayList<>();
             ionTypes.add(ResidueType.BIon);
             ionTypes.add(ResidueType.YIon);
+//            ionTypes.add(ResidueType.AIon);
+//            ionTypes.add(ResidueType.XIon);
+//            ionTypes.add(ResidueType.CIon);
+//            ionTypes.add(ResidueType.ZIon);
         }
         if (chargeTypes == null) {
+            int maxCharge = 2;
+            try {
+                maxCharge = Integer.parseInt(coord.getPeptideRef().split(SymbolConst.UNDERLINE)[1]);
+            } catch (Exception e) {
+                logger.error("这个肽段有些不正常:" + coord.getPeptideRef());
+            }
             chargeTypes = new ArrayList<>();
-            chargeTypes.add(1);
-            chargeTypes.add(2);
+            for (int i = 1; i <= maxCharge; i++) {
+                chargeTypes.add(i);
+            }
         }
         Set<FragmentInfo> fragmentSet = new HashSet<>();
         String sequence = coord.getSequence();

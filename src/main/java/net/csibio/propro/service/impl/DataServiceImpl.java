@@ -36,6 +36,8 @@ public class DataServiceImpl implements DataService {
     SimulateService simulateService;
     @Autowired
     ExperimentService experimentService;
+    @Autowired
+    OverviewService overviewService;
 
     @Override
     public BaseMultiDAO<DataDO, DataQuery> getBaseDAO() {
@@ -75,6 +77,10 @@ public class DataServiceImpl implements DataService {
         if (brother == null) {
             return Result.Error(ResultCode.PEPTIDE_NOT_EXIST);
         }
+        OverviewDO overview = overviewService.getById(overviewId);
+        if (overview == null) {
+            return Result.Error(ResultCode.OVERVIEW_NOT_EXISTED);
+        }
         PeptideCoord coord = brother.toTargetPeptide();
         if (changeCharge) {
             if (brother.getCharge() == 2) {
@@ -84,9 +90,7 @@ public class DataServiceImpl implements DataService {
             }
         }
         AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
-        params.setOverviewId(overviewId);
-        params.setPredict(true);
-        Result<ExpDataVO> result = extractor.eppsPredictOne(exp, coord, params);
+        Result<ExpDataVO> result = extractor.predictOne(exp, overview, coord, params);
         return result;
     }
 }

@@ -1,5 +1,6 @@
 package net.csibio.propro.algorithm.core;
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.algorithm.extract.IonStat;
@@ -9,11 +10,13 @@ import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.ExperimentDO;
+import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.service.SimulateService;
 import net.csibio.propro.utils.ConvolutionUtil;
 import net.csibio.propro.utils.DataUtil;
 import net.csibio.propro.utils.LogUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -42,10 +45,9 @@ public class CoreFunc {
      * @param coord
      * @param rtMap
      * @param params
-     * @param overviewId
      * @return
      */
-    public DataDO extractOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params, String overviewId) {
+    public DataDO extractOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         float mzStart = 0;
         float mzEnd = -1;
         //所有的碎片共享同一个RT数组
@@ -66,7 +68,9 @@ public class CoreFunc {
 
         DataDO data = new DataDO(coord);
         data.setRtArray(rtArray);
-        data.setOverviewId(overviewId);
+        if (StringUtils.isNotEmpty(params.getOverviewId())) {
+            data.setOverviewId(params.getOverviewId());
+        }
 
         boolean isHit = false;
         float window = params.getMethod().getEic().getMzWindow().floatValue();
@@ -116,26 +120,28 @@ public class CoreFunc {
 
     /**
      * EIC Predict Peptide
-     * 核心EIC函数
+     * 核心EIC预测函数
+     * 通过动态替换碎片用来预测
      * <p>
-     * 本函数为整个分析过程中最耗时的步骤
      *
      * @param coord
      * @param rtMap
      * @param params
-     * @param overviewId
      * @return
      */
-    public DataDO extractPredictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params, String overviewId) {
+    public DataDO predictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, OverviewDO overview, AnalyzeParams params) {
 
-        Map<String, FragmentInfo> oldFragmentsMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
-        List<FragmentInfo> oldFragments = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
+        //Step1. 对库中的碎片进行排序
+        Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
+        List<FragmentInfo> sortedLibFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
+
+        //Step2. 生成BY碎片离子,碎片最大带电量为母离子的带电量,最小碎片长度为3
         Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 3);
         proproFiList.forEach(fi -> fi.setIntensity(1d)); //给到一个任意的初始化强度
         Map<String, FragmentInfo> predictFragmentMap = proproFiList.stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
 
         coord.setFragments(proproFiList);
-        DataDO data = extractOne(coord, rtMap, params, overviewId);
+        DataDO data = extractOne(coord, rtMap, params);
         List<IonStat> statList = new ArrayList<>();
 
         List<IonStat> finalStatList = statList;
@@ -175,31 +181,32 @@ public class CoreFunc {
         //按照cv从大到小排序
         statList = statList.stream().sorted(Comparator.comparing(IonStat::stat).reversed()).toList();
 
-        int minIndex = Integer.MAX_VALUE;
-
-        for (FragmentInfo fragment : oldFragments) {
-            IonStat maxIonStat = statList.stream().filter(stat -> stat.cutInfo().equals(fragment.getCutInfo())).findFirst().get();
-            int index = statList.indexOf(maxIonStat);
-            if (index < minIndex) {
-                minIndex = index;
-            }
-        }
-
-        statList = statList.subList(minIndex, minIndex + 6);
+//        int minIndex = Integer.MAX_VALUE;
+//
+//        for (FragmentInfo fragment : sortedLibFrags) {
+//            IonStat maxIonStat = statList.stream().filter(stat -> stat.cutInfo().equals(fragment.getCutInfo())).findFirst().get();
+//            int index = statList.indexOf(maxIonStat);
+//            if (index < minIndex) {
+//                minIndex = index;
+//            }
+//        }
+        log.info(JSON.toJSONString(statList));
+        int minIndex = 0;
+        statList = statList.subList(minIndex, minIndex + 12);
         Set<FragmentInfo> finalFiSet = new HashSet<>();
         for (int i = 0; i < statList.size(); i++) {
             IonStat ion = statList.get(i);
             FragmentInfo predict = predictFragmentMap.get(ion.cutInfo());
-            if (i < oldFragments.size() - 1) {
-                predict.setIntensity(oldFragments.get(i).getIntensity());
+            if (i < sortedLibFrags.size() - 1) {
+                predict.setIntensity(sortedLibFrags.get(i).getIntensity());
             } else {
-                predict.setIntensity(oldFragments.get(oldFragments.size() - 1).getIntensity() / 3);
+                predict.setIntensity(sortedLibFrags.get(sortedLibFrags.size() - 1).getIntensity() / 3);
             }
             FragmentInfo lastPredictPoint = null;
             double lastPointIntensity = 0d;
             //如果原标准库中已经包含了该预测碎片,则直接使用库中的碎片信息
-            if (oldFragmentsMap.containsKey(ion.cutInfo())) {
-                FragmentInfo info = oldFragmentsMap.get(ion.cutInfo());
+            if (libFragMap.containsKey(ion.cutInfo())) {
+                FragmentInfo info = libFragMap.get(ion.cutInfo());
                 info.setPredict(false);
                 finalFiSet.add(info);
                 //如果此时上一个预测锚点存在,则先将该锚点的值设置为本锚点与上一次锚点的平均值
@@ -207,7 +214,7 @@ public class CoreFunc {
                     lastPredictPoint.setIntensity((info.getIntensity() + lastPointIntensity) / 2);
                     lastPredictPoint = null;
                 }
-                lastPointIntensity = oldFragmentsMap.get(ion.cutInfo()).getIntensity();
+                lastPointIntensity = libFragMap.get(ion.cutInfo()).getIntensity();
             } else {
                 //如果原标准库中不存在该碎片,则将该点的预测强度填充为上一个预测点的一半
                 lastPredictPoint = predictFragmentMap.get(ion.cutInfo());
@@ -250,7 +257,7 @@ public class CoreFunc {
         //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
         coordinates.parallelStream().forEach(coord -> {
             //Step1. 常规提取XIC,XIC结果不进行压缩处理,如果没有提取到任何结果,那么加入忽略列表
-            DataDO dataDO = extractOne(coord, rtMap, params, params.getOverviewId());
+            DataDO dataDO = extractOne(coord, rtMap, params);
             if (dataDO == null) {
                 log.info(coord.getPeptideRef() + ":EIC结果为空");
                 return;
@@ -269,7 +276,7 @@ public class CoreFunc {
 
             //Step4. 如果第一,二步均符合条件,那么开始对对应的伪肽段进行数据提取和打分
             coord.setDecoy(true);
-            DataDO decoyData = extractOne(coord, rtMap, params, params.getOverviewId());
+            DataDO decoyData = extractOne(coord, rtMap, params);
             if (decoyData == null) {
                 return;
             }

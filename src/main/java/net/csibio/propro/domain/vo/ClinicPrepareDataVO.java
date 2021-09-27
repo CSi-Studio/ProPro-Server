@@ -17,6 +17,8 @@ public class ClinicPrepareDataVO {
     ProjectDO project;
     IdName insLib;
     IdName anaLib;
+    Long peptideCount;
+    Long proteinCount;
     MethodDO method;
     Set<String> proteins;
     List<IdNameAlias> expList;

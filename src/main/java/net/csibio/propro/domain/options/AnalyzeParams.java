@@ -4,19 +4,23 @@ import lombok.Data;
 import net.csibio.propro.domain.bean.method.Method;
 import net.csibio.propro.domain.db.MethodDO;
 import net.csibio.propro.domain.db.TaskDO;
+import org.springframework.data.annotation.Transient;
 
 @Data
 public class AnalyzeParams {
 
+    //不录入数据库中
+    @Transient
     TaskDO taskDO;
 
+    @Transient
     String overviewId; //分析概览ID
 
     /**
      * 是否为预测
      */
     Boolean predict = false;
-    
+
     /**
      * 是否强制执行Irt,如果是那么即便exp自带了irt结果也会强制重新计算irt并且把新计算的结果赋值给exp
      */

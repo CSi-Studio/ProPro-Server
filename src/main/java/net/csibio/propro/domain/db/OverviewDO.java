@@ -57,6 +57,16 @@ public class OverviewDO extends BaseDO {
     String anaLibId;
 
     /**
+     * 使用的目标库中肽段的数量(不含伪肽段)
+     */
+    Long peptideCount;
+
+    /**
+     * 使用的目标库中蛋白的数量(不含伪肽段)
+     */
+    Long proteinCount;
+
+    /**
      * 实验类型
      */
     String type;
@@ -82,6 +92,7 @@ public class OverviewDO extends BaseDO {
     HashMap<String, Double> weights = new HashMap<>();
 
     Double minTotalScore;
+
     /**
      * 关于本次分析的统计数据
      */
