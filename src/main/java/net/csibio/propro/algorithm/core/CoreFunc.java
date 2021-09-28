@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.algorithm.extract.IonStat;
 import net.csibio.propro.algorithm.formula.FragmentFactory;
-import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
@@ -19,6 +18,7 @@ import net.csibio.propro.utils.DataUtil;
 import net.csibio.propro.utils.LogUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.paukov.combinatorics3.Generator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -150,50 +150,37 @@ public class CoreFunc {
 
         //Step4.获取所有碎片的统计分,并按照CV值进行排序,记录前15的碎片
         List<IonStat> statList = buildIonStat(intMap);
-//        if (statList.size() > 20) {
-//            statList = statList.subList(0, 15);
-//        }
+        if (statList.size() > 12) {
+            statList = statList.subList(0, 12);
+        }
         List<String> totalIonList = statList.stream().map(IonStat::cutInfo).toList();
 
         //Step5.开始全枚举所有的组合分
-//        List<List<String>> allPossibleIonsGroup = Generator.combination(totalIons).simple(6).stream().collect(Collectors.toList());
-
         double bestScore = -99999d;
         Double bestRt = null;
         DataDO bestData = null;
         Set<FragmentInfo> bestIonGroup = null;
-        List<String> types = ScoreType.getAllTypesName();
-//        for (int i = 0; i < allPossibleIonsGroup.size(); i++) {
-//            List<String> ionsGroup = allPossibleIonsGroup.get(i);
-//            DataDO buildData = buildData(data, ionsGroup);
-//            coord.setFragments(selectFragments(predictFragmentMap, ionsGroup));
-//            scorer.baseScoreForOne(buildData, coord);
-//            if (buildData.getScoreList() != null) {
-//                PeakGroupScores peakScore = scorer.getBestTargetPeak(buildData, ScoreType.XcorrShape.getName());
-//                double shapeScore = peakScore.get(ScoreType.XcorrShape.getName(), types);
-//                if (shapeScore > bestShapeScore) {
-//                    bestShapeScore = shapeScore;
-//                    bestPeak = peakScore;
-//                    bestData = buildData;
-//                }
-//            }
-//        }
-//        List<String> subIonList = libIons.subList(0, libIons.size());
-        for (int i = 0; i < totalIonList.size(); i++) {
-            String ion = totalIonList.get(i);
-            List<String> ions = new ArrayList<>(libIons.subList(0, libIons.size() - 1));
-            ions.add(ion);
-            DataDO buildData = buildData(data, ions);
-            Set<FragmentInfo> selectFragments = selectFragments(predictFragmentMap, ions);
-            coord.setFragments(selectFragments);
-            scorer.scoreForOne(exp, buildData, coord, rtMap, params);
-            if (buildData.getScoreList() != null) {
-                DataSumDO dataSum = scorer.getBestTotalScore(buildData, overview);
-                if (dataSum.getTotalScore() > bestScore) {
-                    bestScore = dataSum.getTotalScore();
-                    bestRt = dataSum.getRealRt();
-                    bestData = buildData;
-                    bestIonGroup = selectFragments;
+        double bestStrategy = 1;
+        int strategy = 3;
+        for (int currentStrategy = 1; currentStrategy <= strategy; currentStrategy++) {
+            List<List<String>> allPossibleIonsGroup = Generator.combination(totalIonList).simple(currentStrategy).stream().collect(Collectors.toList());
+            for (int i = 0; i < allPossibleIonsGroup.size(); i++) {
+                List<String> selectedIons = allPossibleIonsGroup.get(i);
+                List<String> ions = new ArrayList<>(libIons.subList(0, libIons.size() - selectedIons.size()));
+                ions.addAll(selectedIons);
+                DataDO buildData = buildData(data, ions);
+                Set<FragmentInfo> selectFragments = selectFragments(predictFragmentMap, ions);
+                coord.setFragments(selectFragments);
+                scorer.scoreForOne(exp, buildData, coord, rtMap, params);
+                if (buildData.getScoreList() != null) {
+                    DataSumDO dataSum = scorer.getBestTotalScore(buildData, overview);
+                    if (dataSum.getTotalScore() > bestScore) {
+                        bestScore = dataSum.getTotalScore();
+                        bestRt = dataSum.getRealRt();
+                        bestData = buildData;
+                        bestIonGroup = selectFragments;
+                        bestStrategy = currentStrategy;
+                    }
                 }
             }
         }
@@ -203,63 +190,11 @@ public class CoreFunc {
             return null;
         }
         coord.setFragments(bestIonGroup); //这里必须要将coord置为最佳峰组
-//        log.info("库中的碎片组为:" + libIons);
-        log.info("最终选中的碎片组为:" + coord.getFragments().stream().map(FragmentInfo::getCutInfo).collect(Collectors.toSet()));
+        log.info("最终选中的碎片组为:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList());
+        log.info("最终使用的肽段替换策略中替换碎片数为:" + bestStrategy);
         log.info("最终的打分:" + bestScore);
         log.info("选择的峰RT为:" + bestRt);
 
-//        int minIndex = Integer.MAX_VALUE;
-//
-//        for (FragmentInfo fragment : sortedLibFrags) {
-//            IonStat maxIonStat = statList.stream().filter(stat -> stat.cutInfo().equals(fragment.getCutInfo())).findFirst().get();
-//            int index = statList.indexOf(maxIonStat);
-//            if (index < minIndex) {
-//                minIndex = index;
-//            }
-//        }
-
-//        int minIndex = 0;
-//        statList = statList.subList(minIndex, minIndex + 12);
-//        Set<FragmentInfo> finalFiSet = new HashSet<>();
-//        for (int i = 0; i < statList.size(); i++) {
-//            IonStat ion = statList.get(i);
-//            FragmentInfo predict = predictFragmentMap.get(ion.cutInfo());
-//            if (i < sortedLibFrags.size() - 1) {
-//                predict.setIntensity(sortedLibFrags.get(i).getIntensity());
-//            } else {
-//                predict.setIntensity(sortedLibFrags.get(sortedLibFrags.size() - 1).getIntensity() / 3);
-//            }
-//            FragmentInfo lastPredictPoint = null;
-//            double lastPointIntensity = 0d;
-//            //如果原标准库中已经包含了该预测碎片,则直接使用库中的碎片信息
-//            if (libFragMap.containsKey(ion.cutInfo())) {
-//                FragmentInfo info = libFragMap.get(ion.cutInfo());
-//                info.setPredict(false);
-//                finalFiSet.add(info);
-//                //如果此时上一个预测锚点存在,则先将该锚点的值设置为本锚点与上一次锚点的平均值
-//                if (lastPredictPoint != null) {
-//                    lastPredictPoint.setIntensity((info.getIntensity() + lastPointIntensity) / 2);
-//                    lastPredictPoint = null;
-//                }
-//                lastPointIntensity = libFragMap.get(ion.cutInfo()).getIntensity();
-//            } else {
-//                //如果原标准库中不存在该碎片,则将该点的预测强度填充为上一个预测点的一半
-//                lastPredictPoint = predictFragmentMap.get(ion.cutInfo());
-//                lastPredictPoint.setPredict(true);
-//                lastPredictPoint.setIntensity(lastPointIntensity / 2);
-//                finalFiSet.add(lastPredictPoint);
-//            }
-//            finalFiSet.add(predict);
-//        }
-//        HashMap<String, float[]> selectedIntMap = new HashMap<>();
-//        HashMap<String, Float> selectedCutInfoMap = new HashMap<>();
-//        statList.forEach(ionStat -> {
-//            selectedIntMap.put(ionStat.cutInfo(), data.getIntMap().get(ionStat.cutInfo()));
-//            selectedCutInfoMap.put(ionStat.cutInfo(), data.getCutInfoMap().get(ionStat.cutInfo()));
-//        });
-//
-//        data.setIntMap(selectedIntMap);
-//        data.setCutInfoMap(selectedCutInfoMap);
         return bestData;
     }
 

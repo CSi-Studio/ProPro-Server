@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -92,6 +93,33 @@ public class ExperimentController {
         exp.setTags(tags);
         experimentService.update(exp);
         return Result.OK(exp);
+    }
+
+    @PostMapping(value = "/batchEdit")
+    Result<List<ExperimentDO>> edit(@RequestParam("ids") List<String> ids,
+                                    @RequestParam(value = "label", required = false) String label,
+                                    @RequestParam(value = "tags", required = false) List<String> tags) {
+        if (ids == null || ids.isEmpty()) {
+            return Result.Error(ResultCode.ID_CANNOT_BE_NULL_OR_ZERO);
+        }
+        
+        List<ExperimentDO> expList = new ArrayList<>();
+        for (String id : ids) {
+            ExperimentDO exp = experimentService.getById(id);
+            if (exp == null) {
+                return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
+            }
+            if (StringUtils.isNotEmpty(label)) {
+                exp.setLabel(label);
+            }
+            if (tags != null && tags.size() != 0) {
+                exp.setTags(tags);
+            }
+            experimentService.update(exp);
+            expList.add(exp);
+        }
+
+        return Result.OK(expList);
     }
 
     @GetMapping(value = "/detail")

@@ -220,9 +220,14 @@ public class ClinicController {
             }
             List<PeptideRt> realRtList = dataSumService.getAll(new DataSumQuery(overview.getId()).setDecoy(false).setStatus(IdentifyStatus.SUCCESS.getCode()).setIsUnique(true), PeptideRt.class, projectId);
             List<String> ids = realRtList.stream().map(PeptideRt::id).collect(Collectors.toList());
+            if (ids.size() == 0) {
+                log.error("没有找到任何鉴定到的数据");
+                continue;
+            }
             List<PeptideRt> libRtList = dataService.getAll(new DataQuery(overview.getId()).setIds(ids), PeptideRt.class, projectId);
             if (realRtList.size() != libRtList.size()) {
                 log.error("数据异常,LibRt Size:" + libRtList.size() + ",RealRt Size:" + realRtList.size());
+                continue;
             }
             Map<String, Double> libRtMap = libRtList.stream().collect(Collectors.toMap(PeptideRt::peptideRef, PeptideRt::libRt));
             //横坐标是libRt,纵坐标是realRt
