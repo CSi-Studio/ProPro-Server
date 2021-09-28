@@ -47,8 +47,8 @@ public class LfqBench {
 
     public Result<BenchStat<PeptideRatio>> buildPeptideRatio(ProjectDO project) {
         List<BaseExp> expList = experimentService.getAll(new ExperimentQuery().setProjectId(project.getId()), BaseExp.class);
-        List<BaseExp> expAList = expList.stream().filter(exp -> exp.getLabel().equals(LABEL_A)).collect(Collectors.toList());
-        List<BaseExp> expBList = expList.stream().filter(exp -> exp.getLabel().equals(LABEL_B)).collect(Collectors.toList());
+        List<BaseExp> expAList = expList.stream().filter(exp -> exp.getGroup().equals(LABEL_A)).collect(Collectors.toList());
+        List<BaseExp> expBList = expList.stream().filter(exp -> exp.getGroup().equals(LABEL_B)).collect(Collectors.toList());
         Map<String, OverviewDO> overviewMap = overviewService.getDefaultOverviews(expList.stream().map(BaseExp::getId).collect(Collectors.toList()));
         if (overviewMap.size() != expList.size()) {
             return Result.Error(ResultCode.SOME_EXPERIMENT_HAVE_NO_DEFAULT_OVERVIEW);

@@ -83,14 +83,14 @@ public class ExperimentController {
     Result<ExperimentDO> edit(@RequestParam("id") String id,
                               @RequestParam(value = "alias", required = false) String alias,
                               @RequestParam(value = "fragMode", required = false) String fragMode,
-                              @RequestParam(value = "label", required = false) String label,
+                              @RequestParam(value = "group", required = false) String group,
                               @RequestParam(value = "tags", required = false) List<String> tags) {
         ExperimentDO exp = experimentService.getById(id);
         if (exp == null) {
             return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
         }
         exp.setAlias(alias);
-        exp.setLabel(label);
+        exp.setGroup(group);
         exp.setTags(tags);
         exp.setFragMode(fragMode);
         experimentService.update(exp);
@@ -100,7 +100,7 @@ public class ExperimentController {
     @PostMapping(value = "/batchEdit")
     Result<List<ExperimentDO>> edit(@RequestParam("ids") List<String> ids,
                                     @RequestParam(value = "fragMode", required = false) String fragMode,
-                                    @RequestParam(value = "label", required = false) String label,
+                                    @RequestParam(value = "group", required = false) String group,
                                     @RequestParam(value = "tags", required = false) List<String> tags) {
         if (ids == null || ids.isEmpty()) {
             return Result.Error(ResultCode.ID_CANNOT_BE_NULL_OR_ZERO);
@@ -112,8 +112,8 @@ public class ExperimentController {
             if (exp == null) {
                 return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
             }
-            if (StringUtils.isNotEmpty(label)) {
-                exp.setLabel(label);
+            if (StringUtils.isNotEmpty(group)) {
+                exp.setGroup(group);
             }
             if (tags != null && tags.size() != 0) {
                 exp.setTags(tags);

@@ -30,8 +30,8 @@ public class ExperimentDO extends BaseDO {
     @Indexed
     String projectName;
 
-    //标签,用于单维度分类学习
-    String label;
+    //分组,用于单维度分类学习
+    String group;
 
     //标签,用于多维度的分类学习
     List<String> tags;

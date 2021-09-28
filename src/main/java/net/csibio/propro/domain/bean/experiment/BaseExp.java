@@ -31,7 +31,7 @@ public class BaseExp {
     /**
      * 标注,用于数据分类学习
      */
-    String label;
+    String group;
 
     /**
      * 标签,用于多维度的分类学习
