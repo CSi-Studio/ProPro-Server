@@ -2,8 +2,12 @@ package net.csibio.propro.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.common.IdName;
+import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.PeptideDO;
+import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.domain.query.PeptideQuery;
+import net.csibio.propro.domain.query.ProjectQuery;
 import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -21,6 +25,8 @@ import java.util.List;
 public class TestController {
 
     @Autowired
+    ProjectService projectService;
+    @Autowired
     ProteinService proteinService;
     @Autowired
     LibraryService libraryService;
@@ -35,8 +41,15 @@ public class TestController {
 
     @GetMapping(value = "/lms")
     Result lms() {
-//        List<IdName> libIdNames = libraryService.getAll(new LibraryQuery(), IdName.class);
-
+        List<IdName> projects = projectService.getAll(new ProjectQuery(), IdName.class);
+        for (IdName project : projects) {
+            List<OverviewDO> overviewList = overviewService.getAll(new OverviewQuery().setProjectId(project.id()));
+            for (OverviewDO overviewDO : overviewList) {
+                overviewDO.getParams().getMethod().getQuickFilter().setMinShapeWeightScore(0.3);
+                overviewDO.getParams().getMethod().getIrt().getSs().setCoeffs(null);
+                overviewService.update(overviewDO);
+            }
+        }
 
         return Result.OK();
     }

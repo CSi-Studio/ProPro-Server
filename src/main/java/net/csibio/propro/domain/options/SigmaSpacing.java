@@ -1,5 +1,7 @@
 package net.csibio.propro.domain.options;
 
+import org.springframework.data.annotation.Transient;
+
 public class SigmaSpacing {
 
     //一般默认为 30/8
@@ -8,6 +10,10 @@ public class SigmaSpacing {
     //一般默认为0.01
     Float spacing;
 
+    /**
+     * 本字段不需要存储到数据库中
+     */
+    @Transient
     double[] coeffs;
 
     Integer rightNum;
@@ -70,6 +76,10 @@ public class SigmaSpacing {
 
     public void setSpacing(Float spacing) {
         this.spacing = spacing;
+    }
+
+    public void setCoeffs(double[] coeffs) {
+        this.coeffs = coeffs;
     }
 
     public double[] getCoeffs() {
