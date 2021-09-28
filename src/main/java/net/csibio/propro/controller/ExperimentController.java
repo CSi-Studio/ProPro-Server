@@ -82,6 +82,7 @@ public class ExperimentController {
     @PostMapping(value = "/edit")
     Result<ExperimentDO> edit(@RequestParam("id") String id,
                               @RequestParam(value = "alias", required = false) String alias,
+                              @RequestParam(value = "fragMode", required = false) String fragMode,
                               @RequestParam(value = "label", required = false) String label,
                               @RequestParam(value = "tags", required = false) List<String> tags) {
         ExperimentDO exp = experimentService.getById(id);
@@ -91,18 +92,20 @@ public class ExperimentController {
         exp.setAlias(alias);
         exp.setLabel(label);
         exp.setTags(tags);
+        exp.setFragMode(fragMode);
         experimentService.update(exp);
         return Result.OK(exp);
     }
 
     @PostMapping(value = "/batchEdit")
     Result<List<ExperimentDO>> edit(@RequestParam("ids") List<String> ids,
+                                    @RequestParam(value = "fragMode", required = false) String fragMode,
                                     @RequestParam(value = "label", required = false) String label,
                                     @RequestParam(value = "tags", required = false) List<String> tags) {
         if (ids == null || ids.isEmpty()) {
             return Result.Error(ResultCode.ID_CANNOT_BE_NULL_OR_ZERO);
         }
-        
+
         List<ExperimentDO> expList = new ArrayList<>();
         for (String id : ids) {
             ExperimentDO exp = experimentService.getById(id);
@@ -114,6 +117,9 @@ public class ExperimentController {
             }
             if (tags != null && tags.size() != 0) {
                 exp.setTags(tags);
+            }
+            if (StringUtils.isNotEmpty(fragMode)) {
+                exp.setFragMode(fragMode);
             }
             experimentService.update(exp);
             expList.add(exp);
