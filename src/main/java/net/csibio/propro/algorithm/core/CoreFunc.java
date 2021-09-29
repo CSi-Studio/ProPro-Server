@@ -141,6 +141,7 @@ public class CoreFunc {
         Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 3);
         proproFiList.forEach(fi -> fi.setIntensity(1000d)); //给到一个任意的初始化强度
         Map<String, FragmentInfo> predictFragmentMap = proproFiList.stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
+        //将预测碎片中的库碎片信息替换为库碎片完整信息(主要是intensity值)
         libFragMap.keySet().forEach(cutInfo -> {
             predictFragmentMap.put(cutInfo, libFragMap.get(cutInfo));
         });
@@ -162,38 +163,37 @@ public class CoreFunc {
         DataSumDO bestDataSum = null;
         DataDO bestData = null;
         Set<FragmentInfo> bestIonGroup = null;
-        double bestStrategy = 1;
-        int strategy = 1;
-        for (int currentStrategy = 1; currentStrategy <= strategy; currentStrategy++) {
-            List<List<String>> allPossibleIonsGroup = Generator.combination(totalIonList).simple(currentStrategy).stream().collect(Collectors.toList());
-            for (int i = 0; i < allPossibleIonsGroup.size(); i++) {
-                List<String> selectedIons = allPossibleIonsGroup.get(i);
-                List<String> ions = new ArrayList<>(libIons.subList(0, libIons.size() - selectedIons.size()));
-                ions.addAll(selectedIons);
-                DataDO buildData = buildData(data, ions);
-                Set<FragmentInfo> selectFragments = selectFragments(predictFragmentMap, ions);
-                coord.setFragments(selectFragments);
-                scorer.scoreForOne(exp, buildData, coord, rtMap, params);
-                if (buildData.getScoreList() != null) {
-                    DataSumDO dataSum = scorer.getBestTotalScore(buildData, overview);
-                    if (dataSum.getTotalScore() > bestScore) {
-                        bestScore = dataSum.getTotalScore();
-                        bestRt = dataSum.getRealRt();
-                        bestDataSum = dataSum;
-                        bestData = buildData;
-                        bestIonGroup = selectFragments;
-                        bestStrategy = currentStrategy;
-                    }
+        List<List<String>> allPossibleIonsGroup = Generator.combination(totalIonList).simple(3).stream().collect(Collectors.toList());
+        for (int i = 0; i < allPossibleIonsGroup.size(); i++) {
+            List<String> selectedIons = allPossibleIonsGroup.get(i);
+            List<String> ions = new ArrayList<>(libIons.subList(0, libIons.size() - selectedIons.size()));
+            ions.addAll(selectedIons);
+            DataDO buildData = new DataDO();
+//                DataDO buildData = buildData(data, ions);
+            Set<FragmentInfo> selectFragments = selectFragments(predictFragmentMap, ions);
+            if (selectFragments.size() < libIons.size()) {
+                continue;
+            }
+            coord.setFragments(selectFragments);
+            scorer.scoreForOne(exp, buildData, coord, rtMap, params);
+            if (buildData.getScoreList() != null) {
+                DataSumDO dataSum = scorer.getBestTotalScore(buildData, overview);
+                if (dataSum.getTotalScore() > bestScore) {
+                    bestScore = dataSum.getTotalScore();
+                    bestRt = dataSum.getRealRt();
+                    bestDataSum = dataSum;
+                    bestData = buildData;
+                    bestIonGroup = selectFragments;
                 }
             }
         }
-
+        
         if (bestData == null) {
             log.info("居然一个可能的组都没有");
             return null;
         }
         coord.setFragments(bestIonGroup); //这里必须要将coord置为最佳峰组
-        log.info("替换策略为:" + bestStrategy + ",最终选中的碎片组为:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList());
+        log.info("最终选中的碎片组为:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList());
         log.info("最终的打分:" + bestScore + ",峰RT:" + bestRt);
 
 

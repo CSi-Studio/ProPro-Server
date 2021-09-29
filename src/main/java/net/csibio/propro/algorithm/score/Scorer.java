@@ -87,7 +87,7 @@ public class Scorer {
         PeakGroupList peakGroupList = featureExtractor.getExperimentFeature(dataDO, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
         if (!peakGroupList.isFeatureFound()) {
             dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
-            log.info("肽段没有被选中的特征：PeptideRef: " + dataDO.getPeptideRef());
+//            log.info("肽段没有被选中的特征：PeptideRef: " + dataDO.getPeptideRef());
             return;
         }
         List<PeakGroupScores> peakGroupScoresList = new ArrayList<>();

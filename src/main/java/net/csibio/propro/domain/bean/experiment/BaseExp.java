@@ -29,6 +29,11 @@ public class BaseExp {
     String name;
 
     /**
+     * 碎裂模式
+     */
+    String fragMode;
+    
+    /**
      * 标注,用于数据分类学习
      */
     String group;
