@@ -2,7 +2,7 @@ package net.csibio.propro.algorithm.score.features;
 
 import lombok.Data;
 import net.finmath.functions.LinearAlgebra;
-import net.finmath.optimizer.OptimizerInterface;
+import net.finmath.optimizer.Optimizer;
 import net.finmath.optimizer.SolverException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,7 @@ import java.util.concurrent.*;
  */
 
 @Data
-public abstract class LevenbergMarquardt implements Serializable, Cloneable, OptimizerInterface {
+public abstract class LevenbergMarquardt implements Serializable, Cloneable, Optimizer {
 
     public static final Logger logger = LoggerFactory.getLogger(LevenbergMarquardt.class);
 
@@ -73,7 +73,7 @@ public abstract class LevenbergMarquardt implements Serializable, Cloneable, Opt
             logger.info("\tparameter[" + i + "]: " + bestParameters[i]);
         }
 
-        OptimizerInterface optimizer2 = optimizer.getCloneWithModifiedTargetValues(new double[]{5.1D, 10.2D}, new double[]{1.0D, 1.0D}, true);
+        Optimizer optimizer2 = optimizer.getCloneWithModifiedTargetValues(new double[]{5.1D, 10.2D}, new double[]{1.0D, 1.0D}, true);
         optimizer2.run();
         double[] bestParameters2 = optimizer2.getBestFitParameters();
         logger.info("The solver for problem 2 required " + optimizer2.getIterations() + " iterations. The best fit parameters are:");

@@ -128,15 +128,15 @@ public class ClinicController {
      * @return
      */
     @PostMapping(value = "/getExpData")
-    Result getExpData(@RequestParam("projectId") String projectId,
-                      @RequestParam(value = "libraryId", required = false) String libraryId,
-                      @RequestParam("peptideRef") String peptideRef,
-                      @RequestParam("predict") Boolean predict,
-                      @RequestParam(value = "changeCharge", required = false) Boolean changeCharge,
-                      @RequestParam("onlyDefault") Boolean onlyDefault,
-                      @RequestParam(value = "smooth", required = false) Boolean smooth,
-                      @RequestParam(value = "denoise", required = false) Boolean denoise,
-                      @RequestParam("expIds") List<String> expIds) {
+    Result<List<ExpDataVO>> getExpData(@RequestParam("projectId") String projectId,
+                                       @RequestParam(value = "libraryId", required = false) String libraryId,
+                                       @RequestParam("peptideRef") String peptideRef,
+                                       @RequestParam("predict") Boolean predict,
+                                       @RequestParam(value = "changeCharge", required = false) Boolean changeCharge,
+                                       @RequestParam("onlyDefault") Boolean onlyDefault,
+                                       @RequestParam(value = "smooth", required = false) Boolean smooth,
+                                       @RequestParam(value = "denoise", required = false) Boolean denoise,
+                                       @RequestParam("expIds") List<String> expIds) {
         List<ExpDataVO> dataList = new ArrayList<>();
         for (int i = 0; i < expIds.size(); i++) {
             String expId = expIds.get(i);

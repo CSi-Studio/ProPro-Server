@@ -151,8 +151,8 @@ public class CoreFunc {
 
         //Step4.获取所有碎片的统计分,并按照CV值进行排序,记录前15的碎片
         List<IonStat> statList = buildIonStat(intMap);
-        if (statList.size() > 12) {
-            statList = statList.subList(0, 12);
+        if (statList.size() > 20) {
+            statList = statList.subList(0, 20);
         }
         List<String> totalIonList = statList.stream().map(IonStat::cutInfo).toList();
 
@@ -163,7 +163,7 @@ public class CoreFunc {
         DataDO bestData = null;
         Set<FragmentInfo> bestIonGroup = null;
         double bestStrategy = 1;
-        int strategy = 3;
+        int strategy = 1;
         for (int currentStrategy = 1; currentStrategy <= strategy; currentStrategy++) {
             List<List<String>> allPossibleIonsGroup = Generator.combination(totalIonList).simple(currentStrategy).stream().collect(Collectors.toList());
             for (int i = 0; i < allPossibleIonsGroup.size(); i++) {
