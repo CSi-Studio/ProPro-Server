@@ -125,7 +125,7 @@ public class FeatureFinder {
         return peakGroupList;
     }
 
-    public List<PeakGroup> findFeaturesNew(PeptideSpectrum peptideSpectrum, HashMap<String, RtIntensityPairsDouble> ionPeaks, HashMap<String, List<IonPeak>> ionPeakParams, HashMap<String, double[]> noise1000Map) {
+    public List<PeakGroup> findFeaturesNew(PeptideSpectrum peptideSpectrum, HashMap<String, RtIntensityPairsDouble> ionPeaks, HashMap<String, List<IonPeak>> ionPeakParams, HashMap<String, double[]> noise1000Map, List<String> quantifyIons) {
 
         //totalXIC
         double totalXic = 0.0d;
@@ -215,12 +215,15 @@ public class FeatureFinder {
 //                Double ionIntTemp = getIonIntensity(rasteredInt, localMaxIntensity * 2);
 //                Double ionIntTemp = (intArray[maxSpectrumIndex]+1) * Math.min(maxSpectrumIndex - leftIndex, rightIndex - maxSpectrumIndex) * Constants.SQRT_2PI / 2d;
                 peakGroupInt += ionIntTemp;
+//                if (quantifyIons.contains(cutInfo)) {
+//                    peakGroupInt += ionIntTemp;
+//                }
                 ionIntensity.put(cutInfo, ionIntTemp);
 
                 //信噪比
                 signalToNoiseSum += noise1000Map.get(cutInfo)[maxSpectrumIndex];
             }
-            if (peakGroupInt == 0D) {
+            if (peakGroupInt == 0d) {
                 continue;
             }
             peakGroup.setIonCount(ionPeaks.size());

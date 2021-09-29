@@ -7,13 +7,10 @@ import net.csibio.aird.bean.WindowRange;
 import net.csibio.aird.parser.DIAParser;
 import net.csibio.propro.algorithm.core.CoreFunc;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
-import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
-import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.data.PeptideScores;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
@@ -143,45 +140,12 @@ public class Extractor {
             return Result.Error(rtMapResult.getErrorCode());
         }
 
-        DataDO dataDO = coreFunc.predictOne(coord, rtMapResult.getData(), exp, overview, params);
-        if (dataDO == null) {
+        ExpDataVO expDataVO = coreFunc.predictOne(coord, rtMapResult.getData(), exp, overview, params);
+        if (expDataVO == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }
 
-        //进行实时打分
-        DataSumDO dataSum = null;
-        scorer.scoreForOne(exp, dataDO, coord, rtMapResult.getData(), params);
-        if (dataDO.getScoreList() == null) {
-            return Result.OK(new ExpDataVO().merge(dataDO, dataSum));
-        }
-
-        PeptideScores ps = new PeptideScores(dataDO);
-
-        List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
-        lda.score(ps, overview.getWeights(), scoreTypes);
-        double bestTotalScore = -1d;
-        Double bestRt = null;
-        int bestIndex = 0;
-        for (int i = 0; i < ps.getScoreList().size(); i++) {
-            Double currentTotalScore = ps.getScoreList().get(i).get(ScoreType.WeightedTotalScore, scoreTypes);
-            if (currentTotalScore != null && currentTotalScore > bestTotalScore) {
-                bestIndex = i;
-                bestTotalScore = currentTotalScore;
-                bestRt = ps.getScoreList().get(i).getRt();
-            }
-        }
-        dataSum = new DataSumDO();
-        if (bestTotalScore > overview.getMinTotalScore()) {
-            dataSum.setStatus(IdentifyStatus.SUCCESS.getCode());
-        } else {
-            dataSum.setStatus(IdentifyStatus.FAILED.getCode());
-        }
-        dataSum.setSum(ps.getScoreList().get(bestIndex).getIntensitySum());
-        dataSum.setRealRt(bestRt);
-        dataSum.setTotalScore(bestTotalScore);
-
-
-        return Result.OK(new ExpDataVO().merge(dataDO, dataSum));
+        return Result.OK(expDataVO);
     }
 
     /**

@@ -44,6 +44,8 @@ public class FeatureExtractor {
     TaskService taskService;
 
     /**
+     * //2021.09.28 lms 在这里将定量方式改为仅计算强度排名前三的三个碎片的强度进行定量
+     *
      * @param data         XIC后的数据对象
      * @param intensityMap 得到标准库中peptideRef对应的碎片和强度的键值对
      * @param ss           sigma spacing
@@ -111,9 +113,16 @@ public class FeatureExtractor {
             return new PeakGroupList(false);
         }
 
+        //挑选理论强度排名前三的三个碎片用于定量
+//        List<Map.Entry<String, Float>> entryList = new ArrayList<>(intensityMap.entrySet());
+//        List<String> quantifyIons = Lists.reverse(entryList.stream().sorted(Map.Entry.comparingByValue()).toList()).stream().map(Map.Entry::getKey).toList();
+//        if (quantifyIons.size() > 3) {
+//            quantifyIons = quantifyIons.subList(0, 3);
+//        }
+
         List<PeakGroup> peakGroupFeatureList;
         if (DeveloperParams.USE_NEW_PEAKGROUP_SELECTOR) {
-            peakGroupFeatureList = featureFinder.findFeaturesNew(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
+            peakGroupFeatureList = featureFinder.findFeaturesNew(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map, null);
         } else {
             peakGroupFeatureList = featureFinder.findFeatures(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
         }

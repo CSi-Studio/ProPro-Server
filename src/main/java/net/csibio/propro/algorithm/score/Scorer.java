@@ -105,49 +105,46 @@ public class Scorer {
         HashMap<Integer, String> unimodHashMap = coord.getUnimodMap();
         String sequence = coord.getSequence();
 
-        for (PeakGroup peakGroupFeature : peakGroupFeatureList) {
+        for (PeakGroup peakGroup : peakGroupFeatureList) {
             PeakGroupScores peakGroupScores = new PeakGroupScores(params.getMethod().getScore().getScoreTypes().size());
-            chromatographicScorer.calculateChromatographicScores(peakGroupFeature, normedLibIntMap, peakGroupScores, params.getMethod().getScore().getScoreTypes());
-            Double shapeScore = peakGroupScores.get(ScoreType.XcorrShape, params.getMethod().getScore().getScoreTypes());
-            Double shapeScoreWeighted = peakGroupScores.get(ScoreType.XcorrShapeWeighted, params.getMethod().getScore().getScoreTypes());
-            if (!dataDO.getDecoy()
-                    && ((shapeScoreWeighted != null && shapeScoreWeighted < params.getMethod().getQuickFilter().getMinShapeWeightScore())
-                    || (shapeScore != null && shapeScore < params.getMethod().getQuickFilter().getMinShapeScore()))) {
-                continue;
-            }
+            chromatographicScorer.calculateChromatographicScores(peakGroup, normedLibIntMap, peakGroupScores, params.getMethod().getScore().getScoreTypes());
+//            Double shapeScore = peakGroupScores.get(ScoreType.XcorrShape, params.getMethod().getScore().getScoreTypes());
+//            Double shapeScoreWeighted = peakGroupScores.get(ScoreType.XcorrShapeWeighted, params.getMethod().getScore().getScoreTypes());
+//            if (!dataDO.getDecoy() && ((shapeScore != null && shapeScore < params.getMethod().getQuickFilter().getMinShapeScore()))) {
+//                continue;
+//            }
             //根据RT时间和前体m/z获取最近的一个原始谱图
             if (params.getMethod().getScore().isDiaScores()) {
-                MzIntensityPairs mzIntensityPairs = blockIndexService.getNearestSpectrumByRt(rtMap, peakGroupFeature.getApexRt());
+                MzIntensityPairs mzIntensityPairs = blockIndexService.getNearestSpectrumByRt(rtMap, peakGroup.getApexRt());
                 if (mzIntensityPairs != null) {
                     float[] spectrumMzArray = mzIntensityPairs.getMzArray();
                     float[] spectrumIntArray = mzIntensityPairs.getIntensityArray();
                     if (params.getMethod().getScore().getScoreTypes().contains(ScoreType.IsotopeCorrelationScore.getName()) || params.getMethod().getScore().getScoreTypes().contains(ScoreType.IsotopeOverlapScore.getName())) {
-                        diaScorer.calculateDiaIsotopeScores(peakGroupFeature, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, peakGroupScores, params.getMethod().getScore().getScoreTypes());
+                        diaScorer.calculateDiaIsotopeScores(peakGroup, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, peakGroupScores, params.getMethod().getScore().getScoreTypes());
                     }
                     if (params.getMethod().getScore().getScoreTypes().contains(ScoreType.BseriesScore.getName()) || params.getMethod().getScore().getScoreTypes().contains(ScoreType.YseriesScore.getName())) {
                         diaScorer.calculateBYIonScore(spectrumMzArray, spectrumIntArray, unimodHashMap, sequence, 1, peakGroupScores, params.getMethod().getScore().getScoreTypes());
                     }
                     diaScorer.calculateDiaMassDiffScore(productMzMap, spectrumMzArray, spectrumIntArray, normedLibIntMap, peakGroupScores, params.getMethod().getScore().getScoreTypes());
-
                 }
             }
             if (params.getMethod().getScore().getScoreTypes().contains(ScoreType.LogSnScore.getName())) {
-                chromatographicScorer.calculateLogSnScore(peakGroupFeature, peakGroupScores, params.getMethod().getScore().getScoreTypes());
+                chromatographicScorer.calculateLogSnScore(peakGroup, peakGroupScores, params.getMethod().getScore().getScoreTypes());
             }
 
             if (params.getMethod().getScore().getScoreTypes().contains(ScoreType.IntensityScore.getName())) {
-                libraryScorer.calculateIntensityScore(peakGroupFeature, peakGroupScores, params.getMethod().getScore().getScoreTypes());
+                libraryScorer.calculateIntensityScore(peakGroup, peakGroupScores, params.getMethod().getScore().getScoreTypes());
             }
 
-            libraryScorer.calculateLibraryScores(peakGroupFeature, normedLibIntMap, peakGroupScores, params.getMethod().getScore().getScoreTypes());
+            libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, peakGroupScores, params.getMethod().getScore().getScoreTypes());
             if (params.getMethod().getScore().getScoreTypes().contains(ScoreType.NormRtScore.getName())) {
-                libraryScorer.calculateNormRtScore(peakGroupFeature, exp.getIrt().getSi(), dataDO.getLibRt(), peakGroupScores, params.getMethod().getScore().getScoreTypes());
+                libraryScorer.calculateNormRtScore(peakGroup, exp.getIrt().getSi(), dataDO.getLibRt(), peakGroupScores, params.getMethod().getScore().getScoreTypes());
             }
             swathLDAScorer.calculateSwathLdaPrescore(peakGroupScores, params.getMethod().getScore().getScoreTypes());
-            peakGroupScores.setRt(peakGroupFeature.getApexRt());
-            peakGroupScores.setRtRangeFeature(FeatureUtil.toString(peakGroupFeature.getBestLeftRt(), peakGroupFeature.getBestRightRt()));
-            peakGroupScores.setIntensitySum(peakGroupFeature.getPeakGroupInt());
-            peakGroupScores.setFragIntFeature(FeatureUtil.toString(peakGroupFeature.getIonIntensity()));
+            peakGroupScores.setRt(peakGroup.getApexRt());
+            peakGroupScores.setRtRangeFeature(FeatureUtil.toString(peakGroup.getBestLeftRt(), peakGroup.getBestRightRt()));
+            peakGroupScores.setIntensitySum(peakGroup.getPeakGroupInt());
+            peakGroupScores.setFragIntFeature(FeatureUtil.toString(peakGroup.getIonIntensity()));
             peakGroupScoresList.add(peakGroupScores);
         }
 

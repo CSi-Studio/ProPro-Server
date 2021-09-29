@@ -12,6 +12,7 @@ import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
+import net.csibio.propro.domain.vo.ExpDataVO;
 import net.csibio.propro.service.SimulateService;
 import net.csibio.propro.utils.ConvolutionUtil;
 import net.csibio.propro.utils.DataUtil;
@@ -130,7 +131,7 @@ public class CoreFunc {
      * @param params
      * @return
      */
-    public DataDO predictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
+    public ExpDataVO predictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
         log.info("实验:" + exp.getAlias() + "开始预测:" + coord.getPeptideRef());
         //Step1.对库中的碎片进行排序
         Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
@@ -158,6 +159,7 @@ public class CoreFunc {
         //Step5.开始全枚举所有的组合分
         double bestScore = -99999d;
         Double bestRt = null;
+        DataSumDO bestDataSum = null;
         DataDO bestData = null;
         Set<FragmentInfo> bestIonGroup = null;
         double bestStrategy = 1;
@@ -177,6 +179,7 @@ public class CoreFunc {
                     if (dataSum.getTotalScore() > bestScore) {
                         bestScore = dataSum.getTotalScore();
                         bestRt = dataSum.getRealRt();
+                        bestDataSum = dataSum;
                         bestData = buildData;
                         bestIonGroup = selectFragments;
                         bestStrategy = currentStrategy;
@@ -190,12 +193,11 @@ public class CoreFunc {
             return null;
         }
         coord.setFragments(bestIonGroup); //这里必须要将coord置为最佳峰组
-        log.info("最终选中的碎片组为:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList());
-        log.info("最终使用的肽段替换策略中替换碎片数为:" + bestStrategy);
-        log.info("最终的打分:" + bestScore);
-        log.info("选择的峰RT为:" + bestRt);
+        log.info("替换策略为:" + bestStrategy + ",最终选中的碎片组为:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList());
+        log.info("最终的打分:" + bestScore + ",峰RT:" + bestRt);
 
-        return bestData;
+
+        return new ExpDataVO().merge(bestData, bestDataSum);
     }
 
     /**
