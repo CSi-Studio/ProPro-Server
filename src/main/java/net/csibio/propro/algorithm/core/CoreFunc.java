@@ -152,8 +152,9 @@ public class CoreFunc {
 
         //Step4.获取所有碎片的统计分,并按照CV值进行排序,记录前15的碎片
         List<IonStat> statList = buildIonStat(intMap);
-        if (statList.size() > 20) {
-            statList = statList.subList(0, 20);
+        int maxCandidateIons = params.getMethod().getScore().getMaxCandidateIons();
+        if (statList.size() > maxCandidateIons) {
+            statList = statList.subList(0, maxCandidateIons);
         }
         List<String> totalIonList = statList.stream().map(IonStat::cutInfo).toList();
 
@@ -187,7 +188,7 @@ public class CoreFunc {
                 }
             }
         }
-        
+
         if (bestData == null) {
             log.info("居然一个可能的组都没有");
             return null;

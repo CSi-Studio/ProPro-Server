@@ -3,8 +3,10 @@ package net.csibio.propro.controller;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
+import net.csibio.propro.domain.db.MethodDO;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.PeptideDO;
+import net.csibio.propro.domain.query.MethodQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.domain.query.ProjectQuery;
@@ -38,6 +40,8 @@ public class TestController {
     DataSumService dataSumService;
     @Autowired
     ExperimentService experimentService;
+    @Autowired
+    MethodService methodService;
 
     @GetMapping(value = "/lms")
     Result lms() {
@@ -45,12 +49,16 @@ public class TestController {
         for (IdName project : projects) {
             List<OverviewDO> overviewList = overviewService.getAll(new OverviewQuery().setProjectId(project.id()));
             for (OverviewDO overviewDO : overviewList) {
-                overviewDO.getParams().getMethod().getQuickFilter().setMinShapeWeightScore(0.3);
-                overviewDO.getParams().getMethod().getIrt().getSs().setCoeffs(null);
+                overviewDO.getParams().getMethod().getScore().setMaxCandidateIons(20);
                 overviewService.update(overviewDO);
             }
         }
 
+        List<MethodDO> methodList = methodService.getAll(new MethodQuery());
+        for (MethodDO methodDO : methodList) {
+            methodDO.getScore().setMaxCandidateIons(20);
+            methodService.update(methodDO);
+        }
         return Result.OK();
     }
 
