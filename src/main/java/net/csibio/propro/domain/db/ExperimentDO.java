@@ -3,7 +3,6 @@ package net.csibio.propro.domain.db;
 import lombok.Data;
 import net.csibio.aird.bean.*;
 import net.csibio.propro.constants.constant.SuffixConst;
-import net.csibio.propro.constants.enums.FragMode;
 import net.csibio.propro.domain.BaseDO;
 import net.csibio.propro.domain.bean.irt.IrtResult;
 import net.csibio.propro.utils.RepositoryUtil;
@@ -46,7 +45,7 @@ public class ExperimentDO extends BaseDO {
     String type;
 
     //CID, HCD, ETD,详情见FragMode类
-    String fragMode = FragMode.CID.name();
+    String fragMode;
 
     //Aird文件大小,单位byte
     Long airdSize;
