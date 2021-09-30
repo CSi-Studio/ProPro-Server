@@ -137,7 +137,7 @@ public class CoreFunc {
         Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
         List<FragmentInfo> sortedLibFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
         List<String> libIons = sortedLibFrags.stream().map(FragmentInfo::getCutInfo).toList();
-        //Step2.生成BY碎片离子,碎片最大带电量为母离子的带电量,最小碎片长度为3
+        //Step2.生成碎片离子,碎片最大带电量为母离子的带电量,最小碎片长度为3
         Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 3);
         proproFiList.forEach(fi -> fi.setIntensity(1000d)); //给到一个任意的初始化强度
         Map<String, FragmentInfo> predictFragmentMap = proproFiList.stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
@@ -169,8 +169,7 @@ public class CoreFunc {
             List<String> selectedIons = allPossibleIonsGroup.get(i);
             List<String> ions = new ArrayList<>(libIons.subList(0, libIons.size() - selectedIons.size()));
             ions.addAll(selectedIons);
-            DataDO buildData = new DataDO();
-//                DataDO buildData = buildData(data, ions);
+            DataDO buildData = buildData(data, ions);
             Set<FragmentInfo> selectFragments = selectFragments(predictFragmentMap, ions);
             if (selectFragments.size() < libIons.size()) {
                 continue;

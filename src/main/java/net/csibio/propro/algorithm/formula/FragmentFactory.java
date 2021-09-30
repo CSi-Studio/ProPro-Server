@@ -1,11 +1,13 @@
 package net.csibio.propro.algorithm.formula;
 
+import com.google.common.collect.Lists;
 import net.csibio.propro.algorithm.parser.LibraryTsvParser;
 import net.csibio.propro.algorithm.parser.model.chemistry.AminoAcid;
 import net.csibio.propro.algorithm.parser.model.chemistry.Unimod;
 import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.constants.constant.ResidueType;
 import net.csibio.propro.constants.constant.SymbolConst;
+import net.csibio.propro.constants.enums.FragMode;
 import net.csibio.propro.domain.bean.peptide.Annotation;
 import net.csibio.propro.domain.bean.peptide.Fragment;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
@@ -107,6 +109,16 @@ public class FragmentFactory {
         return buildFragmentMap(peptideDO.toTargetPeptide(), limitLength, ionTypes, chargeTypes);
     }
 
+    public Set<FragmentInfo> buildFragmentMap(PeptideCoord coord, FragMode fragMode, int limitLength) {
+        Set<FragmentInfo> fragments = new HashSet<>();
+        switch (fragMode) {
+            case CID -> fragments = buildFragmentMap(coord, limitLength, Lists.newArrayList(ResidueType.BIon, ResidueType.YIon), Lists.newArrayList(1, 2));
+            case HCD -> fragments = buildFragmentMap(coord, limitLength, Lists.newArrayList(ResidueType.BIon, ResidueType.YIon), Lists.newArrayList(1, 2));
+            case ETD -> fragments = buildFragmentMap(coord, limitLength, Lists.newArrayList(ResidueType.BIon, ResidueType.YIon), Lists.newArrayList(1, 2));
+        }
+        return fragments;
+    }
+
     public Set<FragmentInfo> buildFragmentMap(PeptideCoord coord, int limitLength) {
         return buildFragmentMap(coord, limitLength, null, null);
     }
@@ -116,10 +128,6 @@ public class FragmentFactory {
             ionTypes = new ArrayList<>();
             ionTypes.add(ResidueType.BIon);
             ionTypes.add(ResidueType.YIon);
-//            ionTypes.add(ResidueType.AIon);
-//            ionTypes.add(ResidueType.XIon);
-//            ionTypes.add(ResidueType.CIon);
-//            ionTypes.add(ResidueType.ZIon);
         }
         if (chargeTypes == null) {
             int maxCharge = 2;
