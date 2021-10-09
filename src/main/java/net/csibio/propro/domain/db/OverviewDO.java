@@ -30,6 +30,12 @@ public class OverviewDO extends BaseDO {
     @Indexed
     String expId;
 
+    /**
+     * 重选峰overview
+     */
+    @Indexed
+    Boolean repick = false;
+
     Boolean defaultOne = false;
     /**
      * 分析名称

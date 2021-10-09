@@ -223,7 +223,14 @@ public class Scorer {
         data.setScoreList(peakGroupScoresList);
     }
 
-    public DataSumDO getBestTotalScore(DataDO data, OverviewDO overview) {
+    /**
+     * 计算最好的峰的总分,并且加上鉴定态
+     *
+     * @param data
+     * @param overview
+     * @return
+     */
+    public DataSumDO calcBestTotalScore(DataDO data, OverviewDO overview) {
         DataSumDO dataSum = null;
         if (data.getScoreList() == null) {
             return null;

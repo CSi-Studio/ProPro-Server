@@ -39,6 +39,8 @@ public class AnalyzeController {
     TaskService taskService;
     @Autowired
     ExperimentTask experimentTask;
+    @Autowired
+    OverviewService overviewService;
 
     @GetMapping(value = "/scoreTypes")
     Result scoreTypes() {
@@ -108,7 +110,7 @@ public class AnalyzeController {
             params.setInsLibName(finalInsLib.getName());
             experimentTask.doIrt(task, experimentList, params);
         } else {
-            experimentList.forEach(exp -> {
+            for (ExperimentDO exp : experimentList) {
                 TaskDO task = new TaskDO(TaskTemplate.EXTRACT_PEAKPICK_SCORE, "Analyze-EPPS-" + project.getName());
                 taskService.insert(task);
                 AnalyzeParams params = new AnalyzeParams(method);
@@ -117,8 +119,58 @@ public class AnalyzeController {
                 params.setInsLibId(finalInsLib.getId());
                 params.setInsLibName(finalInsLib.getName());
                 experimentTask.doProPro(task, exp, params);
-            });
+            }
         }
+        return Result.OK();
+    }
+
+    @PostMapping(value = "/repick")
+    Result repick(@RequestParam(value = "overviewIds") List<String> overviewIds) {
+        for (String overviewId : overviewIds) {
+            OverviewDO repickOverview = overviewService.getById(overviewId);
+            if (repickOverview == null) {
+                return Result.Error(ResultCode.OVERVIEW_NOT_EXISTED);
+            }
+            ProjectDO project = projectService.getById(repickOverview.getProjectId());
+            if (project == null) {
+                return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
+            }
+            ExperimentDO exp = experimentService.getById(repickOverview.getExpId());
+            if (exp == null) {
+                return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
+            }
+            MethodDO method = methodService.getById(repickOverview.getParams().getMethod().getId());
+            if (method == null) {
+                return Result.Error(ResultCode.METHOD_NOT_EXISTED);
+            }
+
+            LibraryDO anaLib = libraryService.getById(repickOverview.getParams().getAnaLibId());
+            if (anaLib == null) {
+                return Result.Error(ResultCode.ANA_LIBRARY_NOT_EXISTED);
+            }
+            LibraryDO insLib = null;
+            if (!method.getIrt().isUseAnaLibForIrt()) {
+                insLib = libraryService.getById(repickOverview.getParams().getInsLibId());
+                if (insLib == null) {
+                    return Result.Error(ResultCode.INS_LIBRARY_NOT_EXISTED);
+                }
+            } else {
+                insLib = anaLib;
+            }
+
+            TaskDO task = new TaskDO(TaskTemplate.REPICK, "Analyze-Repick-" + project.getName());
+            taskService.insert(task);
+            AnalyzeParams params = new AnalyzeParams(method);
+            params.setRepickOverviewId(overviewId);
+            params.setRepickOverview(repickOverview);
+            params.setRepick(true);
+            params.setAnaLibId(anaLib.getId());
+            params.setAnaLibName(anaLib.getName());
+            params.setInsLibId(insLib.getId());
+            params.setInsLibName(insLib.getName());
+            experimentTask.doProPro(task, exp, params);
+        }
+
         return Result.OK();
     }
 }

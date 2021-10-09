@@ -11,6 +11,7 @@ import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
+import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
@@ -109,12 +110,12 @@ public class Extractor {
             return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
         }
 
-        OverviewDO overviewDO = createOverview(exp, params);
+        OverviewDO overview = createOverview(exp, params);
 
         //核心函数在这里
-        extract(overviewDO, exp, params);
-        overviewService.update(overviewDO);
-        resultDO.setData(overviewDO);
+        extract(overview, exp, params);
+        overviewService.update(overview);
+        resultDO.setData(overview);
         return resultDO;
     }
 
@@ -142,7 +143,8 @@ public class Extractor {
             return Result.Error(rtMapResult.getErrorCode());
         }
 
-        ExpDataVO expDataVO = coreFunc.predictOne(coord, rtMapResult.getData(), exp, overview, params);
+        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOne(coord, rtMapResult.getData(), exp, overview, params);
+        ExpDataVO expDataVO = new ExpDataVO().merge(dataPair.getLeft(), dataPair.getRight());
         if (expDataVO == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }
@@ -234,6 +236,8 @@ public class Extractor {
                         }
                     }
                     dataCount += dataList.size();
+                } else {
+                    task.addLog("鉴定错误,有异常情况导致鉴定结果为空");
                 }
                 dataService.insert(dataList, overviewDO.getProjectId());
                 task.addLog("第" + count + "轮数据XIC提取完毕,Range:[" + index.getRange().getStart() + "," + index.getRange().getEnd() + "],有效肽段:" + (dataList == null ? 0 : dataList.size()) + "个,耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
@@ -275,7 +279,14 @@ public class Extractor {
         }
         //Step3.提取指定原始谱图
         rtMap = parser.getSpectrums(swathIndex.getStartPtr(), swathIndex.getEndPtr(), swathIndex.getRts(), swathIndex.getMzs(), swathIndex.getInts());
-        return coreFunc.epps(exp, coords, rtMap, params);
+        List<DataDO> dataList = null;
+
+//        if (params.getRepick() && params.getRepickOverview() != null) {
+//            dataList = coreFunc.repick(exp, coords, rtMap, params);
+//        } else {
+        dataList = coreFunc.epps(exp, coords, rtMap, params);
+//        }
+        return dataList;
     }
 
     /**
@@ -295,7 +306,9 @@ public class Extractor {
         overview.setInsLibId(params.getInsLibId());
         overview.setName(exp.getName() + "-" + params.getInsLibName() + "-" + params.getAnaLibName() + "-" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
         overview.setNote(params.getNote());
+        overview.setRepick(params.getRepick());
 
+        //是否是已存在的overview
         boolean exist = overviewService.exist(new OverviewQuery().setProjectId(exp.getProjectId()).setExpId(exp.getId()));
         if (!exist) {
             overview.setDefaultOne(true);

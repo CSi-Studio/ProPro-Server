@@ -95,7 +95,7 @@ public class ExperimentTask extends BaseTask {
     @Async(value = "eicExecutor")
     public void doProPro(TaskDO taskDO, ExperimentDO exp, AnalyzeParams params) {
         long start = System.currentTimeMillis();
-        //如果还没有计算irt,先执行计算irt的步骤.
+        //Step1. 如果还没有计算irt,先执行计算irt的步骤.
         if (exp.getIrt() == null || (params.getForceIrt() && params.getIrtLibraryId() != null)) {
             boolean exeResult = doIrt(taskDO, exp, params);
             if (!exeResult) {
@@ -104,6 +104,7 @@ public class ExperimentTask extends BaseTask {
             LogUtil.log("Irt消耗时间", start);
         }
 
+        //Step2,3,4,5 EIC,选峰,选峰组,打分四个关键步骤
         boolean eppsResult = doEpps(taskDO, exp, params);
         if (!eppsResult) {
             taskDO.finish(TaskStatus.FAILED.getName());
@@ -111,6 +112,7 @@ public class ExperimentTask extends BaseTask {
             return;
         }
 
+        //Step6. 机器学习,LDA分类
         LearningParams ap = new LearningParams();
         ap.setScoreTypes(params.getMethod().getScore().getScoreTypes());
         ap.setFdr(params.getMethod().getClassifier().getFdr());
@@ -121,6 +123,8 @@ public class ExperimentTask extends BaseTask {
         if (finalResult.getMatchedUniqueProteinCount() != null && finalResult.getMatchedUniqueProteinCount() != 0) {
             taskDO.addLog("Peptide/Protein Rate:" + finalResult.getMatchedPeptideCount() / finalResult.getMatchedUniqueProteinCount());
         }
+
+        //Step7. repick ions
         taskDO.finish(TaskStatus.SUCCESS.getName());
         taskService.update(taskDO);
     }

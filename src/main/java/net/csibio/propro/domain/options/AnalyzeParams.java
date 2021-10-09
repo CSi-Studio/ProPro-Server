@@ -3,6 +3,7 @@ package net.csibio.propro.domain.options;
 import lombok.Data;
 import net.csibio.propro.domain.bean.method.Method;
 import net.csibio.propro.domain.db.MethodDO;
+import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.TaskDO;
 import org.springframework.data.annotation.Transient;
 
@@ -15,6 +16,12 @@ public class AnalyzeParams {
 
     @Transient
     String overviewId; //分析概览ID
+
+    @Transient
+    String repickOverviewId;  //仅在repick模式下存在,为repick之前的分析概览对象id
+    
+    @Transient
+    OverviewDO repickOverview; //仅在repick模式下存在,为repick之前的分析概览对象
 
     /**
      * 是否为预测
@@ -53,6 +60,9 @@ public class AnalyzeParams {
 
     //上下文备忘录
     String note;
+
+    //重选峰步骤,默认为false,只有在进行重选峰时才会将本字段置为true
+    Boolean repick = false;
 
     //用于PRM, <precursor mz, [rt start, rt end]>
 //    HashMap<Float, Float[]> rtRangeMap;
