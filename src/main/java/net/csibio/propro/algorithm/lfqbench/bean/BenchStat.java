@@ -3,6 +3,7 @@ package net.csibio.propro.algorithm.lfqbench.bean;
 import lombok.Data;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -39,6 +40,10 @@ public class BenchStat<T> {
     List<T> yeast;
     List<T> ecoli;
 
+    List<Double> humanPercentile = new ArrayList<>();
+    List<Double> yeastPercentile = new ArrayList<>();
+    List<Double> ecoliPercentile = new ArrayList<>();
+
     public BenchStat(List<T> human, List<T> yeast, List<T> ecoli) {
         this.human = human;
         this.yeast = yeast;
@@ -49,17 +54,26 @@ public class BenchStat<T> {
         this.humanAvg = human.getMean();
         this.humanSD = human.getStandardDeviation();
         this.humanCV = humanSD / humanAvg;
+        for (int i = 1; i <= 99; i++) {
+            humanPercentile.add(human.getPercentile(i));
+        }
     }
 
     public void setYeastStat(DescriptiveStatistics yeast) {
         this.yeastAvg = yeast.getMean();
         this.yeastSD = yeast.getStandardDeviation();
         this.yeastCV = yeastSD / yeastAvg;
+        for (int i = 1; i <= 99; i++) {
+            yeastPercentile.add(yeast.getPercentile(i));
+        }
     }
 
     public void setEcoliStat(DescriptiveStatistics ecoli) {
         this.ecoliAvg = ecoli.getMean();
         this.ecoliSD = ecoli.getStandardDeviation();
         this.ecoliCV = ecoliSD / ecoliAvg;
+        for (int i = 1; i <= 99; i++) {
+            ecoliPercentile.add(ecoli.getPercentile(i));
+        }
     }
 }
