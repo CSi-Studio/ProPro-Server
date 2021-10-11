@@ -71,6 +71,7 @@ public class OverviewController {
             @RequestParam("ids") List<String> ids,
             @RequestParam(value = "defaultOne", required = false) Boolean defaultOne,
             @RequestParam(value = "tags", required = false) Set<String> tags,
+            @RequestParam(value = "label", required = false) String label,
             @RequestParam(value = "note", required = false) String note) {
         for (int i = 0; i < ids.size(); i++) {
             OverviewDO overview = overviewService.getById(ids.get(i));
@@ -90,6 +91,7 @@ public class OverviewController {
             if (tags != null) {
                 overview.setTags(tags);
             }
+            
 
             overviewService.update(overview);
         }

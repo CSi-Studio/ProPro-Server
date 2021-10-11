@@ -34,7 +34,7 @@ public class OverviewDO extends BaseDO {
      * 重选峰overview
      */
     @Indexed
-    Boolean repick = false;
+    Boolean reselect = false;
 
     Boolean defaultOne = false;
     /**

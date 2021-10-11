@@ -300,7 +300,7 @@ public class Extractor {
         overview.setInsLibId(params.getInsLibId());
         overview.setName(exp.getName() + "-" + params.getInsLibName() + "-" + params.getAnaLibName() + "-" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
         overview.setNote(params.getNote());
-        overview.setRepick(params.getRepick());
+        overview.setReselect(params.getReselect());
 
         //是否是已存在的overview
         boolean exist = overviewService.exist(new OverviewQuery().setProjectId(exp.getProjectId()).setExpId(exp.getId()));

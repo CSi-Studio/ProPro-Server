@@ -13,15 +13,12 @@ public class AnalyzeParams {
     //不录入数据库中
     @Transient
     TaskDO taskDO;
-
     @Transient
     String overviewId; //分析概览ID
-
     @Transient
-    String repickOverviewId;  //仅在repick模式下存在,为repick之前的分析概览对象id
-    
+    String reselectOverviewId;  //仅在reselect模式下存在,为reselect之前的分析概览对象id
     @Transient
-    OverviewDO repickOverview; //仅在repick模式下存在,为repick之前的分析概览对象
+    OverviewDO reselectOverview; //仅在reselect模式下存在,为reselect之前的分析概览对象
 
     /**
      * 是否为预测
@@ -62,7 +59,7 @@ public class AnalyzeParams {
     String note;
 
     //重选峰步骤,默认为false,只有在进行重选峰时才会将本字段置为true
-    Boolean repick = false;
+    Boolean reselect = false;
 
     //用于PRM, <precursor mz, [rt start, rt end]>
 //    HashMap<Float, Float[]> rtRangeMap;

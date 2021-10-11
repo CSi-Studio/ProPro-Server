@@ -231,7 +231,7 @@ public class CoreFunc {
         coordinates.parallelStream().forEach(coord -> {
             //Step1. 常规提取XIC,XIC结果不进行压缩处理,如果没有提取到任何结果,那么加入忽略列表
             DataDO dataDO = extractOne(coord, rtMap, params);
-            //如果EIC结果中所有的碎片均为空,那么也不需要再做Repick操作,直接跳过
+            //如果EIC结果中所有的碎片均为空,那么也不需要再做Reselect操作,直接跳过
             if (dataDO == null) {
                 log.info(coord.getPeptideRef() + ":EIC结果为空");
                 return;
@@ -239,10 +239,10 @@ public class CoreFunc {
 
             //Step2. 常规选峰及打分,未满足条件的直接忽略
             scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
-            if (params.getRepick()) {
-                DataSumDO dataSum = scorer.calcBestTotalScore(dataDO, params.getRepickOverview());
+            if (params.getReselect()) {
+                DataSumDO dataSum = scorer.calcBestTotalScore(dataDO, params.getReselectOverview());
                 if (dataSum == null || dataSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
-                    AnyPair<DataDO, DataSumDO> pair = predictOne(coord, rtMap, exp, params.getRepickOverview(), params);
+                    AnyPair<DataDO, DataSumDO> pair = predictOne(coord, rtMap, exp, params.getReselectOverview(), params);
                     if (pair != null && pair.getLeft() != null) {
                         dataDO = pair.getLeft();
                     }
@@ -266,6 +266,13 @@ public class CoreFunc {
 
             //Step5. 对Decoy进行打分
             scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
+            if (params.getReselect()) {
+                AnyPair<DataDO, DataSumDO> pair = predictOne(coord, rtMap, exp, params.getReselectOverview(), params);
+                if (pair != null && pair.getLeft() != null) {
+                    decoyData = pair.getLeft();
+                }
+            }
+
             dataList.add(decoyData);
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
             DataUtil.compress(decoyData);
@@ -278,7 +285,7 @@ public class CoreFunc {
         return dataList;
     }
 
-    public List<DataDO> repick(ExperimentDO exp, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public List<DataDO> reselect(ExperimentDO exp, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
 
         return null;
     }

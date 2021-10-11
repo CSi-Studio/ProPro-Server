@@ -125,7 +125,7 @@ public class ExperimentTask extends BaseTask {
             taskDO.addLog("Peptide/Protein Rate:" + finalResult.getMatchedPeptideCount() / finalResult.getMatchedUniqueProteinCount());
         }
 
-        //Step7. repick ions
+        //Step7. Reselect ions
         taskDO.finish(TaskStatus.SUCCESS.getName());
         taskService.update(taskDO);
     }

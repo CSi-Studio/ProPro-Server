@@ -124,33 +124,33 @@ public class AnalyzeController {
         return Result.OK();
     }
 
-    @PostMapping(value = "/repick")
-    Result repick(@RequestParam(value = "overviewIds") List<String> overviewIds) {
+    @PostMapping(value = "/reselect")
+    Result reselect(@RequestParam(value = "overviewIds") List<String> overviewIds) {
         for (String overviewId : overviewIds) {
-            OverviewDO repickOverview = overviewService.getById(overviewId);
-            if (repickOverview == null) {
+            OverviewDO reselectOverview = overviewService.getById(overviewId);
+            if (reselectOverview == null) {
                 return Result.Error(ResultCode.OVERVIEW_NOT_EXISTED);
             }
-            ProjectDO project = projectService.getById(repickOverview.getProjectId());
+            ProjectDO project = projectService.getById(reselectOverview.getProjectId());
             if (project == null) {
                 return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
             }
-            ExperimentDO exp = experimentService.getById(repickOverview.getExpId());
+            ExperimentDO exp = experimentService.getById(reselectOverview.getExpId());
             if (exp == null) {
                 return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
             }
-            MethodDO method = methodService.getById(repickOverview.getParams().getMethod().getId());
+            MethodDO method = methodService.getById(reselectOverview.getParams().getMethod().getId());
             if (method == null) {
                 return Result.Error(ResultCode.METHOD_NOT_EXISTED);
             }
 
-            LibraryDO anaLib = libraryService.getById(repickOverview.getParams().getAnaLibId());
+            LibraryDO anaLib = libraryService.getById(reselectOverview.getParams().getAnaLibId());
             if (anaLib == null) {
                 return Result.Error(ResultCode.ANA_LIBRARY_NOT_EXISTED);
             }
             LibraryDO insLib = null;
             if (!method.getIrt().isUseAnaLibForIrt()) {
-                insLib = libraryService.getById(repickOverview.getParams().getInsLibId());
+                insLib = libraryService.getById(reselectOverview.getParams().getInsLibId());
                 if (insLib == null) {
                     return Result.Error(ResultCode.INS_LIBRARY_NOT_EXISTED);
                 }
@@ -158,12 +158,12 @@ public class AnalyzeController {
                 insLib = anaLib;
             }
 
-            TaskDO task = new TaskDO(TaskTemplate.REPICK, "Analyze-Repick-" + project.getName());
+            TaskDO task = new TaskDO(TaskTemplate.RESELECT, "Analyze-Reselect-" + project.getName());
             taskService.insert(task);
             AnalyzeParams params = new AnalyzeParams(method);
-            params.setRepickOverviewId(overviewId);
-            params.setRepickOverview(repickOverview);
-            params.setRepick(true);
+            params.setReselectOverviewId(overviewId);
+            params.setReselectOverview(reselectOverview);
+            params.setReselect(true);
             params.setAnaLibId(anaLib.getId());
             params.setAnaLibName(anaLib.getName());
             params.setInsLibId(insLib.getId());
