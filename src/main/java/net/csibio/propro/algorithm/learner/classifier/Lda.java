@@ -156,6 +156,9 @@ public class Lda extends Classifier {
     public HashMap<String, Double> learn(TrainPeaks trainPeaks, String skipScoreType, List<String> scoreTypes) {
 
         int totalLength = trainPeaks.getBestTargets().size() + trainPeaks.getTopDecoys().size();
+        if (totalLength == 0) {
+            log.error("训练数据集为空");
+        }
         int scoreTypesCount = 0;
         if (scoreTypes.contains(skipScoreType)) {
             scoreTypesCount = scoreTypes.size() - 1;

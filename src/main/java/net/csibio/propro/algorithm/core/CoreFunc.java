@@ -139,7 +139,6 @@ public class CoreFunc {
      * @return
      */
     public AnyPair<DataDO, DataSumDO> predictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
-        log.info("实验:" + exp.getAlias() + "开始预测:" + coord.getPeptideRef());
         //Step1.对库中的碎片进行排序
         Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
         List<FragmentInfo> sortedLibFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
@@ -177,12 +176,19 @@ public class CoreFunc {
             List<String> ions = new ArrayList<>(libIons.subList(0, libIons.size() - selectedIons.size()));
             ions.addAll(selectedIons);
             DataDO buildData = buildData(data, ions);
+            if (buildData == null) {
+                continue;
+            }
             Set<FragmentInfo> selectFragments = selectFragments(predictFragmentMap, ions);
             if (selectFragments.size() < libIons.size()) {
                 continue;
             }
             coord.setFragments(selectFragments);
-            scorer.scoreForOne(exp, buildData, coord, rtMap, params);
+            try {
+                scorer.scoreForOne(exp, buildData, coord, rtMap, params);
+            } catch (Exception e) {
+                log.error("Peptide打分异常:" + coord.getPeptideRef());
+            }
             if (buildData.getScoreList() != null) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(buildData, overview);
                 if (dataSum.getTotalScore() > bestScore) {
@@ -196,13 +202,11 @@ public class CoreFunc {
         }
 
         if (bestData == null) {
-            log.info("居然一个可能的组都没有");
+            log.info("居然一个可能的组都没有:" + coord.getPeptideRef());
             return null;
         }
         coord.setFragments(bestIonGroup); //这里必须要将coord置为最佳峰组
-        log.info("最终选中的碎片组为:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList());
-        log.info("最终的打分:" + bestScore + ",峰RT:" + bestRt);
-
+//        log.info(exp.getAlias() + "碎片组:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList() + "; Score:" + bestScore + " RT:" + bestRt);
         return new AnyPair<DataDO, DataSumDO>(bestData, bestDataSum);
     }
 
@@ -237,9 +241,11 @@ public class CoreFunc {
             scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
             if (params.getRepick()) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(dataDO, params.getRepickOverview());
-                if (dataSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
+                if (dataSum == null || dataSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
                     AnyPair<DataDO, DataSumDO> pair = predictOne(coord, rtMap, exp, params.getRepickOverview(), params);
-                    dataDO = pair.getLeft();
+                    if (pair != null && pair.getLeft() != null) {
+                        dataDO = pair.getLeft();
+                    }
                 }
             }
             dataList.add(dataDO);
@@ -273,7 +279,7 @@ public class CoreFunc {
     }
 
     public List<DataDO> repick(ExperimentDO exp, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
-        
+
         return null;
     }
 
@@ -288,10 +294,13 @@ public class CoreFunc {
     private DataDO buildData(DataDO data, List<String> selectedIons) {
         HashMap<String, float[]> selectedIntMap = new HashMap<>();
         HashMap<String, Float> selectedCutInfoMap = new HashMap<>();
-        selectedIons.forEach(cutInfo -> {
+        for (String cutInfo : selectedIons) {
+            if (data.getIntMap().get(cutInfo) == null) {
+                return null;
+            }
             selectedIntMap.put(cutInfo, data.getIntMap().get(cutInfo));
             selectedCutInfoMap.put(cutInfo, data.getCutInfoMap().get(cutInfo));
-        });
+        }
         DataDO newData = data.clone();
         newData.setIntMap(selectedIntMap);
         newData.setCutInfoMap(selectedCutInfoMap);

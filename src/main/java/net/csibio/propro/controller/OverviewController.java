@@ -77,9 +77,13 @@ public class OverviewController {
             if (overview == null) {
                 return Result.Error(ResultCode.OVERVIEW_NOT_EXISTED);
             }
-            if (defaultOne != null) {
+
+            //如果将默认设置为true,那么会清理改exp下的所有overview状态为false
+            if (defaultOne != null && defaultOne) {
+                overviewService.resetDefaultOne(overview.getExpId());
                 overview.setDefaultOne(defaultOne);
             }
+
             if (note != null) {
                 overview.setNote(note);
             }

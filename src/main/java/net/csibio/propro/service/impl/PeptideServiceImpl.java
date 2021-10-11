@@ -183,7 +183,7 @@ public class PeptideServiceImpl implements PeptideService {
             }
         }
 
-        logger.info("构建提取XIC的MS2坐标,总计" + targetList.size() + "条记录,读取标准库耗时:" + dbTime + "毫秒");
+        logger.info("构建提取XIC的MS2坐标,总计" + targetList.size() + "条记录,读取标准库耗时:" + dbTime + "毫秒,mz start:" + mzRange.getStart());
         return targetList;
     }
 

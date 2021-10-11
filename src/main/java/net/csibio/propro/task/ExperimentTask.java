@@ -113,6 +113,7 @@ public class ExperimentTask extends BaseTask {
         }
 
         //Step6. 机器学习,LDA分类
+        logger.info("开始执行机器学习部分");
         LearningParams ap = new LearningParams();
         ap.setScoreTypes(params.getMethod().getScore().getScoreTypes());
         ap.setFdr(params.getMethod().getClassifier().getFdr());
