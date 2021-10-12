@@ -5,13 +5,13 @@ import ml.dmlc.xgboost4j.java.DMatrix;
 import ml.dmlc.xgboost4j.java.XGBoost;
 import ml.dmlc.xgboost4j.java.XGBoostError;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.domain.bean.data.PeptideScores;
+import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.learner.TrainData;
 import net.csibio.propro.domain.bean.learner.TrainPeaks;
 import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
-import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.utils.ProProUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class Xgboost extends Classifier {
         }
     };
 
-    public void classifier(List<PeptideScores> scores, List<String> scoreTypes, LearningParams learningParams) {
+    public void classifier(List<PeptideScore> scores, List<String> scoreTypes, LearningParams learningParams) {
         logger.info("开始训练Booster");
         Booster booster = learnRandomized(scores, learningParams);
         try {
@@ -72,7 +72,7 @@ public class Xgboost extends Classifier {
         }
     }
 
-    public Booster learnRandomized(List<PeptideScores> scores, LearningParams learningParams) {
+    public Booster learnRandomized(List<PeptideScore> scores, LearningParams learningParams) {
         try {
             //Get part of scores as train input.
             TrainData trainData = ProProUtil.split(scores, learningParams.getTrainTestRatio(), learningParams.isDebug(), learningParams.getScoreTypes());
@@ -112,12 +112,12 @@ public class Xgboost extends Classifier {
     }
 
     public void predict(Booster booster, TrainData trainData, String skipScoreType, List<String> scoreTypes) throws XGBoostError {
-        List<PeptideScores> totalGroupScore = new ArrayList<>(trainData.getDecoys());
+        List<PeptideScore> totalGroupScore = new ArrayList<>(trainData.getDecoys());
         totalGroupScore.addAll(trainData.getTargets());
         predictAll(booster, totalGroupScore, skipScoreType, scoreTypes);
     }
 
-    public void predictAll(Booster booster, List<PeptideScores> scores, String skipScoreType, List<String> scoreTypes) throws XGBoostError {
+    public void predictAll(Booster booster, List<PeptideScore> scores, String skipScoreType, List<String> scoreTypes) throws XGBoostError {
         int scoreTypesCount = scoreTypes.size();
         if (skipScoreType.equals(ScoreType.InitScore.getName())) {
             scoreTypesCount -= 1;
@@ -125,10 +125,10 @@ public class Xgboost extends Classifier {
             scoreTypesCount -= 2;
         }
 //        List<Float> testData = new ArrayList<>();
-        for (PeptideScores peptideScores : scores) {
-            for (PeakGroupScores peakGroupScores : peptideScores.getScoreList()) {
-                if (!peptideScores.getDecoy() && !checkRationality(peakGroupScores, scoreTypes)) {
-                    peakGroupScores.put(ScoreType.WeightedTotalScore.getName(), 0d, scoreTypes);
+        for (PeptideScore peptideScore : scores) {
+            for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
+                if (!peptideScore.getDecoy() && !checkRationality(peakGroupScore, scoreTypes)) {
+                    peakGroupScore.put(ScoreType.WeightedTotalScore.getName(), 0d, scoreTypes);
                     continue;
                 }
                 float[] testData = new float[scoreTypesCount];
@@ -137,13 +137,13 @@ public class Xgboost extends Classifier {
                     if (scoreName.equals(ScoreType.WeightedTotalScore.getName()) || scoreName.equals(ScoreType.InitScore.getName())) {
                         continue;
                     }
-                    testData[tempIndex] = peakGroupScores.get(scoreName, scoreTypes).floatValue();
+                    testData[tempIndex] = peakGroupScore.get(scoreName, scoreTypes).floatValue();
                     tempIndex++;
                 }
                 DMatrix dMatrix = new DMatrix(testData, 1, scoreTypesCount);
                 float[][] predicts = booster.predict(dMatrix);
                 double score = predicts[0][0];
-                peakGroupScores.put(ScoreType.WeightedTotalScore.getName(), score, scoreTypes);
+                peakGroupScore.put(ScoreType.WeightedTotalScore.getName(), score, scoreTypes);
             }
         }
     }
@@ -188,8 +188,8 @@ public class Xgboost extends Classifier {
         return trainMat;
     }
 
-    private boolean checkRationality(PeakGroupScores peakGroupScores, List<String> scoreTypes) {
-        if (peakGroupScores.get(ScoreType.XcorrShape.getName(), scoreTypes) < 0.5) {
+    private boolean checkRationality(PeakGroupScore peakGroupScore, List<String> scoreTypes) {
+        if (peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < 0.5) {
             return false;
         } else {
             return true;

@@ -4,7 +4,7 @@ import lombok.Data;
 import net.csibio.propro.domain.BaseDO;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
-import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -46,7 +46,7 @@ public class DataDO extends BaseDO {
 
     String cutInfosFeature; //由cutInfoMap转换所得
 
-    List<PeakGroupScores> scoreList;
+    List<PeakGroupScore> scoreList;
 
     //压缩后的rt列表,对应rtArray
     byte[] rtBytes;

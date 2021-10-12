@@ -3,13 +3,13 @@ package net.csibio.propro.utils;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.constants.constant.FdrConst;
-import net.csibio.propro.domain.bean.data.PeptideScores;
+import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.ScoreData;
 import net.csibio.propro.domain.bean.learner.TrainAndTest;
 import net.csibio.propro.domain.bean.learner.TrainData;
 import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
-import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 
 import java.util.*;
 
@@ -328,23 +328,23 @@ public class ProProUtil {
      * @param scoreTypes 打分开始的时候所有参与打分的子分数快照列表
      * @return
      */
-    public static List<FinalPeakGroupScore> findTopFeatureScores(List<PeptideScores> scores, String scoreType, List<String> scoreTypes, boolean strict) {
+    public static List<FinalPeakGroupScore> findTopFeatureScores(List<PeptideScore> scores, String scoreType, List<String> scoreTypes, boolean strict) {
         List<FinalPeakGroupScore> bestFeatureScoresList = new ArrayList<>();
-        for (PeptideScores score : scores) {
+        for (PeptideScore score : scores) {
             if (score.getScoreList() == null || score.getScoreList().size() == 0) {
                 continue;
             }
             FinalPeakGroupScore bestFeatureScores = new FinalPeakGroupScore(score.getId(), score.getProteins(), score.getPeptideRef(), score.getDecoy());
             double maxScore = -Double.MAX_VALUE;
-            PeakGroupScores topFeatureScore = null;
-            for (PeakGroupScores peakGroupScores : score.getScoreList()) {
-                if (strict && peakGroupScores.getThresholdPassed() != null && !peakGroupScores.getThresholdPassed()) {
+            PeakGroupScore topFeatureScore = null;
+            for (PeakGroupScore peakGroupScore : score.getScoreList()) {
+                if (strict && peakGroupScore.getThresholdPassed() != null && !peakGroupScore.getThresholdPassed()) {
                     continue;
                 }
-                Double featureMainScore = peakGroupScores.get(scoreType, scoreTypes);
+                Double featureMainScore = peakGroupScore.get(scoreType, scoreTypes);
                 if (featureMainScore != null && featureMainScore > maxScore) {
                     maxScore = featureMainScore;
-                    topFeatureScore = peakGroupScores;
+                    topFeatureScore = peakGroupScore;
                 }
             }
 
@@ -472,19 +472,19 @@ public class ProProUtil {
      * @param isDebug  是否取测试集
      * @return
      */
-    public static TrainData split(List<PeptideScores> scores, double fraction, boolean isDebug, List<String> scoreTypes) {
+    public static TrainData split(List<PeptideScore> scores, double fraction, boolean isDebug, List<String> scoreTypes) {
 
         //每一轮开始前将上一轮的加权总分去掉
-        for (PeptideScores ss : scores) {
-            for (PeakGroupScores sft : ss.getScoreList()) {
+        for (PeptideScore ss : scores) {
+            for (PeakGroupScore sft : ss.getScoreList()) {
                 sft.remove(ScoreType.WeightedTotalScore.getName(), scoreTypes);
             }
         }
 
-        List<PeptideScores> targets = new ArrayList<>();
-        List<PeptideScores> decoys = new ArrayList<>();
+        List<PeptideScore> targets = new ArrayList<>();
+        List<PeptideScore> decoys = new ArrayList<>();
         //按照是否是伪肽段分为两个数组
-        for (PeptideScores score : scores) {
+        for (PeptideScore score : scores) {
             if (score.getDecoy()) {
                 decoys.add(score);
             } else {

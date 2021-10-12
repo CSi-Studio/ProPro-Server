@@ -14,13 +14,13 @@ public class PeakGroup {
     double apexRt;
 
     //group中每一个碎片的强度
-    HashMap<String,Double> ionIntensity;
+    HashMap<String, Double> ionIntensity;
 
     //最终的强度总和
     double peakGroupInt;
 
     //单个离子在bestLeftRt和bestRightRt中间最大峰的强度
-    HashMap<String,Double> ionApexInt;
+    HashMap<String, Double> ionApexInt;
 
     //算法选定的峰形范围左侧最合适的RT
     double bestLeftRt;
@@ -36,7 +36,12 @@ public class PeakGroup {
 
     HashMap<Double, PeakGroup> childPeakGroup;
 
-    HashMap<String,Double[]> ionHullInt;
+    HashMap<String, Double[]> ionHullInt;
 
     double signalToNoiseSum;
+
+    //最大强度碎片cutInfo
+    String maxIon;
+    //最大强度碎片的强度
+    Double maxIonIntensity;
 }

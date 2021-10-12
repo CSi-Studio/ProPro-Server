@@ -163,7 +163,6 @@ public class FeatureFinder {
                 continue;
             }
             //合并周围结果
-
             PeakGroup peakGroup = new PeakGroup();
             HashMap<String, IonPeak> concateMap = concatenate(ionPeakPositionList, maxIndex, 1);
             String maxIon = getMaxIntensityIndex(concateMap);
@@ -233,6 +232,8 @@ public class FeatureFinder {
             peakGroup.setTotalXic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
             peakGroup.setSignalToNoiseSum(signalToNoiseSum);
+            peakGroup.setMaxIon(maxIon);
+            peakGroup.setMaxIonIntensity(peakGroup.getIonIntensity().get(maxIon));
             peakGroupList.add(peakGroup);
         }
         return peakGroupList;

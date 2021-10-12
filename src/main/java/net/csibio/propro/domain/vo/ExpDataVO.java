@@ -3,7 +3,7 @@ package net.csibio.propro.domain.vo;
 import lombok.Data;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.data.BaseData;
-import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.utils.DataUtil;
@@ -30,7 +30,7 @@ public class ExpDataVO {
 
     String peptideRef;
 
-    List<PeakGroupScores> scoreList;
+    List<PeakGroupScore> scoreList;
 
     int selectIndex;
 
@@ -83,7 +83,7 @@ public class ExpDataVO {
         if (dataSum != null) {
             BeanUtils.copyProperties(dataSum, this);
             if (data != null && data.getScoreList() != null && dataSum.getRealRt() != null) {
-                this.selectIndex = scoreList.stream().map(PeakGroupScores::getRt).toList().indexOf(dataSum.getRealRt());
+                this.selectIndex = scoreList.stream().map(PeakGroupScore::getRt).toList().indexOf(dataSum.getRealRt());
                 data.getScoreList().get(selectIndex).put(ScoreType.WeightedTotalScore, dataSum.getTotalScore(), ScoreType.getAllTypesName());
             }
         }
@@ -97,7 +97,7 @@ public class ExpDataVO {
         if (dataSum != null) {
             BeanUtils.copyProperties(dataSum, this);
             if (data != null && data.getScoreList() != null && dataSum.getRealRt() != null) {
-                this.selectIndex = scoreList.stream().map(PeakGroupScores::getRt).toList().indexOf(dataSum.getRealRt());
+                this.selectIndex = scoreList.stream().map(PeakGroupScore::getRt).toList().indexOf(dataSum.getRealRt());
                 data.getScoreList().get(selectIndex).put(ScoreType.WeightedTotalScore, dataSum.getTotalScore(), ScoreType.getAllTypesName());
             }
         }

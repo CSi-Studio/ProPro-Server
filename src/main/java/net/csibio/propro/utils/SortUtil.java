@@ -2,9 +2,9 @@ package net.csibio.propro.utils;
 
 import com.google.common.collect.Ordering;
 import net.csibio.aird.bean.WindowRange;
-import net.csibio.propro.domain.bean.data.PeptideScores;
+import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
-import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.PeptideDO;
 
@@ -13,10 +13,10 @@ import java.util.List;
 
 public class SortUtil {
 
-    public static List<PeptideScores> sortByPeptideRef(List<PeptideScores> scores) {
-        Ordering<PeptideScores> ordering = Ordering.from(new Comparator<PeptideScores>() {
+    public static List<PeptideScore> sortByPeptideRef(List<PeptideScore> scores) {
+        Ordering<PeptideScore> ordering = Ordering.from(new Comparator<PeptideScore>() {
             @Override
-            public int compare(PeptideScores o1, PeptideScores o2) {
+            public int compare(PeptideScore o1, PeptideScore o2) {
                 return o1.getPeptideRef().compareTo(o2.getPeptideRef());
             }
         });
@@ -81,10 +81,10 @@ public class SortUtil {
         return ordering.sortedCopy(scores);
     }
 
-    public static List<PeakGroupScores> sortBySelectedScore(List<PeakGroupScores> scores, String scoreName, boolean isDesc, List<String> scoreTypes) {
-        Ordering<PeakGroupScores> ordering = Ordering.from(new Comparator<PeakGroupScores>() {
+    public static List<PeakGroupScore> sortBySelectedScore(List<PeakGroupScore> scores, String scoreName, boolean isDesc, List<String> scoreTypes) {
+        Ordering<PeakGroupScore> ordering = Ordering.from(new Comparator<PeakGroupScore>() {
             @Override
-            public int compare(PeakGroupScores o1, PeakGroupScores o2) {
+            public int compare(PeakGroupScore o1, PeakGroupScore o2) {
                 if (isDesc) {
                     return o2.get(scoreName, scoreTypes).compareTo(o1.get(scoreName, scoreTypes));
                 } else {

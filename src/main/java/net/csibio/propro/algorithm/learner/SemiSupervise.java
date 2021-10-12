@@ -9,12 +9,12 @@ import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.data.PeptideScores;
+import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
-import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.service.DataService;
@@ -65,7 +65,7 @@ public class SemiSupervise {
         params.setType(overview.getType());
         //Step2. 从数据库读取全部含打分结果的数据
         log.info("开始获取打分数据");
-        List<PeptideScores> scores = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), PeptideScores.class, overview.getProjectId());
+        List<PeptideScore> scores = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), PeptideScore.class, overview.getProjectId());
 
         //Step3. 开始训练数据集
         HashMap<String, Double> weightsMap = new HashMap<>();
@@ -112,10 +112,10 @@ public class SemiSupervise {
         return finalResult;
     }
 
-    private Result check(List<PeptideScores> scores) {
+    private Result check(List<PeptideScore> scores) {
         boolean isAllDecoy = true;
         boolean isAllReal = true;
-        for (PeptideScores score : scores) {
+        for (PeptideScore score : scores) {
             if (score.getDecoy()) {
                 isAllReal = false;
             } else {
@@ -189,43 +189,43 @@ public class SemiSupervise {
         overviewDO.getStatistic().put(StatConst.DECOY_DIST, decoyDistributions);
     }
 
-    private void cleanScore(List<PeptideScores> scoresList, List<String> scoreTypes) {
-        for (PeptideScores peptideScores : scoresList) {
-            if (peptideScores.getDecoy()) {
+    private void cleanScore(List<PeptideScore> scoresList, List<String> scoreTypes) {
+        for (PeptideScore peptideScore : scoresList) {
+            if (peptideScore.getDecoy()) {
                 continue;
             }
-            for (PeakGroupScores peakGroupScores : peptideScores.getScoreList()) {
+            for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
                 int count = 0;
-                if (peakGroupScores.get(ScoreType.NormRtScore, scoreTypes) != null && peakGroupScores.get(ScoreType.NormRtScore, scoreTypes) > 8) {
+                if (peakGroupScore.get(ScoreType.NormRtScore, scoreTypes) != null && peakGroupScore.get(ScoreType.NormRtScore, scoreTypes) > 8) {
                     count++;
                 }
-                if (peakGroupScores.get(ScoreType.LogSnScore, scoreTypes) != null && peakGroupScores.get(ScoreType.LogSnScore, scoreTypes) < 3) {
+                if (peakGroupScore.get(ScoreType.LogSnScore, scoreTypes) != null && peakGroupScore.get(ScoreType.LogSnScore, scoreTypes) < 3) {
                     count++;
                 }
-                if (peakGroupScores.get(ScoreType.IsotopeCorrelationScore, scoreTypes) != null && peakGroupScores.get(ScoreType.IsotopeCorrelationScore, scoreTypes) < 0.8) {
+                if (peakGroupScore.get(ScoreType.IsotopeCorrelationScore, scoreTypes) != null && peakGroupScore.get(ScoreType.IsotopeCorrelationScore, scoreTypes) < 0.8) {
                     count++;
                 }
-                if (peakGroupScores.get(ScoreType.IsotopeOverlapScore, scoreTypes) != null && peakGroupScores.get(ScoreType.IsotopeOverlapScore, scoreTypes) > 0.2) {
+                if (peakGroupScore.get(ScoreType.IsotopeOverlapScore, scoreTypes) != null && peakGroupScore.get(ScoreType.IsotopeOverlapScore, scoreTypes) > 0.2) {
                     count++;
                 }
-                if (peakGroupScores.get(ScoreType.MassdevScoreWeighted, scoreTypes) != null && peakGroupScores.get(ScoreType.MassdevScoreWeighted, scoreTypes) > 15) {
+                if (peakGroupScore.get(ScoreType.MassdevScoreWeighted, scoreTypes) != null && peakGroupScore.get(ScoreType.MassdevScoreWeighted, scoreTypes) > 15) {
                     count++;
                 }
-                if (peakGroupScores.get(ScoreType.BseriesScore, scoreTypes) != null && peakGroupScores.get(ScoreType.BseriesScore, scoreTypes) < 1) {
+                if (peakGroupScore.get(ScoreType.BseriesScore, scoreTypes) != null && peakGroupScore.get(ScoreType.BseriesScore, scoreTypes) < 1) {
                     count++;
                 }
-                if (peakGroupScores.get(ScoreType.YseriesScore, scoreTypes) != null && peakGroupScores.get(ScoreType.YseriesScore, scoreTypes) < 5) {
+                if (peakGroupScore.get(ScoreType.YseriesScore, scoreTypes) != null && peakGroupScore.get(ScoreType.YseriesScore, scoreTypes) < 5) {
                     count++;
                 }
-                if (peakGroupScores.get(ScoreType.XcorrShapeWeighted, scoreTypes) != null && peakGroupScores.get(ScoreType.XcorrShapeWeighted, scoreTypes) < 0.6) {
+                if (peakGroupScore.get(ScoreType.XcorrShapeWeighted, scoreTypes) != null && peakGroupScore.get(ScoreType.XcorrShapeWeighted, scoreTypes) < 0.6) {
                     count++;
                 }
-                if (peakGroupScores.get(ScoreType.XcorrShape, scoreTypes) != null && peakGroupScores.get(ScoreType.XcorrShape, scoreTypes) < 0.5) {
+                if (peakGroupScore.get(ScoreType.XcorrShape, scoreTypes) != null && peakGroupScore.get(ScoreType.XcorrShape, scoreTypes) < 0.5) {
                     count++;
                 }
 
                 if (count > 3) {
-                    peakGroupScores.setThresholdPassed(false);
+                    peakGroupScore.setThresholdPassed(false);
                 }
             }
         }

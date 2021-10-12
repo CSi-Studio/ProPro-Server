@@ -27,22 +27,22 @@ public class BenchStat<T> {
     double humanCV;  //标准偏差
     double humanAvg; //均值
     double humanSD;  //标准差
+    List<Double> humanPercentile = new ArrayList<>(); //1-99 percentile
 
     double yeastCV;
     double yeastAvg;
     double yeastSD;
+    List<Double> yeastPercentile = new ArrayList<>();
 
     double ecoliCV;
     double ecoliAvg;
     double ecoliSD;
+    List<Double> ecoliPercentile = new ArrayList<>();
 
     List<T> human;
     List<T> yeast;
     List<T> ecoli;
 
-    List<Double> humanPercentile = new ArrayList<>();
-    List<Double> yeastPercentile = new ArrayList<>();
-    List<Double> ecoliPercentile = new ArrayList<>();
 
     public BenchStat(List<T> human, List<T> yeast, List<T> ecoli) {
         this.human = human;

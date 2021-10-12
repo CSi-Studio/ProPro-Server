@@ -74,6 +74,7 @@ public class AnalyzeController {
                    @RequestParam("expIdList") List<String> expIdList,
                    @RequestParam("methodId") String methodId,
                    @RequestParam("anaLibId") String anaLibId,
+                   @RequestParam("note") String note,
                    @RequestParam(value = "insLibId", required = false) String insLibId
     ) {
         ProjectDO project = projectService.getById(projectId);
@@ -118,6 +119,7 @@ public class AnalyzeController {
                 params.setAnaLibName(anaLib.getName());
                 params.setInsLibId(finalInsLib.getId());
                 params.setInsLibName(finalInsLib.getName());
+                params.setNote(note);
                 experimentTask.doProPro(task, exp, params);
             }
         }

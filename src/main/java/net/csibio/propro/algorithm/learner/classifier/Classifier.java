@@ -3,12 +3,12 @@ package net.csibio.propro.algorithm.learner.classifier;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.domain.bean.data.PeptideScores;
+import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.learner.TrainData;
 import net.csibio.propro.domain.bean.learner.TrainPeaks;
 import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
-import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.utils.ProProUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -37,33 +37,33 @@ public abstract class Classifier {
         score(data.getDecoys(), weightsMap, scoreTypes);
     }
 
-    public void score(List<PeptideScores> scores, HashMap<String, Double> weightsMap, List<String> scoreTypes) {
+    public void score(List<PeptideScore> scores, HashMap<String, Double> weightsMap, List<String> scoreTypes) {
         Set<Map.Entry<String, Double>> entries = weightsMap.entrySet();
-        for (PeptideScores score : scores) {
+        for (PeptideScore score : scores) {
             if (score.getScoreList() == null) {
                 continue;
             }
-            for (PeakGroupScores peakGroupScores : score.getScoreList()) {
+            for (PeakGroupScore peakGroupScore : score.getScoreList()) {
                 double addedScore = 0;
                 for (Map.Entry<String, Double> entry : entries) {
-                    addedScore += peakGroupScores.get(entry.getKey(), scoreTypes) * entry.getValue();
+                    addedScore += peakGroupScore.get(entry.getKey(), scoreTypes) * entry.getValue();
                 }
-                peakGroupScores.put(ScoreType.WeightedTotalScore.getName(), addedScore, scoreTypes);
+                peakGroupScore.put(ScoreType.WeightedTotalScore.getName(), addedScore, scoreTypes);
             }
         }
     }
 
-    public void score(PeptideScores score, HashMap<String, Double> weightsMap, List<String> scoreTypes) {
+    public void score(PeptideScore score, HashMap<String, Double> weightsMap, List<String> scoreTypes) {
         Set<Map.Entry<String, Double>> entries = weightsMap.entrySet();
         if (score.getScoreList() == null) {
             return;
         }
-        for (PeakGroupScores peakGroupScores : score.getScoreList()) {
+        for (PeakGroupScore peakGroupScore : score.getScoreList()) {
             double addedScore = 0;
             for (Map.Entry<String, Double> entry : entries) {
-                addedScore += peakGroupScores.get(entry.getKey(), scoreTypes) * entry.getValue();
+                addedScore += peakGroupScore.get(entry.getKey(), scoreTypes) * entry.getValue();
             }
-            peakGroupScores.put(ScoreType.WeightedTotalScore.getName(), addedScore, scoreTypes);
+            peakGroupScore.put(ScoreType.WeightedTotalScore.getName(), addedScore, scoreTypes);
         }
     }
 

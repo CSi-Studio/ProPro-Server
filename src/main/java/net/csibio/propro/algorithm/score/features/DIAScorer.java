@@ -8,7 +8,7 @@ import net.csibio.propro.constants.constant.IsotopeConstants;
 import net.csibio.propro.domain.bean.score.BYSeries;
 import net.csibio.propro.domain.bean.score.IntegrateWindowMzIntensity;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.loader.AminoAcidLoader;
 import net.csibio.propro.loader.ElementsLoader;
 import net.csibio.propro.loader.UnimodLoader;
@@ -58,7 +58,7 @@ public class DIAScorer {
      * @param normedLibIntMap  unNormalized library intensity(in peptidepeptide)
      * @param scores           scoreForAll for Airus
      */
-    public void calculateDiaMassDiffScore(HashMap<String, Float> productMzArray, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Double> normedLibIntMap, PeakGroupScores scores, List<String> scoreTypes) {
+    public void calculateDiaMassDiffScore(HashMap<String, Float> productMzArray, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Double> normedLibIntMap, PeakGroupScore scores, List<String> scoreTypes) {
 
         double ppmScore = 0.0d;
         double ppmScoreWeighted = 0.0d;
@@ -102,7 +102,7 @@ public class DIAScorer {
      * @param productChargeMap charge in peptide
      * @param scores           scoreForAll for JProphet
      */
-    public void calculateDiaIsotopeScores(PeakGroup peakGroupFeature, HashMap<String, Float> productMzMap, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Integer> productChargeMap, PeakGroupScores scores, List<String> scoreTypes) {
+    public void calculateDiaIsotopeScores(PeakGroup peakGroupFeature, HashMap<String, Float> productMzMap, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Integer> productChargeMap, PeakGroupScore scores, List<String> scoreTypes) {
         double isotopeCorr = 0d;
         double isotopeOverlap = 0d;
         int maxIsotope = Constants.DIA_NR_ISOTOPES + 1;
@@ -223,7 +223,7 @@ public class DIAScorer {
      * @param charge
      * @param scores
      */
-    public void calculateBYIonScore(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge, PeakGroupScores scores, List<String> scoreTypes) {
+    public void calculateBYIonScore(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge, PeakGroupScore scores, List<String> scoreTypes) {
 
         //计算理论值
         BYSeries bySeries = fragmentFactory.getBYSeries(unimodHashMap, sequence, charge);

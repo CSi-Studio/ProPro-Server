@@ -139,10 +139,11 @@ public class CoreFunc {
      * @return
      */
     public AnyPair<DataDO, DataSumDO> predictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
-        //Step1.对库中的碎片进行排序
+        //Step1.对库中的碎片进行排序,按照强度从大到小排列
         Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
         List<FragmentInfo> sortedLibFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
         List<String> libIons = sortedLibFrags.stream().map(FragmentInfo::getCutInfo).toList();
+        String maxLibIon = libIons.get(0);
         //Step2.生成碎片离子,碎片最大带电量为母离子的带电量,最小碎片长度为3
         Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 3);
         proproFiList.forEach(fi -> fi.setIntensity(1000d)); //给到一个任意的初始化强度
@@ -159,6 +160,7 @@ public class CoreFunc {
         //Step4.获取所有碎片的统计分,并按照CV值进行排序,记录前15的碎片
         List<IonStat> statList = buildIonStat(intMap);
         int maxCandidateIons = params.getMethod().getScore().getMaxCandidateIons();
+        maxCandidateIons = 20;
         if (statList.size() > maxCandidateIons) {
             statList = statList.subList(0, maxCandidateIons);
         }
@@ -166,11 +168,11 @@ public class CoreFunc {
 
         //Step5.开始全枚举所有的组合分
         double bestScore = -99999d;
-        Double bestRt = null;
         DataSumDO bestDataSum = null;
         DataDO bestData = null;
         Set<FragmentInfo> bestIonGroup = null;
-        List<List<String>> allPossibleIonsGroup = Generator.combination(totalIonList).simple(3).stream().collect(Collectors.toList());
+
+        List<List<String>> allPossibleIonsGroup = Generator.combination(totalIonList).simple(2).stream().collect(Collectors.toList());
         for (int i = 0; i < allPossibleIonsGroup.size(); i++) {
             List<String> selectedIons = allPossibleIonsGroup.get(i);
             List<String> ions = new ArrayList<>(libIons.subList(0, libIons.size() - selectedIons.size()));
@@ -190,10 +192,9 @@ public class CoreFunc {
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
             }
             if (buildData.getScoreList() != null) {
-                DataSumDO dataSum = scorer.calcBestTotalScore(buildData, overview);
-                if (dataSum.getTotalScore() > bestScore) {
+                DataSumDO dataSum = scorer.calcBestTotalScoreWithLimit(buildData, overview, maxLibIon);
+                if (dataSum != null && dataSum.getTotalScore() > bestScore) {
                     bestScore = dataSum.getTotalScore();
-                    bestRt = dataSum.getRealRt();
                     bestDataSum = dataSum;
                     bestData = buildData;
                     bestIonGroup = selectFragments;
@@ -266,12 +267,12 @@ public class CoreFunc {
 
             //Step5. 对Decoy进行打分
             scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
-            if (params.getReselect()) {
-                AnyPair<DataDO, DataSumDO> pair = predictOne(coord, rtMap, exp, params.getReselectOverview(), params);
-                if (pair != null && pair.getLeft() != null) {
-                    decoyData = pair.getLeft();
-                }
-            }
+//            if (params.getReselect()) {
+//                AnyPair<DataDO, DataSumDO> pair = predictOne(coord, rtMap, exp, params.getReselectOverview(), params);
+//                if (pair != null && pair.getLeft() != null) {
+//                    decoyData = pair.getLeft();
+//                }
+//            }
 
             dataList.add(decoyData);
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
@@ -279,6 +280,7 @@ public class CoreFunc {
         });
 
         LogUtil.log("XIC+选峰+打分耗时", start);
+        log.info("总计构建Data数目" + dataList.size() + "/" + (coordinates.size() * 2) + "个");
         if (dataList.stream().filter(data -> data.getStatus() == null).toList().size() > 0) {
             log.info("居然有问题");
         }

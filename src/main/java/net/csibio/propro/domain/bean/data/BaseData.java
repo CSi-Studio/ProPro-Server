@@ -1,7 +1,7 @@
 package net.csibio.propro.domain.bean.data;
 
 import lombok.Data;
-import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public class BaseData {
 
     List<String> proteins;
 
-    List<PeakGroupScores> scoreList;
+    List<PeakGroupScore> scoreList;
 
     Double fdr;
 

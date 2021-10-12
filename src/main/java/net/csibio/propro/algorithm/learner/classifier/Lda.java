@@ -4,10 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.domain.bean.data.PeptideScores;
+import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.*;
 import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
-import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.utils.ProProUtil;
 import org.apache.commons.math3.linear.*;
 import org.springframework.stereotype.Component;
@@ -25,7 +25,7 @@ public class Lda extends Classifier {
      * @param learningParams
      * @return
      */
-    public HashMap<String, Double> classifier(List<PeptideScores> scores, LearningParams learningParams, List<String> scoreTypes) {
+    public HashMap<String, Double> classifier(List<PeptideScore> scores, LearningParams learningParams, List<String> scoreTypes) {
         log.info("开始训练学习数据权重");
         if (scores.size() < 500) {
             learningParams.setXevalNumIter(10);
@@ -58,7 +58,7 @@ public class Lda extends Classifier {
         return ProProUtil.averagedWeights(weightsMapList);
     }
 
-    public LDALearnData learnRandomized(List<PeptideScores> scores, LearningParams learningParams) {
+    public LDALearnData learnRandomized(List<PeptideScore> scores, LearningParams learningParams) {
         LDALearnData ldaLearnData = new LDALearnData();
         try {
             TrainData trainData = ProProUtil.split(scores, learningParams.getTrainTestRatio(), learningParams.isDebug(), learningParams.getScoreTypes());
@@ -101,14 +101,14 @@ public class Lda extends Classifier {
     private TrainPeaks selectFirstTrainPeaks(TrainData trainData, LearningParams learningParams) {
         List<FinalPeakGroupScore> decoyPeaks = new ArrayList<>();
         List<String> scoreTypes = learningParams.getScoreTypes();
-        for (PeptideScores peptideScores : trainData.getDecoys()) {
-            PeakGroupScores topDecoy = null;
+        for (PeptideScore peptideScore : trainData.getDecoys()) {
+            PeakGroupScore topDecoy = null;
             double maxMainScore = -Double.MAX_VALUE;
-            for (PeakGroupScores peakGroupScores : peptideScores.getScoreList()) {
-                double mainScore = peakGroupScores.get(ScoreType.InitScore.getName(), scoreTypes);
+            for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
+                double mainScore = peakGroupScore.get(ScoreType.InitScore.getName(), scoreTypes);
                 if (mainScore > maxMainScore) {
                     maxMainScore = mainScore;
-                    topDecoy = peakGroupScores;
+                    topDecoy = peakGroupScore;
                 }
             }
             FinalPeakGroupScore finalPeakGroupScore = new FinalPeakGroupScore();

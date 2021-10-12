@@ -1,7 +1,7 @@
 package net.csibio.propro.domain.bean.data;
 
 import lombok.Data;
-import net.csibio.propro.domain.bean.score.PeakGroupScores;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.domain.db.DataDO;
 
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.List;
  * 某一个肽段的打分结果,包含了其中所有的Peak峰组的打分结果
  */
 @Data
-public class PeptideScores {
+public class PeptideScore {
 
     String id;
 
@@ -21,12 +21,12 @@ public class PeptideScores {
     //是否是伪肽段
     Boolean decoy = false;
     //所有峰组的打分情况
-    List<PeakGroupScores> scoreList;
+    List<PeakGroupScore> scoreList;
 
-    public PeptideScores() {
+    public PeptideScore() {
     }
 
-    public PeptideScores(DataDO data) {
+    public PeptideScore(DataDO data) {
         this.id = data.getId();
         this.proteins = data.getProteins();
         this.peptideRef = data.getPeptideRef();
