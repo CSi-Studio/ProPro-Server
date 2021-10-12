@@ -2,8 +2,10 @@ package net.csibio.propro.controller;
 
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.GaussFilter;
 import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
+import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
@@ -14,10 +16,7 @@ import net.csibio.propro.domain.bean.common.IdNameAlias;
 import net.csibio.propro.domain.bean.common.PeptideRtPairs;
 import net.csibio.propro.domain.bean.data.PeptideRt;
 import net.csibio.propro.domain.bean.overview.Overview4Clinic;
-import net.csibio.propro.domain.db.ExperimentDO;
-import net.csibio.propro.domain.db.LibraryDO;
-import net.csibio.propro.domain.db.MethodDO;
-import net.csibio.propro.domain.db.ProjectDO;
+import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.domain.query.DataSumQuery;
@@ -61,6 +60,10 @@ public class ClinicController {
     PeptideService peptideService;
     @Autowired
     BlockIndexService blockIndexService;
+    @Autowired
+    Lda lda;
+    @Autowired
+    Scorer scorer;
 
     @GetMapping(value = "prepare")
     Result<ClinicPrepareDataVO> prepare(@RequestParam("projectId") String projectId) {
@@ -144,7 +147,7 @@ public class ClinicController {
             if (onlyDefault) {
                 query.setDefaultOne(true);
             }
-            Overview4Clinic overview = overviewService.getOne(query, Overview4Clinic.class);
+            OverviewDO overview = overviewService.getOne(query, OverviewDO.class);
             if (overview == null) {
                 continue;
             }
@@ -162,6 +165,7 @@ public class ClinicController {
             }
             if (data != null) {
                 data.setMinTotalScore(overview.getMinTotalScore());
+                lda.scoreForPeakGroups(data.getScoreList(), overview.getWeights(), overview.getParams().getMethod().getScore().getScoreTypes());
                 dataList.add(data);
             }
         }

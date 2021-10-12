@@ -6,7 +6,7 @@ import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.learner.Pi0Est;
 import net.csibio.propro.domain.bean.learner.StatMetrics;
-import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.utils.ArrayUtil;
 import net.csibio.propro.utils.MathUtil;
 import net.csibio.propro.utils.ProProUtil;
@@ -28,19 +28,19 @@ public class Statistics {
 
     public static final Logger logger = LoggerFactory.getLogger(Statistics.class);
 
-    public void pNormalizer(List<FinalPeakGroupScore> targetScores, List<FinalPeakGroupScore> decoyScores) {
+    public void pNormalizer(List<SelectedPeakGroupScore> targetScores, List<SelectedPeakGroupScore> decoyScores) {
         Double[] decoyScoresArray = ProProUtil.buildMainScoreArray(decoyScores, false);
         double mean = MathUtil.mean(decoyScoresArray);
         double std = MathUtil.std(decoyScoresArray, mean);
         double args;
-        for (FinalPeakGroupScore sfs : targetScores) {
+        for (SelectedPeakGroupScore sfs : targetScores) {
             args = (sfs.getMainScore() - mean) / std;
             sfs.setPValue(1 - (0.5 * (1.0 + MathUtil.erf(args / Math.sqrt(2.0)))));
         }
     }
 
-    public void pEmpirical(List<FinalPeakGroupScore> targetScores, List<FinalPeakGroupScore> decoyScores) {
-        List<FinalPeakGroupScore> totalScores = new ArrayList<>();
+    public void pEmpirical(List<SelectedPeakGroupScore> targetScores, List<SelectedPeakGroupScore> decoyScores) {
+        List<SelectedPeakGroupScore> totalScores = new ArrayList<>();
         totalScores.addAll(targetScores);
         totalScores.addAll(decoyScores);
 
@@ -48,7 +48,7 @@ public class Statistics {
         int decoyCount = 0;
         int decoyTotal = decoyScores.size();
         double fix = 1.0 / decoyTotal;
-        for (FinalPeakGroupScore sfs : totalScores) {
+        for (SelectedPeakGroupScore sfs : totalScores) {
             if (sfs.getDecoy()) {
                 decoyCount++;
             } else {
@@ -66,7 +66,7 @@ public class Statistics {
      * Calculate qvalues.
      * targets的qvalue需要从大到小排序
      */
-    public void qvalue(List<FinalPeakGroupScore> targets, double pi0, boolean pfdr) {
+    public void qvalue(List<SelectedPeakGroupScore> targets, double pi0, boolean pfdr) {
         Double[] pValues = ProProUtil.buildPValueArray(targets, false);
         int pValueLength = targets.size();
         double[] v = ArrayUtil.rank(pValues);
@@ -88,11 +88,11 @@ public class Statistics {
      * Estimate final results.
      * TODO 没有实现 pep(lfdr);
      */
-    public ErrorStat errorStatistics(List<FinalPeakGroupScore> scores, LearningParams learningParams) {
+    public ErrorStat errorStatistics(List<SelectedPeakGroupScore> scores, LearningParams learningParams) {
 
-        List<FinalPeakGroupScore> targets = new ArrayList<>();
-        List<FinalPeakGroupScore> decoys = new ArrayList<>();
-        for (FinalPeakGroupScore featureScores : scores) {
+        List<SelectedPeakGroupScore> targets = new ArrayList<>();
+        List<SelectedPeakGroupScore> decoys = new ArrayList<>();
+        for (SelectedPeakGroupScore featureScores : scores) {
             if (featureScores.getDecoy()) {
                 decoys.add(featureScores);
             } else {
@@ -107,11 +107,11 @@ public class Statistics {
      * Estimate final results.
      * TODO 没有实现 pep(lfdr);
      */
-    public ErrorStat errorStatistics(List<FinalPeakGroupScore> targets, List<FinalPeakGroupScore> decoys, LearningParams learningParams) {
+    public ErrorStat errorStatistics(List<SelectedPeakGroupScore> targets, List<SelectedPeakGroupScore> decoys, LearningParams learningParams) {
 
         ErrorStat errorStat = new ErrorStat();
-        List<FinalPeakGroupScore> sortedTargets = SortUtil.sortByMainScore(targets, false);
-        List<FinalPeakGroupScore> sortedDecoys = SortUtil.sortByMainScore(decoys, false);
+        List<SelectedPeakGroupScore> sortedTargets = SortUtil.sortByMainScore(targets, false);
+        List<SelectedPeakGroupScore> sortedDecoys = SortUtil.sortByMainScore(decoys, false);
 
         //compute p-values using decoy scores;
         if (learningParams.isParametric()) {
@@ -145,10 +145,10 @@ public class Statistics {
     /**
      * Finds cut-off target scoreForAll for specified false discovery rate(fdr).
      */
-    public Double findCutoff(List<FinalPeakGroupScore> topTargets, List<FinalPeakGroupScore> topDecoys, LearningParams learningParams, Double cutoff) {
+    public Double findCutoff(List<SelectedPeakGroupScore> topTargets, List<SelectedPeakGroupScore> topDecoys, LearningParams learningParams, Double cutoff) {
         ErrorStat errorStat = errorStatistics(topTargets, topDecoys, learningParams);
 
-        List<FinalPeakGroupScore> bestScores = errorStat.getBestFeatureScoresList();
+        List<SelectedPeakGroupScore> bestScores = errorStat.getBestFeatureScoresList();
         double[] qvalue_CutoffAbs = new double[bestScores.size()];
         for (int i = 0; i < bestScores.size(); i++) {
             qvalue_CutoffAbs[i] = Math.abs(bestScores.get(i).getQValue() - cutoff);
@@ -160,7 +160,7 @@ public class Statistics {
     /**
      * Calculate P relative scores.
      */
-    private Pi0Est pi0Est(List<FinalPeakGroupScore> targets, Double[] lambda, String pi0Method, boolean smoothLogPi0) {
+    private Pi0Est pi0Est(List<SelectedPeakGroupScore> targets, Double[] lambda, String pi0Method, boolean smoothLogPi0) {
 
         Pi0Est pi0EstResults = new Pi0Est();
         int numOfPvalue = targets.size();
@@ -240,7 +240,7 @@ public class Statistics {
         return pi0EstResults;
     }
 
-    private StatMetrics statMetrics(List<FinalPeakGroupScore> scores, Double pi0, boolean pfdr) {
+    private StatMetrics statMetrics(List<SelectedPeakGroupScore> scores, Double pi0, boolean pfdr) {
         StatMetrics results = new StatMetrics();
         int numOfPvalue = scores.size();
         int[] numPositives = ProProUtil.countPValueNumPositives(scores);

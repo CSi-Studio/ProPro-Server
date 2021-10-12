@@ -1,7 +1,7 @@
 package net.csibio.propro.domain.bean.learner;
 
 import lombok.Data;
-import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 public class TrainPeaks {
 
-    List<FinalPeakGroupScore> bestTargets;
+    List<SelectedPeakGroupScore> bestTargets;
 
-    List<FinalPeakGroupScore> topDecoys;
+    List<SelectedPeakGroupScore> topDecoys;
 }

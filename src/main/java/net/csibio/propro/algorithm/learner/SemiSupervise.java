@@ -13,8 +13,8 @@ import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
-import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
 import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.service.DataService;
@@ -80,20 +80,20 @@ public class SemiSupervise {
             }
         }
 
-        List<FinalPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), false);
-        ErrorStat errorStat = statistics.errorStatistics(featureScoresList, params);
+        List<SelectedPeakGroupScore> selectedPeakGroupList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), false);
+        ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupList, params);
         finalResult.setAllInfo(errorStat);
         int count = ProProUtil.checkFdr(finalResult, params.getFdr());
         //Step4. 对于最终的打分结果和选峰结果保存到数据库中
-        log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + featureScoresList.size() + "条数据,开始统计相关数据");
-        giveDecoyFdr(featureScoresList);
-        targetDecoyDistribution(featureScoresList, overview);
+        log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + selectedPeakGroupList.size() + "条数据,开始统计相关数据");
+        giveDecoyFdr(selectedPeakGroupList);
+        targetDecoyDistribution(selectedPeakGroupList, overview);
         if (params.getRemoveUnmatched()) {
             log.info("统计分布完毕,开始移出无用数据");
-            for (int i = featureScoresList.size() - 1; i >= 0; i--) {
+            for (int i = selectedPeakGroupList.size() - 1; i >= 0; i--) {
                 //如果fdr为空或者fdr小于指定的值,那么删除它
-                if (featureScoresList.get(i).getFdr() == null || featureScoresList.get(i).getFdr() > params.getFdr()) {
-                    featureScoresList.remove(i);
+                if (selectedPeakGroupList.get(i).getFdr() == null || selectedPeakGroupList.get(i).getFdr() > params.getFdr()) {
+                    selectedPeakGroupList.remove(i);
                 }
             }
             log.info("无用数据移除完毕,开始生成最终鉴定数据");
@@ -103,8 +103,8 @@ public class SemiSupervise {
 
         long start = System.currentTimeMillis();
         //插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
-        dataSumService.buildDataSumList(featureScoresList, params.getFdr(), overview, overview.getProjectId());
-        log.info("插入Sum数据" + featureScoresList.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
+        dataSumService.buildDataSumList(selectedPeakGroupList, params.getFdr(), overview, overview.getProjectId());
+        log.info("插入Sum数据" + selectedPeakGroupList.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
         overview.setWeights(weightsMap);
         overviewService.update(overview);
         overviewService.statistic(overview);
@@ -132,18 +132,18 @@ public class SemiSupervise {
     }
 
     //给分布在target中的decoy赋以Fdr值, 最末尾部分的decoy忽略, fdr为null
-    private void giveDecoyFdr(List<FinalPeakGroupScore> featureScoresList) {
-        List<FinalPeakGroupScore> sortedAll = SortUtil.sortByMainScore(featureScoresList, false);
-        FinalPeakGroupScore leftFeatureScore = null;
-        FinalPeakGroupScore rightFeatureScore;
-        List<FinalPeakGroupScore> decoyPartList = new ArrayList<>();
-        for (FinalPeakGroupScore finalPeakGroupScore : sortedAll) {
-            if (finalPeakGroupScore.getDecoy()) {
-                decoyPartList.add(finalPeakGroupScore);
+    private void giveDecoyFdr(List<SelectedPeakGroupScore> featureScoresList) {
+        List<SelectedPeakGroupScore> sortedAll = SortUtil.sortByMainScore(featureScoresList, false);
+        SelectedPeakGroupScore leftFeatureScore = null;
+        SelectedPeakGroupScore rightFeatureScore;
+        List<SelectedPeakGroupScore> decoyPartList = new ArrayList<>();
+        for (SelectedPeakGroupScore selectedPeakGroupScore : sortedAll) {
+            if (selectedPeakGroupScore.getDecoy()) {
+                decoyPartList.add(selectedPeakGroupScore);
             } else {
-                rightFeatureScore = finalPeakGroupScore;
+                rightFeatureScore = selectedPeakGroupScore;
                 if (leftFeatureScore != null && !decoyPartList.isEmpty()) {
-                    for (FinalPeakGroupScore decoy : decoyPartList) {
+                    for (SelectedPeakGroupScore decoy : decoyPartList) {
                         if (decoy.getMainScore() - leftFeatureScore.getMainScore() < rightFeatureScore.getMainScore() - decoy.getMainScore()) {
                             decoy.setFdr(leftFeatureScore.getFdr());
                             decoy.setQValue(leftFeatureScore.getQValue());
@@ -158,7 +158,7 @@ public class SemiSupervise {
             }
         }
         if (leftFeatureScore != null && !decoyPartList.isEmpty()) {
-            for (FinalPeakGroupScore decoy : decoyPartList) {
+            for (SelectedPeakGroupScore decoy : decoyPartList) {
                 decoy.setFdr(leftFeatureScore.getFdr());
                 decoy.setQValue(leftFeatureScore.getQValue());
             }
@@ -172,10 +172,10 @@ public class SemiSupervise {
      * @param featureScoresList
      * @param overviewDO
      */
-    private void targetDecoyDistribution(List<FinalPeakGroupScore> featureScoresList, OverviewDO overviewDO) {
+    private void targetDecoyDistribution(List<SelectedPeakGroupScore> featureScoresList, OverviewDO overviewDO) {
         HashMap<String, Integer> targetDistributions = ProProUtil.buildDistributionMap();
         HashMap<String, Integer> decoyDistributions = ProProUtil.buildDistributionMap();
-        for (FinalPeakGroupScore sfs : featureScoresList) {
+        for (SelectedPeakGroupScore sfs : featureScoresList) {
             if (sfs.getFdr() != null) {
                 if (sfs.getDecoy()) {
                     ProProUtil.addOneForFdrDistributionMap(sfs.getFdr(), decoyDistributions);

@@ -10,8 +10,8 @@ import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.learner.TrainData;
 import net.csibio.propro.domain.bean.learner.TrainPeaks;
-import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
 import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.utils.ProProUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +64,7 @@ public class Xgboost extends Classifier {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        List<FinalPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
+        List<SelectedPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
         ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
         int count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
         if (count > 0) {
@@ -90,7 +90,7 @@ public class Xgboost extends Classifier {
                 predict(booster, trainData, ScoreType.WeightedTotalScore.getName(), learningParams.getScoreTypes());
             }
             logger.info("总时间：" + (System.currentTimeMillis() - startTime));
-            List<FinalPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), learningParams.getScoreTypes(), false);
+            List<SelectedPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), learningParams.getScoreTypes(), false);
             ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
             int count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
             logger.info("Train count:" + count);
@@ -160,7 +160,7 @@ public class Xgboost extends Classifier {
         float[] trainData = new float[totalLength * scoreTypesCount];
         float[] trainLabel = new float[totalLength];
         int dataIndex = 0, labelIndex = 0;
-        for (FinalPeakGroupScore sample : trainPeaks.getBestTargets()) {
+        for (SelectedPeakGroupScore sample : trainPeaks.getBestTargets()) {
             for (String scoreName : scoreTypes) {
                 if (scoreName.equals(skipScoreType) || scoreName.equals(ScoreType.InitScore.getName())) {
                     continue;
@@ -171,7 +171,7 @@ public class Xgboost extends Classifier {
             }
             labelIndex++;
         }
-        for (FinalPeakGroupScore sample : trainPeaks.getTopDecoys()) {
+        for (SelectedPeakGroupScore sample : trainPeaks.getTopDecoys()) {
             for (String scoreName : scoreTypes) {
                 if (scoreName.equals(skipScoreType) || scoreName.equals(ScoreType.InitScore.getName())) {
                     continue;

@@ -242,7 +242,7 @@ public class Scorer {
         PeptideScore ps = new PeptideScore(data);
 
         List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
-        lda.score(ps, overview.getWeights(), scoreTypes);
+        lda.scoreForPeakGroups(ps.getScoreList(), overview.getWeights(), scoreTypes);
         double bestTotalScore = -1d;
         Double bestRt = null;
         int bestIndex = 0;
@@ -282,7 +282,7 @@ public class Scorer {
 
         PeptideScore ps = new PeptideScore(data);
         List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
-        lda.score(ps, overview.getWeights(), scoreTypes);
+        lda.scoreForPeakGroups(ps.getScoreList(), overview.getWeights(), scoreTypes);
         double bestTotalScore = -1d;
         Double bestRt = null;
         int bestIndex = 0;

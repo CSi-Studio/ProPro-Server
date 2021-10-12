@@ -8,8 +8,8 @@ import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.ScoreData;
 import net.csibio.propro.domain.bean.learner.TrainAndTest;
 import net.csibio.propro.domain.bean.learner.TrainData;
-import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
 import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 
 import java.util.*;
 
@@ -323,21 +323,21 @@ public class ProProUtil {
     /**
      * 以scoreType为主分数挑选出所有主分数最高的峰
      *
-     * @param scores
-     * @param scoreType  需要作为主分数的分数
-     * @param scoreTypes 打分开始的时候所有参与打分的子分数快照列表
+     * @param peptideScoreList
+     * @param scoreType        需要作为主分数的分数
+     * @param scoreTypes       打分开始的时候所有参与打分的子分数快照列表
      * @return
      */
-    public static List<FinalPeakGroupScore> findTopFeatureScores(List<PeptideScore> scores, String scoreType, List<String> scoreTypes, boolean strict) {
-        List<FinalPeakGroupScore> bestFeatureScoresList = new ArrayList<>();
-        for (PeptideScore score : scores) {
-            if (score.getScoreList() == null || score.getScoreList().size() == 0) {
+    public static List<SelectedPeakGroupScore> findTopFeatureScores(List<PeptideScore> peptideScoreList, String scoreType, List<String> scoreTypes, boolean strict) {
+        List<SelectedPeakGroupScore> bestFeatureScoresList = new ArrayList<>();
+        for (PeptideScore peptideScore : peptideScoreList) {
+            if (peptideScore.getScoreList() == null || peptideScore.getScoreList().size() == 0) {
                 continue;
             }
-            FinalPeakGroupScore bestFeatureScores = new FinalPeakGroupScore(score.getId(), score.getProteins(), score.getPeptideRef(), score.getDecoy());
+            SelectedPeakGroupScore bestFeatureScores = new SelectedPeakGroupScore(peptideScore.getId(), peptideScore.getProteins(), peptideScore.getPeptideRef(), peptideScore.getDecoy());
             double maxScore = -Double.MAX_VALUE;
             PeakGroupScore topFeatureScore = null;
-            for (PeakGroupScore peakGroupScore : score.getScoreList()) {
+            for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
                 if (strict && peakGroupScore.getThresholdPassed() != null && !peakGroupScore.getThresholdPassed()) {
                     continue;
                 }
@@ -360,7 +360,7 @@ public class ProProUtil {
         return bestFeatureScoresList;
     }
 
-    public static Double[] buildMainScoreArray(List<FinalPeakGroupScore> scores, Boolean needToSort) {
+    public static Double[] buildMainScoreArray(List<SelectedPeakGroupScore> scores, Boolean needToSort) {
         Double[] result = new Double[scores.size()];
         for (int i = 0; i < scores.size(); i++) {
             result[i] = scores.get(i).getMainScore();
@@ -371,7 +371,7 @@ public class ProProUtil {
         return result;
     }
 
-    public static Double[] buildPValueArray(List<FinalPeakGroupScore> scores, Boolean needToSort) {
+    public static Double[] buildPValueArray(List<SelectedPeakGroupScore> scores, Boolean needToSort) {
         Double[] result = new Double[scores.size()];
         for (int i = 0; i < scores.size(); i++) {
             result[i] = scores.get(i).getPValue();
@@ -398,9 +398,9 @@ public class ProProUtil {
         }
     }
 
-    public static List<FinalPeakGroupScore> peaksFilter(List<FinalPeakGroupScore> trainTargets, double cutOff) {
-        List<FinalPeakGroupScore> peakScores = new ArrayList<>();
-        for (FinalPeakGroupScore i : trainTargets) {
+    public static List<SelectedPeakGroupScore> peaksFilter(List<SelectedPeakGroupScore> trainTargets, double cutOff) {
+        List<SelectedPeakGroupScore> peakScores = new ArrayList<>();
+        for (SelectedPeakGroupScore i : trainTargets) {
             if (i.getMainScore() >= cutOff) {
                 peakScores.add(i);
             }
@@ -605,9 +605,9 @@ public class ProProUtil {
     /**
      * Count number of values bigger than threshold in array.
      */
-    public static int countOverThreshold(List<FinalPeakGroupScore> scores, double threshold) {
+    public static int countOverThreshold(List<SelectedPeakGroupScore> scores, double threshold) {
         int n = 0;
-        for (FinalPeakGroupScore i : scores) {
+        for (SelectedPeakGroupScore i : scores) {
             if (i.getPValue() >= threshold) {
                 n++;
             }
@@ -620,7 +620,7 @@ public class ProProUtil {
      * 例如数组3,2,1,1. 经过本函数后得到的结果是4,3,2,2
      * 入参array必须是降序排序后的数组
      */
-    public static int[] countPValueNumPositives(List<FinalPeakGroupScore> array) {
+    public static int[] countPValueNumPositives(List<SelectedPeakGroupScore> array) {
         int step = 0;
         int n = array.size();
         int[] result = new int[n];

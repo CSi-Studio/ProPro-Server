@@ -3,8 +3,8 @@ package net.csibio.propro.utils;
 import com.google.common.collect.Ordering;
 import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.domain.bean.data.PeptideScore;
-import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
 import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.PeptideDO;
 
@@ -35,10 +35,10 @@ public class SortUtil {
         return ordering.sortedCopy(swathList);
     }
 
-    public static List<FinalPeakGroupScore> sortByMainScore(List<FinalPeakGroupScore> scores, boolean isDesc) {
-        Ordering<FinalPeakGroupScore> ordering = Ordering.from(new Comparator<FinalPeakGroupScore>() {
+    public static List<SelectedPeakGroupScore> sortByMainScore(List<SelectedPeakGroupScore> scores, boolean isDesc) {
+        Ordering<SelectedPeakGroupScore> ordering = Ordering.from(new Comparator<SelectedPeakGroupScore>() {
             @Override
-            public int compare(FinalPeakGroupScore o1, FinalPeakGroupScore o2) {
+            public int compare(SelectedPeakGroupScore o1, SelectedPeakGroupScore o2) {
                 try {
                     if (isDesc) {
                         return o2.getMainScore().compareTo(o1.getMainScore());
@@ -55,10 +55,10 @@ public class SortUtil {
         return ordering.sortedCopy(scores);
     }
 
-    public static List<FinalPeakGroupScore> sortByFdr(List<FinalPeakGroupScore> scores, boolean isDesc) {
-        Ordering<FinalPeakGroupScore> ordering = Ordering.from(new Comparator<FinalPeakGroupScore>() {
+    public static List<SelectedPeakGroupScore> sortByFdr(List<SelectedPeakGroupScore> scores, boolean isDesc) {
+        Ordering<SelectedPeakGroupScore> ordering = Ordering.from(new Comparator<SelectedPeakGroupScore>() {
             @Override
-            public int compare(FinalPeakGroupScore o1, FinalPeakGroupScore o2) {
+            public int compare(SelectedPeakGroupScore o1, SelectedPeakGroupScore o2) {
                 try {
                     if (o1.getFdr() == null) {
                         return 1;
@@ -106,10 +106,10 @@ public class SortUtil {
      * @param isDesc 是否降序排序
      * @return
      */
-    public static List<FinalPeakGroupScore> sortByPValue(List<FinalPeakGroupScore> scores, boolean isDesc) {
-        Ordering<FinalPeakGroupScore> ordering = Ordering.from(new Comparator<FinalPeakGroupScore>() {
+    public static List<SelectedPeakGroupScore> sortByPValue(List<SelectedPeakGroupScore> scores, boolean isDesc) {
+        Ordering<SelectedPeakGroupScore> ordering = Ordering.from(new Comparator<SelectedPeakGroupScore>() {
             @Override
-            public int compare(FinalPeakGroupScore o1, FinalPeakGroupScore o2) {
+            public int compare(SelectedPeakGroupScore o1, SelectedPeakGroupScore o2) {
                 if (isDesc) {
                     return o2.getPValue().compareTo(o1.getPValue());
                 } else {

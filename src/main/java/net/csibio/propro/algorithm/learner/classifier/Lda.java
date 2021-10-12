@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.*;
-import net.csibio.propro.domain.bean.score.FinalPeakGroupScore;
 import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.utils.ProProUtil;
 import org.apache.commons.math3.linear.*;
 import org.springframework.stereotype.Component;
@@ -42,7 +42,7 @@ public class Lda extends Classifier {
                 continue;
             }
             score(scores, ldaLearnData.getWeightsMap(), scoreTypes);
-            List<FinalPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
+            List<SelectedPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
             int count = 0;
             ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
             count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
@@ -99,7 +99,7 @@ public class Lda extends Classifier {
     }
 
     private TrainPeaks selectFirstTrainPeaks(TrainData trainData, LearningParams learningParams) {
-        List<FinalPeakGroupScore> decoyPeaks = new ArrayList<>();
+        List<SelectedPeakGroupScore> decoyPeaks = new ArrayList<>();
         List<String> scoreTypes = learningParams.getScoreTypes();
         for (PeptideScore peptideScore : trainData.getDecoys()) {
             PeakGroupScore topDecoy = null;
@@ -111,14 +111,14 @@ public class Lda extends Classifier {
                     topDecoy = peakGroupScore;
                 }
             }
-            FinalPeakGroupScore finalPeakGroupScore = new FinalPeakGroupScore();
-            finalPeakGroupScore.setScores(topDecoy.getScores());
-            decoyPeaks.add(finalPeakGroupScore);
+            SelectedPeakGroupScore selectedPeakGroupScore = new SelectedPeakGroupScore();
+            selectedPeakGroupScore.setScores(topDecoy.getScores());
+            decoyPeaks.add(selectedPeakGroupScore);
         }
         TrainPeaks trainPeaks = new TrainPeaks();
         trainPeaks.setTopDecoys(decoyPeaks);
 
-        FinalPeakGroupScore bestTargetScore = new FinalPeakGroupScore(learningParams.getScoreTypes().size());
+        SelectedPeakGroupScore bestTargetScore = new SelectedPeakGroupScore(learningParams.getScoreTypes().size());
         bestTargetScore.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.XcorrShapeWeighted.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.XcorrCoelution.getName(), 0d, scoreTypes);
@@ -140,7 +140,7 @@ public class Lda extends Classifier {
         bestTargetScore.put(ScoreType.YseriesScore.getName(), 10d, scoreTypes);
 
 
-        List<FinalPeakGroupScore> bestTargets = new ArrayList<>();
+        List<SelectedPeakGroupScore> bestTargets = new ArrayList<>();
         bestTargets.add(bestTargetScore);
         trainPeaks.setBestTargets(bestTargets);
         return trainPeaks;
@@ -170,7 +170,7 @@ public class Lda extends Classifier {
         RealMatrix scoresMatrix = new Array2DRowRealMatrix(totalLength, scoreTypesCount);
         RealVector labelVector = new ArrayRealVector(totalLength);
         int k = 0;
-        for (FinalPeakGroupScore sfs : trainPeaks.getBestTargets()) {
+        for (SelectedPeakGroupScore sfs : trainPeaks.getBestTargets()) {
             int i = 0;
             for (String scoreType : scoreTypes) {
                 if (scoreType.equals(skipScoreType)) {
@@ -182,7 +182,7 @@ public class Lda extends Classifier {
             labelVector.setEntry(k, 1);
             k++;
         }
-        for (FinalPeakGroupScore sfs : trainPeaks.getTopDecoys()) {
+        for (SelectedPeakGroupScore sfs : trainPeaks.getTopDecoys()) {
             int i = 0;
             for (String scoreType : scoreTypes) {
                 if (scoreType.equals(skipScoreType)) {
