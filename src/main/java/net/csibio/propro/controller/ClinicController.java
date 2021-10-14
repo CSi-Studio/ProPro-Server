@@ -158,7 +158,8 @@ public class ClinicController {
                 DataSumDO existed = dataSumService.getOne(new DataSumQuery().setOverviewId(overview.getId()).setPeptideRef(peptideRef).setDecoy(false), DataSumDO.class, projectId);
                 if (existed.getStatus() == IdentifyStatus.SUCCESS.getCode()) {
                     DataDO existedData = dataService.getById(existed.getId(), projectId);
-                    data = new ExpDataVO().merge(existedData, existed);
+                    DataSumDO dataSum = scorer.calcBestTotalScore(existedData, overview, null);
+                    data = new ExpDataVO().merge(existedData, dataSum);
                     data.setGroup(exp.getGroup());
                     data.setAlias(exp.getAlias());
                     data.setExpId(exp.getId());
@@ -171,8 +172,6 @@ public class ClinicController {
                         data.setExpId(exp.getId());
                     }
                 }
-
-
             } else {
                 data = dataService.getDataFromDB(projectId, expId, overview.getId(), peptideRef);
             }

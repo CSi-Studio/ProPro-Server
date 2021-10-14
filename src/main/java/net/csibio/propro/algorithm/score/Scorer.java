@@ -242,25 +242,45 @@ public class Scorer {
         PeptideScore ps = new PeptideScore(data);
         List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
         lda.scoreForPeakGroups(ps.getScoreList(), overview.getWeights(), scoreTypes);
-        double minTotalScore = overview.getMinTotalScore();
+
+        PeakGroupScore selectPeakGroup = getBestPeakGroup(data.getScoreList(), overview.getMinTotalScore(), scoreTypes, libMaxIon, true);
+        if (selectPeakGroup == null) {
+            return null;
+        }
+        DataSumDO dataSum = new DataSumDO();
+        if (selectPeakGroup.getTotalScore(scoreTypes) > overview.getMinTotalScore()) {
+            dataSum.setStatus(IdentifyStatus.SUCCESS.getCode());
+        } else {
+            dataSum.setStatus(IdentifyStatus.FAILED.getCode());
+        }
+        dataSum.setSum(selectPeakGroup.getIntensitySum());
+        dataSum.setRealRt(selectPeakGroup.getRt());
+        dataSum.setTotalScore(selectPeakGroup.getTotalScore(scoreTypes));
+        return dataSum;
+    }
+
+    public PeakGroupScore getBestPeakGroup(List<PeakGroupScore> peakGroupScoreList, double minTotalScore, List<String> scoreTypes, String maxLibIonLimit, Boolean byIonLimit) {
+        if (peakGroupScoreList == null || peakGroupScoreList.size() == 0) {
+            return null;
+        }
         double bestTotalScore = -1d;
         int bestIndex = -1;
         List<Integer> candidateIndexList = new ArrayList<>();
-        for (int i = 0; i < ps.getScoreList().size(); i++) {
-            PeakGroupScore peakGroup = ps.getScoreList().get(i);
+        for (int i = 0; i < peakGroupScoreList.size(); i++) {
+            PeakGroupScore peakGroup = peakGroupScoreList.get(i);
 
-            if (libMaxIon != null) {
+            if (maxLibIonLimit != null) {
                 //增加限制条件1. 如果库中最大强度碎片不存在,那么直接跳过
-                if (peakGroup.getIonIntensity().get(libMaxIon) == null) {
+                if (peakGroup.getIonIntensity().get(maxLibIonLimit) == null) {
                     continue;
                 }
                 //增加限制条件2. 填充的碎片不能超过库中最大强度碎片的强度值
-                if (!peakGroup.getMaxIon().equals(libMaxIon)) {
+                if (!peakGroup.getMaxIon().equals(maxLibIonLimit)) {
                     continue;
                 }
             }
 
-            Double currentTotalScore = peakGroup.get(ScoreType.WeightedTotalScore, scoreTypes);
+            Double currentTotalScore = peakGroup.getTotalScore(scoreTypes);
             if (currentTotalScore != null && currentTotalScore > minTotalScore) {
                 candidateIndexList.add(i);
             }
@@ -273,11 +293,10 @@ public class Scorer {
         int selectPeakGroupIndex = -1;
         if (candidateIndexList.size() > 0) {
             for (Integer index : candidateIndexList) {
-                double totalByIons = ps.getScoreList().get(index).get(ScoreType.BseriesScore, scoreTypes) + ps.getScoreList().get(index).get(ScoreType.YseriesScore, scoreTypes);
+                double totalByIons = peakGroupScoreList.get(index).fetchBYIons(scoreTypes);
                 if (totalByIons > byIons) {
                     byIons = totalByIons;
                     selectPeakGroupIndex = index;
-                    bestTotalScore = ps.getScoreList().get(index).get(ScoreType.WeightedTotalScore, scoreTypes);
                 }
             }
             if (selectPeakGroupIndex != bestIndex) {
@@ -291,35 +310,26 @@ public class Scorer {
             return null;
         }
 
-        DataSumDO dataSum = new DataSumDO();
-        if (bestTotalScore > overview.getMinTotalScore()) {
-            dataSum.setStatus(IdentifyStatus.SUCCESS.getCode());
-        } else {
-            dataSum.setStatus(IdentifyStatus.FAILED.getCode());
-        }
-        dataSum.setSum(ps.getScoreList().get(selectPeakGroupIndex).getIntensitySum());
-        dataSum.setRealRt(ps.getScoreList().get(selectPeakGroupIndex).getRt());
-        dataSum.setTotalScore(ps.getScoreList().get(selectPeakGroupIndex).get(ScoreType.WeightedTotalScore, scoreTypes));
-        return dataSum;
+        return peakGroupScoreList.get(selectPeakGroupIndex);
     }
-
-    public PeakGroupScore getBestTargetPeak(DataDO data, String typeName) {
-        if (data.getScoreList() == null) {
-            return null;
-        }
-
-        PeptideScore ps = new PeptideScore(data);
-
-        double bestTotalScore = -1d;
-        PeakGroupScore bestPeak = null;
-        for (int i = 0; i < ps.getScoreList().size(); i++) {
-            Double currentTotalScore = ps.getScoreList().get(i).get(typeName, ScoreType.getAllTypesName());
-            if (currentTotalScore != null && currentTotalScore > bestTotalScore) {
-                bestTotalScore = currentTotalScore;
-                bestPeak = ps.getScoreList().get(i);
-            }
-        }
-
-        return bestPeak;
-    }
+//
+//    public PeakGroupScore getBestTargetPeak(DataDO data, String typeName) {
+//        if (data.getScoreList() == null) {
+//            return null;
+//        }
+//
+//        PeptideScore ps = new PeptideScore(data);
+//
+//        double bestTotalScore = -1d;
+//        PeakGroupScore bestPeak = null;
+//        for (int i = 0; i < ps.getScoreList().size(); i++) {
+//            Double currentTotalScore = ps.getScoreList().get(i).get(typeName, ScoreType.getAllTypesName());
+//            if (currentTotalScore != null && currentTotalScore > bestTotalScore) {
+//                bestTotalScore = currentTotalScore;
+//                bestPeak = ps.getScoreList().get(i);
+//            }
+//        }
+//
+//        return bestPeak;
+//    }
 }

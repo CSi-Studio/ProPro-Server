@@ -64,7 +64,7 @@ public class Xgboost extends Classifier {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        List<SelectedPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
+        List<SelectedPeakGroupScore> featureScoresList = ProProUtil.findBestPeakGroupByTargetScoreType(scores, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
         ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
         int count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
         if (count > 0) {
@@ -90,7 +90,7 @@ public class Xgboost extends Classifier {
                 predict(booster, trainData, ScoreType.WeightedTotalScore.getName(), learningParams.getScoreTypes());
             }
             logger.info("总时间：" + (System.currentTimeMillis() - startTime));
-            List<SelectedPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), learningParams.getScoreTypes(), false);
+            List<SelectedPeakGroupScore> featureScoresList = ProProUtil.findBestPeakGroupByTargetScoreType(scores, ScoreType.WeightedTotalScore.getName(), learningParams.getScoreTypes(), false);
             ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
             int count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
             logger.info("Train count:" + count);

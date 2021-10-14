@@ -21,13 +21,13 @@ import java.util.List;
 public class Lda extends Classifier {
 
     /**
-     * @param scores
+     * @param peptideList
      * @param learningParams
      * @return
      */
-    public HashMap<String, Double> classifier(List<PeptideScore> scores, LearningParams learningParams, List<String> scoreTypes) {
+    public HashMap<String, Double> classifier(List<PeptideScore> peptideList, LearningParams learningParams, List<String> scoreTypes) {
         log.info("开始训练学习数据权重");
-        if (scores.size() < 500) {
+        if (peptideList.size() < 500) {
             learningParams.setXevalNumIter(10);
             learningParams.setSsIterationFdr(0.02);
             learningParams.setProgressiveRate(0.8);
@@ -36,13 +36,13 @@ public class Lda extends Classifier {
         List<HashMap<String, Double>> weightsMapList = new ArrayList<>();
         for (int i = 0; i < neval; i++) {
             log.info("开始第" + i + "轮尝试,总计" + neval + "轮");
-            LDALearnData ldaLearnData = learnRandomized(scores, learningParams);
+            LDALearnData ldaLearnData = learnRandomized(peptideList, learningParams);
             if (ldaLearnData == null) {
                 log.info("跳过本轮训练");
                 continue;
             }
-            score(scores, ldaLearnData.getWeightsMap(), scoreTypes);
-            List<SelectedPeakGroupScore> featureScoresList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
+            score(peptideList, ldaLearnData.getWeightsMap(), scoreTypes);
+            List<SelectedPeakGroupScore> featureScoresList = ProProUtil.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
             int count = 0;
             ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
             count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());

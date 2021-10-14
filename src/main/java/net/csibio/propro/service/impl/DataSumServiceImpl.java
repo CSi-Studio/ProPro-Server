@@ -46,22 +46,22 @@ public class DataSumServiceImpl implements DataSumService {
     }
 
     @Override
-    public void buildDataSumList(List<SelectedPeakGroupScore> sfsList, Double fdr, OverviewDO overview, String projectId) {
+    public void buildDataSumList(List<SelectedPeakGroupScore> selectPeakGroupList, Double fdr, OverviewDO overview, String projectId) {
         List<DataSumDO> sumList = new ArrayList<>();
-        sfsList.forEach(sfs -> {
+        selectPeakGroupList.forEach(selectedPeakGroup -> {
             DataSumDO sum = new DataSumDO();
             sum.setOverviewId(overview.getId());
-            sum.setId(sfs.getId());
-            sum.setProteins(sfs.getProteins());
-            sum.setDecoy(sfs.getDecoy());
-            sum.setFdr(sfs.getFdr());
-            sum.setQValue(sfs.getQValue());
-            sum.setFragIntFeature(sfs.getFragIntFeature());
-            sum.setRealRt(sfs.getRt());
-            sum.setPeptideRef(sfs.getPeptideRef());
-            sum.setSum(sfs.getIntensitySum());
-            sum.setTotalScore(sfs.getMainScore());
-            if (sfs.getFdr() != null && sfs.getFdr() <= fdr) {
+            sum.setId(selectedPeakGroup.getId());
+            sum.setProteins(selectedPeakGroup.getProteins());
+            sum.setDecoy(selectedPeakGroup.getDecoy());
+            sum.setFdr(selectedPeakGroup.getFdr());
+            sum.setQValue(selectedPeakGroup.getQValue());
+            sum.setFragIntFeature(selectedPeakGroup.getFragIntFeature());
+            sum.setRealRt(selectedPeakGroup.getRt());
+            sum.setPeptideRef(selectedPeakGroup.getPeptideRef());
+            sum.setSum(selectedPeakGroup.getIntensitySum());
+            sum.setTotalScore(selectedPeakGroup.getMainScore());
+            if (selectedPeakGroup.getFdr() != null && selectedPeakGroup.getFdr() <= fdr) {
                 sum.setStatus(IdentifyStatus.SUCCESS.getCode());
             } else {
                 sum.setStatus(IdentifyStatus.FAILED.getCode());

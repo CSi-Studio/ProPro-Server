@@ -324,11 +324,11 @@ public class ProProUtil {
      * 以scoreType为主分数挑选出所有主分数最高的峰
      *
      * @param peptideScoreList
-     * @param scoreType        需要作为主分数的分数
+     * @param targetScoreType  需要作为主分数的分数
      * @param scoreTypes       打分开始的时候所有参与打分的子分数快照列表
      * @return
      */
-    public static List<SelectedPeakGroupScore> findTopFeatureScores(List<PeptideScore> peptideScoreList, String scoreType, List<String> scoreTypes, boolean strict) {
+    public static List<SelectedPeakGroupScore> findBestPeakGroupByTargetScoreType(List<PeptideScore> peptideScoreList, String targetScoreType, List<String> scoreTypes, boolean strict) {
         List<SelectedPeakGroupScore> bestFeatureScoresList = new ArrayList<>();
         for (PeptideScore peptideScore : peptideScoreList) {
             if (peptideScore.getScoreList() == null || peptideScore.getScoreList().size() == 0) {
@@ -341,15 +341,15 @@ public class ProProUtil {
                 if (strict && peakGroupScore.getThresholdPassed() != null && !peakGroupScore.getThresholdPassed()) {
                     continue;
                 }
-                Double featureMainScore = peakGroupScore.get(scoreType, scoreTypes);
-                if (featureMainScore != null && featureMainScore > maxScore) {
-                    maxScore = featureMainScore;
+                Double targetScore = peakGroupScore.get(targetScoreType, scoreTypes);
+                if (targetScore != null && targetScore > maxScore) {
+                    maxScore = targetScore;
                     topFeatureScore = peakGroupScore;
                 }
             }
 
             if (topFeatureScore != null) {
-                bestFeatureScores.setMainScore(topFeatureScore.get(scoreType, scoreTypes));
+                bestFeatureScores.setMainScore(topFeatureScore.get(targetScoreType, scoreTypes));
                 bestFeatureScores.setScores(topFeatureScore.getScores());
                 bestFeatureScores.setRt(topFeatureScore.getRt());
                 bestFeatureScores.setIntensitySum(topFeatureScore.getIntensitySum());

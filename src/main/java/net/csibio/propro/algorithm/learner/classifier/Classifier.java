@@ -69,8 +69,8 @@ public abstract class Classifier {
 
     public TrainPeaks selectTrainPeaks(TrainData trainData, String usedScoreType, LearningParams learningParams, Double cutoff) {
 
-        List<SelectedPeakGroupScore> topTargetPeaks = ProProUtil.findTopFeatureScores(trainData.getTargets(), usedScoreType, learningParams.getScoreTypes(), true);
-        List<SelectedPeakGroupScore> topDecoyPeaks = ProProUtil.findTopFeatureScores(trainData.getDecoys(), usedScoreType, learningParams.getScoreTypes(), false);
+        List<SelectedPeakGroupScore> topTargetPeaks = ProProUtil.findBestPeakGroupByTargetScoreType(trainData.getTargets(), usedScoreType, learningParams.getScoreTypes(), true);
+        List<SelectedPeakGroupScore> topDecoyPeaks = ProProUtil.findBestPeakGroupByTargetScoreType(trainData.getDecoys(), usedScoreType, learningParams.getScoreTypes(), false);
 
         Double cutoffNew;
         if (topTargetPeaks.size() < 100) {

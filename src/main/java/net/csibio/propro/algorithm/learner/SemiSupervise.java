@@ -65,8 +65,8 @@ public class SemiSupervise {
         params.setType(overview.getType());
         //Step2. 从数据库读取全部含打分结果的数据
         log.info("开始获取打分数据");
-        List<PeptideScore> scores = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), PeptideScore.class, overview.getProjectId());
-        if (scores == null || scores.size() == 0) {
+        List<PeptideScore> peptideList = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), PeptideScore.class, overview.getProjectId());
+        if (peptideList == null || peptideList.size() == 0) {
             log.info("没有合适的数据");
             return finalResult;
         }
@@ -74,16 +74,16 @@ public class SemiSupervise {
         HashMap<String, Double> weightsMap = new HashMap<>();
         switch (params.getClassifier()) {
             case lda -> {
-                weightsMap = lda.classifier(scores, params, overview.getParams().getMethod().getScore().getScoreTypes());
-                lda.score(scores, weightsMap, params.getScoreTypes());
+                weightsMap = lda.classifier(peptideList, params, overview.getParams().getMethod().getScore().getScoreTypes());
+                lda.score(peptideList, weightsMap, params.getScoreTypes());
                 finalResult.setWeightsMap(weightsMap);
             }
-            case xgboost -> xgboost.classifier(scores, overview.getParams().getMethod().getScore().getScoreTypes(), params);
+            case xgboost -> xgboost.classifier(peptideList, overview.getParams().getMethod().getScore().getScoreTypes(), params);
             default -> {
             }
         }
 
-        List<SelectedPeakGroupScore> selectedPeakGroupList = ProProUtil.findTopFeatureScores(scores, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), false);
+        List<SelectedPeakGroupScore> selectedPeakGroupList = ProProUtil.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), false);
         ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupList, params);
         finalResult.setAllInfo(errorStat);
         int count = ProProUtil.checkFdr(finalResult, params.getFdr());
