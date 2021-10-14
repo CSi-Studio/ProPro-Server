@@ -20,7 +20,9 @@ public class ExpDataVO {
 
     String expId;
 
-    String label;
+    String group;
+
+    String alias;
 
     Boolean decoy;
 

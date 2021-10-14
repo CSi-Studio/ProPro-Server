@@ -74,7 +74,7 @@ public class AnalyzeController {
                    @RequestParam("expIdList") List<String> expIdList,
                    @RequestParam("methodId") String methodId,
                    @RequestParam("anaLibId") String anaLibId,
-                   @RequestParam("note") String note,
+                   @RequestParam(value = "note", required = false) String note,
                    @RequestParam(value = "insLibId", required = false) String insLibId
     ) {
         ProjectDO project = projectService.getById(projectId);
@@ -129,30 +129,30 @@ public class AnalyzeController {
     @PostMapping(value = "/reselect")
     Result reselect(@RequestParam(value = "overviewIds") List<String> overviewIds) {
         for (String overviewId : overviewIds) {
-            OverviewDO reselectOverview = overviewService.getById(overviewId);
-            if (reselectOverview == null) {
+            OverviewDO baseOverview = overviewService.getById(overviewId);
+            if (baseOverview == null) {
                 return Result.Error(ResultCode.OVERVIEW_NOT_EXISTED);
             }
-            ProjectDO project = projectService.getById(reselectOverview.getProjectId());
+            ProjectDO project = projectService.getById(baseOverview.getProjectId());
             if (project == null) {
                 return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
             }
-            ExperimentDO exp = experimentService.getById(reselectOverview.getExpId());
+            ExperimentDO exp = experimentService.getById(baseOverview.getExpId());
             if (exp == null) {
                 return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
             }
-            MethodDO method = methodService.getById(reselectOverview.getParams().getMethod().getId());
+            MethodDO method = methodService.getById(baseOverview.getParams().getMethod().getId());
             if (method == null) {
                 return Result.Error(ResultCode.METHOD_NOT_EXISTED);
             }
 
-            LibraryDO anaLib = libraryService.getById(reselectOverview.getParams().getAnaLibId());
+            LibraryDO anaLib = libraryService.getById(baseOverview.getParams().getAnaLibId());
             if (anaLib == null) {
                 return Result.Error(ResultCode.ANA_LIBRARY_NOT_EXISTED);
             }
             LibraryDO insLib = null;
             if (!method.getIrt().isUseAnaLibForIrt()) {
-                insLib = libraryService.getById(reselectOverview.getParams().getInsLibId());
+                insLib = libraryService.getById(baseOverview.getParams().getInsLibId());
                 if (insLib == null) {
                     return Result.Error(ResultCode.INS_LIBRARY_NOT_EXISTED);
                 }
@@ -163,9 +163,10 @@ public class AnalyzeController {
             TaskDO task = new TaskDO(TaskTemplate.RESELECT, "Analyze-Reselect-" + project.getName());
             taskService.insert(task);
             AnalyzeParams params = new AnalyzeParams(method);
-            params.setReselectOverviewId(overviewId);
-            params.setReselectOverview(reselectOverview);
+            params.setBaseOverviewId(overviewId);
+            params.setBaseOverview(baseOverview);
             params.setReselect(true);
+            params.getMethod().getClassifier().setFdr(0.01);
             params.setAnaLibId(anaLib.getId());
             params.setAnaLibName(anaLib.getName());
             params.setInsLibId(insLib.getId());

@@ -279,8 +279,11 @@ public class Extractor {
         }
         //Step3.提取指定原始谱图
         rtMap = parser.getSpectrums(swathIndex.getStartPtr(), swathIndex.getEndPtr(), swathIndex.getRts(), swathIndex.getMzs(), swathIndex.getInts());
-        List<DataDO> dataList = coreFunc.epps(exp, coords, rtMap, params);
-        return dataList;
+        if (params.getReselect()) {
+            return coreFunc.reselect(exp, coords, rtMap, params);
+        } else {
+            return coreFunc.epps(exp, coords, rtMap, params);
+        }
     }
 
     /**

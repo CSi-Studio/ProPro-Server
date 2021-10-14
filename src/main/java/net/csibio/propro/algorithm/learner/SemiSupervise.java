@@ -66,7 +66,10 @@ public class SemiSupervise {
         //Step2. 从数据库读取全部含打分结果的数据
         log.info("开始获取打分数据");
         List<PeptideScore> scores = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), PeptideScore.class, overview.getProjectId());
-
+        if (scores == null || scores.size() == 0) {
+            log.info("没有合适的数据");
+            return finalResult;
+        }
         //Step3. 开始训练数据集
         HashMap<String, Double> weightsMap = new HashMap<>();
         switch (params.getClassifier()) {
@@ -103,6 +106,7 @@ public class SemiSupervise {
 
         long start = System.currentTimeMillis();
         //插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
+        log.info("FDR:" + params.getFdr());
         dataSumService.buildDataSumList(selectedPeakGroupList, params.getFdr(), overview, overview.getProjectId());
         log.info("插入Sum数据" + selectedPeakGroupList.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
         overview.setWeights(weightsMap);

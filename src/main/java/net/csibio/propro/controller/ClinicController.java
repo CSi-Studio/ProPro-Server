@@ -155,11 +155,24 @@ public class ClinicController {
             //如果使用预测方法,则进行实时EIC获取
             if (predict) {
                 ExperimentDO exp = experimentService.getById(expId);
-                Result<ExpDataVO> res = dataService.predictDataFromFile(exp, libraryId, peptideRef, changeCharge, overview.getId());
-                if (res.isSuccess()) {
-                    data = res.getData();
+                DataSumDO existed = dataSumService.getOne(new DataSumQuery().setOverviewId(overview.getId()).setPeptideRef(peptideRef).setDecoy(false), DataSumDO.class, projectId);
+                if (existed.getStatus() == IdentifyStatus.SUCCESS.getCode()) {
+                    DataDO existedData = dataService.getById(existed.getId(), projectId);
+                    data = new ExpDataVO().merge(existedData, existed);
+                    data.setGroup(exp.getGroup());
+                    data.setAlias(exp.getAlias());
                     data.setExpId(exp.getId());
+                } else {
+                    Result<ExpDataVO> res = dataService.predictDataFromFile(exp, libraryId, peptideRef, changeCharge, overview.getId());
+                    if (res.isSuccess()) {
+                        data = res.getData();
+                        data.setGroup(exp.getGroup());
+                        data.setAlias(exp.getAlias());
+                        data.setExpId(exp.getId());
+                    }
                 }
+
+
             } else {
                 data = dataService.getDataFromDB(projectId, expId, overview.getId(), peptideRef);
             }
@@ -192,6 +205,9 @@ public class ClinicController {
                 }
                 data.setIntMap(denoiseIntMap);
             });
+        }
+        if (dataList.size() == 0) {
+            return Result.Error(ResultCode.DATA_IS_EMPTY);
         }
         return Result.OK(dataList);
     }

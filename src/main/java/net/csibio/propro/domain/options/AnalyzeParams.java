@@ -16,9 +16,9 @@ public class AnalyzeParams {
     @Transient
     String overviewId; //分析概览ID
     @Transient
-    String reselectOverviewId;  //仅在reselect模式下存在,为reselect之前的分析概览对象id
+    String baseOverviewId;  //仅在reselect模式下存在,为reselect之前的分析概览对象id
     @Transient
-    OverviewDO reselectOverview; //仅在reselect模式下存在,为reselect之前的分析概览对象
+    OverviewDO baseOverview; //仅在reselect模式下存在,为reselect之前的分析概览对象
 
     /**
      * 是否为预测

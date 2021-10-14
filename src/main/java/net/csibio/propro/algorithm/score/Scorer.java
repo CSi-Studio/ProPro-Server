@@ -231,51 +231,10 @@ public class Scorer {
      *
      * @param data
      * @param overview
-     * @return
-     */
-    public DataSumDO calcBestTotalScore(DataDO data, OverviewDO overview) {
-        DataSumDO dataSum = null;
-        if (data.getScoreList() == null) {
-            return null;
-        }
-
-        PeptideScore ps = new PeptideScore(data);
-
-        List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
-        lda.scoreForPeakGroups(ps.getScoreList(), overview.getWeights(), scoreTypes);
-        double bestTotalScore = -1d;
-        Double bestRt = null;
-        int bestIndex = 0;
-        for (int i = 0; i < ps.getScoreList().size(); i++) {
-            Double currentTotalScore = ps.getScoreList().get(i).get(ScoreType.WeightedTotalScore, scoreTypes);
-            if (currentTotalScore != null && currentTotalScore > bestTotalScore) {
-                bestIndex = i;
-                bestTotalScore = currentTotalScore;
-                bestRt = ps.getScoreList().get(i).getRt();
-            }
-        }
-        dataSum = new DataSumDO();
-        if (bestTotalScore > overview.getMinTotalScore()) {
-            dataSum.setStatus(IdentifyStatus.SUCCESS.getCode());
-        } else {
-            dataSum.setStatus(IdentifyStatus.FAILED.getCode());
-        }
-        dataSum.setSum(ps.getScoreList().get(bestIndex).getIntensitySum());
-        dataSum.setRealRt(bestRt);
-        dataSum.setTotalScore(bestTotalScore);
-        return dataSum;
-    }
-
-    /**
-     * 计算最好的峰的总分,并且加上鉴定态
-     *
-     * @param data
-     * @param overview
      * @param libMaxIon 库中理论最大强度碎片,在实际获得的EIC峰组中,该碎片应该仍然为最大强度碎片
      * @return
      */
-    public DataSumDO calcBestTotalScoreWithLimit(DataDO data, OverviewDO overview, String libMaxIon) {
-        DataSumDO dataSum = null;
+    public DataSumDO calcBestTotalScore(DataDO data, OverviewDO overview, String libMaxIon) {
         if (data.getScoreList() == null) {
             return null;
         }
@@ -283,35 +242,64 @@ public class Scorer {
         PeptideScore ps = new PeptideScore(data);
         List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
         lda.scoreForPeakGroups(ps.getScoreList(), overview.getWeights(), scoreTypes);
+        double minTotalScore = overview.getMinTotalScore();
         double bestTotalScore = -1d;
-        Double bestRt = null;
-        int bestIndex = 0;
+        int bestIndex = -1;
+        List<Integer> candidateIndexList = new ArrayList<>();
         for (int i = 0; i < ps.getScoreList().size(); i++) {
             PeakGroupScore peakGroup = ps.getScoreList().get(i);
-            if (peakGroup.getIonIntensity().get(libMaxIon) == null) {
-                continue;
+
+            if (libMaxIon != null) {
+                //增加限制条件1. 如果库中最大强度碎片不存在,那么直接跳过
+                if (peakGroup.getIonIntensity().get(libMaxIon) == null) {
+                    continue;
+                }
+                //增加限制条件2. 填充的碎片不能超过库中最大强度碎片的强度值
+                if (!peakGroup.getMaxIon().equals(libMaxIon)) {
+                    continue;
+                }
             }
-            Double libMaxIntensity = peakGroup.getIonIntensity().get(libMaxIon);
-            Double ratio = Math.abs(libMaxIntensity - peakGroup.getMaxIonIntensity()) / libMaxIntensity;
-            if (!peakGroup.getMaxIon().equals(libMaxIon) && ratio > 0.15) {
-                continue;
-            }
+
             Double currentTotalScore = peakGroup.get(ScoreType.WeightedTotalScore, scoreTypes);
+            if (currentTotalScore != null && currentTotalScore > minTotalScore) {
+                candidateIndexList.add(i);
+            }
             if (currentTotalScore != null && currentTotalScore > bestTotalScore) {
-                bestIndex = i;
                 bestTotalScore = currentTotalScore;
-                bestRt = ps.getScoreList().get(i).getRt();
+                bestIndex = i;
             }
         }
-        dataSum = new DataSumDO();
+        double byIons = -1d;
+        int selectPeakGroupIndex = -1;
+        if (candidateIndexList.size() > 0) {
+            for (Integer index : candidateIndexList) {
+                double totalByIons = ps.getScoreList().get(index).get(ScoreType.BseriesScore, scoreTypes) + ps.getScoreList().get(index).get(ScoreType.YseriesScore, scoreTypes);
+                if (totalByIons > byIons) {
+                    byIons = totalByIons;
+                    selectPeakGroupIndex = index;
+                    bestTotalScore = ps.getScoreList().get(index).get(ScoreType.WeightedTotalScore, scoreTypes);
+                }
+            }
+            if (selectPeakGroupIndex != bestIndex) {
+                log.info("组内切换了对应峰组,最高得分Index:" + bestIndex + ";" + "选中Index:" + selectPeakGroupIndex);
+            }
+        } else {
+            selectPeakGroupIndex = bestIndex;
+        }
+
+        if (selectPeakGroupIndex == -1) {
+            return null;
+        }
+
+        DataSumDO dataSum = new DataSumDO();
         if (bestTotalScore > overview.getMinTotalScore()) {
             dataSum.setStatus(IdentifyStatus.SUCCESS.getCode());
         } else {
             dataSum.setStatus(IdentifyStatus.FAILED.getCode());
         }
-        dataSum.setSum(ps.getScoreList().get(bestIndex).getIntensitySum());
-        dataSum.setRealRt(bestRt);
-        dataSum.setTotalScore(bestTotalScore);
+        dataSum.setSum(ps.getScoreList().get(selectPeakGroupIndex).getIntensitySum());
+        dataSum.setRealRt(ps.getScoreList().get(selectPeakGroupIndex).getRt());
+        dataSum.setTotalScore(ps.getScoreList().get(selectPeakGroupIndex).get(ScoreType.WeightedTotalScore, scoreTypes));
         return dataSum;
     }
 
