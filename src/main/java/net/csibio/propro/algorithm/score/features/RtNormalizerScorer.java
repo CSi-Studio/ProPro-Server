@@ -52,7 +52,7 @@ public class RtNormalizerScorer {
                 continue;
             }
             PeakGroupScore scores = new PeakGroupScore(defaultScoreTypes.size());
-            chromatographicScorer.calculateChromatographicScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
+            chromatographicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
             chromatographicScorer.calculateLogSnScore(peakGroupFeature, scores, defaultScoreTypes);
             libraryScorer.calculateLibraryScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
 

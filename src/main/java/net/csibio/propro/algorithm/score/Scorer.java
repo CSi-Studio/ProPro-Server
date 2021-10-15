@@ -107,7 +107,7 @@ public class Scorer {
 
         for (PeakGroup peakGroup : peakGroupFeatureList) {
             PeakGroupScore peakGroupScore = new PeakGroupScore(params.getMethod().getScore().getScoreTypes().size());
-            chromatographicScorer.calculateChromatographicScores(peakGroup, normedLibIntMap, peakGroupScore, params.getMethod().getScore().getScoreTypes());
+            chromatographicScorer.calcXICScores(peakGroup, normedLibIntMap, peakGroupScore, params.getMethod().getScore().getScoreTypes());
 //            Double shapeScore = peakGroupScores.get(ScoreType.XcorrShape, params.getMethod().getScore().getScoreTypes());
 //            Double shapeScoreWeighted = peakGroupScores.get(ScoreType.XcorrShapeWeighted, params.getMethod().getScore().getScoreTypes());
 //            if (!dataDO.getDecoy() && ((shapeScore != null && shapeScore < params.getMethod().getQuickFilter().getMinShapeScore()))) {
@@ -178,7 +178,7 @@ public class Scorer {
             List<String> scoreTypes = new ArrayList<>();
             scoreTypes.add(ScoreType.XcorrShape.getName());
             scoreTypes.add(ScoreType.XcorrShapeWeighted.getName());
-            chromatographicScorer.calculateChromatographicScores(peakGroupFeature, normedLibIntMap, peakGroupScore, scoreTypes);
+            chromatographicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, peakGroupScore, scoreTypes);
             if (peakGroupScore.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes) < shapeScoreThreshold
                     || peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
                 continue;
@@ -211,7 +211,7 @@ public class Scorer {
         HashMap<String, Double> normedLibIntMap = peakGroupList.getNormedIntMap();
         for (PeakGroup peakGroupFeature : peakGroupFeatureList) {
             PeakGroupScore peakGroupScore = new PeakGroupScore(types.size());
-            chromatographicScorer.calculateChromatographicScores(peakGroupFeature, normedLibIntMap, peakGroupScore, types);
+            chromatographicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, peakGroupScore, types);
             if (peakGroupScore.get(ScoreType.XcorrShape.getName(), types) < 0.6) {
                 continue;
             }

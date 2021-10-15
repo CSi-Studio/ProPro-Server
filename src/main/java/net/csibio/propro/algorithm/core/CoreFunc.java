@@ -152,7 +152,7 @@ public class CoreFunc {
         String maxLibIon = libIons.get(0);
         //Step2.生成碎片离子,碎片最大带电量为母离子的带电量,最小碎片长度为3
         Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 3);
-        proproFiList.forEach(fi -> fi.setIntensity(500d)); //给到一个任意的初始化强度
+        proproFiList.forEach(fi -> fi.setIntensity(100d)); //给到一个任意的初始化强度
         Map<String, FragmentInfo> predictFragmentMap = proproFiList.stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
         //将预测碎片中的库碎片信息替换为库碎片完整信息(主要是intensity值)
         libFragMap.keySet().forEach(cutInfo -> {
@@ -166,7 +166,7 @@ public class CoreFunc {
         //Step4.获取所有碎片的统计分,并按照CV值进行排序,记录前15的碎片
         List<IonStat> statList = buildIonStat(intMap);
         int maxCandidateIons = params.getMethod().getScore().getMaxCandidateIons();
-        maxCandidateIons = 15;
+        maxCandidateIons = 20;
         if (statList.size() > maxCandidateIons) {
             statList = statList.subList(0, maxCandidateIons);
         }

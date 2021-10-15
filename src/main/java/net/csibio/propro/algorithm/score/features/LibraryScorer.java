@@ -18,7 +18,6 @@ import java.util.List;
 /**
  * scores.library_corr
  * scores.library_norm_manhattan
- * <p>
  * scores.var_intensity_score
  * <p>
  * Created by Nico Wang Ruimin
@@ -121,14 +120,14 @@ public class LibraryScorer {
         }
 
         //root mean square
-        if (scoreTypes.contains(ScoreType.LibraryRootmeansquare.getName())) {
-            double rms = 0;
-            for (int i = 0; i < normedLibInt.size(); i++) {
-                rms += (normedLibInt.get(i) - normedExpInt.get(i)) * (normedLibInt.get(i) - normedExpInt.get(i));
-            }
-            rms = Math.sqrt(rms / normedLibInt.size());
-            scores.put(ScoreType.LibraryRootmeansquare.getName(), rms, scoreTypes);
-        }
+//        if (scoreTypes.contains(ScoreType.LibraryRootmeansquare.getName())) {
+//            double rms = 0;
+//            for (int i = 0; i < normedLibInt.size(); i++) {
+//                rms += (normedLibInt.get(i) - normedExpInt.get(i)) * (normedLibInt.get(i) - normedExpInt.get(i));
+//            }
+//            rms = Math.sqrt(rms / normedLibInt.size());
+//            scores.put(ScoreType.LibraryRootmeansquare.getName(), rms, scoreTypes);
+//        }
     }
 
     public void calculateNormRtScore(PeakGroup peakGroup, SlopeIntercept slopeIntercept, double groupRt, PeakGroupScore scores, List<String> scoreTypes) {

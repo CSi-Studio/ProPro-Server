@@ -73,7 +73,7 @@ public enum ScoreType {
             false, true),
     LibraryRootmeansquare("LibraryRootmeansquare", "var_LibraryRootmeansquare",
             "",
-            false, true),
+            false, false),
     ManhattScore("ManhattScore", "var_ManhattScore",
             "",
             null, false),

@@ -227,6 +227,9 @@ public class MathUtil {
     }
 
     public static int findMaxIndex(Double[] data) {
+        if (data == null || data.length == 0) {
+            return -1;
+        }
         double max = data[0];
         int index = 0;
         for (int i = 0; i < data.length; i++) {
@@ -239,6 +242,9 @@ public class MathUtil {
     }
 
     public static int findMaxIndex(List<Double> data) {
+        if (data == null || data.size() == 0) {
+            return -1;
+        }
         double max = data.get(0);
         int index = 0;
         for (int i = 0; i < data.size(); i++) {

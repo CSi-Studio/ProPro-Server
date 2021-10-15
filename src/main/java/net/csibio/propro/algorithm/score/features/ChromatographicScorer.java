@@ -14,31 +14,28 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by Nico Wang Ruimin
- * Time: 2018-08-15 16:06
- * <p>
- * scores.xcorr_coelution_score 互相关偏移的mean + std
- * scores.weighted_coelution_score 带权重的相关偏移sum
- * scores.xcorr_shape_score 互相关序列最大值的平均值
- * scores.weighted_xcorr_shape 带权重的互相关序列最大值的平均值
- * scores.log_sn_score log(距离ApexRt最近点的stn值之和)
- * <p>
- * scores.var_intensity_score 同一个peptideRef下, 所有HullPoints的intensity之和 除以 所有intensity之和
+ * xcorr_coelution_score 互相关偏移的mean + std
+ * weighted_coelution_score 带权重的相关偏移sum
+ * xcorr_shape_score 互相关序列最大值的平均值
+ * weighted_xcorr_shape 带权重的互相关序列最大值的平均值
+ * log_sn_score log(距离ApexRt最近点的stn值之和)
+ * var_intensity_score 同一个peptideRef下, 所有HullPoints的intensity之和 除以 所有intensity之和
  */
 @Component("chromatographicScorer")
 public class ChromatographicScorer {
 
     /**
+     * xcorrCoelutionScore
+     * xcorrCoelutionScoreWeighted
+     * xcorrShapeScore
+     * xcorrShapeScoreWeighted
+     *
      * @param peakGroup list of features in selected mrmfeature
      */
-    public void calculateChromatographicScores(PeakGroup peakGroup, HashMap<String, Double> normedLibIntMap, PeakGroupScore scores, List<String> scoreTypes) {
+    public void calcXICScores(PeakGroup peakGroup, HashMap<String, Double> normedLibIntMap, PeakGroupScore scores, List<String> scoreTypes) {
         Table<Integer, Integer, Double[]> xcorrMatrix = initializeXCorrMatrix(peakGroup);
 
-        //xcorrCoelutionScore
-        //xcorrCoelutionScoreWeighted
-        //xcorrShapeScore
-        //xcorrShapeScoreWeighted
-        List<Double> normalizedLibraryIntensity = new ArrayList<>(normedLibIntMap.values());
+        List<Double> normedLibIntList = new ArrayList<>(normedLibIntMap.values());
         List<Integer> deltas = new ArrayList<>();
         List<Double> deltasWeighted = new ArrayList<>();
         List<Double> intensities = new ArrayList<>();
@@ -49,16 +46,16 @@ public class ChromatographicScorer {
         for (int i = 0; i < size; i++) {
             value = xcorrMatrix.get(i, i);
             max = MathUtil.findMaxIndex(value);
-            deltasWeighted.add(FastMath.abs(max - (value.length - 1) / 2) * normalizedLibraryIntensity.get(i) * normalizedLibraryIntensity.get(i));
-            intensitiesWeighted.add(value[max] * normalizedLibraryIntensity.get(i) * normalizedLibraryIntensity.get(i));
+            deltasWeighted.add(FastMath.abs(max - (value.length - 1) / 2) * normedLibIntList.get(i) * normedLibIntList.get(i));
+            intensitiesWeighted.add(value[max] * normedLibIntList.get(i) * normedLibIntList.get(i));
             for (int j = i; j < size; j++) {
                 value = xcorrMatrix.get(i, j);
                 max = MathUtil.findMaxIndex(value);
                 deltas.add(Math.abs(max - (value.length - 1) / 2)); //first: maxdelay //delta: 偏移量
                 intensities.add(value[max]);//value[max] 吻合系数
                 if (j != i) {
-                    deltasWeighted.add(Math.abs(max - (value.length - 1) / 2) * normalizedLibraryIntensity.get(i) * normalizedLibraryIntensity.get(j) * 2d);
-                    intensitiesWeighted.add(value[max] * normalizedLibraryIntensity.get(i) * normalizedLibraryIntensity.get(j) * 2d);
+                    deltasWeighted.add(Math.abs(max - (value.length - 1) / 2) * normedLibIntList.get(i) * normedLibIntList.get(j) * 2d);
+                    intensitiesWeighted.add(value[max] * normedLibIntList.get(i) * normedLibIntList.get(j) * 2d);
                 }
             }
         }
