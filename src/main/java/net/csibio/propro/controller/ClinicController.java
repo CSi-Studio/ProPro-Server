@@ -16,12 +16,10 @@ import net.csibio.propro.domain.bean.common.IdNameAlias;
 import net.csibio.propro.domain.bean.common.PeptideRtPairs;
 import net.csibio.propro.domain.bean.data.PeptideRt;
 import net.csibio.propro.domain.bean.overview.Overview4Clinic;
+import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.SigmaSpacing;
-import net.csibio.propro.domain.query.DataQuery;
-import net.csibio.propro.domain.query.DataSumQuery;
-import net.csibio.propro.domain.query.ExperimentQuery;
-import net.csibio.propro.domain.query.OverviewQuery;
+import net.csibio.propro.domain.query.*;
 import net.csibio.propro.domain.vo.ClinicPrepareDataVO;
 import net.csibio.propro.domain.vo.ExpDataVO;
 import net.csibio.propro.service.*;
@@ -141,6 +139,8 @@ public class ClinicController {
                                        @RequestParam(value = "denoise", required = false) Boolean denoise,
                                        @RequestParam("expIds") List<String> expIds) {
         List<ExpDataVO> dataList = new ArrayList<>();
+        PeptideDO peptide = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(peptideRef), PeptideDO.class);
+        Map<String, Double> intensityMap = peptide.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, FragmentInfo::getIntensity));
         for (int i = 0; i < expIds.size(); i++) {
             String expId = expIds.get(i);
             OverviewQuery query = new OverviewQuery(projectId).setExpId(expId);
@@ -208,7 +208,10 @@ public class ClinicController {
         if (dataList.size() == 0) {
             return Result.Error(ResultCode.DATA_IS_EMPTY);
         }
-        return Result.OK(dataList);
+        Result<List<ExpDataVO>> result = new Result<List<ExpDataVO>>(true);
+        result.setData(dataList);
+        result.getFeatureMap().put("intensityMap", intensityMap);
+        return result;
     }
 
     @PostMapping(value = "/getSpectra")

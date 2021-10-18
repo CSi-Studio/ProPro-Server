@@ -251,6 +251,8 @@ public class Scorer {
             return null;
         }
         DataSumDO dataSum = new DataSumDO();
+        dataSum.setPeptideRef(data.getPeptideRef());
+        dataSum.setProteins(data.getProteins());
         if (selectPeakGroup.getTotalScore(scoreTypes) > overview.getMinTotalScore()) {
             dataSum.setStatus(IdentifyStatus.SUCCESS.getCode());
         } else {
@@ -302,7 +304,7 @@ public class Scorer {
         return bestFeatureScoresList;
     }
 
-    public List<SelectedPeakGroupScore> findBestPeakGroupByTargetScoreTypeAndWeightMap(List<PeptideScore> peptideScoreList, String targetScoreType, List<String> scoreTypes, HashMap<String, Double> weightsMap) {
+    public List<SelectedPeakGroupScore> findBestPeakGroupByTargetScoreTypeAndMinTotalScore(List<PeptideScore> peptideScoreList, String targetScoreType, List<String> scoreTypes, Double minTotalScore) {
         List<SelectedPeakGroupScore> bestFeatureScoresList = new ArrayList<>();
         for (PeptideScore peptideScore : peptideScoreList) {
             if (peptideScore.getScoreList() == null || peptideScore.getScoreList().size() == 0) {
@@ -310,7 +312,7 @@ public class Scorer {
             }
             SelectedPeakGroupScore bestFeatureScores = new SelectedPeakGroupScore(peptideScore.getId(), peptideScore.getProteins(), peptideScore.getPeptideRef(), peptideScore.getDecoy());
 
-            PeakGroupScore topFeatureScore = scorer.getBestPeakGroup(peptideScore.getScoreList(), 5.0, scoreTypes, null);
+            PeakGroupScore topFeatureScore = scorer.getBestPeakGroup(peptideScore.getScoreList(), minTotalScore, scoreTypes, null);
             if (topFeatureScore != null) {
                 bestFeatureScores.setMainScore(topFeatureScore.get(targetScoreType, scoreTypes));
                 bestFeatureScores.setScores(topFeatureScore.getScores());

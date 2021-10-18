@@ -85,26 +85,34 @@ public class SemiSupervise {
         }
 
         //进行第一轮严格意义的初筛
-        List<SelectedPeakGroupScore> selectedPeakGroupList = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), true);
-        ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupList, params);
-        finalResult.setAllInfo(errorStat);
-        int count = ProProUtil.checkFdr(finalResult, params.getFdr());
-        giveDecoyFdr(selectedPeakGroupList);
-        targetDecoyDistribution(selectedPeakGroupList, overview);
+        List<SelectedPeakGroupScore> selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), true);
+        statistics.errorStatistics(selectedPeakGroupListV1, params);
+        giveDecoyFdr(selectedPeakGroupListV1);
+        //获取第一轮严格意义上的最小总分阈值
+        double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroupScore::getFdr)).get().getTotalScore();
+        List<SelectedPeakGroupScore> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreTypeAndMinTotalScore(peptideList,
+                ScoreType.WeightedTotalScore.getName(),
+                overview.getParams().getMethod().getScore().getScoreTypes(),
+                minTotalScore);
+        //重新统计
+        ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupListV2, params);
+        giveDecoyFdr(selectedPeakGroupListV2);
 
         long start = System.currentTimeMillis();
         //Step4. 对于最终的打分结果和选峰结果保存到数据库中, 插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
-        log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + selectedPeakGroupList.size() + "条数据,开始统计相关数据,FDR:" + params.getFdr());
-
-        double minTotalScore = selectedPeakGroupList.stream().filter(s -> s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroupScore::getFdr)).get().getTotalScore();
-
+        log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + selectedPeakGroupListV2.size() + "条数据,开始统计相关数据,FDR:" + params.getFdr());
 
         log.info("最小阈值总分为:" + minTotalScore);
-        dataSumService.buildDataSumList(selectedPeakGroupList, params.getFdr(), overview, overview.getProjectId());
-        log.info("插入Sum数据" + selectedPeakGroupList.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
+        dataSumService.buildDataSumList(selectedPeakGroupListV2, params.getFdr(), overview, overview.getProjectId());
+        log.info("插入Sum数据" + selectedPeakGroupListV2.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
         overview.setWeights(weightsMap);
+
+        targetDecoyDistribution(selectedPeakGroupListV2, overview); //统计Target Decoy分布的函数
         overviewService.update(overview);
         overviewService.statistic(overview);
+
+        finalResult.setAllInfo(errorStat);
+        int count = ProProUtil.checkFdr(finalResult, params.getFdr());
         log.info("合并打分完成,共找到新肽段" + count + "个");
         return finalResult;
     }
