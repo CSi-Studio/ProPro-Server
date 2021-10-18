@@ -23,4 +23,8 @@ public class Overview4Clinic {
     Boolean defaultOne;
     HashMap<String, Double> weights;
     Double minTotalScore;
+    /**
+     * 关于本次分析的统计数据
+     */
+    HashMap<String, Object> statistic = new HashMap<>();
 }

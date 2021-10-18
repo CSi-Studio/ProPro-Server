@@ -155,23 +155,23 @@ public class ClinicController {
             //如果使用预测方法,则进行实时EIC获取
             if (predict) {
                 ExperimentDO exp = experimentService.getById(expId);
-                DataSumDO existed = dataSumService.getOne(new DataSumQuery().setOverviewId(overview.getId()).setPeptideRef(peptideRef).setDecoy(false), DataSumDO.class, projectId);
-                if (existed.getStatus() == IdentifyStatus.SUCCESS.getCode()) {
-                    DataDO existedData = dataService.getById(existed.getId(), projectId);
-                    DataSumDO dataSum = scorer.calcBestTotalScore(existedData, overview, null);
-                    data = new ExpDataVO().merge(existedData, dataSum);
+//                DataSumDO existed = dataSumService.getOne(new DataSumQuery().setOverviewId(overview.getId()).setPeptideRef(peptideRef).setDecoy(false), DataSumDO.class, projectId);
+//                if (existed.getStatus() == IdentifyStatus.SUCCESS.getCode()) {
+//                    DataDO existedData = dataService.getById(existed.getId(), projectId);
+//                    DataSumDO dataSum = scorer.calcBestTotalScore(existedData, overview, null);
+//                    data = new ExpDataVO().merge(existedData, dataSum);
+//                    data.setGroup(exp.getGroup());
+//                    data.setAlias(exp.getAlias());
+//                    data.setExpId(exp.getId());
+//                } else {
+                Result<ExpDataVO> res = dataService.predictDataFromFile(exp, libraryId, peptideRef, changeCharge, overview.getId());
+                if (res.isSuccess()) {
+                    data = res.getData();
                     data.setGroup(exp.getGroup());
                     data.setAlias(exp.getAlias());
                     data.setExpId(exp.getId());
-                } else {
-                    Result<ExpDataVO> res = dataService.predictDataFromFile(exp, libraryId, peptideRef, changeCharge, overview.getId());
-                    if (res.isSuccess()) {
-                        data = res.getData();
-                        data.setGroup(exp.getGroup());
-                        data.setAlias(exp.getAlias());
-                        data.setExpId(exp.getId());
-                    }
                 }
+//                }
             } else {
                 data = dataService.getDataFromDB(projectId, expId, overview.getId(), peptideRef);
             }
@@ -256,8 +256,9 @@ public class ClinicController {
             realRtList = realRtList.stream().sorted(Comparator.comparingDouble(PeptideRt::realRt)).collect(Collectors.toList());
             for (int j = 0; j < realRtList.size(); j++) {
                 peptideRefs[j] = realRtList.get(j).peptideRef();
-                x[j] = libRtMap.get(peptideRefs[j]);
-                y[j] = realRtList.get(j).realRt() - exp.getIrt().getSi().realRt(x[j]);
+//                x[j] = libRtMap.get(peptideRefs[j]);
+                x[j] = realRtList.get(j).realRt();
+                y[j] = realRtList.get(j).realRt() - exp.getIrt().getSi().realRt(libRtMap.get(peptideRefs[j]));
             }
             map.put(expId, new PeptideRtPairs(peptideRefs, x, y));
         }

@@ -117,7 +117,6 @@ public class ExperimentTask extends BaseTask {
         LearningParams ap = new LearningParams();
         ap.setScoreTypes(params.getMethod().getScore().getScoreTypes());
         ap.setFdr(params.getMethod().getClassifier().getFdr());
-        ap.setRemoveUnmatched(params.getMethod().getClassifier().getRemoveUnmatched());
         FinalResult finalResult = semiSupervise.doSemiSupervise(params.getOverviewId(), ap);
         taskDO.addLog("流程执行完毕,总耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
         log.info("流程执行完毕,总耗时:" + ((System.currentTimeMillis() - start) / 1000) + "秒");

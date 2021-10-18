@@ -3,6 +3,7 @@ package net.csibio.propro.algorithm.learner.classifier;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.score.ScoreType;
+import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.learner.TrainData;
@@ -26,7 +27,10 @@ import java.util.Set;
 public abstract class Classifier {
 
     @Autowired
-    public Statistics statistics;
+    Statistics statistics;
+
+    @Autowired
+    Scorer scorer;
 
     /**
      * Get clfScore with given confidence(params).
@@ -69,8 +73,8 @@ public abstract class Classifier {
 
     public TrainPeaks selectTrainPeaks(TrainData trainData, String usedScoreType, LearningParams learningParams, Double cutoff) {
 
-        List<SelectedPeakGroupScore> topTargetPeaks = ProProUtil.findBestPeakGroupByTargetScoreType(trainData.getTargets(), usedScoreType, learningParams.getScoreTypes(), true);
-        List<SelectedPeakGroupScore> topDecoyPeaks = ProProUtil.findBestPeakGroupByTargetScoreType(trainData.getDecoys(), usedScoreType, learningParams.getScoreTypes(), false);
+        List<SelectedPeakGroupScore> topTargetPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getTargets(), usedScoreType, learningParams.getScoreTypes(), true);
+        List<SelectedPeakGroupScore> topDecoyPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getDecoys(), usedScoreType, learningParams.getScoreTypes(), false);
 
         Double cutoffNew;
         if (topTargetPeaks.size() < 100) {

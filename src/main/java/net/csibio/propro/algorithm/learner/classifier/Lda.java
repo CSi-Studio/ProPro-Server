@@ -42,7 +42,7 @@ public class Lda extends Classifier {
                 continue;
             }
             score(peptideList, ldaLearnData.getWeightsMap(), scoreTypes);
-            List<SelectedPeakGroupScore> featureScoresList = ProProUtil.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
+            List<SelectedPeakGroupScore> featureScoresList = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
             int count = 0;
             ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
             count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());

@@ -227,7 +227,7 @@ public class Extractor {
             int dataCount = 0;
             for (BlockIndexDO index : blockIndexList) {
                 long start = System.currentTimeMillis();
-                task.addLog("开始处理窗口:" + index.getRange().getStart() + "-" + index.getRange().getEnd());
+                task.addLog("开始处理窗口:" + index.getRange().getStart() + "-" + index.getRange().getEnd() + ",当前轮数" + count + "/" + blockIndexList.size());
                 List<DataDO> dataList = doExtract(parser, exp, index, analyzeParams);
                 if (dataList != null) {
                     for (DataDO dataDO : dataList) {

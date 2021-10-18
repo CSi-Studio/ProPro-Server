@@ -12,6 +12,7 @@ import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.PeakGroupList;
 import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.ExperimentDO;
@@ -73,6 +74,8 @@ public class Scorer {
     BlockIndexService blockIndexService;
     @Autowired
     Lda lda;
+    @Autowired
+    Scorer scorer;
 
     public void scoreForOne(ExperimentDO exp, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
 
@@ -243,7 +246,7 @@ public class Scorer {
         List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
         lda.scoreForPeakGroups(ps.getScoreList(), overview.getWeights(), scoreTypes);
 
-        PeakGroupScore selectPeakGroup = getBestPeakGroup(data.getScoreList(), overview.getMinTotalScore(), scoreTypes, libMaxIon, true);
+        PeakGroupScore selectPeakGroup = getBestPeakGroup(data.getScoreList(), overview.getMinTotalScore(), scoreTypes, libMaxIon);
         if (selectPeakGroup == null) {
             return null;
         }
@@ -259,7 +262,68 @@ public class Scorer {
         return dataSum;
     }
 
-    public PeakGroupScore getBestPeakGroup(List<PeakGroupScore> peakGroupScoreList, double minTotalScore, List<String> scoreTypes, String maxLibIonLimit, Boolean byIonLimit) {
+    /**
+     * 以scoreType为主分数挑选出所有主分数最高的峰
+     *
+     * @param peptideScoreList
+     * @param targetScoreType  需要作为主分数的分数
+     * @param scoreTypes       打分开始的时候所有参与打分的子分数快照列表
+     * @return
+     */
+    public List<SelectedPeakGroupScore> findBestPeakGroupByTargetScoreType(List<PeptideScore> peptideScoreList, String targetScoreType, List<String> scoreTypes, boolean strict) {
+        List<SelectedPeakGroupScore> bestFeatureScoresList = new ArrayList<>();
+        for (PeptideScore peptideScore : peptideScoreList) {
+            if (peptideScore.getScoreList() == null || peptideScore.getScoreList().size() == 0) {
+                continue;
+            }
+            SelectedPeakGroupScore bestFeatureScores = new SelectedPeakGroupScore(peptideScore.getId(), peptideScore.getProteins(), peptideScore.getPeptideRef(), peptideScore.getDecoy());
+            double maxScore = -Double.MAX_VALUE;
+            PeakGroupScore topFeatureScore = null;
+            for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
+                if (strict && peakGroupScore.getThresholdPassed() != null && !peakGroupScore.getThresholdPassed()) {
+                    continue;
+                }
+                Double targetScore = peakGroupScore.get(targetScoreType, scoreTypes);
+                if (targetScore != null && targetScore > maxScore) {
+                    maxScore = targetScore;
+                    topFeatureScore = peakGroupScore;
+                }
+            }
+
+            if (topFeatureScore != null) {
+                bestFeatureScores.setMainScore(topFeatureScore.get(targetScoreType, scoreTypes));
+                bestFeatureScores.setScores(topFeatureScore.getScores());
+                bestFeatureScores.setRt(topFeatureScore.getRt());
+                bestFeatureScores.setIntensitySum(topFeatureScore.getIntensitySum());
+                bestFeatureScores.setFragIntFeature(topFeatureScore.getFragIntFeature());
+                bestFeatureScoresList.add(bestFeatureScores);
+            }
+        }
+        return bestFeatureScoresList;
+    }
+
+    public List<SelectedPeakGroupScore> findBestPeakGroupByTargetScoreTypeAndWeightMap(List<PeptideScore> peptideScoreList, String targetScoreType, List<String> scoreTypes, HashMap<String, Double> weightsMap) {
+        List<SelectedPeakGroupScore> bestFeatureScoresList = new ArrayList<>();
+        for (PeptideScore peptideScore : peptideScoreList) {
+            if (peptideScore.getScoreList() == null || peptideScore.getScoreList().size() == 0) {
+                continue;
+            }
+            SelectedPeakGroupScore bestFeatureScores = new SelectedPeakGroupScore(peptideScore.getId(), peptideScore.getProteins(), peptideScore.getPeptideRef(), peptideScore.getDecoy());
+
+            PeakGroupScore topFeatureScore = scorer.getBestPeakGroup(peptideScore.getScoreList(), 5.0, scoreTypes, null);
+            if (topFeatureScore != null) {
+                bestFeatureScores.setMainScore(topFeatureScore.get(targetScoreType, scoreTypes));
+                bestFeatureScores.setScores(topFeatureScore.getScores());
+                bestFeatureScores.setRt(topFeatureScore.getRt());
+                bestFeatureScores.setIntensitySum(topFeatureScore.getIntensitySum());
+                bestFeatureScores.setFragIntFeature(topFeatureScore.getFragIntFeature());
+                bestFeatureScoresList.add(bestFeatureScores);
+            }
+        }
+        return bestFeatureScoresList;
+    }
+
+    public PeakGroupScore getBestPeakGroup(List<PeakGroupScore> peakGroupScoreList, double minTotalScore, List<String> scoreTypes, String maxLibIonLimit) {
         if (peakGroupScoreList == null || peakGroupScoreList.size() == 0) {
             return null;
         }

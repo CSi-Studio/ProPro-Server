@@ -2,6 +2,7 @@ package net.csibio.propro.algorithm.score.features;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.PeakGroupScore;
@@ -22,6 +23,7 @@ import java.util.List;
  * var_intensity_score 同一个peptideRef下, 所有HullPoints的intensity之和 除以 所有intensity之和
  */
 @Component("chromatographicScorer")
+@Slf4j
 public class ChromatographicScorer {
 
     /**
@@ -41,21 +43,26 @@ public class ChromatographicScorer {
         List<Double> intensities = new ArrayList<>();
         List<Double> intensitiesWeighted = new ArrayList<>();
         Double[] value;
-        int max;
+        int maxIndex;
         int size = peakGroup.getIonHullInt().size();
         for (int i = 0; i < size; i++) {
             value = xcorrMatrix.get(i, i);
-            max = MathUtil.findMaxIndex(value);
-            deltasWeighted.add(FastMath.abs(max - (value.length - 1) / 2) * normedLibIntList.get(i) * normedLibIntList.get(i));
-            intensitiesWeighted.add(value[max] * normedLibIntList.get(i) * normedLibIntList.get(i));
+            if (value == null) {
+                log.error("Peak Group Intensity List is null!!!");
+                continue;
+            }
+            maxIndex = MathUtil.findMaxIndex(value);
+            int midIndex = (value.length - 1) / 2;
+            deltasWeighted.add(FastMath.abs(maxIndex - midIndex) * normedLibIntList.get(i) * normedLibIntList.get(i));
+            intensitiesWeighted.add(value[maxIndex] * normedLibIntList.get(i) * normedLibIntList.get(i));
             for (int j = i; j < size; j++) {
                 value = xcorrMatrix.get(i, j);
-                max = MathUtil.findMaxIndex(value);
-                deltas.add(Math.abs(max - (value.length - 1) / 2)); //first: maxdelay //delta: 偏移量
-                intensities.add(value[max]);//value[max] 吻合系数
+                maxIndex = MathUtil.findMaxIndex(value);
+                deltas.add(Math.abs(maxIndex - midIndex)); //first: maxdelay //delta: 偏移量
+                intensities.add(value[maxIndex]);//value[max] 吻合系数
                 if (j != i) {
-                    deltasWeighted.add(Math.abs(max - (value.length - 1) / 2) * normedLibIntList.get(i) * normedLibIntList.get(j) * 2d);
-                    intensitiesWeighted.add(value[max] * normedLibIntList.get(i) * normedLibIntList.get(j) * 2d);
+                    deltasWeighted.add(Math.abs(maxIndex - midIndex) * normedLibIntList.get(i) * normedLibIntList.get(j) * 2d);
+                    intensitiesWeighted.add(value[maxIndex] * normedLibIntList.get(i) * normedLibIntList.get(j) * 2d);
                 }
             }
         }

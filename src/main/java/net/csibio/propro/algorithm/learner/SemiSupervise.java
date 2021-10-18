@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -83,30 +84,22 @@ public class SemiSupervise {
             }
         }
 
-        List<SelectedPeakGroupScore> selectedPeakGroupList = ProProUtil.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), false);
+        //进行第一轮严格意义的初筛
+        List<SelectedPeakGroupScore> selectedPeakGroupList = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), true);
         ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupList, params);
         finalResult.setAllInfo(errorStat);
         int count = ProProUtil.checkFdr(finalResult, params.getFdr());
-        //Step4. 对于最终的打分结果和选峰结果保存到数据库中
-        log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + selectedPeakGroupList.size() + "条数据,开始统计相关数据");
         giveDecoyFdr(selectedPeakGroupList);
         targetDecoyDistribution(selectedPeakGroupList, overview);
-        if (params.getRemoveUnmatched()) {
-            log.info("统计分布完毕,开始移出无用数据");
-            for (int i = selectedPeakGroupList.size() - 1; i >= 0; i--) {
-                //如果fdr为空或者fdr小于指定的值,那么删除它
-                if (selectedPeakGroupList.get(i).getFdr() == null || selectedPeakGroupList.get(i).getFdr() > params.getFdr()) {
-                    selectedPeakGroupList.remove(i);
-                }
-            }
-            log.info("无用数据移除完毕,开始生成最终鉴定数据");
-        } else {
-            log.info("不需要移出无用数据");
-        }
 
         long start = System.currentTimeMillis();
-        //插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
-        log.info("FDR:" + params.getFdr());
+        //Step4. 对于最终的打分结果和选峰结果保存到数据库中, 插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
+        log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + selectedPeakGroupList.size() + "条数据,开始统计相关数据,FDR:" + params.getFdr());
+
+        double minTotalScore = selectedPeakGroupList.stream().filter(s -> s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroupScore::getFdr)).get().getTotalScore();
+
+
+        log.info("最小阈值总分为:" + minTotalScore);
         dataSumService.buildDataSumList(selectedPeakGroupList, params.getFdr(), overview, overview.getProjectId());
         log.info("插入Sum数据" + selectedPeakGroupList.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
         overview.setWeights(weightsMap);

@@ -19,8 +19,6 @@ public class LearningParams {
 
     double fdr = Constants.DEFAULT_FDR;
 
-    Boolean removeUnmatched = false;
-
     double trainTestRatio = 1;
 
     int xevalNumIter = 20;
