@@ -90,6 +90,7 @@ public class DataServiceImpl implements DataService {
             }
         }
         AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
+        params.setChangeCharge(changeCharge);
         Result<ExpDataVO> result = extractor.predictOne(exp, overview, coord, params);
         return result;
     }

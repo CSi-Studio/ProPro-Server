@@ -136,7 +136,7 @@ public class Lda extends Classifier {
         bestTargetScore.put(ScoreType.IsotopeOverlapScore.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.MassdevScore.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.MassdevScoreWeighted.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.BseriesScore.getName(), 4d, scoreTypes);
+        bestTargetScore.put(ScoreType.BseriesScore.getName(), 6d, scoreTypes);
         bestTargetScore.put(ScoreType.YseriesScore.getName(), 10d, scoreTypes);
 
 

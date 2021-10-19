@@ -69,7 +69,7 @@ public class Constants {
     public static final float C13C12_MASSDIFF_U = 1.0033548f;
     public static final double PEAK_BEFORE_MONO_MAX_PPM_DIFF = 0.00002d;
     public static final double DIA_BYSERIES_PPM_DIFF = 10.0d;
-    public static final double DIA_BYSERIES_INTENSITY_MIN = 300.0d;
+    public static final double DIA_BYSERIES_INTENSITY_MIN = 100.0d;
 
     public static final double AVG_WEIGHT_C = 12.0107358985d;
     public static final double AVG_WEIGHT_H = 1.0079407537168315d;

@@ -135,6 +135,7 @@ public class Scorer {
                 chromatographicScorer.calculateLogSnScore(peakGroup, peakGroupScore, params.getMethod().getScore().getScoreTypes());
             }
 
+            //TODO 打分
             if (params.getMethod().getScore().getScoreTypes().contains(ScoreType.IntensityScore.getName())) {
                 libraryScorer.calculateIntensityScore(peakGroup, peakGroupScore, params.getMethod().getScore().getScoreTypes());
             }
@@ -264,6 +265,20 @@ public class Scorer {
         return dataSum;
     }
 
+    public double calcBestBYSeriesCount(DataDO data, List<String> scoreTyps) {
+        if (data.getScoreList() == null) {
+            return -1;
+        }
+        double maxBYCount = -1;
+        for (PeakGroupScore peakGroupScore : data.getScoreList()) {
+            double currentBYCount = peakGroupScore.fetchBYIons(scoreTyps);
+            if (currentBYCount > maxBYCount) {
+                maxBYCount = currentBYCount;
+            }
+        }
+        return maxBYCount;
+    }
+
     /**
      * 以scoreType为主分数挑选出所有主分数最高的峰
      *
@@ -304,6 +319,42 @@ public class Scorer {
         return bestFeatureScoresList;
     }
 
+    /**
+     * 以scoreType为主分数挑选出所有主分数最高的峰
+     *
+     * @param peptideScoreList
+     * @param scoreTypes       打分开始的时候所有参与打分的子分数快照列表
+     * @return
+     */
+    public List<SelectedPeakGroupScore> findBestPeakGroupByTotalScore(List<PeptideScore> peptideScoreList, List<String> scoreTypes) {
+        List<SelectedPeakGroupScore> bestFeatureScoresList = new ArrayList<>();
+        for (PeptideScore peptideScore : peptideScoreList) {
+            if (peptideScore.getScoreList() == null || peptideScore.getScoreList().size() == 0) {
+                continue;
+            }
+            SelectedPeakGroupScore bestFeatureScores = new SelectedPeakGroupScore(peptideScore.getId(), peptideScore.getProteins(), peptideScore.getPeptideRef(), peptideScore.getDecoy());
+            double maxScore = -Double.MAX_VALUE;
+            PeakGroupScore topFeatureScore = null;
+            for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
+                Double targetScore = peakGroupScore.getTotalScore(scoreTypes);
+                if (targetScore != null && targetScore > maxScore) {
+                    maxScore = targetScore;
+                    topFeatureScore = peakGroupScore;
+                }
+            }
+
+            if (topFeatureScore != null) {
+                bestFeatureScores.setMainScore(topFeatureScore.get(ScoreType.WeightedTotalScore, scoreTypes));
+                bestFeatureScores.setScores(topFeatureScore.getScores());
+                bestFeatureScores.setRt(topFeatureScore.getRt());
+                bestFeatureScores.setIntensitySum(topFeatureScore.getIntensitySum());
+                bestFeatureScores.setFragIntFeature(topFeatureScore.getFragIntFeature());
+                bestFeatureScoresList.add(bestFeatureScores);
+            }
+        }
+        return bestFeatureScoresList;
+    }
+
     public List<SelectedPeakGroupScore> findBestPeakGroupByTargetScoreTypeAndMinTotalScore(List<PeptideScore> peptideScoreList, String targetScoreType, List<String> scoreTypes, Double minTotalScore) {
         List<SelectedPeakGroupScore> bestFeatureScoresList = new ArrayList<>();
         for (PeptideScore peptideScore : peptideScoreList) {
@@ -325,6 +376,15 @@ public class Scorer {
         return bestFeatureScoresList;
     }
 
+    /**
+     * 在同一个组内,如果有两个峰组均满足最小总分阈值,那么选择其中BY离子数更多的一个
+     *
+     * @param peakGroupScoreList
+     * @param minTotalScore
+     * @param scoreTypes
+     * @param maxLibIonLimit
+     * @return
+     */
     public PeakGroupScore getBestPeakGroup(List<PeakGroupScore> peakGroupScoreList, double minTotalScore, List<String> scoreTypes, String maxLibIonLimit) {
         if (peakGroupScoreList == null || peakGroupScoreList.size() == 0) {
             return null;
@@ -334,7 +394,6 @@ public class Scorer {
         List<Integer> candidateIndexList = new ArrayList<>();
         for (int i = 0; i < peakGroupScoreList.size(); i++) {
             PeakGroupScore peakGroup = peakGroupScoreList.get(i);
-
             if (maxLibIonLimit != null) {
                 //增加限制条件1. 如果库中最大强度碎片不存在,那么直接跳过
                 if (peakGroup.getIonIntensity().get(maxLibIonLimit) == null) {
@@ -355,27 +414,36 @@ public class Scorer {
                 bestIndex = i;
             }
         }
-        double byIons = -1d;
-        int selectPeakGroupIndex = -1;
+
+        int selectPeakGroupIndex = bestIndex;
         if (candidateIndexList.size() > 0) {
+            //BY离子分与isotope分均高的才切换
+            double bestBYIons = peakGroupScoreList.get(bestIndex).fetchBYIons(scoreTypes);
+            double bestIsotope = peakGroupScoreList.get(bestIndex).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
             for (Integer index : candidateIndexList) {
-                double totalByIons = peakGroupScoreList.get(index).fetchBYIons(scoreTypes);
-                if (totalByIons > byIons) {
-                    byIons = totalByIons;
+                double currentBYIons = peakGroupScoreList.get(index).fetchBYIons(scoreTypes);
+                double currentIsotope = peakGroupScoreList.get(index).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
+                if (currentBYIons > bestBYIons && (currentIsotope > bestIsotope || bestIsotope - currentIsotope < 0.1)) {
+                    bestBYIons = currentBYIons;
+                    bestIsotope = currentIsotope;
                     selectPeakGroupIndex = index;
                 }
             }
             if (selectPeakGroupIndex != bestIndex) {
+                double iosBefore = peakGroupScoreList.get(bestIndex).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
+                double iosAfter = peakGroupScoreList.get(selectPeakGroupIndex).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
+
+                double byCountBefore = peakGroupScoreList.get(bestIndex).fetchBYIons(scoreTypes);
+                double byCountAfter = peakGroupScoreList.get(selectPeakGroupIndex).fetchBYIons(scoreTypes);
+                log.info("切换前/后BYIon打分:" + byCountBefore + "/" + byCountAfter + ";" + (byCountAfter > byCountBefore ? "切换靠谱" : "不靠谱"));
+                log.info("切换前/后Isotope打分:" + iosBefore + "/" + iosAfter + ";" + ((iosAfter > iosBefore || (iosBefore - iosAfter < 0.1)) ? "切换靠谱" : "不靠谱"));
                 log.info("组内切换了对应峰组,最高得分Index:" + bestIndex + ";" + "选中Index:" + selectPeakGroupIndex);
             }
-        } else {
-            selectPeakGroupIndex = bestIndex;
         }
 
         if (selectPeakGroupIndex == -1) {
             return null;
         }
-
         return peakGroupScoreList.get(selectPeakGroupIndex);
     }
 //

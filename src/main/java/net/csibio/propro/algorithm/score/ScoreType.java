@@ -27,7 +27,7 @@ public enum ScoreType {
             true, true),
     IntensityScore("IntensityScore", "var_IntensityScore",
             "同一个peptideRef下, 所有HullPoints的intensity之和 除以 所有intensity之和",
-            true, true),
+            true, false),
     IsotopeCorrelationScore("IsotopeCorrelationScore", "var_IsotopeCorrelationScore",
             "",
             true, true),
@@ -44,10 +44,10 @@ public enum ScoreType {
             "log(距离ApexRt最近点的stn值之和)",
             true, true),
     MassdevScore("MassdevScore", "var_MassdevScore",
-            "按spectrum intensity加权的mz与product mz的偏差ppm百分比之和",
+            "按spectrum intensity加权的mz与product mz的偏差ppm百分比之和,即理论mz与实际mz(按intensity加权计算)的差别程度",
             false, true),
     MassdevScoreWeighted("MassdevScoreWeighted", "var_MassdevScoreWeighted",
-            "按spectrum intensity加权的mz与product mz的偏差ppm百分比按libraryIntensity加权之和",
+            "[库强度相关打分]按spectrum intensity加权的mz与product mz的偏差ppm百分比按libraryIntensity加权之和,即理论mz与实际mz(按intensity加权计算)的差别程度(程度按照库中intensity的强度进行加成)",
             false, true),
 
     XcorrCoelution("XcorrCoelution", "var_XcorrCoelution",
@@ -98,8 +98,8 @@ public enum ScoreType {
     ScoreType(String typeName, String pyProphetName, String description, Boolean biggerIsBetter, Boolean isUsed) {
         this.name = typeName;
         this.pyProphetName = pyProphetName;
-        this.isUsed = isUsed;
         this.biggerIsBetter = biggerIsBetter;
+        this.isUsed = isUsed;
         this.desc = description;
     }
 

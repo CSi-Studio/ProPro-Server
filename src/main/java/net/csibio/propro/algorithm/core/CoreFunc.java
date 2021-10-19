@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -178,7 +179,9 @@ public class CoreFunc {
         DataDO bestData = null;
         Set<FragmentInfo> bestIonGroup = null;
 
-        List<List<String>> allPossibleIonsGroup = Generator.combination(totalIonList).simple(2).stream().collect(Collectors.toList());
+        int replace = params.getChangeCharge() ? 6 : 2; //如果是新带点碎片预测,那么直接全部替换
+        List<List<String>> allPossibleIonsGroup = Generator.combination(totalIonList).simple(replace).stream().collect(Collectors.toList());
+        double maxBYCount = -1;
         for (int i = 0; i < allPossibleIonsGroup.size(); i++) {
             List<String> selectedIons = allPossibleIonsGroup.get(i);
 
@@ -199,8 +202,13 @@ public class CoreFunc {
             } catch (Exception e) {
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
             }
+
             if (buildData.getScoreList() != null) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(buildData, overview, maxLibIon);
+                double currentBYCount = scorer.calcBestBYSeriesCount(buildData, overview.fetchScoreTypes());
+                if (currentBYCount > maxBYCount) {
+                    maxBYCount = currentBYCount;
+                }
                 if (dataSum != null && dataSum.getTotalScore() > bestScore) {
                     bestScore = dataSum.getTotalScore();
                     bestDataSum = dataSum;
@@ -214,6 +222,13 @@ public class CoreFunc {
             //  log.info("居然一个可能的组都没有:" + coord.getPeptideRef());
             return null;
         }
+        double finalBYCount = scorer.calcBestBYSeriesCount(bestData, overview.fetchScoreTypes());
+        //Max BYCount Limit
+        if (maxBYCount != finalBYCount && finalBYCount <= 5) {
+            return null;
+        }
+
+        log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",BYCount:" + finalBYCount);
         coord.setFragments(bestIonGroup); //这里必须要将coord置为最佳峰组
 //        log.info(exp.getAlias() + "碎片组:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList() + "; Score:" + bestScore + " RT:" + bestRt);
         return new AnyPair<DataDO, DataSumDO>(bestData, bestDataSum);
@@ -288,7 +303,7 @@ public class CoreFunc {
             log.error("肽段坐标为空");
             return null;
         }
-
+        AtomicLong newIonsGroup = new AtomicLong(0);
         //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
         coordinates.parallelStream().forEach(coord -> {
             DataDO dataDO = extractOne(coord, rtMap, params);
@@ -306,6 +321,7 @@ public class CoreFunc {
                 if (dataSum == null || dataSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
                     AnyPair<DataDO, DataSumDO> pair = predictOne(coord, rtMap, exp, params.getBaseOverview(), params);
                     if (pair != null && pair.getLeft() != null) {
+                        newIonsGroup.getAndIncrement();
                         dataDO = pair.getLeft();
                     }
                 }
@@ -336,6 +352,7 @@ public class CoreFunc {
         });
 
         LogUtil.log("XIC+选峰+打分耗时", start);
+        log.info("新增组合碎片数目为:" + newIonsGroup.get());
         log.info("总计构建Data数目" + dataList.size() + "/" + (coordinates.size() * 2) + "个");
         if (dataList.stream().filter(data -> data.getStatus() == null).toList().size() > 0) {
             log.info("居然有问题");

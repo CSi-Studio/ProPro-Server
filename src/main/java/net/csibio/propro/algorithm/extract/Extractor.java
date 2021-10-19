@@ -144,6 +144,9 @@ public class Extractor {
         }
 
         AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOne(coord, rtMapResult.getData(), exp, overview, params);
+        if (dataPair == null) {
+            return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
+        }
         ExpDataVO expDataVO = new ExpDataVO().merge(dataPair.getLeft(), dataPair.getRight());
         if (expDataVO == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);

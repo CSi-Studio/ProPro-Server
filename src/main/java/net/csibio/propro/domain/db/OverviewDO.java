@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -116,5 +117,9 @@ public class OverviewDO extends BaseDO {
 
     public String buildUniqueTag() {
         return (insLibId != null ? insLibId : "NaN") + "-" + (anaLibId != null ? anaLibId : "NaN") + "-" + getParams().getMethod().getId();
+    }
+
+    public List<String> fetchScoreTypes() {
+        return params.getMethod().getScore().getScoreTypes();
     }
 }

@@ -56,7 +56,7 @@ public class DIAScorer {
      * @param spectrumMzArray  根据transitionGroup选取的RT选择的最近的Spectrum对应的mzArray
      * @param spectrumIntArray 根据transitionGroup选取的RT选择的最近的Spectrum对应的intensityArray
      * @param normedLibIntMap  unNormalized library intensity(in peptidepeptide)
-     * @param scores           scoreForAll for Airus
+     * @param scores           scoreForAll
      */
     public void calculateDiaMassDiffScore(HashMap<String, Float> productMzArray, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Double> normedLibIntMap, PeakGroupScore scores, List<String> scoreTypes) {
 
@@ -108,7 +108,7 @@ public class DIAScorer {
         int maxIsotope = Constants.DIA_NR_ISOTOPES + 1;
 
         //getFirstIsotopeRelativeIntensities
-        double relIntensity;//离子强度占peak group强度的比例
+        double relIntensity;//离子强度占peak group总强度的比例
         double intensitySum = peakGroupFeature.getPeakGroupInt();
 
         for (String cutInfo : peakGroupFeature.getIonIntensity().keySet()) {
@@ -116,7 +116,7 @@ public class DIAScorer {
             int putativeFragmentCharge = productChargeMap.get(cutInfo);
             relIntensity = (peakGroupFeature.getIonIntensity().get(cutInfo) / intensitySum);
             Double[] expDistribution = new Double[maxIsotope];
-            double maxIntensity = 0.0d;
+            double maxIntensity = 0.0d; //记录强度最大的一个同位素对应的强度值
             for (int iso = 0; iso < maxIsotope; iso++) {
                 float left = monoPeakMz + iso * Constants.C13C12_MASSDIFF_U / putativeFragmentCharge;
                 float right = left;
