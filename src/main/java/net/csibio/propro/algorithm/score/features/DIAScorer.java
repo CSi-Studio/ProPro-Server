@@ -216,15 +216,14 @@ public class DIAScorer {
      * scores.bseries_score peptideRt对应的spectrumArray中，检测到的b离子的数量
      * scores.yseries_score peptideRt对应的spectrumArray中，检测到的y离子的数量
      *
-     * @param spectrumMzArray
-     * @param spectrumIntArray
-     * @param unimodHashMap
      * @param sequence
-     * @param charge
      * @param scores
      */
-    public void calculateBYIonScore(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge, PeakGroupScore scores, List<String> scoreTypes) {
+    public void calculateIonsScore(int ionsCount, String sequence, PeakGroupScore scores, List<String> scoreTypes) {
+        scores.put(ScoreType.IonsCountWeightScore.getName(), ionsCount * 1.0 / sequence.length(), scoreTypes);
+    }
 
+    public int calcTotalIons(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge, PeakGroup peakGroup) {
         //计算理论值
         BYSeries bySeries = fragmentFactory.getBYSeries(unimodHashMap, sequence, charge);
         List<Double> bSeriesList = bySeries.getBSeries();
@@ -233,10 +232,8 @@ public class DIAScorer {
         List<Double> ySeriesList = bySeries.getYSeries();
         int ySeriesScore = getSeriesScore(ySeriesList, spectrumMzArray, spectrumIntArray);
 
-        scores.put(ScoreType.BseriesScore.getName(), (double) bSeriesScore, scoreTypes);
-        scores.put(ScoreType.YseriesScore.getName(), (double) ySeriesScore, scoreTypes);
+        return bSeriesScore + ySeriesScore;
     }
-
 
     private List<Double> getIsotopePercent(List<String> isotopeLog) {
         List<Double> isotopePercentList = new ArrayList<>();

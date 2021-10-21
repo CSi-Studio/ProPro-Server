@@ -6,6 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
@@ -13,6 +14,7 @@ import java.net.UnknownHostException;
 
 @SpringBootApplication
 @Slf4j
+@EnableAsync
 @SectionScan(basePackages = {"net.csibio.propro.constants.enums.*"})
 public class ProProApplication {
     public static void main(String[] args) throws UnknownHostException, ClassNotFoundException, InvocationTargetException, IllegalAccessException, NoSuchMethodException, InstantiationException {

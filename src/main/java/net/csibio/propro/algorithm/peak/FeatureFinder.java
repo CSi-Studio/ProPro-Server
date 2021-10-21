@@ -129,7 +129,9 @@ public class FeatureFinder {
 
         //totalXIC
         double totalXic = 0.0d;
-        for (Double[] intensityTmp : peptideSpectrum.intensitiesMap().values()) {
+
+        for (String cutInfo : peptideSpectrum.intensitiesMap().keySet()) {
+            Double[] intensityTmp = peptideSpectrum.intensitiesMap().get(cutInfo);
             for (double intensity : intensityTmp) {
                 totalXic += intensity;
             }

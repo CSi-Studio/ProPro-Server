@@ -1,14 +1,29 @@
 package net.csibio.propro.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import net.csibio.propro.algorithm.learner.SemiSupervise;
+import net.csibio.propro.algorithm.learner.Statistics;
+import net.csibio.propro.algorithm.learner.classifier.Lda;
+import net.csibio.propro.algorithm.score.ScoreType;
+import net.csibio.propro.algorithm.score.Scorer;
+import net.csibio.propro.algorithm.score.features.SwathLDAScorer;
+import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
+import net.csibio.propro.domain.bean.data.PeptideScore;
+import net.csibio.propro.domain.bean.learner.ErrorStat;
+import net.csibio.propro.domain.bean.learner.FinalResult;
+import net.csibio.propro.domain.bean.learner.LearningParams;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.PeptideDO;
+import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.domain.query.ProjectQuery;
 import net.csibio.propro.service.*;
+import net.csibio.propro.utils.ProProUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +32,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -40,6 +58,18 @@ public class TestController {
     ExperimentService experimentService;
     @Autowired
     MethodService methodService;
+    @Autowired
+    SemiSupervise semiSupervise;
+    @Autowired
+    DataService dataService;
+    @Autowired
+    Lda lda;
+    @Autowired
+    Statistics statistics;
+    @Autowired
+    Scorer scorer;
+    @Autowired
+    SwathLDAScorer swathLDAScorer;
 
     @GetMapping(value = "/lms")
     Result lms() {
@@ -49,6 +79,109 @@ public class TestController {
             for (OverviewDO overviewDO : overviewList) {
 //                overviewDO.setReselect(overviewDO.getReselect());
 //                overviewService.update(overviewDO);
+            }
+        }
+
+        return Result.OK();
+    }
+
+    @GetMapping(value = "/lms2")
+    Result lms2() {
+        List<String> overviewIds = new ArrayList<>();
+        overviewIds.add("61713f52749794487dd90936");
+        overviewIds.add("61713f52749794487dd90937");
+        overviewIds.add("61713f52749794487dd90938");
+        overviewIds.add("61713f52749794487dd90934");
+        overviewIds.add("61713f52749794487dd90935");
+        overviewIds.add("61713f52749794487dd90932");
+
+
+        double k = 2d;
+        double n = 0.1d;
+        while (n < k) {
+            n += 0.1;
+            log.info("开始尝试n=" + n);
+            boolean success = true;
+            for (String overviewId : overviewIds) {
+                OverviewDO overview = overviewService.getById(overviewId);
+                LearningParams params = new LearningParams();
+                params.setScoreTypes(overview.fetchScoreTypes());
+                params.setFdr(overview.getParams().getMethod().getClassifier().getFdr());
+
+                FinalResult finalResult = new FinalResult();
+
+                //Step1. 数据预处理
+                log.info("数据预处理");
+                params.setType(overview.getType());
+                //Step2. 从数据库读取全部含打分结果的数据
+                log.info("开始获取打分数据");
+                List<PeptideScore> peptideList = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), PeptideScore.class, overview.getProjectId());
+                if (peptideList == null || peptideList.size() == 0) {
+                    log.info("没有合适的数据");
+                    return null;
+                }
+                log.info("总计有待鉴定态肽段" + peptideList.size() + "个");
+
+                for (PeptideScore peptideScore : peptideList) {
+                    for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
+                        swathLDAScorer.calculateSwathLdaPrescore1(peakGroupScore, n, overview.fetchScoreTypes());
+                    }
+                }
+                log.info("重新计算初始分完毕");
+                //Step3. 开始训练数据集
+                HashMap<String, Double> weightsMap = lda.classifier(peptideList, params, overview.fetchScoreTypes());
+                lda.score(peptideList, weightsMap, params.getScoreTypes());
+                finalResult.setWeightsMap(weightsMap);
+
+                //进行第一轮严格意义的初筛
+                log.info("开始第一轮严格意义上的初筛");
+                List<SelectedPeakGroupScore> selectedPeakGroupListV1 = null;
+                try {
+                    selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), overview.fetchScoreTypes(), true);
+                    statistics.errorStatistics(selectedPeakGroupListV1, params);
+                    semiSupervise.giveDecoyFdr(selectedPeakGroupListV1);
+                    //获取第一轮严格意义上的最小总分阈值
+                    double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroupScore::getFdr)).get().getTotalScore();
+                    log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
+                    List<SelectedPeakGroupScore> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreTypeAndMinTotalScore(peptideList,
+                            ScoreType.WeightedTotalScore.getName(),
+                            overview.getParams().getMethod().getScore().getScoreTypes(),
+                            minTotalScore);
+                    //重新统计
+                    ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupListV2, params);
+                    semiSupervise.giveDecoyFdr(selectedPeakGroupListV2);
+
+                    long start = System.currentTimeMillis();
+                    //Step4. 对于最终的打分结果和选峰结果保存到数据库中, 插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
+                    log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + selectedPeakGroupListV2.size() + "条数据,开始统计相关数据,FDR:" + params.getFdr());
+                    minTotalScore = selectedPeakGroupListV2.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroupScore::getFdr)).get().getTotalScore();
+
+                    log.info("最小阈值总分为:" + minTotalScore);
+                    dataSumService.buildDataSumList(selectedPeakGroupListV2, params.getFdr(), overview, overview.getProjectId());
+                    log.info("插入Sum数据" + selectedPeakGroupListV2.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
+                    overview.setWeights(weightsMap);
+
+                    semiSupervise.targetDecoyDistribution(selectedPeakGroupListV2, overview); //统计Target Decoy分布的函数
+                    overviewService.update(overview);
+                    overviewService.statistic(overview);
+
+                    finalResult.setAllInfo(errorStat);
+                    int count = ProProUtil.checkFdr(finalResult, params.getFdr());
+                    if (count < 20000) {
+                        success = false;
+                        break;
+                    }
+                    log.info("合并打分完成,共找到新肽段" + count + "个");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    success = false;
+                    break;
+                }
+
+            }
+            if (success) {
+                log.info("成功啦:n=" + n);
+                break;
             }
         }
 

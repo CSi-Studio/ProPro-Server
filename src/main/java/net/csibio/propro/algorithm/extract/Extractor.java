@@ -143,7 +143,7 @@ public class Extractor {
             return Result.Error(rtMapResult.getErrorCode());
         }
 
-        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOne(coord, rtMapResult.getData(), exp, overview, params);
+        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneReplace(coord, rtMapResult.getData(), exp, overview, params);
         if (dataPair == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }

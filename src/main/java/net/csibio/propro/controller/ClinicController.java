@@ -156,22 +156,22 @@ public class ClinicController {
             if (predict) {
                 ExperimentDO exp = experimentService.getById(expId);
                 DataSumDO existed = dataSumService.getOne(new DataSumQuery().setOverviewId(overview.getId()).setPeptideRef(peptideRef).setDecoy(false), DataSumDO.class, projectId);
-                if (existed.getStatus() == IdentifyStatus.SUCCESS.getCode()) {
-                    DataDO existedData = dataService.getById(existed.getId(), projectId);
-                    DataSumDO dataSum = scorer.calcBestTotalScore(existedData, overview, null);
-                    data = new ExpDataVO().merge(existedData, dataSum);
+//                if (existed.getStatus() == IdentifyStatus.SUCCESS.getCode()) {
+//                    DataDO existedData = dataService.getById(existed.getId(), projectId);
+//                    DataSumDO dataSum = scorer.calcBestTotalScore(existedData, overview, null);
+//                    data = new ExpDataVO().merge(existedData, dataSum);
+//                    data.setGroup(exp.getGroup());
+//                    data.setAlias(exp.getAlias());
+//                    data.setExpId(exp.getId());
+//                } else {
+                Result<ExpDataVO> res = dataService.predictDataFromFile(exp, libraryId, peptideRef, changeCharge, overview.getId());
+                if (res.isSuccess()) {
+                    data = res.getData();
                     data.setGroup(exp.getGroup());
                     data.setAlias(exp.getAlias());
                     data.setExpId(exp.getId());
-                } else {
-                    Result<ExpDataVO> res = dataService.predictDataFromFile(exp, libraryId, peptideRef, changeCharge, overview.getId());
-                    if (res.isSuccess()) {
-                        data = res.getData();
-                        data.setGroup(exp.getGroup());
-                        data.setAlias(exp.getAlias());
-                        data.setExpId(exp.getId());
-                    }
                 }
+//                }
             } else {
                 data = dataService.getDataFromDB(projectId, expId, overview.getId(), peptideRef);
             }

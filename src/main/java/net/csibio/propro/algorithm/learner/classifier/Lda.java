@@ -127,8 +127,7 @@ public class Lda extends Classifier {
         bestTargetScore.put(ScoreType.LibraryRsmd.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.LibraryManhattan.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.LibraryDotprod.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.LibrarySangle.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.LibraryRootmeansquare.getName(), 0d, scoreTypes);
+//        bestTargetScore.put(ScoreType.LibrarySangle.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.LogSnScore.getName(), 5d, scoreTypes);
         bestTargetScore.put(ScoreType.NormRtScore.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.IntensityScore.getName(), 1d, scoreTypes);
@@ -136,9 +135,9 @@ public class Lda extends Classifier {
         bestTargetScore.put(ScoreType.IsotopeOverlapScore.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.MassdevScore.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.MassdevScoreWeighted.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.BseriesScore.getName(), 6d, scoreTypes);
-        bestTargetScore.put(ScoreType.YseriesScore.getName(), 10d, scoreTypes);
-
+//        bestTargetScore.put(ScoreType.IonsCountScore.getName(), 10d, scoreTypes);
+//        bestTargetScore.put(ScoreType.IonsDeltaScore.getName(), 0d, scoreTypes);
+//        bestTargetScore.put(ScoreType.IonsWeightMaxScore.getName(), 1d, scoreTypes);
 
         List<SelectedPeakGroupScore> bestTargets = new ArrayList<>();
         bestTargets.add(bestTargetScore);

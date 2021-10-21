@@ -32,6 +32,8 @@ public class SelectedPeakGroupScore extends BaseScores {
 
     Double qValue;
 
+    Integer totalIons;
+    
     Double fdr;
 
     String fragIntFeature;

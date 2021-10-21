@@ -41,18 +41,4 @@ public class CSiTaskExecutor {
         executor.setAwaitTerminationSeconds(60);
         return executor;
     }
-
-    @Bean(name = "ldaExecutor")
-    public Executor airusExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(1);
-        executor.setMaxPoolSize(10);
-        executor.setQueueCapacity(99999);
-        executor.setKeepAliveSeconds(5);
-        executor.setThreadNamePrefix("ldaExecutor-");
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setAwaitTerminationSeconds(60);
-        return executor;
-    }
 }

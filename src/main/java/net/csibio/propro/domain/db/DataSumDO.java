@@ -42,6 +42,8 @@ public class DataSumDO extends BaseDO {
     //Intensity Sum
     Double sum;
 
+    Integer totalIons;
+    
     //最终的定量值
     String fragIntFeature;
 }

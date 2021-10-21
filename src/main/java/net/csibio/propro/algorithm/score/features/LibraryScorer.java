@@ -114,10 +114,10 @@ public class LibraryScorer {
         }
 
         //spectral angle
-        if (scoreTypes.contains(ScoreType.LibrarySangle.getName())) {
-            double spectralAngle = FastMath.acos(dotprod / (FastMath.sqrt(experiment2Sum) * FastMath.sqrt(library2Sum)));
-            scores.put(ScoreType.LibrarySangle.getName(), spectralAngle, scoreTypes);
-        }
+//        if (scoreTypes.contains(ScoreType.LibrarySangle.getName())) {
+//            double spectralAngle = FastMath.acos(dotprod / (FastMath.sqrt(experiment2Sum) * FastMath.sqrt(library2Sum)));
+//            scores.put(ScoreType.LibrarySangle.getName(), spectralAngle, scoreTypes);
+//        }
 
         //root mean square
 //        if (scoreTypes.contains(ScoreType.LibraryRootmeansquare.getName())) {

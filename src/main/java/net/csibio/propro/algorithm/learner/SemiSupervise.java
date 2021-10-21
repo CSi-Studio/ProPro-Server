@@ -71,25 +71,28 @@ public class SemiSupervise {
             log.info("没有合适的数据");
             return finalResult;
         }
+        log.info("总计有待鉴定态肽段" + peptideList.size() + "个");
         //Step3. 开始训练数据集
         HashMap<String, Double> weightsMap = new HashMap<>();
         switch (params.getClassifier()) {
             case lda -> {
-                weightsMap = lda.classifier(peptideList, params, overview.getParams().getMethod().getScore().getScoreTypes());
+                weightsMap = lda.classifier(peptideList, params, overview.fetchScoreTypes());
                 lda.score(peptideList, weightsMap, params.getScoreTypes());
                 finalResult.setWeightsMap(weightsMap);
             }
-            case xgboost -> xgboost.classifier(peptideList, overview.getParams().getMethod().getScore().getScoreTypes(), params);
+            case xgboost -> xgboost.classifier(peptideList, overview.fetchScoreTypes(), params);
             default -> {
             }
         }
 
         //进行第一轮严格意义的初筛
-        List<SelectedPeakGroupScore> selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), overview.getParams().getMethod().getScore().getScoreTypes(), true);
+        log.info("开始第一轮严格意义上的初筛");
+        List<SelectedPeakGroupScore> selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), overview.fetchScoreTypes(), true);
         statistics.errorStatistics(selectedPeakGroupListV1, params);
         giveDecoyFdr(selectedPeakGroupListV1);
         //获取第一轮严格意义上的最小总分阈值
         double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroupScore::getFdr)).get().getTotalScore();
+        log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
         List<SelectedPeakGroupScore> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreTypeAndMinTotalScore(peptideList,
                 ScoreType.WeightedTotalScore.getName(),
                 overview.getParams().getMethod().getScore().getScoreTypes(),
@@ -101,6 +104,7 @@ public class SemiSupervise {
         long start = System.currentTimeMillis();
         //Step4. 对于最终的打分结果和选峰结果保存到数据库中, 插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
         log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + selectedPeakGroupListV2.size() + "条数据,开始统计相关数据,FDR:" + params.getFdr());
+        minTotalScore = selectedPeakGroupListV2.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroupScore::getFdr)).get().getTotalScore();
 
         log.info("最小阈值总分为:" + minTotalScore);
         dataSumService.buildDataSumList(selectedPeakGroupListV2, params.getFdr(), overview, overview.getProjectId());
@@ -137,7 +141,7 @@ public class SemiSupervise {
     }
 
     //给分布在target中的decoy赋以Fdr值, 最末尾部分的decoy忽略, fdr为null
-    private void giveDecoyFdr(List<SelectedPeakGroupScore> featureScoresList) {
+    public void giveDecoyFdr(List<SelectedPeakGroupScore> featureScoresList) {
         List<SelectedPeakGroupScore> sortedAll = SortUtil.sortByMainScore(featureScoresList, false);
         SelectedPeakGroupScore leftFeatureScore = null;
         SelectedPeakGroupScore rightFeatureScore;
@@ -177,7 +181,7 @@ public class SemiSupervise {
      * @param featureScoresList
      * @param overviewDO
      */
-    private void targetDecoyDistribution(List<SelectedPeakGroupScore> featureScoresList, OverviewDO overviewDO) {
+    public void targetDecoyDistribution(List<SelectedPeakGroupScore> featureScoresList, OverviewDO overviewDO) {
         HashMap<String, Integer> targetDistributions = ProProUtil.buildDistributionMap();
         HashMap<String, Integer> decoyDistributions = ProProUtil.buildDistributionMap();
         for (SelectedPeakGroupScore sfs : featureScoresList) {
@@ -216,12 +220,12 @@ public class SemiSupervise {
                 if (peakGroupScore.get(ScoreType.MassdevScoreWeighted, scoreTypes) != null && peakGroupScore.get(ScoreType.MassdevScoreWeighted, scoreTypes) > 15) {
                     count++;
                 }
-                if (peakGroupScore.get(ScoreType.BseriesScore, scoreTypes) != null && peakGroupScore.get(ScoreType.BseriesScore, scoreTypes) < 1) {
-                    count++;
-                }
-                if (peakGroupScore.get(ScoreType.YseriesScore, scoreTypes) != null && peakGroupScore.get(ScoreType.YseriesScore, scoreTypes) < 5) {
-                    count++;
-                }
+//                if (peakGroupScore.get(ScoreType.IonsWeightMaxScore, scoreTypes) != null && peakGroupScore.get(ScoreType.IonsWeightMaxScore, scoreTypes) < 1) {
+//                    count++;
+//                }
+//                if (peakGroupScore.get(ScoreType.IonsDeltaScore, scoreTypes) != null && peakGroupScore.get(ScoreType.IonsDeltaScore, scoreTypes) < 5) {
+//                    count++;
+//                }
                 if (peakGroupScore.get(ScoreType.XcorrShapeWeighted, scoreTypes) != null && peakGroupScore.get(ScoreType.XcorrShapeWeighted, scoreTypes) < 0.6) {
                     count++;
                 }

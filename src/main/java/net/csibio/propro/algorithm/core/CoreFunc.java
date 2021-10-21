@@ -145,7 +145,65 @@ public class CoreFunc {
      * @param params
      * @return
      */
-    public AnyPair<DataDO, DataSumDO> predictOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
+    public AnyPair<DataDO, DataSumDO> predictOneDelete(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
+        //Step1.对库中的碎片进行排序,按照强度从大到小排列
+        Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
+        List<FragmentInfo> sortedLibFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
+        List<String> libIons = sortedLibFrags.stream().map(FragmentInfo::getCutInfo).toList();
+
+        DataDO data = extractOne(coord, rtMap, params);
+        double bestScore = -99999d;
+        DataSumDO bestDataSum = null;
+        DataDO bestData = null;
+        Set<FragmentInfo> bestIonGroup = null;
+
+        try {
+            scorer.scoreForOne(exp, data, coord, rtMap, params);
+        } catch (Exception e) {
+            log.error("Peptide打分异常:" + coord.getPeptideRef());
+        }
+
+        double maxBYCount = -1;
+        if (data.getScoreList() != null) {
+            DataSumDO dataSum = scorer.calcBestTotalScore(data, overview, null);
+            double currentBYCount = scorer.calcBestIonsCount(data);
+            if (currentBYCount > maxBYCount) {
+                maxBYCount = currentBYCount;
+            }
+            if (dataSum != null && dataSum.getTotalScore() > bestScore) {
+                bestDataSum = dataSum;
+                bestData = data;
+            }
+        }
+
+        if (bestData == null) {
+            return null;
+        }
+
+        double finalBYCount = scorer.calcBestIonsCount(bestData);
+        //Max BYCount Limit
+        if (maxBYCount != finalBYCount && finalBYCount <= 5) {
+            return null;
+        }
+
+        log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",BYCount:" + finalBYCount);
+        coord.setFragments(bestIonGroup); //这里必须要将coord置为最佳峰组
+//        log.info(exp.getAlias() + "碎片组:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList() + "; Score:" + bestScore + " RT:" + bestRt);
+        return new AnyPair<DataDO, DataSumDO>(bestData, bestDataSum);
+    }
+
+    /**
+     * EIC Predict Peptide
+     * 核心EIC预测函数
+     * 通过动态替换碎片用来预测
+     * <p>
+     *
+     * @param coord
+     * @param rtMap
+     * @param params
+     * @return
+     */
+    public AnyPair<DataDO, DataSumDO> predictOneReplace(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
         //Step1.对库中的碎片进行排序,按照强度从大到小排列
         Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
         List<FragmentInfo> sortedLibFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
@@ -179,8 +237,8 @@ public class CoreFunc {
         DataDO bestData = null;
         Set<FragmentInfo> bestIonGroup = null;
 
-        int replace = params.getChangeCharge() ? 6 : 2; //如果是新带点碎片预测,那么直接全部替换
-        List<List<String>> allPossibleIonsGroup = Generator.combination(totalIonList).simple(replace).stream().collect(Collectors.toList());
+        int replace = params.getChangeCharge() ? 6 : 1; //如果是新带点碎片预测,那么直接全部替换
+        List<List<String>> allPossibleIonsGroup = Generator.combination(totalIonList).simple(replace).stream().collect(Collectors.toList()); //替换策略
         double maxBYCount = -1;
         for (int i = 0; i < allPossibleIonsGroup.size(); i++) {
             List<String> selectedIons = allPossibleIonsGroup.get(i);
@@ -205,7 +263,7 @@ public class CoreFunc {
 
             if (buildData.getScoreList() != null) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(buildData, overview, maxLibIon);
-                double currentBYCount = scorer.calcBestBYSeriesCount(buildData, overview.fetchScoreTypes());
+                double currentBYCount = scorer.calcBestIonsCount(buildData);
                 if (currentBYCount > maxBYCount) {
                     maxBYCount = currentBYCount;
                 }
@@ -222,7 +280,7 @@ public class CoreFunc {
             //  log.info("居然一个可能的组都没有:" + coord.getPeptideRef());
             return null;
         }
-        double finalBYCount = scorer.calcBestBYSeriesCount(bestData, overview.fetchScoreTypes());
+        double finalBYCount = scorer.calcBestIonsCount(bestData);
         //Max BYCount Limit
         if (maxBYCount != finalBYCount && finalBYCount <= 5) {
             return null;
@@ -319,7 +377,7 @@ public class CoreFunc {
             if (tempSum == null || tempSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview(), null);
                 if (dataSum == null || dataSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
-                    AnyPair<DataDO, DataSumDO> pair = predictOne(coord, rtMap, exp, params.getBaseOverview(), params);
+                    AnyPair<DataDO, DataSumDO> pair = predictOneReplace(coord, rtMap, exp, params.getBaseOverview(), params);
                     if (pair != null && pair.getLeft() != null) {
                         newIonsGroup.getAndIncrement();
                         dataDO = pair.getLeft();
@@ -409,4 +467,5 @@ public class CoreFunc {
         statList = statList.stream().sorted(Comparator.comparing(IonStat::stat).reversed()).toList();
         return statList;
     }
+
 }

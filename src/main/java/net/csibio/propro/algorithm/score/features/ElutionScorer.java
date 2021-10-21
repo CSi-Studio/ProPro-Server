@@ -1,6 +1,5 @@
 package net.csibio.propro.algorithm.score.features;
 
-import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.domain.bean.data.RtIntensityPairsDouble;
 import net.csibio.propro.domain.bean.score.EmgModelParams;
@@ -26,12 +25,21 @@ public class ElutionScorer {
 
     public final Logger logger = LoggerFactory.getLogger(ElutionScorer.class);
 
+    /**
+     * 不再使用的一种特征分
+     * 耗时过长
+     *
+     * @param peakGroupFeature
+     * @param scores
+     * @param scoreTypes
+     */
+    @Deprecated
     public void calculateElutionModelScore(PeakGroup peakGroupFeature, PeakGroupScore scores, List<String> scoreTypes) {
-        double avgScore = 0.0d;
+        double elutionModelFitScore = 0.0d;
         for (String cutInfo : peakGroupFeature.getIonHullInt().keySet()) {
             RtIntensityPairsDouble preparedHullPoints = prepareElutionFit(peakGroupFeature.getIonHullRt(), peakGroupFeature.getIonHullInt().get(cutInfo));
             if (preparedHullPoints == null) {
-                avgScore += -1;
+                elutionModelFitScore += -1;
                 continue;
             }
             double sum = 0.0d;
@@ -86,11 +94,13 @@ public class ElutionScorer {
             if (Double.isNaN(fScore)) {
                 logger.info("fscore is NaN");
             }
-            avgScore += fScore;
+            elutionModelFitScore += fScore;
         }
-        avgScore /= peakGroupFeature.getIonHullInt().size();
 
-        scores.put(ScoreType.ElutionModelFitScore.getName(), avgScore, scoreTypes);
+        elutionModelFitScore /= peakGroupFeature.getIonHullInt().size();
+
+//        return elutionModelFitScore;
+//        scores.put(ScoreType.ElutionModelFitScore.getName(), avgScore, scoreTypes);
     }
 
     /**

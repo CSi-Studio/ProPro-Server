@@ -91,8 +91,4 @@ public class BaseScores {
     public Double getTotalScore(List<String> scoreTypes) {
         return get(ScoreType.WeightedTotalScore, scoreTypes);
     }
-
-    public Double fetchBYIons(List<String> scoreTypes) {
-        return get(ScoreType.BseriesScore, scoreTypes) + get(ScoreType.YseriesScore, scoreTypes);
-    }
 }

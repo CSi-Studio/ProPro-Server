@@ -30,6 +30,8 @@ public class PeakGroupScore extends BaseScores {
     @Transient
     HashMap<String, Double> ionIntensity;
 
+    //原BYSeries分数,ApexRt处所有的可能的离子碎片数目
+    Integer totalIons;
     //强度最高的碎片cutInfo
     String maxIon;
     //强度最高的碎片的强度
