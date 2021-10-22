@@ -45,11 +45,11 @@ public class SwathLDAScorer {
         Double xcorrShape = scores.get(ScoreType.XcorrShape.getName(), scoreTypes);
         xcorrShape = (xcorrShape == null ? 0 : xcorrShape);
 
-//        Double ionWeightMaxScore = scores.get(ScoreType.IonsWeightMaxScore.getName(), scoreTypes);
-//        ionWeightMaxScore = (ionWeightMaxScore == null ? 0 : ionWeightMaxScore);
-//
-//        Double ionsDeltaScore = scores.get(ScoreType.IonsDeltaScore.getName(), scoreTypes);
-//        ionsDeltaScore = (ionsDeltaScore == null ? 0 : ionsDeltaScore);
+        Double ionsCountWeightScore = scores.get(ScoreType.IonsCountWeightScore.getName(), scoreTypes);
+        ionsCountWeightScore = (ionsCountWeightScore == null ? 0 : ionsCountWeightScore);
+
+        Double ionsCountDeltaScore = scores.get(ScoreType.IonsCountDeltaScore.getName(), scoreTypes);
+        ionsCountDeltaScore = (ionsCountDeltaScore == null ? 0 : ionsCountDeltaScore);
 
         Double logSnScore = scores.get(ScoreType.LogSnScore.getName(), scoreTypes);
         logSnScore = (logSnScore == null ? 0 : logSnScore);
@@ -67,7 +67,7 @@ public class SwathLDAScorer {
 //  BY改造前               (0.19267813) * ionCountScore +
 //  BY改造后               (0.10267813) * ionCountScore +
 //                        (0.05) * ionWeightMaxScore +
-//                        (-0.05) * ionsDeltaScore +
+                        (-0.5) * ionsCountDeltaScore +
                         (0.61712054) * logSnScore, scoreTypes);
     }
 
@@ -97,11 +97,11 @@ public class SwathLDAScorer {
         Double xcorrShape = scores.get(ScoreType.XcorrShape.getName(), scoreTypes);
         xcorrShape = (xcorrShape == null ? 0 : xcorrShape);
 
-//        Double ionWeightMaxScore = scores.get(ScoreType.IonsWeightMaxScore.getName(), scoreTypes);
-//        ionWeightMaxScore = (ionWeightMaxScore == null ? 0 : ionWeightMaxScore);
-//
-//        Double ionsDeltaScore = scores.get(ScoreType.IonsDeltaScore.getName(), scoreTypes);
-//        ionsDeltaScore = (ionsDeltaScore == null ? 0 : ionsDeltaScore);
+        Double ionsCountWeightScore = scores.get(ScoreType.IonsCountWeightScore.getName(), scoreTypes);
+        ionsCountWeightScore = (ionsCountWeightScore == null ? 0 : ionsCountWeightScore);
+
+        Double ionsCountDeltaScore = scores.get(ScoreType.IonsCountDeltaScore.getName(), scoreTypes);
+        ionsCountDeltaScore = (ionsCountDeltaScore == null ? 0 : ionsCountDeltaScore);
 
         Double logSnScore = scores.get(ScoreType.LogSnScore.getName(), scoreTypes);
         logSnScore = (logSnScore == null ? 0 : logSnScore);
@@ -119,7 +119,7 @@ public class SwathLDAScorer {
 //  BY改造前               (0.19267813) * ionCountScore +
 //  BY改造后               (0.10267813) * ionCountScore +
 //                        (temp) * ionWeightMaxScore +
-//                        (-temp) * ionsDeltaScore +
+                        (-temp) * ionsCountDeltaScore +
                         (0.61712054) * logSnScore, scoreTypes);
     }
 }

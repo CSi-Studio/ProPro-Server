@@ -32,10 +32,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("test")
@@ -87,15 +87,17 @@ public class TestController {
 
     @GetMapping(value = "/lms2")
     Result lms2() {
-        List<String> overviewIds = new ArrayList<>();
-        overviewIds.add("61713f52749794487dd90936");
-        overviewIds.add("61713f52749794487dd90937");
-        overviewIds.add("61713f52749794487dd90938");
-        overviewIds.add("61713f52749794487dd90934");
-        overviewIds.add("61713f52749794487dd90935");
-        overviewIds.add("61713f52749794487dd90932");
+        String projectId = "6166a5fd6113c157a6431ab9";
+        List<IdName> idNameList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), IdName.class);
+        List<String> overviewIds = idNameList.stream().map(IdName::id).collect(Collectors.toList());
+//        overviewIds.add("61713f52749794487dd90936");
+//        overviewIds.add("61713f52749794487dd90937");
+//        overviewIds.add("61713f52749794487dd90938");
+//        overviewIds.add("61713f52749794487dd90934");
+//        overviewIds.add("61713f52749794487dd90935");
+//        overviewIds.add("61713f52749794487dd90932");
 
-
+        log.info("一共overview" + overviewIds.size() + "个");
         double k = 2d;
         double n = 0.1d;
         while (n < k) {

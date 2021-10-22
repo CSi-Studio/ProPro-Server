@@ -12,6 +12,7 @@ package net.csibio.propro.domain.bean.overview;
 
 import lombok.Data;
 
+import java.util.Date;
 import java.util.HashMap;
 
 @Data
@@ -27,4 +28,8 @@ public class Overview4Clinic {
      * 关于本次分析的统计数据
      */
     HashMap<String, Object> statistic = new HashMap<>();
+    /**
+     * 分析实验的创建时间
+     */
+    Date createDate;
 }

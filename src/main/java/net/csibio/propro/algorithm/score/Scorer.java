@@ -115,7 +115,7 @@ public class Scorer {
             MzIntensityPairs mzIntensityPairs = blockIndexService.getNearestSpectrumByRt(rtMap, peakGroup.getApexRt());
             peakSpecMap.put(peakGroup.getApexRt(), mzIntensityPairs);
         }
-
+        int maxIonsCount = -1;
         for (PeakGroup peakGroup : peakGroupFeatureList) {
             PeakGroupScore peakGroupScore = new PeakGroupScore(scoreTypes.size());
             chromatographicScorer.calcXICScores(peakGroup, normedLibIntMap, peakGroupScore, scoreTypes);
@@ -130,6 +130,9 @@ public class Scorer {
                     }
                     int ionCount = diaScorer.calcTotalIons(mzIntensityPairs.getMzArray(), mzIntensityPairs.getIntensityArray(), unimodHashMap, sequence, 1, peakGroup);
                     peakGroupScore.setTotalIons(ionCount);
+                    if (ionCount > maxIonsCount) {
+                        maxIonsCount = ionCount;
+                    }
                     if (scoreTypes.contains(ScoreType.IonsCountWeightScore.getName())) {
                         diaScorer.calculateIonsScore(ionCount, sequence, peakGroupScore, scoreTypes);
                     }
@@ -148,7 +151,7 @@ public class Scorer {
             if (scoreTypes.contains(ScoreType.NormRtScore.getName())) {
                 libraryScorer.calculateNormRtScore(peakGroup, exp.getIrt().getSi(), dataDO.getLibRt(), peakGroupScore, scoreTypes);
             }
-            swathLDAScorer.calculateSwathLdaPrescore(peakGroupScore, scoreTypes);
+//            swathLDAScorer.calculateSwathLdaPrescore(peakGroupScore, scoreTypes);
             peakGroupScore.setRt(peakGroup.getApexRt());
             peakGroupScore.setRtRangeFeature(FeatureUtil.toString(peakGroup.getBestLeftRt(), peakGroup.getBestRightRt()));
             peakGroupScore.setIntensitySum(peakGroup.getPeakGroupInt());
@@ -164,12 +167,12 @@ public class Scorer {
             return;
         }
 
-//        if (params.getMethod().getScore().isDiaScores() && scoreTypes.contains(ScoreType.IonsDeltaScore.getName())) {
-//            for (PeakGroupScore peakGroupScore : peakGroupScoreList) {
-//                peakGroupScore.put(ScoreType.IonsDeltaScore, maxIonCount - peakGroupScore.getTotalIons(), scoreTypes);
-//                swathLDAScorer.calculateSwathLdaPrescore(peakGroupScore, scoreTypes);
-//            }
-//        }
+        if (params.getMethod().getScore().isDiaScores() && scoreTypes.contains(ScoreType.IonsCountDeltaScore.getName())) {
+            for (PeakGroupScore peakGroupScore : peakGroupScoreList) {
+                peakGroupScore.put(ScoreType.IonsCountDeltaScore, (double) (maxIonsCount - peakGroupScore.getTotalIons()), scoreTypes);
+                swathLDAScorer.calculateSwathLdaPrescore(peakGroupScore, scoreTypes);
+            }
+        }
         dataDO.setStatus(IdentifyStatus.WAIT.getCode());
         dataDO.setScoreList(peakGroupScoreList);
     }

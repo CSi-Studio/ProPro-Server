@@ -7,7 +7,6 @@ import net.csibio.propro.domain.bean.score.IonPeak;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.PeakGroupList;
 import net.csibio.propro.domain.db.DataDO;
-import net.csibio.propro.domain.options.DeveloperParams;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.service.DataService;
 import net.csibio.propro.service.OverviewService;
@@ -19,6 +18,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component("featureExtractor")
@@ -120,14 +122,23 @@ public class FeatureExtractor {
 //            quantifyIons = quantifyIons.subList(0, 3);
 //        }
 
-        List<PeakGroup> peakGroupFeatureList;
-        if (DeveloperParams.USE_NEW_PEAKGROUP_SELECTOR) {
-            peakGroupFeatureList = featureFinder.findFeaturesNew(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map, null);
-        } else {
-            peakGroupFeatureList = featureFinder.findFeatures(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
+        Map<Double, PeakGroup> peakGroupMap = featureFinder.findFeaturesNew(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map).stream().collect(Collectors.toMap(PeakGroup::getApexRt, Function.identity()));
+
+        List<PeakGroup> peakGroupFeatureList = featureFinder.findFeatures(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
+        for (PeakGroup peakGroup : peakGroupFeatureList) {
+            if (!peakGroupMap.containsKey(peakGroup.getApexRt())) {
+                peakGroupMap.put(peakGroup.getApexRt(), peakGroup);
+            }
         }
+//        List<PeakGroup> peakGroupFeatureList;
+//        if (DeveloperParams.USE_NEW_PEAKGROUP_SELECTOR) {
+//            peakGroupFeatureList = featureFinder.findFeaturesNew(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
+//        } else {
+//            peakGroupFeatureList = featureFinder.findFeatures(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
+//        }
+
         PeakGroupList featureResult = new PeakGroupList(true);
-        featureResult.setList(peakGroupFeatureList);
+        featureResult.setList(peakGroupMap.values().stream().toList());
         featureResult.setNormedIntMap(normedLibIntMap);
 
         return featureResult;

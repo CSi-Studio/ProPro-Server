@@ -53,8 +53,6 @@ public class FeatureFinder {
         }
 
         List<PeakGroup> peakGroupList = new ArrayList<>();
-
-
         //mrmFeature loop
         while (true) {
             PeakGroup peakGroup = new PeakGroup();
@@ -69,7 +67,6 @@ public class FeatureFinder {
             double apexRt = ionPeaks.get(maxCutInfo).getRtArray()[maxIndex];
             double bestLeft = peptideSpectrum.rtArray()[leftIndex];
             double bestRight = peptideSpectrum.rtArray()[rightIndex];
-
 
             peakGroup.setApexRt(apexRt);
             peakGroup.setBestLeftRt(bestLeft);
@@ -116,6 +113,8 @@ public class FeatureFinder {
             peakGroup.setTotalXic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
             peakGroup.setSignalToNoiseSum(signalToNoiseSum);
+            peakGroup.setMaxIon(maxCutInfo);
+            peakGroup.setMaxIonIntensity(peakGroup.getIonIntensity().get(maxCutInfo));
             peakGroupList.add(peakGroup);
             if (peakGroupInt > 0 && peakGroupInt / totalXic < Constants.STOP_AFTER_INTENSITY_RATIO) {
                 break;
@@ -125,7 +124,7 @@ public class FeatureFinder {
         return peakGroupList;
     }
 
-    public List<PeakGroup> findFeaturesNew(PeptideSpectrum peptideSpectrum, HashMap<String, RtIntensityPairsDouble> ionPeaks, HashMap<String, List<IonPeak>> ionPeakParams, HashMap<String, double[]> noise1000Map, List<String> quantifyIons) {
+    public List<PeakGroup> findFeaturesNew(PeptideSpectrum peptideSpectrum, HashMap<String, RtIntensityPairsDouble> ionPeaks, HashMap<String, List<IonPeak>> ionPeakParams, HashMap<String, double[]> noise1000Map) {
 
         //totalXIC
         double totalXic = 0.0d;

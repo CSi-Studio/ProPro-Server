@@ -133,7 +133,7 @@ public class ClinicController {
      * @param predict
      * @param smooth
      * @param denoise
-     * @param expIds
+     * @param overviewIds
      * @return
      */
     @PostMapping(value = "/getExpData")
@@ -213,6 +213,9 @@ public class ClinicController {
             });
         }
 
+//        for (ExpDataVO expDataVO : dataList) {
+//            expDataVO.setScoreList(expDataVO.getScoreList().stream().sorted(Comparator.comparing(PeakGroupScore::getRt)).collect(Collectors.toList()));
+//        }
         Result<List<ExpDataVO>> result = new Result<List<ExpDataVO>>(true);
         result.setData(dataList);
         result.getFeatureMap().put("intensityMap", intensityMap);

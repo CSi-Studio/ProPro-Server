@@ -185,8 +185,8 @@ public class DIAScorer {
             int largePeaksBeforeFirstIsotope = 0;
             double ratio;
             double monoPeakIntensity = expDistribution[0];
-            for (int ch = 1; ch < maxIsotope; ch++) {
-                double leftPeakMz = monoPeakMz - Constants.C13C12_MASSDIFF_U / ch;
+            for (int charge = 1; charge < maxIsotope; charge++) {
+                double leftPeakMz = monoPeakMz - Constants.C13C12_MASSDIFF_U / charge;
                 Double left = leftPeakMz - Constants.DIA_EXTRACT_WINDOW;
                 Double right = leftPeakMz + Constants.DIA_EXTRACT_WINDOW;
 
@@ -201,7 +201,7 @@ public class DIAScorer {
                     ratio = 0d;
                 }
                 //从OpenSWATH源代码1.0改为Constants.C13C12_MASSDIFF_U,作为leftPeakMz
-                if (ratio > 1 && (Math.abs(mzIntensity.getMz() - (monoPeakMz - 1.0d / ch)) / monoPeakMz) < Constants.PEAK_BEFORE_MONO_MAX_PPM_DIFF) {
+                if (ratio > 1 && (Math.abs(mzIntensity.getMz() - (monoPeakMz - 1.0d / charge)) / monoPeakMz) < Constants.PEAK_BEFORE_MONO_MAX_PPM_DIFF) {
                     largePeaksBeforeFirstIsotope++;//-i同位素出现的次数
                 }
 

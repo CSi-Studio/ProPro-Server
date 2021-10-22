@@ -152,6 +152,11 @@ public class CoreFunc {
         List<String> libIons = sortedLibFrags.stream().map(FragmentInfo::getCutInfo).toList();
 
         DataDO data = extractOne(coord, rtMap, params);
+
+        data.getIntMap().remove("y3");
+        data.getCutInfoMap().remove("y3");
+//        data.getIntMap().remove("y7");
+//        data.getCutInfoMap().remove("y7");
         double bestScore = -99999d;
         DataSumDO bestDataSum = null;
         DataDO bestData = null;
