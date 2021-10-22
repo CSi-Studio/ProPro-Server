@@ -64,7 +64,9 @@ public class ClinicController {
     Scorer scorer;
 
     @GetMapping(value = "prepare")
-    Result<ClinicPrepareDataVO> prepare(@RequestParam("projectId") String projectId) {
+    Result<ClinicPrepareDataVO> prepare(
+            @RequestParam(value = "projectId") String projectId,
+            @RequestParam(value = "overviewIds", required = false) List<String> overviewIds) {
         ProjectDO project = projectService.getById(projectId);
         if (project == null) {
             return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
@@ -84,13 +86,20 @@ public class ClinicController {
         if (method == null) {
             return Result.Error(ResultCode.METHOD_NOT_EXISTED);
         }
-        List<IdNameAlias> expList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId), IdNameAlias.class);
-        List<Overview4Clinic> totalOverviewList = overviewService.getAll(new OverviewQuery(projectId), Overview4Clinic.class);
-        Map<String, List<Overview4Clinic>> overviewMap = totalOverviewList.stream().collect(Collectors.groupingBy(Overview4Clinic::getExpId));
-        overviewMap.values().forEach(overviews -> {
-            overviews = overviews.stream().sorted(Comparator.nullsLast(Comparator.comparing(Overview4Clinic::getDefaultOne))).toList();
-        });
+        //TODO 王嘉伟 当overviewIds不为空的时候,检测他们的projectId, methodId, insId, anaId是否一致
 
+        List<IdNameAlias> expList = null;
+        List<Overview4Clinic> totalOverviewList = null;
+        if (overviewIds == null || overviewIds.size() == 0) {
+            //如果overviewIds不为空,则按照overviewIds获取,否则获取该项目下所有的defaultOne=true的overview
+            expList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId), IdNameAlias.class);
+            totalOverviewList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), Overview4Clinic.class);
+        } else {
+            totalOverviewList = overviewService.getAll(new OverviewQuery(projectId).setIds(overviewIds), Overview4Clinic.class);
+            List<String> expIds = totalOverviewList.stream().map(Overview4Clinic::getExpId).collect(Collectors.toList());
+            expList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId).setIds(expIds), IdNameAlias.class);
+        }
+        Map<String, List<Overview4Clinic>> overviewMap = totalOverviewList.stream().collect(Collectors.groupingBy(Overview4Clinic::getExpId));
         ClinicPrepareDataVO data = new ClinicPrepareDataVO();
         data.setProject(project);
         if (expList.stream().filter(idNameAlias -> idNameAlias.alias() != null).count() == expList.size()) {
@@ -122,7 +131,6 @@ public class ClinicController {
      * @param libraryId
      * @param peptideRef
      * @param predict
-     * @param onlyDefault
      * @param smooth
      * @param denoise
      * @param expIds
@@ -134,27 +142,22 @@ public class ClinicController {
                                        @RequestParam("peptideRef") String peptideRef,
                                        @RequestParam("predict") Boolean predict,
                                        @RequestParam(value = "changeCharge", required = false) Boolean changeCharge,
-                                       @RequestParam("onlyDefault") Boolean onlyDefault,
                                        @RequestParam(value = "smooth", required = false) Boolean smooth,
                                        @RequestParam(value = "denoise", required = false) Boolean denoise,
-                                       @RequestParam("expIds") List<String> expIds) {
+                                       @RequestParam("overviewIds") List<String> overviewIds) {
         List<ExpDataVO> dataList = new ArrayList<>();
         PeptideDO peptide = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(peptideRef), PeptideDO.class);
         Map<String, Double> intensityMap = peptide.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, FragmentInfo::getIntensity));
-        for (int i = 0; i < expIds.size(); i++) {
-            String expId = expIds.get(i);
-            OverviewQuery query = new OverviewQuery(projectId).setExpId(expId);
-            if (onlyDefault) {
-                query.setDefaultOne(true);
-            }
-            OverviewDO overview = overviewService.getOne(query, OverviewDO.class);
+        for (int i = 0; i < overviewIds.size(); i++) {
+            String overviewId = overviewIds.get(i);
+            OverviewDO overview = overviewService.getById(overviewId);
             if (overview == null) {
                 continue;
             }
             ExpDataVO data = null;
             //如果使用预测方法,则进行实时EIC获取
             if (predict) {
-                ExperimentDO exp = experimentService.getById(expId);
+                ExperimentDO exp = experimentService.getById(overview.getExpId());
                 DataSumDO existed = dataSumService.getOne(new DataSumQuery().setOverviewId(overview.getId()).setPeptideRef(peptideRef).setDecoy(false), DataSumDO.class, projectId);
 //                if (existed.getStatus() == IdentifyStatus.SUCCESS.getCode()) {
 //                    DataDO existedData = dataService.getById(existed.getId(), projectId);
@@ -173,13 +176,17 @@ public class ClinicController {
                 }
 //                }
             } else {
-                data = dataService.getDataFromDB(projectId, expId, overview.getId(), peptideRef);
+                data = dataService.getDataFromDB(projectId, overview.getExpId(), overview.getId(), peptideRef);
             }
             if (data != null) {
                 data.setMinTotalScore(overview.getMinTotalScore());
                 lda.scoreForPeakGroups(data.getScoreList(), overview.getWeights(), overview.getParams().getMethod().getScore().getScoreTypes());
                 dataList.add(data);
             }
+        }
+
+        if (dataList.size() == 0) {
+            return Result.Error(ResultCode.DATA_IS_EMPTY);
         }
 
         if (smooth) {
@@ -205,9 +212,7 @@ public class ClinicController {
                 data.setIntMap(denoiseIntMap);
             });
         }
-        if (dataList.size() == 0) {
-            return Result.Error(ResultCode.DATA_IS_EMPTY);
-        }
+
         Result<List<ExpDataVO>> result = new Result<List<ExpDataVO>>(true);
         result.setData(dataList);
         result.getFeatureMap().put("intensityMap", intensityMap);

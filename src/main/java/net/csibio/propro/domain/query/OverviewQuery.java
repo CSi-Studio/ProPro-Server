@@ -11,6 +11,8 @@ public class OverviewQuery extends PageQuery {
 
     String id;
 
+    List<String> ids;
+
     String projectId;
 
     Boolean defaultOne;
@@ -26,7 +28,7 @@ public class OverviewQuery extends PageQuery {
     String expId;
 
     List<String> expIds;
-    
+
     public OverviewQuery() {
     }
 
