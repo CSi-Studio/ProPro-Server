@@ -153,8 +153,8 @@ public class CoreFunc {
 
         DataDO data = extractOne(coord, rtMap, params);
 
-        data.getIntMap().remove("y4");
-        data.getCutInfoMap().remove("y4");
+//        data.getIntMap().remove("y4");
+//        data.getCutInfoMap().remove("y4");
 //        data.getIntMap().remove("y7");
 //        data.getCutInfoMap().remove("y7");
         double bestScore = -99999d;
@@ -188,10 +188,11 @@ public class CoreFunc {
         double finalBYCount = scorer.calcBestIonsCount(bestData);
         //Max BYCount Limit
         if (maxBYCount != finalBYCount && finalBYCount <= 5) {
+            log.info("未预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount);
             return null;
         }
 
-        log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",BYCount:" + finalBYCount);
+        log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount);
         coord.setFragments(bestIonGroup); //这里必须要将coord置为最佳峰组
 //        log.info(exp.getAlias() + "碎片组:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList() + "; Score:" + bestScore + " RT:" + bestRt);
         return new AnyPair<DataDO, DataSumDO>(bestData, bestDataSum);
@@ -288,10 +289,11 @@ public class CoreFunc {
         double finalBYCount = scorer.calcBestIonsCount(bestData);
         //Max BYCount Limit
         if (maxBYCount != finalBYCount && finalBYCount <= 5) {
+            log.info("未预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount);
             return null;
         }
 
-        log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",BYCount:" + finalBYCount);
+        log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount);
         coord.setFragments(bestIonGroup); //这里必须要将coord置为最佳峰组
 //        log.info(exp.getAlias() + "碎片组:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList() + "; Score:" + bestScore + " RT:" + bestRt);
         return new AnyPair<DataDO, DataSumDO>(bestData, bestDataSum);

@@ -58,6 +58,7 @@ public class DataSumServiceImpl implements DataSumService {
             sum.setQValue(selectedPeakGroup.getQValue());
             sum.setFragIntFeature(selectedPeakGroup.getFragIntFeature());
             sum.setRealRt(selectedPeakGroup.getRt());
+            sum.setNearestRt(selectedPeakGroup.getNearestRt());
             sum.setPeptideRef(selectedPeakGroup.getPeptideRef());
             sum.setSum(selectedPeakGroup.getIntensitySum());
             sum.setTotalScore(selectedPeakGroup.getMainScore());

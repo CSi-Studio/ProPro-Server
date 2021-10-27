@@ -233,6 +233,7 @@ public class DIAScorer {
 
             List<Double> ySeriesList = bySeries.getYSeries();
             int ySeriesScore = getSeriesScore(ySeriesList, spectrumMzArray, spectrumIntArray);
+            
             count += (bSeriesScore + ySeriesScore);
         }
 
@@ -335,7 +336,7 @@ public class DIAScorer {
             IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left.floatValue(), right.floatValue());
             if (mzIntensity.isSignalFound() &&
                     (Math.abs(seriesMz - mzIntensity.getMz()) * 1000000 / seriesMz) < Constants.DIA_BYSERIES_PPM_DIFF &&
-                    mzIntensity.getIntensity() > Constants.DIA_BYSERIES_INTENSITY_MIN) {
+                    mzIntensity.getIntensity() > 50) {
                 seriesScore++;
             }
         }

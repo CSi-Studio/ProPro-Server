@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -118,6 +119,7 @@ public class PeptideDO extends BaseDO {
 
     public PeptideCoord toTargetPeptide() {
         PeptideCoord tp = new PeptideCoord();
+        tp.setProteins(new ArrayList<>(proteins));
         tp.setPeptideRef(peptideRef);
         tp.setRt(rt);
         tp.setFragments(fragments);

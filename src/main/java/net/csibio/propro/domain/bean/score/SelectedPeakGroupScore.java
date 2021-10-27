@@ -22,6 +22,8 @@ public class SelectedPeakGroupScore extends BaseScores {
     //本峰值对应的最佳RT时间
     Double rt;
 
+    Double nearestRt;
+    
     //定量结果
     Double intensitySum;
 
@@ -33,7 +35,7 @@ public class SelectedPeakGroupScore extends BaseScores {
     Double qValue;
 
     Integer totalIons;
-    
+
     Double fdr;
 
     String fragIntFeature;

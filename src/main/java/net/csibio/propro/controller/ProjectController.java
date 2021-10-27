@@ -43,6 +43,7 @@ public class ProjectController {
 
     @GetMapping(value = "/list")
     Result list(ProjectQuery query) {
+        long s = System.currentTimeMillis();
         query.setSortColumn("group");
         query.setOrderBy(Sort.Direction.ASC);
         Result<List<ProjectVO>> result = projectService.getList(query, ProjectVO.class);
@@ -73,6 +74,7 @@ public class ProjectController {
                 projectVO.setOverviewCount(overviewService.count(new OverviewQuery().setProjectId(projectVO.getId())));
             });
         }
+        log.info("耗时:" + (System.currentTimeMillis() - s));
         return result;
     }
 

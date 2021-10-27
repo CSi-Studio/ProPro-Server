@@ -11,9 +11,12 @@ public class PeakGroup {
     int ionCount;
 
     int totalIons;
-    
+
     //算法得出的最高峰的Rt(不一定在谱图里面存在这个值)
     double apexRt;
+
+    //最接近apexRt的光谱rt值
+    double nearestRt;
 
     //group中每一个碎片的强度
     HashMap<String, Double> ionIntensity;

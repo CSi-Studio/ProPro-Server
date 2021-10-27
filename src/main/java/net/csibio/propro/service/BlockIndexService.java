@@ -13,7 +13,7 @@ public interface BlockIndexService extends BaseService<BlockIndexDO, BlockIndexQ
 
     List<BlockIndexDO> getAllMS2ByExpId(String expId);
 
-    MzIntensityPairs getNearestSpectrumByRt(TreeMap<Float, MzIntensityPairs> rtMap, Double rt);
+    float getNearestSpectrumByRt(TreeMap<Float, MzIntensityPairs> rtMap, Double rt);
 
     BlockIndexDO getOne(String expId, Double mz);
 

@@ -2,6 +2,7 @@ package net.csibio.propro.domain.db;
 
 import lombok.Data;
 import net.csibio.propro.domain.BaseDO;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
@@ -36,6 +37,9 @@ public class DataSumDO extends BaseDO {
     //最终鉴定的时间
     Double realRt;
 
+    //距离realRt最近的光谱图的rt
+    Double nearestRt;
+
     //对应的最终的主峰的打分
     Double totalScore;
 
@@ -43,7 +47,19 @@ public class DataSumDO extends BaseDO {
     Double sum;
 
     Integer totalIons;
-    
+
     //最终的定量值
     String fragIntFeature;
+
+    public static DataSumDO buildByPeakGroupScore(List<String> proteins, String peptideRef, PeakGroupScore selectPeakGroup) {
+        DataSumDO dataSum = new DataSumDO();
+        dataSum.setPeptideRef(peptideRef);
+        dataSum.setProteins(proteins);
+        dataSum.setTotalIons(selectPeakGroup.getTotalIons());
+        dataSum.setSum(selectPeakGroup.getIntensitySum());
+        dataSum.setRealRt(selectPeakGroup.getRt());
+        dataSum.setNearestRt(selectPeakGroup.getNearestRt());
+        dataSum.setTotalScore(selectPeakGroup.getTotalScore());
+        return dataSum;
+    }
 }

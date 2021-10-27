@@ -130,11 +130,11 @@ public class LibraryScorer {
 //        }
     }
 
-    public void calculateNormRtScore(PeakGroup peakGroup, SlopeIntercept slopeIntercept, double groupRt, PeakGroupScore scores, List<String> scoreTypes) {
+    public void calculateNormRtScore(PeakGroup peakGroup, SlopeIntercept slopeIntercept, double libRt, PeakGroupScore scores, List<String> scoreTypes) {
         //varNormRtScore
         double experimentalRt = peakGroup.getApexRt();
         double normalizedExperimentalRt = ScoreUtil.trafoApplier(slopeIntercept, experimentalRt);
-        scores.put(ScoreType.NormRtScore.getName(), Math.abs(normalizedExperimentalRt - groupRt), scoreTypes);
+        scores.put(ScoreType.NormRtScore.getName(), Math.abs(normalizedExperimentalRt - libRt), scoreTypes);
     }
 
     /**

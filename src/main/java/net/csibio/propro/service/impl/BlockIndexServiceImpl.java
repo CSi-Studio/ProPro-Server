@@ -41,7 +41,7 @@ public class BlockIndexServiceImpl implements BlockIndexService {
     }
 
     @Override
-    public MzIntensityPairs getNearestSpectrumByRt(TreeMap<Float, MzIntensityPairs> rtMap, Double rt) {
+    public float getNearestSpectrumByRt(TreeMap<Float, MzIntensityPairs> rtMap, Double rt) {
         float[] fArray = ArrayUtil.toPrimitive(rtMap.keySet());
         int rightIndex = ConvolutionUtil.findRightIndex(fArray, rt.floatValue());
         int finalIndex = rightIndex;
@@ -53,7 +53,7 @@ public class BlockIndexServiceImpl implements BlockIndexService {
             finalIndex = rightIndex - 1;
         }
 
-        return rtMap.get(fArray[finalIndex]);
+        return fArray[finalIndex];
     }
 
     @Override

@@ -53,7 +53,6 @@ public class FeatureFinder {
         }
 
         List<PeakGroup> peakGroupList = new ArrayList<>();
-        //mrmFeature loop
         while (true) {
             PeakGroup peakGroup = new PeakGroup();
             Pair<String, Integer> maxPeakLocation = findLargestPeak(ionPeaks);

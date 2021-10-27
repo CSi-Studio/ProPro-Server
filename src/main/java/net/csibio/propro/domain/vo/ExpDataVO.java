@@ -54,6 +54,9 @@ public class ExpDataVO {
     //最终鉴定的时间
     Double realRt;
 
+    //距离realRt最近的光谱图rt
+    Double nearestRt;
+
     //Intensity Sum
     Double sum;
 
