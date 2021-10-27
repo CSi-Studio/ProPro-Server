@@ -173,6 +173,7 @@ public class ClinicController {
                     data.setGroup(exp.getGroup());
                     data.setAlias(exp.getAlias());
                     data.setExpId(exp.getId());
+                    data.setOverviewId(overviewId);
                 }
 //                }
             } else {
@@ -248,17 +249,20 @@ public class ClinicController {
             if (overview == null) {
                 continue;
             }
+
             List<PeptideRt> realRtList = dataSumService.getAll(new DataSumQuery(overview.getId()).setDecoy(false).setStatus(IdentifyStatus.SUCCESS.getCode()).setIsUnique(true), PeptideRt.class, projectId);
             List<String> ids = realRtList.stream().map(PeptideRt::id).collect(Collectors.toList());
             if (ids.size() == 0) {
                 log.error("没有找到任何鉴定到的数据");
                 continue;
             }
+            long s = System.currentTimeMillis();
             List<PeptideRt> libRtList = dataService.getAll(new DataQuery(overview.getId()).setIds(ids), PeptideRt.class, projectId);
             if (realRtList.size() != libRtList.size()) {
                 log.error("数据异常,LibRt Size:" + libRtList.size() + ",RealRt Size:" + realRtList.size());
                 continue;
             }
+            log.info("数据库读取耗时:" + (System.currentTimeMillis() - s));
             Map<String, Double> libRtMap = libRtList.stream().collect(Collectors.toMap(PeptideRt::peptideRef, PeptideRt::libRt));
             //横坐标是libRt,纵坐标是realRt
             String[] peptideRefs = new String[realRtList.size()];

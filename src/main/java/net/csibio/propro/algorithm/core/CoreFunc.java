@@ -153,8 +153,8 @@ public class CoreFunc {
 
         DataDO data = extractOne(coord, rtMap, params);
 
-        data.getIntMap().remove("y3");
-        data.getCutInfoMap().remove("y3");
+        data.getIntMap().remove("y4");
+        data.getCutInfoMap().remove("y4");
 //        data.getIntMap().remove("y7");
 //        data.getCutInfoMap().remove("y7");
         double bestScore = -99999d;

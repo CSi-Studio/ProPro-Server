@@ -13,7 +13,7 @@ import net.csibio.propro.domain.bean.common.ListPairs;
 import net.csibio.propro.domain.bean.common.Pair;
 import net.csibio.propro.domain.bean.irt.IrtResult;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
-import net.csibio.propro.domain.bean.score.PeakGroupList;
+import net.csibio.propro.domain.bean.score.PeakGroupListWrapper;
 import net.csibio.propro.domain.bean.score.ScoreRtPair;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
 import net.csibio.propro.domain.db.DataDO;
@@ -95,8 +95,8 @@ public abstract class Irt {
         dataList = dataList.stream().sorted(Comparator.comparing(DataDO::getLibRt)).toList();
         for (DataDO data : dataList) {
             PeptideCoord coord = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
-            PeakGroupList peakGroupList = featureExtractor.getExperimentFeature(data, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
-            if (!peakGroupList.isFeatureFound()) {
+            PeakGroupListWrapper peakGroupListWrapper = featureExtractor.getExperimentFeature(data, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
+            if (!peakGroupListWrapper.isFeatureFound()) {
                 continue;
             }
             double groupRt = data.getLibRt();
@@ -106,7 +106,7 @@ public abstract class Irt {
             if (groupRt < minGroupRt) {
                 minGroupRt = groupRt;
             }
-            List<ScoreRtPair> scoreRtPairs = rtNormalizerScorer.score(peakGroupList.getList(), peakGroupList.getNormedIntMap(), groupRt, params);
+            List<ScoreRtPair> scoreRtPairs = rtNormalizerScorer.score(peakGroupListWrapper.getList(), peakGroupListWrapper.getNormedIntMap(), groupRt, params);
             scoreRtPairs = scoreRtPairs.stream().sorted(Comparator.comparing(ScoreRtPair::getScore).reversed()).toList();
             if (scoreRtPairs.size() == 0) {
                 continue;

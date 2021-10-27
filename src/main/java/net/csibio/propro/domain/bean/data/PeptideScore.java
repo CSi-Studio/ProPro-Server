@@ -12,6 +12,7 @@ import java.util.List;
 @Data
 public class PeptideScore {
 
+    //对应的DataDO的id
     String id;
 
     List<String> proteins;
@@ -21,7 +22,7 @@ public class PeptideScore {
 
     //是否是伪肽段
     Boolean decoy = false;
-    
+
     //所有峰组的打分情况
     List<PeakGroupScore> scoreList;
 

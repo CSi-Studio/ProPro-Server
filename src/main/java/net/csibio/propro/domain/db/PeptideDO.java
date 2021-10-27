@@ -122,6 +122,7 @@ public class PeptideDO extends BaseDO {
         tp.setRt(rt);
         tp.setFragments(fragments);
         tp.setMz(mz);
+        tp.setCharge(charge);
         tp.setSequence(sequence);
         tp.setUnimodMap(unimodMap);
         tp.setDecoySequence(decoySequence);
@@ -145,6 +146,7 @@ public class PeptideDO extends BaseDO {
         peptide.setProteins(proteins);
         peptide.setSequence(sequence);
         peptide.setRt(rt);
+        peptide.setCharge(charge);
         peptide.setPeptideRef(fullName + SymbolConst.UNDERLINE + newCharge);
         peptide.setMz(mz * charge / newCharge);
         return peptide;

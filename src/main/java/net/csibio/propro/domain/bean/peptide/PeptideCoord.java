@@ -27,7 +27,7 @@ public class PeptideCoord {
      * 对应肽段序列,如果是伪肽段,则为对应的伪肽段的序列(不包含UniModId)
      */
     String sequence;
-
+    Integer charge;
     /**
      * 对应的前体荷质比
      */
@@ -49,7 +49,7 @@ public class PeptideCoord {
      * 经过校准以后的rt值
      */
     Double irt;
-    
+
     /**
      * 如果是伪肽段,则本字段代表的是伪肽段中unimod的位置
      * key为unimod在肽段中的位置,位置从0开始计数,value为unimod的Id(参见unimod.obo文件)

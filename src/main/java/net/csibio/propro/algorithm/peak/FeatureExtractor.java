@@ -5,7 +5,7 @@ import net.csibio.propro.domain.bean.data.PeptideSpectrum;
 import net.csibio.propro.domain.bean.data.RtIntensityPairsDouble;
 import net.csibio.propro.domain.bean.score.IonPeak;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.PeakGroupList;
+import net.csibio.propro.domain.bean.score.PeakGroupListWrapper;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.service.DataService;
@@ -49,13 +49,13 @@ public class FeatureExtractor {
      * //2021.09.28 lms 在这里将定量方式改为仅计算强度排名前三的三个碎片的强度进行定量
      *
      * @param data         XIC后的数据对象
-     * @param intensityMap 得到标准库中peptideRef对应的碎片和强度的键值对
+     * @param intensityMap 得到标准库中peptideRef对应的碎片和强度的键值对,理论强度值
      * @param ss           sigma spacing
      * @return
      */
-    public PeakGroupList getExperimentFeature(DataDO data, HashMap<String, Float> intensityMap, SigmaSpacing ss) {
+    public PeakGroupListWrapper getExperimentFeature(DataDO data, HashMap<String, Float> intensityMap, SigmaSpacing ss) {
         if (data.getIntMap().isEmpty()) {
-            return new PeakGroupList(false);
+            return new PeakGroupListWrapper(false);
         }
 
         HashMap<String, RtIntensityPairsDouble> ionPeaks = new HashMap<>();
@@ -81,7 +81,7 @@ public class FeatureExtractor {
         }
 
         if (intensitiesMap.size() == 0) {
-            return new PeakGroupList(false);
+            return new PeakGroupListWrapper(false);
         }
         //计算GaussFilter
         Double[] rtDoubleArray = new Double[data.getRtArray().length];
@@ -112,7 +112,7 @@ public class FeatureExtractor {
             normedLibIntMap.put(cutInfo, intensityMap.get(cutInfo) / libIntSum);
         }
         if (ionPeakParams.size() == 0) {
-            return new PeakGroupList(false);
+            return new PeakGroupListWrapper(false);
         }
 
         //挑选理论强度排名前三的三个碎片用于定量
@@ -122,8 +122,8 @@ public class FeatureExtractor {
 //            quantifyIons = quantifyIons.subList(0, 3);
 //        }
 
+        //合并新老两种选峰算法
         Map<Double, PeakGroup> peakGroupMap = featureFinder.findFeaturesNew(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map).stream().collect(Collectors.toMap(PeakGroup::getApexRt, Function.identity()));
-
         List<PeakGroup> peakGroupFeatureList = featureFinder.findFeatures(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
         for (PeakGroup peakGroup : peakGroupFeatureList) {
             if (!peakGroupMap.containsKey(peakGroup.getApexRt())) {
@@ -137,7 +137,7 @@ public class FeatureExtractor {
 //            peakGroupFeatureList = featureFinder.findFeatures(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
 //        }
 
-        PeakGroupList featureResult = new PeakGroupList(true);
+        PeakGroupListWrapper featureResult = new PeakGroupListWrapper(true);
         featureResult.setList(peakGroupMap.values().stream().toList());
         featureResult.setNormedIntMap(normedLibIntMap);
 

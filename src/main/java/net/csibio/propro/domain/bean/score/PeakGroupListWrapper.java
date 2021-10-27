@@ -9,7 +9,7 @@ import java.util.List;
  * 一个peptideRef在某一个时间段内检测到的所有峰组的列表
  */
 @Data
-public class PeakGroupList {
+public class PeakGroupListWrapper {
 
     /**
      * 时候检测到了峰组
@@ -26,10 +26,10 @@ public class PeakGroupList {
      */
     HashMap<String, Double> normedIntMap;
 
-    public PeakGroupList() {
+    public PeakGroupListWrapper() {
     }
 
-    public PeakGroupList(boolean isFeatureFound) {
+    public PeakGroupListWrapper(boolean isFeatureFound) {
         this.featureFound = isFeatureFound;
     }
 }

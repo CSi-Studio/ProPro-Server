@@ -39,6 +39,8 @@ public class PeakGroupScore extends BaseScores {
 
     Boolean thresholdPassed;
 
+    Boolean mark = false;
+
     public PeakGroupScore() {
     }
 
