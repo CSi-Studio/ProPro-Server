@@ -24,7 +24,7 @@ import java.util.List;
  */
 @Component("chromatographicScorer")
 @Slf4j
-public class ChromatographicScorer {
+public class XicScorer {
 
     /**
      * xcorrCoelutionScore

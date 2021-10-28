@@ -36,13 +36,12 @@ public class PeakGroupScore extends BaseScores {
     String maxIon;
     //强度最高的碎片的强度
     Double maxIonIntensity;
-    
+
+    //中间计算变量,不需要存入数据库
     @Transient
     Boolean thresholdPassed;
-
     @Transient
     HashMap<String, Double> ionIntensity;
-
     @Transient
     Boolean mark = false;
 

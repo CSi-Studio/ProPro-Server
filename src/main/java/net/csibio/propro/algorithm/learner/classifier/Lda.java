@@ -98,6 +98,13 @@ public class Lda extends Classifier {
         }
     }
 
+    /**
+     * 选择第一批初始数据集
+     *
+     * @param trainData
+     * @param learningParams
+     * @return
+     */
     private TrainPeaks selectFirstTrainPeaks(TrainData trainData, LearningParams learningParams) {
         List<SelectedPeakGroupScore> decoyPeaks = new ArrayList<>();
         List<String> scoreTypes = learningParams.getScoreTypes();
@@ -111,9 +118,16 @@ public class Lda extends Classifier {
                     topDecoy = peakGroupScore;
                 }
             }
+
             SelectedPeakGroupScore selectedPeakGroupScore = new SelectedPeakGroupScore();
-            selectedPeakGroupScore.setScores(topDecoy.getScores());
-            decoyPeaks.add(selectedPeakGroupScore);
+            if (topDecoy == null || topDecoy.getScores() == null) {
+                log.error("Scores为空");
+                continue;
+            } else {
+                selectedPeakGroupScore.setScores(topDecoy.getScores());
+                decoyPeaks.add(selectedPeakGroupScore);
+            }
+
         }
         TrainPeaks trainPeaks = new TrainPeaks();
         trainPeaks.setTopDecoys(decoyPeaks);
@@ -129,15 +143,13 @@ public class Lda extends Classifier {
         bestTargetScore.put(ScoreType.LibraryDotprod.getName(), 1d, scoreTypes);
 //        bestTargetScore.put(ScoreType.LibrarySangle.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.LogSnScore.getName(), 5d, scoreTypes);
-        bestTargetScore.put(ScoreType.NormRtScore.getName(), 0d, scoreTypes);
+//        bestTargetScore.put(ScoreType.NormRtScore.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.IntensityScore.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.IsotopeCorrelationScore.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.IsotopeOverlapScore.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.MassdevScore.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.MassdevScoreWeighted.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.IonsCountScore.getName(), 10d, scoreTypes);
-//        bestTargetScore.put(ScoreType.IonsDeltaScore.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.IonsWeightMaxScore.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.IonsCountDeltaScore.getName(), 0d, scoreTypes);
 
         List<SelectedPeakGroupScore> bestTargets = new ArrayList<>();
         bestTargets.add(bestTargetScore);

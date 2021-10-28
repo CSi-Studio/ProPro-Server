@@ -66,7 +66,9 @@ public class SemiSupervise {
         params.setType(overview.getType());
         //Step2. 从数据库读取全部含打分结果的数据
         log.info("开始获取打分数据");
+        long temp = System.currentTimeMillis();
         List<PeptideScore> peptideList = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), PeptideScore.class, overview.getProjectId());
+        log.info("获取打分数据耗时:" + (System.currentTimeMillis() - temp));
         if (peptideList == null || peptideList.size() == 0) {
             log.info("没有合适的数据");
             return finalResult;

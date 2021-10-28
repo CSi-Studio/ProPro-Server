@@ -10,16 +10,10 @@ import java.util.List;
  * Created by Nico Wang Ruimin
  * Time: 2018-08-19 21:05
  */
-@Component("swathLDAScorer")
-public class SwathLDAScorer {
+@Component("initScorer")
+public class InitScorer {
 
-    //    /**
-//     * -scores.calculate_swath_lda_prescore
-//     *
-//     * @param scores
-//     * @return
-//     */
-    public void calculateSwathLdaPrescore(PeakGroupScore scores, List<String> scoreTypes) {
+    public void calcInitScore(PeakGroupScore scores, List<String> scoreTypes) {
 
         Double libraryCorr = scores.get(ScoreType.LibraryCorr.getName(), scoreTypes);
         libraryCorr = (libraryCorr == null ? 0 : libraryCorr);
@@ -27,8 +21,8 @@ public class SwathLDAScorer {
         Double libraryRsmd = scores.get(ScoreType.LibraryRsmd.getName(), scoreTypes);
         libraryRsmd = (libraryRsmd == null ? 0 : libraryRsmd);
 
-        Double normRtScore = scores.get(ScoreType.NormRtScore.getName(), scoreTypes);
-        normRtScore = (normRtScore == null ? 0 : normRtScore);
+//        Double normRtScore = scores.get(ScoreType.NormRtScore.getName(), scoreTypes);
+//        normRtScore = (normRtScore == null ? 0 : normRtScore);
 
         Double isotopeCorrelationScore = scores.get(ScoreType.IsotopeCorrelationScore.getName(), scoreTypes);
         isotopeCorrelationScore = (isotopeCorrelationScore == null ? 0 : isotopeCorrelationScore);
@@ -45,9 +39,6 @@ public class SwathLDAScorer {
         Double xcorrShape = scores.get(ScoreType.XcorrShape.getName(), scoreTypes);
         xcorrShape = (xcorrShape == null ? 0 : xcorrShape);
 
-//        Double ionsCountWeightScore = scores.get(ScoreType.IonsCountWeightScore.getName(), scoreTypes);
-//        ionsCountWeightScore = (ionsCountWeightScore == null ? 0 : ionsCountWeightScore);
-
         Double ionsCountDeltaScore = scores.get(ScoreType.IonsCountDeltaScore.getName(), scoreTypes);
         ionsCountDeltaScore = (ionsCountDeltaScore == null ? 0 : ionsCountDeltaScore);
 
@@ -58,16 +49,14 @@ public class SwathLDAScorer {
         scores.put(ScoreType.InitScore.getName(),
                 (0.19011762) * libraryCorr +
                         (-2.47298914) * libraryRsmd +
-                        (-5.63906731) * normRtScore +
+//                        (-5.63906731) * normRtScore +
                         (0.62640133) * isotopeCorrelationScore +
                         (-0.36006925) * isotopeOverlapScore +
                         (-0.08814003) * massdevScore +
                         (-0.13978311) * xcorrCoelution +
                         (1.16475032) * xcorrShape +
-//  BY改造前               (0.19267813) * ionCountScore +
-//  BY改造后               (0.10267813) * ionCountScore +
 //                        (0.05) * ionsCountWeightScore +
-                        (-0.5) * ionsCountDeltaScore +
+                        (-0.2) * ionsCountDeltaScore +
                         (0.61712054) * logSnScore, scoreTypes);
     }
 
@@ -79,8 +68,8 @@ public class SwathLDAScorer {
         Double libraryRsmd = scores.get(ScoreType.LibraryRsmd.getName(), scoreTypes);
         libraryRsmd = (libraryRsmd == null ? 0 : libraryRsmd);
 
-        Double normRtScore = scores.get(ScoreType.NormRtScore.getName(), scoreTypes);
-        normRtScore = (normRtScore == null ? 0 : normRtScore);
+//        Double normRtScore = scores.get(ScoreType.NormRtScore.getName(), scoreTypes);
+//        normRtScore = (normRtScore == null ? 0 : normRtScore);
 
         Double isotopeCorrelationScore = scores.get(ScoreType.IsotopeCorrelationScore.getName(), scoreTypes);
         isotopeCorrelationScore = (isotopeCorrelationScore == null ? 0 : isotopeCorrelationScore);
@@ -110,7 +99,7 @@ public class SwathLDAScorer {
         scores.put(ScoreType.InitScore.getName(),
                 (0.19011762) * libraryCorr +
                         (-2.47298914) * libraryRsmd +
-                        (-5.63906731) * normRtScore +
+//                        (-5.63906731) * normRtScore +
                         (0.62640133) * isotopeCorrelationScore +
                         (-0.36006925) * isotopeOverlapScore +
                         (-0.08814003) * massdevScore +

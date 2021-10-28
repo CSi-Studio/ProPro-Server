@@ -16,7 +16,7 @@ import java.util.List;
 public class RtNormalizerScorer {
 
     @Autowired
-    ChromatographicScorer chromatographicScorer;
+    XicScorer xicScorer;
     @Autowired
     LibraryScorer libraryScorer;
 
@@ -52,8 +52,8 @@ public class RtNormalizerScorer {
                 continue;
             }
             PeakGroupScore scores = new PeakGroupScore(defaultScoreTypes.size());
-            chromatographicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
-            chromatographicScorer.calculateLogSnScore(peakGroupFeature, scores, defaultScoreTypes);
+            xicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
+            xicScorer.calculateLogSnScore(peakGroupFeature, scores, defaultScoreTypes);
             libraryScorer.calculateLibraryScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
 
             double ldaScore = -1d * calculateLdaPrescore(scores, defaultScoreTypes);

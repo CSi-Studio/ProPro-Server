@@ -6,7 +6,7 @@ import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.Scorer;
-import net.csibio.propro.algorithm.score.features.SwathLDAScorer;
+import net.csibio.propro.algorithm.score.features.InitScorer;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
@@ -14,7 +14,6 @@ import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.PeptideDO;
@@ -69,7 +68,7 @@ public class TestController {
     @Autowired
     Scorer scorer;
     @Autowired
-    SwathLDAScorer swathLDAScorer;
+    InitScorer initScorer;
 
     @GetMapping(value = "/lms")
     Result lms() {
@@ -90,7 +89,7 @@ public class TestController {
         String projectId = "6166a5fd6113c157a6431ab9";
         List<IdName> idNameList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), IdName.class);
         List<String> overviewIds = idNameList.stream().map(IdName::id).collect(Collectors.toList());
-//        overviewIds.add("61713f52749794487dd90936");
+        overviewIds.add("617a1168cbe5541deb772b09");
 //        overviewIds.add("61713f52749794487dd90937");
 //        overviewIds.add("61713f52749794487dd90938");
 //        overviewIds.add("61713f52749794487dd90934");
@@ -124,11 +123,11 @@ public class TestController {
                 }
                 log.info("总计有待鉴定态肽段" + peptideList.size() + "个");
 
-                for (PeptideScore peptideScore : peptideList) {
-                    for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
-                        swathLDAScorer.calculateSwathLdaPrescore1(peakGroupScore, n, overview.fetchScoreTypes());
-                    }
-                }
+//                for (PeptideScore peptideScore : peptideList) {
+//                    for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
+//                        initScorer.calculateSwathLdaPrescore1(peakGroupScore, n, overview.fetchScoreTypes());
+//                    }
+//                }
                 log.info("重新计算初始分完毕");
                 //Step3. 开始训练数据集
                 HashMap<String, Double> weightsMap = lda.classifier(peptideList, params, overview.fetchScoreTypes());

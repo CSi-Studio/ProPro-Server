@@ -49,7 +49,7 @@ public class DIAScorer {
     FragmentFactory fragmentFactory;
 
     /**
-     * scores.massdev_score 按spectrum intensity加权的mz与product mz的偏差ppm百分比之和
+     * scores.massdev_score 按光谱图中的强度加权mz与库中mz的偏差ppm百分比之和
      * scores.weighted_massdev_score 按spectrum intensity加权的mz与product mz的偏差ppm百分比按libraryIntensity加权之和
      *
      * @param productMzArray   根据transitionGroup获得存在transition中的productMz，存成Float array
@@ -233,7 +233,7 @@ public class DIAScorer {
 
             List<Double> ySeriesList = bySeries.getYSeries();
             int ySeriesScore = getSeriesScore(ySeriesList, spectrumMzArray, spectrumIntArray);
-            
+
             count += (bSeriesScore + ySeriesScore);
         }
 
@@ -336,7 +336,7 @@ public class DIAScorer {
             IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left.floatValue(), right.floatValue());
             if (mzIntensity.isSignalFound() &&
                     (Math.abs(seriesMz - mzIntensity.getMz()) * 1000000 / seriesMz) < Constants.DIA_BYSERIES_PPM_DIFF &&
-                    mzIntensity.getIntensity() > 50) {
+                    mzIntensity.getIntensity() > 300) {
                 seriesScore++;
             }
         }

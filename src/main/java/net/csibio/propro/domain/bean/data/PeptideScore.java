@@ -8,6 +8,8 @@ import java.util.List;
 
 /**
  * 某一个肽段的打分结果,包含了其中所有的Peak峰组的打分结果
+ *
+ * @see DataDO
  */
 @Data
 public class PeptideScore {

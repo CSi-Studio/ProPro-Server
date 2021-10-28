@@ -59,7 +59,7 @@ public class Scorer {
     @Autowired
     ExperimentService experimentService;
     @Autowired
-    ChromatographicScorer chromatographicScorer;
+    XicScorer xicScorer;
     @Autowired
     DIAScorer diaScorer;
     @Autowired
@@ -67,7 +67,7 @@ public class Scorer {
     @Autowired
     LibraryScorer libraryScorer;
     @Autowired
-    SwathLDAScorer swathLDAScorer;
+    InitScorer initScorer;
     @Autowired
     LinearFitter linearFitter;
     @Autowired
@@ -124,12 +124,16 @@ public class Scorer {
         String sequence = coord.getSequence();
 
         HashMap<Double, MzIntensityPairs> peakSpecMap = new HashMap<>();
+        int maxIonsCount = -1;
         for (PeakGroup peakGroup : peakGroupList) {
             float nearestRt = blockIndexService.getNearestSpectrumByRt(rtMap, peakGroup.getApexRt());
             MzIntensityPairs mzIntensityPairs = rtMap.get(nearestRt);
             peakSpecMap.put(peakGroup.getApexRt(), mzIntensityPairs);
-//            int ionCount = diaScorer.calcTotalIons(mzIntensityPairs.getMzArray(), mzIntensityPairs.getIntensityArray(), unimodHashMap, sequence, coord.getCharge());
-            int ionCount = diaScorer.calcTotalIons(mzIntensityPairs.getMzArray(), mzIntensityPairs.getIntensityArray(), unimodHashMap, sequence, 1);
+            int ionCount = diaScorer.calcTotalIons(mzIntensityPairs.getMzArray(), mzIntensityPairs.getIntensityArray(), unimodHashMap, sequence, coord.getCharge());
+//            int ionCount = diaScorer.calcTotalIons(mzIntensityPairs.getMzArray(), mzIntensityPairs.getIntensityArray(), unimodHashMap, sequence, 1);
+            if (ionCount > maxIonsCount) {
+                maxIonsCount = ionCount;
+            }
             peakGroup.setTotalIons(ionCount);
             peakGroup.setNearestRt(nearestRt);
         }
@@ -140,11 +144,10 @@ public class Scorer {
         }
         peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getApexRt)).collect(Collectors.toList());
 
-        int maxIonsCount = -1;
         //开始对所有的PeakGroup进行打分
         for (PeakGroup peakGroup : peakGroupList) {
             PeakGroupScore peakGroupScore = new PeakGroupScore(scoreTypes.size());
-            chromatographicScorer.calcXICScores(peakGroup, normedLibIntMap, peakGroupScore, scoreTypes);
+            xicScorer.calcXICScores(peakGroup, normedLibIntMap, peakGroupScore, scoreTypes);
             //根据RT时间和前体m/z获取最近的一个原始谱图
             if (params.getMethod().getScore().isDiaScores()) {
                 MzIntensityPairs mzIntensityPairs = peakSpecMap.get(peakGroup.getApexRt());
@@ -154,19 +157,11 @@ public class Scorer {
                     if (scoreTypes.contains(ScoreType.IsotopeCorrelationScore.getName()) || scoreTypes.contains(ScoreType.IsotopeOverlapScore.getName())) {
                         diaScorer.calculateDiaIsotopeScores(peakGroup, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, peakGroupScore, scoreTypes);
                     }
-                    int ionCount = diaScorer.calcTotalIons(mzIntensityPairs.getMzArray(), mzIntensityPairs.getIntensityArray(), unimodHashMap, sequence, 1);
-                    peakGroupScore.setTotalIons(ionCount);
-                    if (ionCount > maxIonsCount) {
-                        maxIonsCount = ionCount;
-                    }
-//                    if (scoreTypes.contains(ScoreType.IonsCountWeightScore.getName())) {
-//                        diaScorer.calculateIonsScore(ionCount, sequence, peakGroupScore, scoreTypes);
-//                    }
                     diaScorer.calculateDiaMassDiffScore(productMzMap, spectrumMzArray, spectrumIntArray, normedLibIntMap, peakGroupScore, scoreTypes);
                 }
             }
             if (scoreTypes.contains(ScoreType.LogSnScore.getName())) {
-                chromatographicScorer.calculateLogSnScore(peakGroup, peakGroupScore, scoreTypes);
+                xicScorer.calculateLogSnScore(peakGroup, peakGroupScore, scoreTypes);
             }
 
             if (scoreTypes.contains(ScoreType.IntensityScore.getName())) {
@@ -185,6 +180,7 @@ public class Scorer {
             peakGroupScore.setMaxIon(peakGroup.getMaxIon());
             peakGroupScore.setMaxIonIntensity(peakGroup.getMaxIonIntensity());
             peakGroupScore.setIonIntensity(peakGroup.getIonIntensity());
+            peakGroupScore.setTotalIons(peakGroup.getTotalIons());
             peakGroupScore.setNearestRt(peakGroup.getNearestRt());
             peakGroupScoreList.add(peakGroupScore);
         }
@@ -196,8 +192,9 @@ public class Scorer {
 
         if (params.getMethod().getScore().isDiaScores() && scoreTypes.contains(ScoreType.IonsCountDeltaScore.getName())) {
             for (PeakGroupScore peakGroupScore : peakGroupScoreList) {
-                peakGroupScore.put(ScoreType.IonsCountDeltaScore, (double) (maxIonsCount - peakGroupScore.getTotalIons()), scoreTypes);
-                swathLDAScorer.calculateSwathLdaPrescore(peakGroupScore, scoreTypes);
+                double ionCountDelta = (maxIonsCount - peakGroupScore.getTotalIons()) / (double) maxIonsCount;
+                peakGroupScore.put(ScoreType.IonsCountDeltaScore, ionCountDelta, scoreTypes);
+                initScorer.calcInitScore(peakGroupScore, scoreTypes);
             }
         }
         dataDO.setStatus(IdentifyStatus.WAIT.getCode());
@@ -223,7 +220,7 @@ public class Scorer {
             List<String> scoreTypes = new ArrayList<>();
             scoreTypes.add(ScoreType.XcorrShape.getName());
             scoreTypes.add(ScoreType.XcorrShapeWeighted.getName());
-            chromatographicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, peakGroupScore, scoreTypes);
+            xicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, peakGroupScore, scoreTypes);
             if (peakGroupScore.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes) < shapeScoreThreshold
                     || peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
                 continue;
@@ -256,7 +253,7 @@ public class Scorer {
         HashMap<String, Double> normedLibIntMap = peakGroupListWrapper.getNormedIntMap();
         for (PeakGroup peakGroupFeature : peakGroupFeatureList) {
             PeakGroupScore peakGroupScore = new PeakGroupScore(types.size());
-            chromatographicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, peakGroupScore, types);
+            xicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, peakGroupScore, types);
             if (peakGroupScore.get(ScoreType.XcorrShape.getName(), types) < 0.6) {
                 continue;
             }
@@ -458,8 +455,8 @@ public class Scorer {
 
         PeakGroupScore pgs = peakGroupScoreList.get(selectPeakGroupIndex);
         List<Integer> sorted = peakGroupScoreList.stream().map(PeakGroupScore::getTotalIons).distinct().sorted(Comparator.reverseOrder()).collect(Collectors.toList());
-
-        if (pgs.getTotalIons() < sorted.get(0) - 3) {
+        int maxIons = sorted.get(0);
+        if (pgs.getTotalIons() <= maxIons - 2) {
             pgs.setMark(true);
         }
 

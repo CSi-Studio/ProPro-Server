@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
         @CompoundIndex(name = "overviewId_peptideRef", def = "{'overviewId':1,'peptideRef':1}"),
         @CompoundIndex(name = "overviewId_proteins", def = "{'overviewId':1,'proteins':1}"),
         @CompoundIndex(name = "overviewId_peptideRef_status", def = "{'overviewId':1,'peptideRef':1,'status':1}"),
+        @CompoundIndex(name = "overviewId_status", def = "{'overviewId':1,'status':1}"),
         @CompoundIndex(name = "overviewId_peptideRef_decoy", def = "{'overviewId':1,'peptideRef':1,'decoy':1}", unique = true)
 })
 public class DataDO extends BaseDO {
@@ -36,14 +37,13 @@ public class DataDO extends BaseDO {
     Boolean decoy = false; //是否是伪肽段
     @Indexed
     List<String> proteins;
+    @Indexed
+    Integer status; //鉴定态
 
     Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得
 
     Double irt; //该肽段的理论rt值,从标准库中冗余所得,并且经过了irt校准
-
-    @Indexed
-    Integer status; //鉴定态
-
+    
     String cutInfosFeature; //由cutInfoMap转换所得
 
     List<PeakGroupScore> scoreList;

@@ -10,22 +10,20 @@ public class PeakGroup {
     //离子片段的数目
     int ionCount;
 
+    //最高峰顶处(NearestRt处)的光谱图中含有的b,y离子(根据轰击方式确定)的总数
     int totalIons;
 
-    //算法得出的最高峰的Rt(不一定在谱图里面存在这个值)
+    //算法得出的顶峰的Rt(不一定在谱图里面存在这个值)
     double apexRt;
 
     //最接近apexRt的光谱rt值
     double nearestRt;
 
-    //group中每一个碎片的强度
+    //peak group中每一个碎片的强度
     HashMap<String, Double> ionIntensity;
 
     //最终的强度总和
     double peakGroupInt;
-
-    //单个离子在bestLeftRt和bestRightRt中间最大峰的强度
-    HashMap<String, Double> ionApexInt;
 
     //算法选定的峰形范围左侧最合适的RT
     double bestLeftRt;
