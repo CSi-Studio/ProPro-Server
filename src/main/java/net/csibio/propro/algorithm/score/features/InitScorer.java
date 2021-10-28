@@ -39,6 +39,9 @@ public class InitScorer {
         Double xcorrShape = scores.get(ScoreType.XcorrShape.getName(), scoreTypes);
         xcorrShape = (xcorrShape == null ? 0 : xcorrShape);
 
+        Double xcorrShapeWeight = scores.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes);
+        xcorrShapeWeight = (xcorrShapeWeight == null ? 0 : xcorrShapeWeight);
+
         Double ionsCountDeltaScore = scores.get(ScoreType.IonsCountDeltaScore.getName(), scoreTypes);
         ionsCountDeltaScore = (ionsCountDeltaScore == null ? 0 : ionsCountDeltaScore);
 
@@ -47,11 +50,11 @@ public class InitScorer {
 
 //        scores.put(ScoreType.InitScore.getName(), (-5) * normRtScore + (-3) * libraryRsmd + (-5) * ionsDeltaScore + (5) * xcorrShape + (5) * isotopeCorrelationScore, scoreTypes);
         scores.put(ScoreType.InitScore.getName(),
-                (0.19011762) * libraryCorr +
-                        (-2.47298914) * libraryRsmd +
+//                (0.19011762) * libraryCorr +
+//                        (-2.47298914) * libraryRsmd +
 //                        (-5.63906731) * normRtScore +
-                        (0.62640133) * isotopeCorrelationScore +
-                        (-0.36006925) * isotopeOverlapScore +
+                (0.62640133) * isotopeCorrelationScore +
+//                        (-0.36006925) * isotopeOverlapScore +
                         (-0.08814003) * massdevScore +
                         (-0.13978311) * xcorrCoelution +
                         (1.16475032) * xcorrShape +

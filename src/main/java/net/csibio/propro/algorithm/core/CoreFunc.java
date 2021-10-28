@@ -146,55 +146,61 @@ public class CoreFunc {
      * @return
      */
     public AnyPair<DataDO, DataSumDO> predictOneDelete(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
-        //Step1.对库中的碎片进行排序,按照强度从大到小排列
-        Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
-        List<FragmentInfo> sortedLibFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
-        List<String> libIons = sortedLibFrags.stream().map(FragmentInfo::getCutInfo).toList();
 
-        DataDO data = extractOne(coord, rtMap, params);
-
-//        data.getIntMap().remove("y4");
-//        data.getCutInfoMap().remove("y4");
-//        data.getIntMap().remove("y7");
-//        data.getCutInfoMap().remove("y7");
+        List<FragmentInfo> libFrags = new ArrayList<>(coord.getFragments());
+        int size = coord.getFragments().size();
         double bestScore = -99999d;
         DataSumDO bestDataSum = null;
         DataDO bestData = null;
-        Set<FragmentInfo> bestIonGroup = null;
-
-        try {
-            scorer.scoreForOne(exp, data, coord, rtMap, params);
-        } catch (Exception e) {
-            log.error("Peptide打分异常:" + coord.getPeptideRef());
-        }
-
         double maxBYCount = -1;
-        if (data.getScoreList() != null) {
-            DataSumDO dataSum = scorer.calcBestTotalScore(data, overview, null);
-            double currentBYCount = scorer.calcBestIonsCount(data);
-            if (currentBYCount > maxBYCount) {
-                maxBYCount = currentBYCount;
+        String removeCutInfo = "null";
+        for (int i = -1; i < size; i++) {
+            String currentRemoveCutInfo = "null";
+            //i==-1的时候检测的就是自己本身
+            if (i != -1) {
+                FragmentInfo temp = libFrags.get(i);
+                libFrags.remove(i);
+                currentRemoveCutInfo = temp.getCutInfo();
+                coord.setFragments(new HashSet<>(libFrags));
+                libFrags.add(temp);
             }
-            if (dataSum != null && dataSum.getTotalScore() > bestScore) {
-                bestDataSum = dataSum;
-                bestData = data;
+            DataDO data = extractOne(coord, rtMap, params);
+
+            if (data == null) {
+                continue;
+            }
+            try {
+                scorer.scoreForOne(exp, data, coord, rtMap, params);
+            } catch (Exception e) {
+                log.error("Peptide打分异常:" + coord.getPeptideRef());
+            }
+
+            if (data.getScoreList() != null) {
+                DataSumDO dataSum = scorer.calcBestTotalScore(data, overview, null);
+                double currentBYCount = scorer.calcBestIonsCount(data);
+                if (currentBYCount > maxBYCount) {
+                    maxBYCount = currentBYCount;
+                }
+                if (dataSum != null && dataSum.getTotalScore() > bestScore && dataSum.getTotalIons() >= maxBYCount) {
+                    bestDataSum = dataSum;
+                    bestData = data;
+                    bestScore = dataSum.getTotalScore();
+                    removeCutInfo = currentRemoveCutInfo;
+                }
             }
         }
 
         if (bestData == null) {
             return null;
         }
-
         double finalBYCount = scorer.calcBestIonsCount(bestData);
         //Max BYCount Limit
         if (maxBYCount != finalBYCount && finalBYCount <= 5) {
             log.info("未预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount);
             return null;
         }
-
-        log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount);
-        coord.setFragments(bestIonGroup); //这里必须要将coord置为最佳峰组
-//        log.info(exp.getAlias() + "碎片组:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList() + "; Score:" + bestScore + " RT:" + bestRt);
+//        log.info(JSON.toJSONString(libFrags.stream().map(FragmentInfo::getCutInfo).collect(Collectors.toList())));
+//        log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount + ",Remove CutInfo=" + removeCutInfo);
         return new AnyPair<DataDO, DataSumDO>(bestData, bestDataSum);
     }
 
@@ -340,6 +346,8 @@ public class CoreFunc {
 
             //Step4. 如果第一,二步均符合条件,那么开始对对应的伪肽段进行数据提取和打分
             coord.setDecoy(true);
+//            coord.setDecoyFragments(new HashSet<>(coord.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()).subList(0, 5)));
+
             DataDO decoyData = extractOne(coord, rtMap, params);
             if (decoyData == null) {
                 return;
@@ -384,7 +392,7 @@ public class CoreFunc {
             if (tempSum == null || tempSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview(), null);
                 if (dataSum == null || dataSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
-                    AnyPair<DataDO, DataSumDO> pair = predictOneReplace(coord, rtMap, exp, params.getBaseOverview(), params);
+                    AnyPair<DataDO, DataSumDO> pair = predictOneDelete(coord, rtMap, exp, params.getBaseOverview(), params);
                     if (pair != null && pair.getLeft() != null) {
                         newIonsGroup.getAndIncrement();
                         dataDO = pair.getLeft();

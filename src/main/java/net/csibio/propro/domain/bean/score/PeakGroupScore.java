@@ -44,6 +44,8 @@ public class PeakGroupScore extends BaseScores {
     HashMap<String, Double> ionIntensity;
     @Transient
     Boolean mark = false;
+    @Transient
+    Boolean changed = false;
 
     public PeakGroupScore() {
     }

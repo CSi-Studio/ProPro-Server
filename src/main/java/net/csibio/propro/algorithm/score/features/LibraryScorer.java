@@ -134,11 +134,14 @@ public class LibraryScorer {
         //varNormRtScore
         double experimentalRt = peakGroup.getApexRt();
         double normalizedExperimentalRt = ScoreUtil.trafoApplier(slopeIntercept, experimentalRt);
-        scores.put(ScoreType.NormRtScore.getName(), Math.abs(normalizedExperimentalRt - libRt), scoreTypes);
+//        scores.put(ScoreType.NormRtScore.getName(), Math.abs(normalizedExperimentalRt - libRt), scoreTypes);
+        scores.put(ScoreType.NormRtScore.getName(), 0d, scoreTypes);
     }
 
     /**
+     * 当出现干扰碎片的时候,本打分会有很大的副作用
      * scores.var_intensity_score
+     * <p>
      * sum of intensitySum:
      * totalXic
      */

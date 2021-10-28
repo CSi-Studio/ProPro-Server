@@ -51,8 +51,6 @@ public class Scorer {
     @Autowired
     FeatureFinder featureFinder;
     @Autowired
-    RtNormalizerScorer rtNormalizerScorer;
-    @Autowired
     TaskService taskService;
     @Autowired
     FeatureExtractor featureExtractor;
@@ -357,6 +355,7 @@ public class Scorer {
     public List<SelectedPeakGroupScore> findBestPeakGroupByTargetScoreTypeAndMinTotalScore(List<PeptideScore> peptideScoreList, String targetScoreType, List<String> scoreTypes, Double minTotalScore) {
         List<SelectedPeakGroupScore> bestFeatureScoresList = new ArrayList<>();
         List<String> markedPeptideRefList = new ArrayList<>();
+        List<String> changedPeptideRefList = new ArrayList<>();
         for (PeptideScore peptideScore : peptideScoreList) {
             if (peptideScore.getScoreList() == null || peptideScore.getScoreList().size() == 0) {
                 continue;
@@ -367,6 +366,9 @@ public class Scorer {
             if (topFeatureScore != null) {
                 if (topFeatureScore.getMark() && !peptideScore.getDecoy() && topFeatureScore.get(targetScoreType, scoreTypes) > minTotalScore) {
                     markedPeptideRefList.add(peptideScore.getPeptideRef());
+                }
+                if (topFeatureScore.getChanged() && !peptideScore.getDecoy()) {
+                    changedPeptideRefList.add(peptideScore.getPeptideRef());
                 }
                 bestFeatureScores.setTotalIons(topFeatureScore.getTotalIons());
                 bestFeatureScores.setMainScore(topFeatureScore.get(targetScoreType, scoreTypes));
@@ -380,6 +382,8 @@ public class Scorer {
         }
         log.info("总计有问题的肽段有:" + markedPeptideRefList.size() + "个");
         log.info(JSON.toJSONString(markedPeptideRefList));
+        log.info("总计组内切换的肽段有:" + changedPeptideRefList.size() + "个");
+        log.info(JSON.toJSONString(changedPeptideRefList));
         return bestFeatureScoresList;
     }
 
@@ -431,22 +435,26 @@ public class Scorer {
             for (Integer index : candidateIndexList) {
                 double currentBYIons = peakGroupScoreList.get(index).getTotalIons();
                 double currentIsotope = peakGroupScoreList.get(index).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
-                if (currentBYIons > bestBYIons && (currentIsotope > bestIsotope || bestIsotope - currentIsotope < 0.1)) {
+                //切换条件, 碎片数更大,同时Isotope分数差值不能超过0.1
+                boolean condition1 = (currentBYIons > bestBYIons && (currentIsotope > bestIsotope || (bestIsotope - currentIsotope < 0.03 * (currentBYIons - bestBYIons))));
+                boolean condition2 = currentBYIons == bestBYIons && (currentIsotope - bestIsotope) > 0.05;
+                if (condition1 || condition2) {
                     bestBYIons = currentBYIons;
                     bestIsotope = currentIsotope;
                     selectPeakGroupIndex = index;
                 }
             }
-            if (selectPeakGroupIndex != bestIndex) {
-                double iosBefore = peakGroupScoreList.get(bestIndex).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
-                double iosAfter = peakGroupScoreList.get(selectPeakGroupIndex).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
-
-                double byCountBefore = peakGroupScoreList.get(bestIndex).getTotalIons();
-                double byCountAfter = peakGroupScoreList.get(selectPeakGroupIndex).getTotalIons();
-                log.info("切换前/后BYIon打分:" + byCountBefore + "/" + byCountAfter + ";" + (byCountAfter > byCountBefore ? "切换靠谱" : "不靠谱"));
-                log.info("切换前/后Isotope打分:" + iosBefore + "/" + iosAfter + ";" + ((iosAfter > iosBefore || (iosBefore - iosAfter < 0.1)) ? "切换靠谱" : "不靠谱"));
-                log.info("组内切换了对应峰组,最高得分Index:" + bestIndex + ";" + "选中Index:" + selectPeakGroupIndex);
-            }
+//            if (selectPeakGroupIndex != bestIndex) {
+//
+//                double iosBefore = peakGroupScoreList.get(bestIndex).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
+//                double iosAfter = peakGroupScoreList.get(selectPeakGroupIndex).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
+//
+//                double byCountBefore = peakGroupScoreList.get(bestIndex).getTotalIons();
+//                double byCountAfter = peakGroupScoreList.get(selectPeakGroupIndex).getTotalIons();
+////                log.info("切换前/后BYIon打分:" + byCountBefore + "/" + byCountAfter + ";" + (byCountAfter > byCountBefore ? "切换靠谱" : "不靠谱"));
+////                log.info("切换前/后Isotope打分:" + iosBefore + "/" + iosAfter + ";" + ((iosAfter > iosBefore || (iosBefore - iosAfter < 0.1)) ? "切换靠谱" : "不靠谱"));
+//                log.info("组内切换了对应峰组,最高得分Index:" + bestIndex + ";" + "选中Index:" + selectPeakGroupIndex);
+//            }
         }
 
         if (selectPeakGroupIndex == -1) {
@@ -459,7 +467,9 @@ public class Scorer {
         if (pgs.getTotalIons() <= maxIons - 2) {
             pgs.setMark(true);
         }
-
+        if (selectPeakGroupIndex != bestIndex) {
+            pgs.setChanged(true);
+        }
         return pgs;
     }
 

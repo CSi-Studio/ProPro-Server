@@ -38,6 +38,7 @@ public class OverviewDO extends BaseDO {
     Boolean reselect = false;
 
     Boolean defaultOne = false;
+
     /**
      * 分析名称
      */
