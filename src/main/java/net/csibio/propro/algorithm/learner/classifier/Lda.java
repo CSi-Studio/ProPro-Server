@@ -142,11 +142,11 @@ public class Lda extends Classifier {
         bestTargetScore.put(ScoreType.LibraryManhattan.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.LibraryDotprod.getName(), 1d, scoreTypes);
 //        bestTargetScore.put(ScoreType.LibrarySangle.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.LogSnScore.getName(), 5d, scoreTypes);
+//        bestTargetScore.put(ScoreType.LogSnScore.getName(), 5d, scoreTypes);
 //        bestTargetScore.put(ScoreType.NormRtScore.getName(), 0d, scoreTypes);
 //        bestTargetScore.put(ScoreType.IntensityScore.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.IsotopeCorrelationScore.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.IsotopeOverlapScore.getName(), 0d, scoreTypes);
+//        bestTargetScore.put(ScoreType.IsotopeOverlapScore.getName(), 0d, scoreTypes);
 //        bestTargetScore.put(ScoreType.MassdevScore.getName(), 0d, scoreTypes);
 //        bestTargetScore.put(ScoreType.MassdevScoreWeighted.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.IonsCountDeltaScore.getName(), 0d, scoreTypes);

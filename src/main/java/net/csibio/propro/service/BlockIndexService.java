@@ -1,6 +1,7 @@
 package net.csibio.propro.service;
 
 import net.csibio.aird.bean.MzIntensityPairs;
+import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.query.BlockIndexQuery;
 
@@ -13,7 +14,7 @@ public interface BlockIndexService extends BaseService<BlockIndexDO, BlockIndexQ
 
     List<BlockIndexDO> getAllMS2ByExpId(String expId);
 
-    float getNearestSpectrumByRt(TreeMap<Float, MzIntensityPairs> rtMap, Double rt);
+    AnyPair<Float, Float> getNearestSpectrumByRt(TreeMap<Float, MzIntensityPairs> rtMap, Double rt);
 
     BlockIndexDO getOne(String expId, Double mz);
 

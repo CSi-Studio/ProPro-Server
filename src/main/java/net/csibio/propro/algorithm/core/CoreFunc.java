@@ -1,5 +1,6 @@
 package net.csibio.propro.algorithm.core;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.algorithm.extract.IonStat;
@@ -29,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -147,13 +149,18 @@ public class CoreFunc {
      */
     public AnyPair<DataDO, DataSumDO> predictOneDelete(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
 
-        List<FragmentInfo> libFrags = new ArrayList<>(coord.getFragments());
+        List<FragmentInfo> libFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
         int size = coord.getFragments().size();
+
+        HashMap<Double, List<AnyPair<DataDO, DataSumDO>>> hitPairMap = new HashMap<>();
+
         double bestScore = -99999d;
-        DataSumDO bestDataSum = null;
-        DataDO bestData = null;
-        double maxBYCount = -1;
+        AnyPair<DataDO, DataSumDO> bestPair = null;
+        AnyPair<DataDO, DataSumDO> bestIonsPair = null;
+
         String removeCutInfo = "null";
+
+        //当i=0的时候,不切换,也就是说跳过了强度比最高的碎片,强度比最高的碎片不进行离子替换
         for (int i = -1; i < size; i++) {
             String currentRemoveCutInfo = "null";
             //i==-1的时候检测的就是自己本身
@@ -162,7 +169,7 @@ public class CoreFunc {
                 libFrags.remove(i);
                 currentRemoveCutInfo = temp.getCutInfo();
                 coord.setFragments(new HashSet<>(libFrags));
-                libFrags.add(temp);
+                libFrags.add(i, temp);
             }
             DataDO data = extractOne(coord, rtMap, params);
 
@@ -178,30 +185,63 @@ public class CoreFunc {
             if (data.getScoreList() != null) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(data, overview, null);
                 double currentBYCount = scorer.calcBestIonsCount(data);
-                if (currentBYCount > maxBYCount) {
-                    maxBYCount = currentBYCount;
-                }
-                if (dataSum != null && dataSum.getTotalScore() > bestScore && dataSum.getTotalIons() >= maxBYCount) {
-                    bestDataSum = dataSum;
-                    bestData = data;
-                    bestScore = dataSum.getTotalScore();
-                    removeCutInfo = currentRemoveCutInfo;
+//                if (currentBYCount > maxBYCount) {
+//                    maxBYCount = currentBYCount;
+//                }
+                if (dataSum != null) {
+                    if (!hitPairMap.containsKey(dataSum.getNearestRt())) {
+                        List<AnyPair<DataDO, DataSumDO>> pairs = new ArrayList<>();
+                        pairs.add(new AnyPair<DataDO, DataSumDO>(data, dataSum));
+                        hitPairMap.put(dataSum.getNearestRt(), pairs);
+                    } else {
+                        List<AnyPair<DataDO, DataSumDO>> currentPairs = hitPairMap.get(dataSum.getNearestRt());
+                        currentPairs.add(new AnyPair<DataDO, DataSumDO>(data, dataSum));
+                    }
                 }
             }
         }
+        AtomicDouble maxHitRt = new AtomicDouble();
+        AtomicInteger maxHits = new AtomicInteger();
+        hitPairMap.forEach((key, value) -> {
+            if (value.size() > maxHits.get()) {
+                maxHitRt.set(key);
+                maxHits.set(value.size());
+            }
+        });
 
-        if (bestData == null) {
+        //获取Max Hit的pair组
+        List<AnyPair<DataDO, DataSumDO>> maxHitGroup = hitPairMap.get(maxHitRt.get());
+        if (maxHitGroup == null) {
             return null;
         }
-        double finalBYCount = scorer.calcBestIonsCount(bestData);
+        for (AnyPair<DataDO, DataSumDO> anyPair : maxHitGroup) {
+            if (anyPair.getRight().getTotalScore() > bestScore) {
+                bestPair = anyPair;
+                bestScore = anyPair.getRight().getTotalScore();
+            }
+        }
+
+        if (bestPair == null) {
+            log.info("没有产生数据:" + exp.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
+            return null;
+        }
+
+        if (maxHitRt.get() != bestPair.getRight().getNearestRt()) {
+            log.info("有问题:" + exp.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
+        } else {
+            log.info("RT吻合:" + exp.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
+        }
+
+//        double finalIonsCount = scorer.calcBestIonsCount(bestData);
         //Max BYCount Limit
-        if (maxBYCount != finalBYCount && finalBYCount <= 5) {
-            log.info("未预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount);
-            return null;
-        }
+//        if (maxBYCount != finalIonsCount && finalIonsCount <= 5) {
+////            log.info("未预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount);
+//            return null;
+//        }
+
 //        log.info(JSON.toJSONString(libFrags.stream().map(FragmentInfo::getCutInfo).collect(Collectors.toList())));
 //        log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount + ",Remove CutInfo=" + removeCutInfo);
-        return new AnyPair<DataDO, DataSumDO>(bestData, bestDataSum);
+        return bestPair;
     }
 
     /**

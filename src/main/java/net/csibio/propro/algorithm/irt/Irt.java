@@ -95,7 +95,7 @@ public abstract class Irt {
         dataList = dataList.stream().sorted(Comparator.comparing(DataDO::getLibRt)).toList();
         for (DataDO data : dataList) {
             PeptideCoord coord = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
-            PeakGroupListWrapper peakGroupListWrapper = featureExtractor.getExperimentFeature(data, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
+            PeakGroupListWrapper peakGroupListWrapper = featureExtractor.searchPeakGroups(data, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
             if (!peakGroupListWrapper.isFeatureFound()) {
                 continue;
             }

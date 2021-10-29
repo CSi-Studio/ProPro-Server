@@ -4,6 +4,7 @@ import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.dao.BaseDAO;
 import net.csibio.propro.dao.BlockIndexDAO;
+import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.query.BlockIndexQuery;
 import net.csibio.propro.exceptions.XException;
@@ -41,19 +42,19 @@ public class BlockIndexServiceImpl implements BlockIndexService {
     }
 
     @Override
-    public float getNearestSpectrumByRt(TreeMap<Float, MzIntensityPairs> rtMap, Double rt) {
+    public AnyPair<Float, Float> getNearestSpectrumByRt(TreeMap<Float, MzIntensityPairs> rtMap, Double rt) {
         float[] fArray = ArrayUtil.toPrimitive(rtMap.keySet());
         int rightIndex = ConvolutionUtil.findRightIndex(fArray, rt.floatValue());
         int finalIndex = rightIndex;
         if (rightIndex == -1) {
             //Max value in fArray is less than rt. The max index of fArray is the nearest index.
             finalIndex = fArray.length - 1;
+            return new AnyPair<Float, Float>(fArray[finalIndex], fArray[finalIndex]);
         } else if (rightIndex != 0 && (fArray[rightIndex] - rt) > (fArray[rightIndex - 1] - rt)) {
             //if rightIndex == 0, finalIndex == 0
             finalIndex = rightIndex - 1;
         }
-
-        return fArray[finalIndex];
+        return new AnyPair<Float, Float>(fArray[finalIndex], fArray[finalIndex + 1]);
     }
 
     @Override

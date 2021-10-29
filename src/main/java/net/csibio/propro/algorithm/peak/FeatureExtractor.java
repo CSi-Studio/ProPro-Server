@@ -53,7 +53,7 @@ public class FeatureExtractor {
      * @param ss           sigma spacing
      * @return
      */
-    public PeakGroupListWrapper getExperimentFeature(DataDO data, HashMap<String, Float> intensityMap, SigmaSpacing ss) {
+    public PeakGroupListWrapper searchPeakGroups(DataDO data, HashMap<String, Float> intensityMap, SigmaSpacing ss) {
         if (data.getIntMap().isEmpty()) {
             return new PeakGroupListWrapper(false);
         }
@@ -115,13 +115,6 @@ public class FeatureExtractor {
             return new PeakGroupListWrapper(false);
         }
 
-        //挑选理论强度排名前三的三个碎片用于定量
-//        List<Map.Entry<String, Float>> entryList = new ArrayList<>(intensityMap.entrySet());
-//        List<String> quantifyIons = Lists.reverse(entryList.stream().sorted(Map.Entry.comparingByValue()).toList()).stream().map(Map.Entry::getKey).toList();
-//        if (quantifyIons.size() > 3) {
-//            quantifyIons = quantifyIons.subList(0, 3);
-//        }
-
         //合并新老两种选峰算法
         Map<Double, PeakGroup> peakGroupMap = featureFinder.findFeaturesNew(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map).stream().collect(Collectors.toMap(PeakGroup::getApexRt, Function.identity()));
         List<PeakGroup> peakGroupFeatureList = featureFinder.findFeatures(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
@@ -130,12 +123,6 @@ public class FeatureExtractor {
                 peakGroupMap.put(peakGroup.getApexRt(), peakGroup);
             }
         }
-//        List<PeakGroup> peakGroupFeatureList;
-//        if (DeveloperParams.USE_NEW_PEAKGROUP_SELECTOR) {
-//            peakGroupFeatureList = featureFinder.findFeaturesNew(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
-//        } else {
-//            peakGroupFeatureList = featureFinder.findFeatures(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
-//        }
 
         PeakGroupListWrapper featureResult = new PeakGroupListWrapper(true);
         featureResult.setList(peakGroupMap.values().stream().toList());

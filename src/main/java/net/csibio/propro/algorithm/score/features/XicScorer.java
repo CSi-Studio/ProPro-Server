@@ -91,24 +91,25 @@ public class XicScorer {
             scores.put(ScoreType.XcorrCoelutionWeighted.getName(), sumDeltaWeighted, scoreTypes);
         }
         if (scoreTypes.contains(ScoreType.XcorrShape.getName())) {
-            scores.put(ScoreType.XcorrShape.getName(), meanIntensity, scoreTypes); // 平均的吻合程度--> 新的吻合系数
+            scores.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes); // 平均的吻合程度--> 新的吻合系数
+//            scores.put(ScoreType.XcorrShape.getName(), meanIntensity, scoreTypes); // 平均的吻合程度--> 新的吻合系数
         }
         if (scoreTypes.contains(ScoreType.XcorrShapeWeighted.getName())) {
             scores.put(ScoreType.XcorrShapeWeighted.getName(), sumIntensityWeighted, scoreTypes);
         }
     }
 
-    public void calculateLogSnScore(PeakGroup peakGroup, PeakGroupScore scores, List<String> scoreTypes) {
-        //logSnScore
-        // log(mean of Apex sn s)
-        double snScore = peakGroup.getSignalToNoiseSum();
-        snScore /= peakGroup.getIonCount();
-        if (snScore < 1) {
-            scores.put(ScoreType.LogSnScore.getName(), 0d, scoreTypes);
-        } else {
-            scores.put(ScoreType.LogSnScore.getName(), FastMath.log(snScore), scoreTypes);
-        }
-    }
+//    public void calculateLogSnScore(PeakGroup peakGroup, PeakGroupScore scores, List<String> scoreTypes) {
+//        //logSnScore
+//        // log(mean of Apex sn s)
+//        double snScore = peakGroup.getSignalToNoiseSum();
+//        snScore /= peakGroup.getIonCount();
+//        if (snScore < 1) {
+//            scores.put(ScoreType.LogSnScore.getName(), 0d, scoreTypes);
+//        } else {
+//            scores.put(ScoreType.LogSnScore.getName(), FastMath.log(snScore), scoreTypes);
+//        }
+//    }
 
 
     /**

@@ -53,7 +53,7 @@ public class RtNormalizerScorer {
             }
             PeakGroupScore scores = new PeakGroupScore(defaultScoreTypes.size());
             xicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
-            xicScorer.calculateLogSnScore(peakGroupFeature, scores, defaultScoreTypes);
+//            xicScorer.calculateLogSnScore(peakGroupFeature, scores, defaultScoreTypes);
             libraryScorer.calculateLibraryScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
 
             double ldaScore = -1d * calculateLdaPrescore(scores, defaultScoreTypes);
@@ -75,11 +75,11 @@ public class RtNormalizerScorer {
      * @return final scoreForAll
      */
     private double calculateLdaPrescore(PeakGroupScore scores, List<String> scoreTypes) {
-        return scores.get(ScoreType.LibraryCorr.getName(), scoreTypes) * -0.34664267d +
-                scores.get(ScoreType.LibraryRsmd.getName(), scoreTypes) * 2.98700722d +
-                scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes) * 0.09445371d +
-                scores.get(ScoreType.XcorrShape.getName(), scoreTypes) * -5.71823862d +
-                scores.get(ScoreType.LogSnScore.getName(), scoreTypes) * -0.72989582d;
+//        return scores.get(ScoreType.LibraryCorr.getName(), scoreTypes) * -0.34664267d +
+//                scores.get(ScoreType.LibraryRsmd.getName(), scoreTypes) * 2.98700722d +
+        return scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes) * 0.09445371d +
+                scores.get(ScoreType.XcorrShape.getName(), scoreTypes) * -5.71823862d;
+//                scores.get(ScoreType.LogSnScore.getName(), scoreTypes) * -0.72989582d;
     }
 
 }

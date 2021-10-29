@@ -82,12 +82,12 @@ public class DIAScorer {
                 e.printStackTrace();
             }
         }
-        if (scoreTypes.contains(ScoreType.MassdevScore.getName())) {
-            scores.put(ScoreType.MassdevScore.getName(), ppmScore, scoreTypes);
-        }
-        if (scoreTypes.contains(ScoreType.MassdevScoreWeighted.getName())) {
-            scores.put(ScoreType.MassdevScoreWeighted.getName(), ppmScoreWeighted, scoreTypes);
-        }
+//        if (scoreTypes.contains(ScoreType.MassdevScore.getName())) {
+//            scores.put(ScoreType.MassdevScore.getName(), ppmScore, scoreTypes);
+//        }
+//        if (scoreTypes.contains(ScoreType.MassdevScoreWeighted.getName())) {
+//            scores.put(ScoreType.MassdevScoreWeighted.getName(), ppmScoreWeighted, scoreTypes);
+//        }
     }
 
 
@@ -209,7 +209,7 @@ public class DIAScorer {
             isotopeOverlap += largePeaksBeforeFirstIsotope * relIntensity;//带离子强度权重的largePeaksBeforeFirstIsotope数量统计
         }
         scores.put(ScoreType.IsotopeCorrelationScore.getName(), isotopeCorr, scoreTypes);
-        scores.put(ScoreType.IsotopeOverlapScore.getName(), isotopeOverlap, scoreTypes);
+//        scores.put(ScoreType.IsotopeOverlapScore.getName(), isotopeOverlap, scoreTypes);
     }
 
     /**

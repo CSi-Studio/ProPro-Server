@@ -8,6 +8,7 @@ import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.*;
 import net.csibio.propro.algorithm.score.features.*;
 import net.csibio.propro.constants.enums.IdentifyStatus;
+import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
@@ -85,7 +86,7 @@ public class Scorer {
 
         //获取标准库中对应的PeptideRef组
         //重要步骤,"或许是目前整个工程最重要的核心算法--选峰算法."--陆妙善
-        PeakGroupListWrapper peakGroupListWrapper = featureExtractor.getExperimentFeature(dataDO, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
+        PeakGroupListWrapper peakGroupListWrapper = featureExtractor.searchPeakGroups(dataDO, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
         if (!peakGroupListWrapper.isFeatureFound()) {
             dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
             if (!dataDO.getDecoy()) {
@@ -124,16 +125,18 @@ public class Scorer {
         HashMap<Double, MzIntensityPairs> peakSpecMap = new HashMap<>();
         int maxIonsCount = -1;
         for (PeakGroup peakGroup : peakGroupList) {
-            float nearestRt = blockIndexService.getNearestSpectrumByRt(rtMap, peakGroup.getApexRt());
-            MzIntensityPairs mzIntensityPairs = rtMap.get(nearestRt);
+            AnyPair<Float, Float> nearestRtPair = blockIndexService.getNearestSpectrumByRt(rtMap, peakGroup.getApexRt());
+            int left = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getLeft()).getMzArray(), rtMap.get(nearestRtPair.getLeft()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge());
+            int right = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getRight()).getMzArray(), rtMap.get(nearestRtPair.getRight()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge());
+            float bestRt = right > left ? nearestRtPair.getRight() : nearestRtPair.getLeft();
+            MzIntensityPairs mzIntensityPairs = rtMap.get(bestRt);
             peakSpecMap.put(peakGroup.getApexRt(), mzIntensityPairs);
             int ionCount = diaScorer.calcTotalIons(mzIntensityPairs.getMzArray(), mzIntensityPairs.getIntensityArray(), unimodHashMap, sequence, coord.getCharge());
-//            int ionCount = diaScorer.calcTotalIons(mzIntensityPairs.getMzArray(), mzIntensityPairs.getIntensityArray(), unimodHashMap, sequence, 1);
             if (ionCount > maxIonsCount) {
                 maxIonsCount = ionCount;
             }
             peakGroup.setTotalIons(ionCount);
-            peakGroup.setNearestRt(nearestRt);
+            peakGroup.setNearestRt(bestRt);
         }
         //如果数组长度超过20,则筛选ions数目最大的20个碎片
         peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getTotalIons).reversed()).toList();
@@ -152,24 +155,24 @@ public class Scorer {
                 if (mzIntensityPairs != null) {
                     float[] spectrumMzArray = mzIntensityPairs.getMzArray();
                     float[] spectrumIntArray = mzIntensityPairs.getIntensityArray();
-                    if (scoreTypes.contains(ScoreType.IsotopeCorrelationScore.getName()) || scoreTypes.contains(ScoreType.IsotopeOverlapScore.getName())) {
+                    if (scoreTypes.contains(ScoreType.IsotopeCorrelationScore.getName())) {
                         diaScorer.calculateDiaIsotopeScores(peakGroup, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, peakGroupScore, scoreTypes);
                     }
                     diaScorer.calculateDiaMassDiffScore(productMzMap, spectrumMzArray, spectrumIntArray, normedLibIntMap, peakGroupScore, scoreTypes);
                 }
             }
-            if (scoreTypes.contains(ScoreType.LogSnScore.getName())) {
-                xicScorer.calculateLogSnScore(peakGroup, peakGroupScore, scoreTypes);
-            }
+//            if (scoreTypes.contains(ScoreType.LogSnScore.getName())) {
+//                xicScorer.calculateLogSnScore(peakGroup, peakGroupScore, scoreTypes);
+//            }
 
-            if (scoreTypes.contains(ScoreType.IntensityScore.getName())) {
-                libraryScorer.calculateIntensityScore(peakGroup, peakGroupScore, params.getMethod().getScore().getScoreTypes());
-            }
+//            if (scoreTypes.contains(ScoreType.IntensityScore.getName())) {
+//                libraryScorer.calculateIntensityScore(peakGroup, peakGroupScore, params.getMethod().getScore().getScoreTypes());
+//            }
 
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, peakGroupScore, scoreTypes);
-            if (scoreTypes.contains(ScoreType.NormRtScore.getName())) {
-                libraryScorer.calculateNormRtScore(peakGroup, exp.getIrt().getSi(), dataDO.getLibRt(), peakGroupScore, scoreTypes);
-            }
+//            if (scoreTypes.contains(ScoreType.NormRtScore.getName())) {
+//                libraryScorer.calculateNormRtScore(peakGroup, exp.getIrt().getSi(), dataDO.getLibRt(), peakGroupScore, scoreTypes);
+//            }
 //            swathLDAScorer.calculateSwathLdaPrescore(peakGroupScore, scoreTypes);
             peakGroupScore.setRt(peakGroup.getApexRt());
             peakGroupScore.setRtRangeFeature(FeatureUtil.toString(peakGroup.getBestLeftRt(), peakGroup.getBestRightRt()));
@@ -206,7 +209,7 @@ public class Scorer {
         }
 
         SigmaSpacing ss = SigmaSpacing.create();
-        PeakGroupListWrapper peakGroupListWrapper = featureExtractor.getExperimentFeature(dataDO, peptide.buildIntensityMap(), ss);
+        PeakGroupListWrapper peakGroupListWrapper = featureExtractor.searchPeakGroups(dataDO, peptide.buildIntensityMap(), ss);
         if (!peakGroupListWrapper.isFeatureFound()) {
             return;
         }
@@ -232,38 +235,6 @@ public class Scorer {
         }
 
         dataDO.setScoreList(peakGroupScoreList);
-    }
-
-    public void baseScoreForOne(DataDO data, PeptideCoord coord) {
-        if (data.getIntMap() == null || data.getIntMap().size() < coord.getFragments().size()) {
-            data.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
-            return;
-        }
-
-        SigmaSpacing ss = SigmaSpacing.create();
-        PeakGroupListWrapper peakGroupListWrapper = featureExtractor.getExperimentFeature(data, coord.buildIntensityMap(), ss);
-        if (!peakGroupListWrapper.isFeatureFound()) {
-            return;
-        }
-        List<String> types = ScoreType.getAllTypesName();
-        List<PeakGroupScore> peakGroupScoreList = new ArrayList<>();
-        List<PeakGroup> peakGroupFeatureList = peakGroupListWrapper.getList();
-        HashMap<String, Double> normedLibIntMap = peakGroupListWrapper.getNormedIntMap();
-        for (PeakGroup peakGroupFeature : peakGroupFeatureList) {
-            PeakGroupScore peakGroupScore = new PeakGroupScore(types.size());
-            xicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, peakGroupScore, types);
-            if (peakGroupScore.get(ScoreType.XcorrShape.getName(), types) < 0.6) {
-                continue;
-            }
-            peakGroupScore.setRt(peakGroupFeature.getApexRt());
-            peakGroupScoreList.add(peakGroupScore);
-        }
-
-        if (peakGroupScoreList.size() == 0) {
-            return;
-        }
-
-        data.setScoreList(peakGroupScoreList);
     }
 
     /**
@@ -436,8 +407,8 @@ public class Scorer {
                 double currentBYIons = peakGroupScoreList.get(index).getTotalIons();
                 double currentIsotope = peakGroupScoreList.get(index).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
                 //切换条件, 碎片数更大,同时Isotope分数差值不能超过0.1
-                boolean condition1 = (currentBYIons > bestBYIons && (currentIsotope > bestIsotope || (bestIsotope - currentIsotope < 0.03 * (currentBYIons - bestBYIons))));
-                boolean condition2 = currentBYIons == bestBYIons && (currentIsotope - bestIsotope) > 0.05;
+                boolean condition1 = (currentBYIons > bestBYIons && (currentIsotope > bestIsotope || (bestIsotope - currentIsotope < 0.02 * (currentBYIons - bestBYIons))));
+                boolean condition2 = (currentBYIons == bestBYIons && (currentIsotope - bestIsotope) > 0.1);
                 if (condition1 || condition2) {
                     bestBYIons = currentBYIons;
                     bestIsotope = currentIsotope;

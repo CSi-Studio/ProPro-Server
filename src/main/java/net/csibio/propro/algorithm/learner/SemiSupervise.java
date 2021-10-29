@@ -13,7 +13,6 @@ import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.DataQuery;
@@ -198,47 +197,5 @@ public class SemiSupervise {
 
         overviewDO.getStatistic().put(StatConst.TARGET_DIST, targetDistributions);
         overviewDO.getStatistic().put(StatConst.DECOY_DIST, decoyDistributions);
-    }
-
-    private void cleanScore(List<PeptideScore> scoresList, List<String> scoreTypes) {
-        for (PeptideScore peptideScore : scoresList) {
-            if (peptideScore.getDecoy()) {
-                continue;
-            }
-            for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
-                int count = 0;
-                if (peakGroupScore.get(ScoreType.NormRtScore, scoreTypes) != null && peakGroupScore.get(ScoreType.NormRtScore, scoreTypes) > 8) {
-                    count++;
-                }
-                if (peakGroupScore.get(ScoreType.LogSnScore, scoreTypes) != null && peakGroupScore.get(ScoreType.LogSnScore, scoreTypes) < 3) {
-                    count++;
-                }
-                if (peakGroupScore.get(ScoreType.IsotopeCorrelationScore, scoreTypes) != null && peakGroupScore.get(ScoreType.IsotopeCorrelationScore, scoreTypes) < 0.8) {
-                    count++;
-                }
-                if (peakGroupScore.get(ScoreType.IsotopeOverlapScore, scoreTypes) != null && peakGroupScore.get(ScoreType.IsotopeOverlapScore, scoreTypes) > 0.2) {
-                    count++;
-                }
-                if (peakGroupScore.get(ScoreType.MassdevScoreWeighted, scoreTypes) != null && peakGroupScore.get(ScoreType.MassdevScoreWeighted, scoreTypes) > 15) {
-                    count++;
-                }
-//                if (peakGroupScore.get(ScoreType.IonsWeightMaxScore, scoreTypes) != null && peakGroupScore.get(ScoreType.IonsWeightMaxScore, scoreTypes) < 1) {
-//                    count++;
-//                }
-//                if (peakGroupScore.get(ScoreType.IonsDeltaScore, scoreTypes) != null && peakGroupScore.get(ScoreType.IonsDeltaScore, scoreTypes) < 5) {
-//                    count++;
-//                }
-                if (peakGroupScore.get(ScoreType.XcorrShapeWeighted, scoreTypes) != null && peakGroupScore.get(ScoreType.XcorrShapeWeighted, scoreTypes) < 0.6) {
-                    count++;
-                }
-                if (peakGroupScore.get(ScoreType.XcorrShape, scoreTypes) != null && peakGroupScore.get(ScoreType.XcorrShape, scoreTypes) < 0.5) {
-                    count++;
-                }
-
-                if (count > 3) {
-                    peakGroupScore.setThresholdPassed(false);
-                }
-            }
-        }
     }
 }

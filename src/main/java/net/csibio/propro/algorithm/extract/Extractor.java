@@ -62,7 +62,6 @@ public class Extractor {
      * @return
      */
     public Result<TreeMap<Float, MzIntensityPairs>> getRtMap(ExperimentDO exp, PeptideCoord coord) {
-        long start = System.currentTimeMillis();
         Result checkResult = ConvolutionUtil.checkExperiment(exp);
         if (checkResult.isFailed()) {
             log.error("条件检查失败:" + checkResult.getErrorMessage());
@@ -89,7 +88,6 @@ public class Extractor {
             if (parser != null) {
                 parser.close();
             }
-            log.info("解析耗时:" + (System.currentTimeMillis() - start) + "毫秒");
         }
         return Result.OK(rtMap);
     }

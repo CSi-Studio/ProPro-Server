@@ -145,6 +145,7 @@ public class ClinicController {
                                        @RequestParam(value = "smooth", required = false) Boolean smooth,
                                        @RequestParam(value = "denoise", required = false) Boolean denoise,
                                        @RequestParam("overviewIds") List<String> overviewIds) {
+        log.info("开始获取新预测数据-------------------------------------------------------------------------------");
         List<ExpDataVO> dataList = new ArrayList<>();
         PeptideDO peptide = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(peptideRef), PeptideDO.class);
         Map<String, Double> intensityMap = peptide.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, FragmentInfo::getIntensity));
