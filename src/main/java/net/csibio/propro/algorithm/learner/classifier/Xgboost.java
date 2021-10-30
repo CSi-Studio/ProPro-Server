@@ -189,10 +189,11 @@ public class Xgboost extends Classifier {
     }
 
     private boolean checkRationality(PeakGroupScore peakGroupScore, List<String> scoreTypes) {
-        if (peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < 0.5) {
-            return false;
-        } else {
-            return true;
-        }
+//        if (peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < 0.5) {
+//            return false;
+//        } else {
+//            return true;
+//        }
+        return true;
     }
 }

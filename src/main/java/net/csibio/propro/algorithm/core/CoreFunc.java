@@ -7,6 +7,7 @@ import net.csibio.propro.algorithm.extract.IonStat;
 import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.score.Scorer;
+import net.csibio.propro.algorithm.score.features.DIAScorer;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
@@ -53,6 +54,8 @@ public class CoreFunc {
     DataSumService dataSumService;
     @Autowired
     DataService dataService;
+    @Autowired
+    DIAScorer diaScorer;
 
     /**
      * EIC Core Function
@@ -154,6 +157,17 @@ public class CoreFunc {
 
         HashMap<Double, List<AnyPair<DataDO, DataSumDO>>> hitPairMap = new HashMap<>();
 
+        float[] ionsArray1_300 = new float[rtMap.size()];
+        float[] ionsArray2_300 = new float[rtMap.size()];
+        AtomicInteger iter = new AtomicInteger(0);
+        rtMap.forEach((key, value) -> {
+            int total1_300 = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), 1, 300);
+            int total2_300 = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), 2, 300);
+            ionsArray1_300[iter.get()] = total1_300;
+            ionsArray2_300[iter.get()] = total2_300;
+            iter.getAndIncrement();
+        });
+
         double bestScore = -99999d;
         AnyPair<DataDO, DataSumDO> bestPair = null;
         AnyPair<DataDO, DataSumDO> bestIonsPair = null;
@@ -226,6 +240,10 @@ public class CoreFunc {
             return null;
         }
 
+        bestPair.getLeft().getCutInfoMap().put("1_300", 0f);
+        bestPair.getLeft().getCutInfoMap().put("2_300", 0f);
+        bestPair.getLeft().getIntMap().put("1_300", ionsArray1_300);
+        bestPair.getLeft().getIntMap().put("2_300", ionsArray2_300);
         if (maxHitRt.get() != bestPair.getRight().getNearestRt()) {
             log.info("有问题:" + exp.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
         } else {

@@ -90,10 +90,10 @@ public class XicScorer {
         if (scoreTypes.contains(ScoreType.XcorrCoelutionWeighted.getName())) {
             scores.put(ScoreType.XcorrCoelutionWeighted.getName(), sumDeltaWeighted, scoreTypes);
         }
-        if (scoreTypes.contains(ScoreType.XcorrShape.getName())) {
-            scores.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes); // 平均的吻合程度--> 新的吻合系数
+//        if (scoreTypes.contains(ScoreType.XcorrShape.getName())) {
+//            scores.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes); // 平均的吻合程度--> 新的吻合系数
 //            scores.put(ScoreType.XcorrShape.getName(), meanIntensity, scoreTypes); // 平均的吻合程度--> 新的吻合系数
-        }
+//        }
         if (scoreTypes.contains(ScoreType.XcorrShapeWeighted.getName())) {
             scores.put(ScoreType.XcorrShapeWeighted.getName(), sumIntensityWeighted, scoreTypes);
         }

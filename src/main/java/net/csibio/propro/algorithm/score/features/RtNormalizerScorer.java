@@ -77,8 +77,8 @@ public class RtNormalizerScorer {
     private double calculateLdaPrescore(PeakGroupScore scores, List<String> scoreTypes) {
 //        return scores.get(ScoreType.LibraryCorr.getName(), scoreTypes) * -0.34664267d +
 //                scores.get(ScoreType.LibraryRsmd.getName(), scoreTypes) * 2.98700722d +
-        return scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes) * 0.09445371d +
-                scores.get(ScoreType.XcorrShape.getName(), scoreTypes) * -5.71823862d;
+        return scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes) * 0.09445371d;
+//                scores.get(ScoreType.XcorrShape.getName(), scoreTypes) * -5.71823862d;
 //                scores.get(ScoreType.LogSnScore.getName(), scoreTypes) * -0.72989582d;
     }
 

@@ -36,8 +36,8 @@ public class InitScorer {
         Double xcorrCoelution = scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes);
         xcorrCoelution = (xcorrCoelution == null ? 0 : xcorrCoelution);
 
-        Double xcorrShape = scores.get(ScoreType.XcorrShape.getName(), scoreTypes);
-        xcorrShape = (xcorrShape == null ? 0 : xcorrShape);
+//        Double xcorrShape = scores.get(ScoreType.XcorrShape.getName(), scoreTypes);
+//        xcorrShape = (xcorrShape == null ? 0 : xcorrShape);
 
         Double xcorrShapeWeight = scores.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes);
         xcorrShapeWeight = (xcorrShapeWeight == null ? 0 : xcorrShapeWeight);
@@ -57,10 +57,10 @@ public class InitScorer {
 //                        (-0.36006925) * isotopeOverlapScore +
 //                        (-0.08814003) * massdevScore +
                         (-0.13978311) * xcorrCoelution +
-                        (1.16475032) * xcorrShape +
+//                        (1.16475032) * xcorrShape +
                         (1.16475032) * xcorrShapeWeight +
 //                        (0.05) * ionsCountWeightScore +
-                        (-5) * ionsCountDeltaScore, scoreTypes);
+                        (-10) * ionsCountDeltaScore, scoreTypes);
 //                        (0.61712054) * logSnScore, scoreTypes);
 
     }
@@ -88,8 +88,8 @@ public class InitScorer {
         Double xcorrCoelution = scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes);
         xcorrCoelution = (xcorrCoelution == null ? 0 : xcorrCoelution);
 
-        Double xcorrShape = scores.get(ScoreType.XcorrShape.getName(), scoreTypes);
-        xcorrShape = (xcorrShape == null ? 0 : xcorrShape);
+//        Double xcorrShape = scores.get(ScoreType.XcorrShape.getName(), scoreTypes);
+//        xcorrShape = (xcorrShape == null ? 0 : xcorrShape);
 
 //        Double ionsCountWeightScore = scores.get(ScoreType.IonsCountWeightScore.getName(), scoreTypes);
 //        ionsCountWeightScore = (ionsCountWeightScore == null ? 0 : ionsCountWeightScore);
@@ -109,7 +109,7 @@ public class InitScorer {
 //                        (-0.36006925) * isotopeOverlapScore +
 //                        (-0.08814003) * massdevScore +
                         (-0.13978311) * xcorrCoelution +
-                        (1.16475032) * xcorrShape +
+//                        (1.16475032) * xcorrShape +
 //  BY改造前               (0.19267813) * ionCountScore +
 //  BY改造后               (0.10267813) * ionCountScore +
 //                        (temp) * ionWeightMaxScore +

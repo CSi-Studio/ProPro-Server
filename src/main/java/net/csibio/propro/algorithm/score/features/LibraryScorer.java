@@ -3,7 +3,6 @@ package net.csibio.propro.algorithm.score.features;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.PeakGroupScore;
-import net.csibio.propro.utils.MathUtil;
 import org.apache.commons.math3.util.FastMath;
 import org.springframework.stereotype.Component;
 
@@ -97,18 +96,18 @@ public class LibraryScorer {
 
         //manhattan
         //需要的前置变量：expSqrt, libSqrt
-        if (scoreTypes.contains(ScoreType.LibraryManhattan.getName())) {
-            double expIntTotal = MathUtil.sum(expSqrt);
-            double libIntTotal = MathUtil.sum(libSqrt);
-            double[] expSqrtNormed = normalize(expSqrt, expIntTotal);
-            double[] libSqrtNormed = normalize(libSqrt, libIntTotal);
-            double sumOfDivide = 0;
-            for (int i = 0; i < expSqrt.length; i++) {
-                sumOfDivide += FastMath.abs(expSqrtNormed[i] - libSqrtNormed[i]);
-            }
-//            scores.put(ScoreType.LibraryManhattan.getName(), sumOfDivide, scoreTypes);
-            scores.put(ScoreType.LibraryManhattan.getName(), 0d, scoreTypes);
-        }
+//        if (scoreTypes.contains(ScoreType.LibraryManhattan.getName())) {
+//            double expIntTotal = MathUtil.sum(expSqrt);
+//            double libIntTotal = MathUtil.sum(libSqrt);
+//            double[] expSqrtNormed = normalize(expSqrt, expIntTotal);
+//            double[] libSqrtNormed = normalize(libSqrt, libIntTotal);
+//            double sumOfDivide = 0;
+//            for (int i = 0; i < expSqrt.length; i++) {
+//                sumOfDivide += FastMath.abs(expSqrtNormed[i] - libSqrtNormed[i]);
+//            }
+////            scores.put(ScoreType.LibraryManhattan.getName(), sumOfDivide, scoreTypes);
+//            scores.put(ScoreType.LibraryManhattan.getName(), 0d, scoreTypes);
+//        }
 
         //spectral angle
 //        if (scoreTypes.contains(ScoreType.LibrarySangle.getName())) {

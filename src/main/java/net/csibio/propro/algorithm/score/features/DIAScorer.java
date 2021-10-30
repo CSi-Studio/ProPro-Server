@@ -224,15 +224,19 @@ public class DIAScorer {
     }
 
     public int calcTotalIons(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge) {
+        return calcTotalIons(spectrumMzArray, spectrumIntArray, unimodHashMap, sequence, charge, 300);
+    }
+
+    public int calcTotalIons(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge, float minIntensity) {
         //计算理论值
         int count = 0;
         for (int i = 1; i <= charge; i++) {
             BYSeries bySeries = fragmentFactory.getBYSeries(unimodHashMap, sequence, i);
             List<Double> bSeriesList = bySeries.getBSeries();
-            int bSeriesScore = getSeriesScore(bSeriesList, spectrumMzArray, spectrumIntArray);
+            int bSeriesScore = getSeriesScore(bSeriesList, spectrumMzArray, spectrumIntArray, minIntensity);
 
             List<Double> ySeriesList = bySeries.getYSeries();
-            int ySeriesScore = getSeriesScore(ySeriesList, spectrumMzArray, spectrumIntArray);
+            int ySeriesScore = getSeriesScore(ySeriesList, spectrumMzArray, spectrumIntArray, minIntensity);
 
             count += (bSeriesScore + ySeriesScore);
         }
@@ -327,7 +331,7 @@ public class DIAScorer {
      * @param spectrumIntArray intArray of certain spectrum
      * @return scoreForAll of b or y
      */
-    private int getSeriesScore(List<Double> seriesList, float[] spectrumMzArray, float[] spectrumIntArray) {
+    private int getSeriesScore(List<Double> seriesList, float[] spectrumMzArray, float[] spectrumIntArray, float minIntensity) {
         int seriesScore = 0;
         for (double seriesMz : seriesList) {
             Double left = seriesMz - Constants.DIA_EXTRACT_WINDOW;
@@ -336,7 +340,7 @@ public class DIAScorer {
             IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left.floatValue(), right.floatValue());
             if (mzIntensity.isSignalFound() &&
                     (Math.abs(seriesMz - mzIntensity.getMz()) * 1000000 / seriesMz) < Constants.DIA_BYSERIES_PPM_DIFF &&
-                    mzIntensity.getIntensity() > 300) {
+                    mzIntensity.getIntensity() > minIntensity) {
                 seriesScore++;
             }
         }

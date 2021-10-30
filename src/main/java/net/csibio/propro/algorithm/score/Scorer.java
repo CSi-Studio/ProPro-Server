@@ -131,7 +131,7 @@ public class Scorer {
             float bestRt = right > left ? nearestRtPair.getRight() : nearestRtPair.getLeft();
             MzIntensityPairs mzIntensityPairs = rtMap.get(bestRt);
             peakSpecMap.put(peakGroup.getApexRt(), mzIntensityPairs);
-            int ionCount = diaScorer.calcTotalIons(mzIntensityPairs.getMzArray(), mzIntensityPairs.getIntensityArray(), unimodHashMap, sequence, coord.getCharge());
+            int ionCount = Math.max(right, left);
             if (ionCount > maxIonsCount) {
                 maxIonsCount = ionCount;
             }
@@ -219,11 +219,11 @@ public class Scorer {
         for (PeakGroup peakGroupFeature : peakGroupFeatureList) {
             PeakGroupScore peakGroupScore = new PeakGroupScore(2);
             List<String> scoreTypes = new ArrayList<>();
-            scoreTypes.add(ScoreType.XcorrShape.getName());
+//            scoreTypes.add(ScoreType.XcorrShape.getName());
             scoreTypes.add(ScoreType.XcorrShapeWeighted.getName());
             xicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, peakGroupScore, scoreTypes);
-            if (peakGroupScore.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes) < shapeScoreThreshold
-                    || peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
+//            if (peakGroupScore.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes) < shapeScoreThreshold|| peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
+            if (peakGroupScore.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes) < shapeScoreThreshold) {
                 continue;
             }
             peakGroupScore.setRt(peakGroupFeature.getApexRt());
