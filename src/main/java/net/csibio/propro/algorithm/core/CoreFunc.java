@@ -155,16 +155,23 @@ public class CoreFunc {
         List<FragmentInfo> libFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
         int size = coord.getFragments().size();
 
+        //初始化原始数据对象集
+        DataDO data = extractOne(coord, rtMap, params);
+        if (data == null) {
+            log.info("XIC没有检测到任何数据,小概率事件:" + coord.getPeptideRef());
+            return null;
+        }
+        String maxIons = libFrags.get(0).getCutInfo();
         HashMap<Double, List<AnyPair<DataDO, DataSumDO>>> hitPairMap = new HashMap<>();
 
-        float[] ionsArray1_300 = new float[rtMap.size()];
-        float[] ionsArray2_300 = new float[rtMap.size()];
+        float[] ionsArray = new float[rtMap.size()];
         AtomicInteger iter = new AtomicInteger(0);
+        DataDO finalData = data;
         rtMap.forEach((key, value) -> {
-            int total1_300 = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), 1, 300);
-            int total2_300 = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), 2, 300);
-            ionsArray1_300[iter.get()] = total1_300;
-            ionsArray2_300[iter.get()] = total2_300;
+            float maxIntensity = finalData.getIntMap().get(maxIons)[iter.get()];
+
+            int ions = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 300, maxIntensity);
+            ionsArray[iter.get()] = ions;
             iter.getAndIncrement();
         });
 
@@ -184,8 +191,8 @@ public class CoreFunc {
                 currentRemoveCutInfo = temp.getCutInfo();
                 coord.setFragments(new HashSet<>(libFrags));
                 libFrags.add(i, temp);
+                data = extractOne(coord, rtMap, params);
             }
-            DataDO data = extractOne(coord, rtMap, params);
 
             if (data == null) {
                 continue;
@@ -240,10 +247,8 @@ public class CoreFunc {
             return null;
         }
 
-        bestPair.getLeft().getCutInfoMap().put("1_300", 0f);
-        bestPair.getLeft().getCutInfoMap().put("2_300", 0f);
-        bestPair.getLeft().getIntMap().put("1_300", ionsArray1_300);
-        bestPair.getLeft().getIntMap().put("2_300", ionsArray2_300);
+        bestPair.getLeft().getCutInfoMap().put("Ions", 0f);
+        bestPair.getLeft().getIntMap().put("Ions", ionsArray);
         if (maxHitRt.get() != bestPair.getRight().getNearestRt()) {
             log.info("有问题:" + exp.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
         } else {

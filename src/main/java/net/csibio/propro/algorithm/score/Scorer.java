@@ -124,10 +124,14 @@ public class Scorer {
 
         HashMap<Double, MzIntensityPairs> peakSpecMap = new HashMap<>();
         int maxIonsCount = -1;
+        List<Float> rtList = new ArrayList<>(rtMap.keySet());
         for (PeakGroup peakGroup : peakGroupList) {
             AnyPair<Float, Float> nearestRtPair = blockIndexService.getNearestSpectrumByRt(rtMap, peakGroup.getApexRt());
-            int left = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getLeft()).getMzArray(), rtMap.get(nearestRtPair.getLeft()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge());
-            int right = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getRight()).getMzArray(), rtMap.get(nearestRtPair.getRight()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge());
+
+            float maxIntensityLeft = dataDO.getIntMap().get(maxLibIon)[rtList.indexOf(nearestRtPair.getLeft())];
+            float maxIntensityRight = dataDO.getIntMap().get(maxLibIon)[rtList.indexOf(nearestRtPair.getRight())];
+            int left = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getLeft()).getMzArray(), rtMap.get(nearestRtPair.getLeft()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 300, maxIntensityLeft);
+            int right = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getRight()).getMzArray(), rtMap.get(nearestRtPair.getRight()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 300, maxIntensityRight);
             float bestRt = right > left ? nearestRtPair.getRight() : nearestRtPair.getLeft();
             MzIntensityPairs mzIntensityPairs = rtMap.get(bestRt);
             peakSpecMap.put(peakGroup.getApexRt(), mzIntensityPairs);
@@ -433,9 +437,11 @@ public class Scorer {
         }
 
         PeakGroupScore pgs = peakGroupScoreList.get(selectPeakGroupIndex);
-        List<Integer> sorted = peakGroupScoreList.stream().map(PeakGroupScore::getTotalIons).distinct().sorted(Comparator.reverseOrder()).collect(Collectors.toList());
-        int maxIons = sorted.get(0);
-        if (pgs.getTotalIons() <= maxIons - 2) {
+        List<Integer> sorted = peakGroupScoreList.stream().map(PeakGroupScore::getTotalIons).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+        int index = sorted.indexOf(pgs.getTotalIons());
+
+        //排名连前五都没有混到
+        if (index > 5 && pgs.getTotalScore() >= minTotalScore) {
             pgs.setMark(true);
         }
         if (selectPeakGroupIndex != bestIndex) {

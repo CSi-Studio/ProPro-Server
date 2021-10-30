@@ -133,7 +133,7 @@ public class Extractor {
             coord.setRtRange(-1, 99999);
         } else {
             double targetRt = exp.getIrt().getSi().realRt(rt);
-            coord.setRtRange(targetRt - 500, targetRt + 500);
+            coord.setRtRange(targetRt - 300, targetRt + 300);
         }
 
         Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(exp, coord);
