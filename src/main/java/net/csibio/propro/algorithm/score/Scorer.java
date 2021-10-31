@@ -23,6 +23,7 @@ import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.service.*;
+import net.csibio.propro.utils.ArrayUtil;
 import net.csibio.propro.utils.FeatureUtil;
 import net.csibio.propro.utils.PeptideUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,12 +125,13 @@ public class Scorer {
 
         HashMap<Double, MzIntensityPairs> peakSpecMap = new HashMap<>();
         int maxIonsCount = -1;
-        List<Float> rtList = new ArrayList<>(rtMap.keySet());
+        List<Float> rtList = ArrayUtil.toList(dataDO.getRtArray());
+        float[] maxIonsIntArray = dataDO.getIntMap().get(maxLibIon);
         for (PeakGroup peakGroup : peakGroupList) {
             AnyPair<Float, Float> nearestRtPair = blockIndexService.getNearestSpectrumByRt(rtMap, peakGroup.getApexRt());
 
-            float maxIntensityLeft = dataDO.getIntMap().get(maxLibIon)[rtList.indexOf(nearestRtPair.getLeft())];
-            float maxIntensityRight = dataDO.getIntMap().get(maxLibIon)[rtList.indexOf(nearestRtPair.getRight())];
+            float maxIntensityLeft = maxIonsIntArray == null ? Float.MAX_VALUE : maxIonsIntArray[rtList.indexOf(nearestRtPair.getLeft())];
+            float maxIntensityRight = maxIonsIntArray == null ? Float.MAX_VALUE : maxIonsIntArray[rtList.indexOf(nearestRtPair.getRight())];
             int left = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getLeft()).getMzArray(), rtMap.get(nearestRtPair.getLeft()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 300, maxIntensityLeft);
             int right = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getRight()).getMzArray(), rtMap.get(nearestRtPair.getRight()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 300, maxIntensityRight);
             float bestRt = right > left ? nearestRtPair.getRight() : nearestRtPair.getLeft();
@@ -197,7 +199,7 @@ public class Scorer {
 
         if (params.getMethod().getScore().isDiaScores() && scoreTypes.contains(ScoreType.IonsCountDeltaScore.getName())) {
             for (PeakGroupScore peakGroupScore : peakGroupScoreList) {
-                double ionCountDelta = (maxIonsCount - peakGroupScore.getTotalIons()) / (double) maxIonsCount;
+                double ionCountDelta = (maxIonsCount - peakGroupScore.getTotalIons());
                 peakGroupScore.put(ScoreType.IonsCountDeltaScore, ionCountDelta, scoreTypes);
                 initScorer.calcInitScore(peakGroupScore, scoreTypes);
             }

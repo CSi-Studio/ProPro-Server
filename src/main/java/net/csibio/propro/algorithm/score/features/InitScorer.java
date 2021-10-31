@@ -60,7 +60,7 @@ public class InitScorer {
 //                        (1.16475032) * xcorrShape +
                         (1.16475032) * xcorrShapeWeight +
 //                        (0.05) * ionsCountWeightScore +
-                        (-10) * ionsCountDeltaScore, scoreTypes);
+                        (-0.1) * ionsCountDeltaScore, scoreTypes);
 //                        (0.61712054) * logSnScore, scoreTypes);
 
     }

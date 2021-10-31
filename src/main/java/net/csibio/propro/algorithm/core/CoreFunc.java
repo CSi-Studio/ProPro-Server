@@ -169,8 +169,7 @@ public class CoreFunc {
         DataDO finalData = data;
         rtMap.forEach((key, value) -> {
             float maxIntensity = finalData.getIntMap().get(maxIons)[iter.get()];
-
-            int ions = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 300, maxIntensity);
+            int ions = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 100, maxIntensity);
             ionsArray[iter.get()] = ions;
             iter.getAndIncrement();
         });

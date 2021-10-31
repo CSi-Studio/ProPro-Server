@@ -26,6 +26,7 @@ import java.util.List;
 @Component("featureFinder")
 public class FeatureFinder {
 
+
     /**
      * 1）找出pickedChrom下的最高峰，得到对应rt和rtLeft、rtRight
      * 2）将pickedChrom最高峰intensity设为0

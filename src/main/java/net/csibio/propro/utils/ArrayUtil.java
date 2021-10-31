@@ -12,6 +12,14 @@ import java.util.*;
 @Slf4j
 public class ArrayUtil {
 
+    public static List<Float> toList(float[] array) {
+        ArrayList<Float> list = new ArrayList<Float>(array.length);
+        for (int i = 0; i < array.length; i++) {
+            list.add(array[i]);
+        }
+        return list;
+    }
+
     /**
      * Return reverse of given array[].
      */

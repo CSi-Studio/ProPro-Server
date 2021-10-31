@@ -117,12 +117,12 @@ public class FeatureExtractor {
 
         //合并新老两种选峰算法
         Map<Double, PeakGroup> peakGroupMap = featureFinder.findFeaturesNew(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map).stream().collect(Collectors.toMap(PeakGroup::getApexRt, Function.identity()));
-        List<PeakGroup> peakGroupFeatureList = featureFinder.findFeatures(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
-        for (PeakGroup peakGroup : peakGroupFeatureList) {
-            if (!peakGroupMap.containsKey(peakGroup.getApexRt())) {
-                peakGroupMap.put(peakGroup.getApexRt(), peakGroup);
-            }
-        }
+//        List<PeakGroup> peakGroupFeatureList = featureFinder.findFeatures(peptideSpectrum, ionPeaks, ionPeakParams, noise1000Map);
+//        for (PeakGroup peakGroup : peakGroupFeatureList) {
+//            if (!peakGroupMap.containsKey(peakGroup.getApexRt())) {
+//                peakGroupMap.put(peakGroup.getApexRt(), peakGroup);
+//            }
+//        }
 
         PeakGroupListWrapper featureResult = new PeakGroupListWrapper(true);
         featureResult.setList(peakGroupMap.values().stream().toList());
