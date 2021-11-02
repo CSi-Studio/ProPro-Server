@@ -129,6 +129,31 @@ public class ExperimentTask extends BaseTask {
         taskService.update(taskDO);
     }
 
+    @Async(value = "csiExecutor")
+    public void doCSi(TaskDO taskDO, ExperimentDO exp, AnalyzeParams params) {
+        long start = System.currentTimeMillis();
+        //Step1. 如果还没有计算irt,先执行计算irt的步骤.
+        if (exp.getIrt() == null || (params.getForceIrt() && params.getIrtLibraryId() != null)) {
+            boolean exeResult = doIrt(taskDO, exp, params);
+            if (!exeResult) {
+                return;
+            }
+            LogUtil.log("Irt消耗时间", start);
+        }
+
+        //Step2 全新套路
+        boolean csiResult = doEpps(taskDO, exp, params);
+        if (!csiResult) {
+            taskDO.finish(TaskStatus.FAILED.getName());
+            taskService.update(taskDO);
+            return;
+        }
+
+        //Step7. Reselect ions
+        taskDO.finish(TaskStatus.SUCCESS.getName());
+        taskService.update(taskDO);
+    }
+
     @Async(value = "eicExecutor")
     public void irt(TaskDO taskDO, List<ExperimentDO> exps, AnalyzeParams params) {
         long start = System.currentTimeMillis();

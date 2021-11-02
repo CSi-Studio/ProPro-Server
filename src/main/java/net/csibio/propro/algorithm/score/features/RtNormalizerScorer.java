@@ -4,7 +4,6 @@ import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.domain.bean.score.ScoreRtPair;
-import net.csibio.propro.domain.options.AnalyzeParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -39,27 +38,31 @@ public class RtNormalizerScorer {
      * scores.log_sn_score                     * -0.72989582 +
      * scores.elution_model_fit_score          *  1.88443209;
      *
-     * @param peakGroupFeatureList features extracted from chromatogramList in transitionGroup
-     * @param normedLibIntMap      intensity in transitionList in transitionGroup
+     * @param peakGroupList   features extracted from chromatogramList in transitionGroup
+     * @param normedLibIntMap intensity in transitionList in transitionGroup
      * @return List of overallQuality
      */
-    public List<ScoreRtPair> score(List<PeakGroup> peakGroupFeatureList, HashMap<String, Double> normedLibIntMap, double groupRt, AnalyzeParams params) {
+    public List<ScoreRtPair> score4Irt(List<PeakGroup> peakGroupList, HashMap<String, Double> normedLibIntMap, double groupRt, int maxIonsCount) {
 
         List<ScoreRtPair> finalScores = new ArrayList<>();
-        List<String> defaultScoreTypes = params.getMethod().getScore().getScoreTypes();
-        for (PeakGroup peakGroupFeature : peakGroupFeatureList) {
-            if (peakGroupFeature.getBestRightRt() - peakGroupFeature.getBestLeftRt() < 15d) {
+        List<String> scoreTypes4Irt = ScoreType.scoreTypes4Irt();
+
+        for (PeakGroup peakGroup : peakGroupList) {
+            if (peakGroup.getBestRightRt() - peakGroup.getBestLeftRt() < 15d) {
                 continue;
             }
-            PeakGroupScore scores = new PeakGroupScore(defaultScoreTypes.size());
-            xicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
-//            xicScorer.calculateLogSnScore(peakGroupFeature, scores, defaultScoreTypes);
-            libraryScorer.calculateLibraryScores(peakGroupFeature, normedLibIntMap, scores, defaultScoreTypes);
+            PeakGroupScore scores = new PeakGroupScore(scoreTypes4Irt.size());
+            xicScorer.calcXICScores(peakGroup, normedLibIntMap, scores, scoreTypes4Irt);
+//            xicScorer.calculateLogSnScore(peakGroup, scores, defaultScoreTypes);
+            libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scores, scoreTypes4Irt);
+            scores.put(ScoreType.IonsCountDeltaScore.getName(), (maxIonsCount - peakGroup.getTotalIons()) * 1d / maxIonsCount, scoreTypes4Irt);
+            double deltaWeight = (maxIonsCount - peakGroup.getTotalIons()) * 1d / maxIonsCount;
+            scores.put(ScoreType.IonsCountDeltaScore, deltaWeight, scoreTypes4Irt);
 
-            double ldaScore = -1d * calculateLdaPrescore(scores, defaultScoreTypes);
+            double ldaScore = calculateLdaPrescore(scores, scoreTypes4Irt);
             ScoreRtPair scoreRtPair = new ScoreRtPair();
             scoreRtPair.setLibRt(groupRt);
-            scoreRtPair.setRealRt(peakGroupFeature.getApexRt());
+            scoreRtPair.setRealRt(peakGroup.getApexRt());
             scoreRtPair.setScore(ldaScore);
             scoreRtPair.setScores(scores);
             finalScores.add(scoreRtPair);
@@ -77,9 +80,13 @@ public class RtNormalizerScorer {
     private double calculateLdaPrescore(PeakGroupScore scores, List<String> scoreTypes) {
 //        return scores.get(ScoreType.LibraryCorr.getName(), scoreTypes) * -0.34664267d +
 //                scores.get(ScoreType.LibraryRsmd.getName(), scoreTypes) * 2.98700722d +
-        return scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes) * 0.09445371d;
+//             scores.get(ScoreType.LogSnScore.getName(), scoreTypes) * -0.72989582 +
+//        return scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes) * (-0.09445371d) +
 //                scores.get(ScoreType.XcorrShape.getName(), scoreTypes) * -5.71823862d;
-//                scores.get(ScoreType.LogSnScore.getName(), scoreTypes) * -0.72989582d;
+        return scores.get(ScoreType.XcorrShape.getName(), scoreTypes) +
+                scores.get(ScoreType.LibraryDotprod.getName(), scoreTypes) +
+                scores.get(ScoreType.LibraryDotprod.getName(), scoreTypes) -
+                scores.get(ScoreType.IonsCountDeltaScore.getName(), scoreTypes);
     }
 
 }

@@ -43,9 +43,9 @@ public enum ScoreType {
     XcorrCoelutionWeighted("XcorrCoelutionWeighted", "var_XcorrCoelutionWeighted",
             "带权重的相关偏移sum",
             false, true),
-    //    XcorrShape("XcorrShape", "var_XcorrShape",
-//            "互相关序列最大值的平均值",
-//            true, true),
+    XcorrShape("XcorrShape", "var_XcorrShape",
+            "互相关序列最大值的平均值",
+            true, true),
     XcorrShapeWeighted("XcorrShapeWeighted", "var_XcorrShapeWeighted",
             "带权重的互相关序列最大值的平均值",
             true, true),
@@ -192,4 +192,16 @@ public enum ScoreType {
         return columns.toString();
     }
 
+    public static List<String> scoreTypes4Irt() {
+        List<String> scoreTypes4Irt = new ArrayList<>();
+        scoreTypes4Irt.add(ScoreType.WeightedTotalScore.getName());
+        scoreTypes4Irt.add(ScoreType.InitScore.getName());
+        scoreTypes4Irt.add(ScoreType.IonsCountDeltaScore.getName());
+        scoreTypes4Irt.add(ScoreType.XcorrShape.getName());
+        scoreTypes4Irt.add(ScoreType.XcorrShapeWeighted.getName());
+        scoreTypes4Irt.add(ScoreType.XcorrCoelution.getName());
+        scoreTypes4Irt.add(ScoreType.XcorrCoelutionWeighted.getName());
+        scoreTypes4Irt.add(ScoreType.LibraryDotprod.getName());
+        return scoreTypes4Irt;
+    }
 }

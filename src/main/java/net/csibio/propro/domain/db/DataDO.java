@@ -43,10 +43,12 @@ public class DataDO extends BaseDO {
     Double libRt;  //该肽段片段的理论rt值,从标准库中冗余所得
 
     Double irt; //该肽段的理论rt值,从标准库中冗余所得,并且经过了irt校准
-    
+
     String cutInfosFeature; //由cutInfoMap转换所得
 
     List<PeakGroupScore> scoreList;
+
+    int[] ionsCounts; //用于存储每一张Spectrum的ionsCount数目
 
     //压缩后的rt列表,对应rtArray
     byte[] rtBytes;
@@ -60,6 +62,8 @@ public class DataDO extends BaseDO {
     Map<String, float[]> intMap = new HashMap<>();  //key为cutInfo, value为对应的intensity值列表(也即该碎片的光谱图信息)
     @Transient
     Map<String, Float> cutInfoMap; //冗余的peptide切片信息,key为cutInfo,value为mz
+    @Transient
+    Boolean only = false; //是否存在唯一峰
 
     public DataDO() {
     }

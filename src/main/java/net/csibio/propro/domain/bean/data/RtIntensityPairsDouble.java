@@ -1,6 +1,10 @@
 package net.csibio.propro.domain.bean.data;
 
 import lombok.Data;
+import net.csibio.propro.domain.bean.common.DoublePair;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Nico Wang Ruimin
@@ -48,5 +52,16 @@ public class RtIntensityPairsDouble {
     public RtIntensityPairsDouble(RtIntensityPairsDouble rtIntensityPairsDouble) {
         this.rtArray = rtIntensityPairsDouble.getRtArray().clone();
         this.intensityArray = rtIntensityPairsDouble.getIntensityArray().clone();
+    }
+
+    public List<DoublePair> toPairs() {
+        if (rtArray == null) {
+            return null;
+        }
+        List<DoublePair> pairs = new ArrayList<>();
+        for (int i = 0; i < rtArray.length; i++) {
+            pairs.add(new DoublePair(rtArray[i], intensityArray[i]));
+        }
+        return pairs;
     }
 }

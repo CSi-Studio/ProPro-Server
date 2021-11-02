@@ -41,4 +41,18 @@ public class CSiTaskExecutor {
         executor.setAwaitTerminationSeconds(60);
         return executor;
     }
+
+    @Bean(name = "csiExecutor")
+    public Executor csiExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(vmProperties.getMultiple());
+        executor.setMaxPoolSize(20);
+        executor.setQueueCapacity(99999);
+        executor.setKeepAliveSeconds(5);
+        executor.setThreadNamePrefix("csiExecutor-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(60);
+        return executor;
+    }
 }

@@ -8,10 +8,12 @@ import net.csibio.aird.parser.DIAParser;
 import net.csibio.propro.algorithm.core.CoreFunc;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.score.Scorer;
+import net.csibio.propro.algorithm.score.features.DIAScorer;
 import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.AnyPair;
+import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
@@ -28,6 +30,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component("extractor")
@@ -53,6 +56,8 @@ public class Extractor {
     CoreFunc coreFunc;
     @Autowired
     Lda lda;
+    @Autowired
+    DIAScorer diaScorer;
 
     /**
      * 根据coord肽段坐标读取exp对应的aird文件中涉及的相关光谱图
@@ -141,7 +146,7 @@ public class Extractor {
             return Result.Error(rtMapResult.getErrorCode());
         }
 
-        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneDelete(coord, rtMapResult.getData(), exp, overview, params);
+        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneNiubi(coord, rtMapResult.getData(), exp, overview, params);
 //        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneReplace(coord, rtMapResult.getData(), exp, overview, params);
         if (dataPair == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
@@ -187,7 +192,7 @@ public class Extractor {
             if (dataDO == null) {
                 continue;
             }
-            scorer.strictScoreForOne(dataDO, coordinates.get(i), params.getMethod().getQuickFilter().getMinShapeScore());
+            scorer.strictScoreForOne(dataDO, coordinates.get(i), rtMap, params.getMethod().getQuickFilter().getMinShapeScore());
 
             if (dataDO.getScoreList() != null) {
                 finalList.add(dataDO);
@@ -284,8 +289,27 @@ public class Extractor {
         if (params.getReselect()) {
             return coreFunc.reselect(exp, coords, rtMap, params);
         } else {
-            return coreFunc.epps(exp, coords, rtMap, params);
+//            return coreFunc.epps(exp, coords, rtMap, params);
+            return coreFunc.csi(exp, coords, rtMap, params);
         }
+    }
+
+    public void calcIonsCount(DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap) {
+        String maxIon = coord.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()).get(0).getCutInfo();
+        int[] ionsCount = new int[dataDO.getRtArray().length];
+        for (int i = 0; i < dataDO.getRtArray().length; i++) {
+            MzIntensityPairs pairs = rtMap.get(dataDO.getRtArray()[i]);
+            float[] intensities = dataDO.getIntMap().get(maxIon); //获取该spectrum中maxIon的强度列表
+            float maxIonIntensityInThisSpectrum = 0;
+            if (intensities == null || intensities.length == 0) {
+                maxIonIntensityInThisSpectrum = Float.MAX_VALUE;
+            } else {
+                maxIonIntensityInThisSpectrum = intensities[i];
+            }
+            ionsCount[i] = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 0f, maxIonIntensityInThisSpectrum);
+        }
+
+        dataDO.setIonsCounts(ionsCount);
     }
 
     /**

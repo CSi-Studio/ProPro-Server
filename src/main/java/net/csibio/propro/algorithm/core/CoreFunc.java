@@ -3,11 +3,14 @@ package net.csibio.propro.algorithm.core;
 import com.google.common.util.concurrent.AtomicDouble;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
+import net.csibio.propro.algorithm.extract.Extractor;
 import net.csibio.propro.algorithm.extract.IonStat;
 import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
+import net.csibio.propro.algorithm.peak.GaussFilter;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.score.features.DIAScorer;
+import net.csibio.propro.constants.constant.CutInfoConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
@@ -56,6 +59,10 @@ public class CoreFunc {
     DataService dataService;
     @Autowired
     DIAScorer diaScorer;
+    @Autowired
+    GaussFilter gaussFilter;
+    @Autowired
+    Extractor extractor;
 
     /**
      * EIC Core Function
@@ -135,7 +142,8 @@ public class CoreFunc {
         if (!isHit) {
             return null;
         }
-
+        //计算每一帧的离子碎片总数
+        extractor.calcIonsCount(data, coord, rtMap);
         return data;
     }
 
@@ -164,16 +172,16 @@ public class CoreFunc {
         String maxIons = libFrags.get(0).getCutInfo();
         HashMap<Double, List<AnyPair<DataDO, DataSumDO>>> hitPairMap = new HashMap<>();
 
-        float[] ionsArray = new float[rtMap.size()];
+        int[] ionsArray = new int[rtMap.size()];
         AtomicInteger iter = new AtomicInteger(0);
         DataDO finalData = data;
         rtMap.forEach((key, value) -> {
             float maxIntensity = finalData.getIntMap().get(maxIons)[iter.get()];
-            int ions = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 100, maxIntensity);
+            int ions = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 50, maxIntensity);
             ionsArray[iter.get()] = ions;
             iter.getAndIncrement();
         });
-
+        data.setIonsCounts(ionsArray);
         double bestScore = -99999d;
         AnyPair<DataDO, DataSumDO> bestPair = null;
         AnyPair<DataDO, DataSumDO> bestIonsPair = null;
@@ -191,14 +199,16 @@ public class CoreFunc {
                 coord.setFragments(new HashSet<>(libFrags));
                 libFrags.add(i, temp);
                 data = extractOne(coord, rtMap, params);
+                if (data == null) {
+                    continue;
+                }
+                data.setIonsCounts(ionsArray);
             }
 
-            if (data == null) {
-                continue;
-            }
             try {
                 scorer.scoreForOne(exp, data, coord, rtMap, params);
             } catch (Exception e) {
+                e.printStackTrace();
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
             }
 
@@ -246,8 +256,12 @@ public class CoreFunc {
             return null;
         }
 
-        bestPair.getLeft().getCutInfoMap().put("Ions", 0f);
-        bestPair.getLeft().getIntMap().put("Ions", ionsArray);
+        bestPair.getLeft().getCutInfoMap().put(CutInfoConst.ION_COUNT, 0f);
+        float[] ionsFloatArray = new float[ionsArray.length];
+        for (int i = 0; i < ionsArray.length; i++) {
+            ionsFloatArray[i] = ionsArray[i];
+        }
+        bestPair.getLeft().getIntMap().put(CutInfoConst.ION_COUNT, ionsFloatArray);
         if (maxHitRt.get() != bestPair.getRight().getNearestRt()) {
             log.info("有问题:" + exp.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
         } else {
@@ -264,6 +278,43 @@ public class CoreFunc {
 //        log.info(JSON.toJSONString(libFrags.stream().map(FragmentInfo::getCutInfo).collect(Collectors.toList())));
 //        log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount + ",Remove CutInfo=" + removeCutInfo);
         return bestPair;
+    }
+
+    public AnyPair<DataDO, DataSumDO> predictOneNiubi(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
+//        coord.setFragments(coord.getFragments().stream().filter(f -> !f.getCutInfo().equals("y7")).collect(Collectors.toSet()));
+        DataDO dataDO = extractOne(coord, rtMap, params);
+        //EIC结果如果为空则没有继续的必要了
+        if (dataDO == null) {
+            log.info(coord.getPeptideRef() + ":EIC结果为空");
+            return null;
+        }
+        //如果
+        if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
+            dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
+            return null;
+        }
+
+        scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+        dataDO.setId(params.getOverviewId() + dataDO.getPeptideRef());
+        DataSumDO sum = new DataSumDO();
+        if (dataDO.getOnly()) {
+            sum.setOverviewId(params.getOverviewId());
+            sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
+            sum.setProteins(dataDO.getProteins());
+            sum.setRealRt(dataDO.getScoreList().get(0).getRt());
+            sum.setNearestRt(dataDO.getScoreList().get(0).getNearestRt());
+            sum.setPeptideRef(dataDO.getPeptideRef());
+            sum.setSum(dataDO.getScoreList().get(0).getIntensitySum());
+            sum.setTotalIons(dataDO.getScoreList().get(0).getTotalIons());
+            sum.setStatus(IdentifyStatus.SUCCESS.getCode());
+        } else {
+            sum.setOverviewId(params.getOverviewId());
+            sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
+            sum.setProteins(dataDO.getProteins());
+            sum.setPeptideRef(dataDO.getPeptideRef());
+            sum.setStatus(IdentifyStatus.FAILED.getCode());
+        }
+        return new AnyPair<>(dataDO, sum);
     }
 
     /**
@@ -408,8 +459,6 @@ public class CoreFunc {
 
             //Step4. 如果第一,二步均符合条件,那么开始对对应的伪肽段进行数据提取和打分
             coord.setDecoy(true);
-//            coord.setDecoyFragments(new HashSet<>(coord.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()).subList(0, 5)));
-
             DataDO decoyData = extractOne(coord, rtMap, params);
             if (decoyData == null) {
                 return;
@@ -494,6 +543,76 @@ public class CoreFunc {
         }
         return dataList;
     }
+
+    public List<DataDO> csi(ExperimentDO exp, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+        List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
+        List<DataSumDO> sumList = Collections.synchronizedList(new ArrayList<>());
+        if (coordinates == null || coordinates.size() == 0) {
+            log.error("肽段坐标为空");
+            return null;
+        }
+        //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
+        coordinates.parallelStream().forEach(coord -> {
+            DataDO dataDO = extractOne(coord, rtMap, params);
+            //EIC结果如果为空则没有继续的必要了
+            if (dataDO == null) {
+                log.info(coord.getPeptideRef() + ":EIC结果为空");
+                return;
+            }
+            //如果
+            if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
+                dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
+                return;
+            }
+
+            scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+            dataDO.setId(params.getOverviewId() + dataDO.getPeptideRef());
+            DataSumDO sum = new DataSumDO();
+            if (dataDO.getOnly()) {
+                sum.setOverviewId(params.getOverviewId());
+                sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
+                sum.setProteins(dataDO.getProteins());
+                sum.setRealRt(dataDO.getScoreList().get(0).getRt());
+                sum.setNearestRt(dataDO.getScoreList().get(0).getNearestRt());
+                sum.setPeptideRef(dataDO.getPeptideRef());
+                sum.setSum(dataDO.getScoreList().get(0).getIntensitySum());
+                sum.setTotalIons(dataDO.getScoreList().get(0).getTotalIons());
+                sum.setStatus(IdentifyStatus.SUCCESS.getCode());
+                dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
+            } else {
+                sum.setOverviewId(params.getOverviewId());
+                sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
+                sum.setProteins(dataDO.getProteins());
+                sum.setPeptideRef(dataDO.getPeptideRef());
+                if (dataDO.getStatus() == null || dataDO.getStatus().equals(IdentifyStatus.WAIT.getCode())) {
+                    sum.setStatus(IdentifyStatus.FAILED.getCode());
+                    dataDO.setStatus(IdentifyStatus.FAILED.getCode());
+                } else {
+                    sum.setStatus(dataDO.getStatus());
+                }
+            }
+            sumList.add(sum);
+            dataList.add(dataDO);
+            //Step3. 忽略过程数据,将数据提取结果加入最终的列表
+            DataUtil.compress(dataDO);
+
+            //如果没有打分数据,那么对应的decoy也不再计算,以保持target与decoy 1:1的混合比例,这里需要注意的是,即便是scoreList是空,也需要将DataDO存储到数据库中,以便后续的重新统计和分析
+//            if (dataDO.getScoreList() == null) {
+//                return;
+//            }
+        });
+
+//        LogUtil.log("XIC+选峰+打分耗时", start);
+//        log.info("新增组合碎片数目为:" + newIonsGroup.get());
+//        log.info("总计构建Data数目" + dataList.size() + "/" + (coordinates.size() * 2) + "个");
+//        if (dataList.stream().filter(data -> data.getStatus() == null).toList().size() > 0) {
+//            log.info("居然有问题");
+//        }
+        dataSumService.insert(sumList, exp.getProjectId());
+        log.info("唯一解数目:" + dataList.stream().filter(DataDO::getOnly).count());
+        return dataList;
+    }
+
 
     private Set<FragmentInfo> selectFragments(Map<String, FragmentInfo> fragMap, List<String> selectedIons) {
         Set<FragmentInfo> fragmentInfos = new HashSet<>();

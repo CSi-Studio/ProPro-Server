@@ -27,6 +27,7 @@ import net.csibio.propro.utils.MathUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -94,6 +95,7 @@ public abstract class Irt {
         double maxGroupRt = -Double.MAX_VALUE;
         dataList = dataList.stream().sorted(Comparator.comparing(DataDO::getLibRt)).toList();
         for (DataDO data : dataList) {
+            int maxIonsCount = Arrays.stream(data.getIonsCounts()).max().getAsInt();
             PeptideCoord coord = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
             PeakGroupListWrapper peakGroupListWrapper = featureExtractor.searchPeakGroups(data, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
             if (!peakGroupListWrapper.isFeatureFound()) {
@@ -106,7 +108,8 @@ public abstract class Irt {
             if (groupRt < minGroupRt) {
                 minGroupRt = groupRt;
             }
-            List<ScoreRtPair> scoreRtPairs = rtNormalizerScorer.score(peakGroupListWrapper.getList(), peakGroupListWrapper.getNormedIntMap(), groupRt, params);
+
+            List<ScoreRtPair> scoreRtPairs = rtNormalizerScorer.score4Irt(peakGroupListWrapper.getList(), peakGroupListWrapper.getNormedIntMap(), groupRt, maxIonsCount);
             scoreRtPairs = scoreRtPairs.stream().sorted(Comparator.comparing(ScoreRtPair::getScore).reversed()).toList();
             if (scoreRtPairs.size() == 0) {
                 continue;

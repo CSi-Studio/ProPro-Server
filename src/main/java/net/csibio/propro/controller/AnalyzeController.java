@@ -120,7 +120,7 @@ public class AnalyzeController {
                 params.setInsLibId(finalInsLib.getId());
                 params.setInsLibName(finalInsLib.getName());
                 params.setNote(note);
-                experimentTask.doProPro(task, exp, params);
+                experimentTask.doCSi(task, exp, params);
             }
         }
         return Result.OK();

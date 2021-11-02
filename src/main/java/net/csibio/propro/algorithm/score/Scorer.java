@@ -120,30 +120,14 @@ public class Scorer {
             productMzMap.put(key, value);
         });
 
-        HashMap<Integer, String> unimodHashMap = coord.getUnimodMap();
-        String sequence = coord.getSequence();
-
         HashMap<Double, MzIntensityPairs> peakSpecMap = new HashMap<>();
-        int maxIonsCount = -1;
-        List<Float> rtList = ArrayUtil.toList(dataDO.getRtArray());
-        float[] maxIonsIntArray = dataDO.getIntMap().get(maxLibIon);
-        for (PeakGroup peakGroup : peakGroupList) {
-            AnyPair<Float, Float> nearestRtPair = blockIndexService.getNearestSpectrumByRt(rtMap, peakGroup.getApexRt());
+        int maxIonsCount = Arrays.stream(dataDO.getIonsCounts()).max().getAsInt();
 
-            float maxIntensityLeft = maxIonsIntArray == null ? Float.MAX_VALUE : maxIonsIntArray[rtList.indexOf(nearestRtPair.getLeft())];
-            float maxIntensityRight = maxIonsIntArray == null ? Float.MAX_VALUE : maxIonsIntArray[rtList.indexOf(nearestRtPair.getRight())];
-            int left = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getLeft()).getMzArray(), rtMap.get(nearestRtPair.getLeft()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 300, maxIntensityLeft);
-            int right = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getRight()).getMzArray(), rtMap.get(nearestRtPair.getRight()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 300, maxIntensityRight);
-            float bestRt = right > left ? nearestRtPair.getRight() : nearestRtPair.getLeft();
-            MzIntensityPairs mzIntensityPairs = rtMap.get(bestRt);
-            peakSpecMap.put(peakGroup.getApexRt(), mzIntensityPairs);
-            int ionCount = Math.max(right, left);
-            if (ionCount > maxIonsCount) {
-                maxIonsCount = ionCount;
-            }
-            peakGroup.setTotalIons(ionCount);
-            peakGroup.setNearestRt(bestRt);
+//        calcNearestRtAndTotalIons(dataDO, coord, maxLibIon, peakGroupList, rtMap);
+        for (PeakGroup peakGroup : peakGroupList) {
+            peakSpecMap.put(peakGroup.getApexRt(), rtMap.get(peakGroup.getNearestRt()));
         }
+
         //如果数组长度超过20,则筛选ions数目最大的20个碎片
         peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getTotalIons).reversed()).toList();
         if (peakGroupList.size() > 20) {
@@ -208,28 +192,32 @@ public class Scorer {
         dataDO.setScoreList(peakGroupScoreList);
     }
 
-    public void strictScoreForOne(DataDO dataDO, PeptideCoord peptide, double shapeScoreThreshold) {
-        if (dataDO.getIntMap() == null || dataDO.getIntMap().size() < peptide.getFragments().size()) {
+    public void strictScoreForOne(DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, double shapeScoreThreshold) {
+        if (dataDO.getIntMap() == null || dataDO.getIntMap().size() < coord.getFragments().size()) {
             dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
             return;
         }
 
         SigmaSpacing ss = SigmaSpacing.create();
-        PeakGroupListWrapper peakGroupListWrapper = featureExtractor.searchPeakGroups(dataDO, peptide.buildIntensityMap(), ss);
+        PeakGroupListWrapper peakGroupListWrapper = featureExtractor.searchPeakGroups(dataDO, coord.buildIntensityMap(), ss);
         if (!peakGroupListWrapper.isFeatureFound()) {
             return;
         }
+
+
         List<PeakGroupScore> peakGroupScoreList = new ArrayList<>();
-        List<PeakGroup> peakGroupFeatureList = peakGroupListWrapper.getList();
+        List<PeakGroup> peakGroupList = peakGroupListWrapper.getList();
+        String maxLibIon = coord.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).toList().get(0).getCutInfo();
+//        calcNearestRtAndTotalIons(dataDO, coord, maxLibIon, peakGroupList, rtMap);
+
         HashMap<String, Double> normedLibIntMap = peakGroupListWrapper.getNormedIntMap();
-        for (PeakGroup peakGroupFeature : peakGroupFeatureList) {
+        for (PeakGroup peakGroupFeature : peakGroupList) {
             PeakGroupScore peakGroupScore = new PeakGroupScore(2);
             List<String> scoreTypes = new ArrayList<>();
-//            scoreTypes.add(ScoreType.XcorrShape.getName());
+            scoreTypes.add(ScoreType.XcorrShape.getName());
             scoreTypes.add(ScoreType.XcorrShapeWeighted.getName());
             xicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, peakGroupScore, scoreTypes);
-//            if (peakGroupScore.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes) < shapeScoreThreshold|| peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
-            if (peakGroupScore.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes) < shapeScoreThreshold) {
+            if (peakGroupScore.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes) < shapeScoreThreshold || peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
                 continue;
             }
             peakGroupScore.setRt(peakGroupFeature.getApexRt());
@@ -450,6 +438,24 @@ public class Scorer {
             pgs.setChanged(true);
         }
         return pgs;
+    }
+
+    public void calcNearestRtAndTotalIons(DataDO data, PeptideCoord coord, String maxLibIon, List<PeakGroup> peakGroupList, TreeMap<Float, MzIntensityPairs> rtMap) {
+        List<Float> rtList = ArrayUtil.toList(data.getRtArray());
+        float[] maxIonsIntArray = data.getIntMap().get(maxLibIon);
+        HashMap<Integer, String> unimodHashMap = coord.getUnimodMap();
+        String sequence = coord.getSequence();
+        for (PeakGroup peakGroup : peakGroupList) {
+            AnyPair<Float, Float> nearestRtPair = blockIndexService.getNearestSpectrumByRt(rtMap, peakGroup.getApexRt());
+            float maxIntensityLeft = maxIonsIntArray == null ? Float.MAX_VALUE : maxIonsIntArray[rtList.indexOf(nearestRtPair.getLeft())];
+            float maxIntensityRight = maxIonsIntArray == null ? Float.MAX_VALUE : maxIonsIntArray[rtList.indexOf(nearestRtPair.getRight())];
+            int left = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getLeft()).getMzArray(), rtMap.get(nearestRtPair.getLeft()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 300, maxIntensityLeft);
+            int right = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getRight()).getMzArray(), rtMap.get(nearestRtPair.getRight()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 300, maxIntensityRight);
+            float bestRt = right > left ? nearestRtPair.getRight() : nearestRtPair.getLeft();
+            int ionCount = Math.max(right, left);
+            peakGroup.setTotalIons(ionCount);
+            peakGroup.setNearestRt(bestRt);
+        }
     }
 
     public void removeIons(PeakGroupListWrapper peakGroupListWrapper, String cutInfo) {

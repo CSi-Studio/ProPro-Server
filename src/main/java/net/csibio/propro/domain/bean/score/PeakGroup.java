@@ -17,7 +17,7 @@ public class PeakGroup {
     double apexRt;
 
     //最接近apexRt的光谱rt值
-    double nearestRt;
+    float nearestRt;
 
     //peak group中每一个碎片的强度
     HashMap<String, Double> ionIntensity;

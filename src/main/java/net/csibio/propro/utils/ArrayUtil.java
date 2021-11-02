@@ -20,6 +20,31 @@ public class ArrayUtil {
         return list;
     }
 
+    public static Double[] floatToDouble(float[] array) {
+        Double[] d = new Double[array.length];
+        for (int i = 0; i < array.length; i++) {
+            d[i] = (double) array[i];
+        }
+        return d;
+    }
+
+
+    public static Double[] intToDouble(int[] array) {
+        Double[] d = new Double[array.length];
+        for (int i = 0; i < array.length; i++) {
+            d[i] = (double) array[i];
+        }
+        return d;
+    }
+
+    public static float[] intTofloat(int[] array) {
+        float[] d = new float[array.length];
+        for (int i = 0; i < array.length; i++) {
+            d[i] = (float) array[i];
+        }
+        return d;
+    }
+
     /**
      * Return reverse of given array[].
      */

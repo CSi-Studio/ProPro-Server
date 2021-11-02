@@ -68,6 +68,9 @@ public class DataServiceImpl implements DataService {
         }
         DataSumDO dataSum = dataSumService.getById(data.getId(), projectId);
         dataVO.merge(data, dataSum);
+
+//        dataVO.getIntMap().put("Ions", ArrayUtil.intTofloat(data.getIonsCounts()));
+//        dataVO.getCutInfoMap().put("Ions", 0f);
         return dataVO;
     }
 

@@ -41,7 +41,6 @@ public class PeakPicker {
         double mid;
         double midDerivVal;
 
-
         for (int i = 2; i < rtArray.length - 2; i++) {
             leftNeighborRt = rtArray[i - 1];
             centralPeakRt = rtArray[i];
@@ -59,7 +58,7 @@ public class PeakPicker {
                 leftToCentral = centralPeakRt - leftNeighborRt;
                 centralToRight = rightNeighborRt - centralPeakRt;
                 //选出间距较小的那个
-                minSpacing = (leftToCentral > centralToRight ? centralToRight : leftToCentral);
+                minSpacing = Math.min(leftToCentral, centralToRight);
             }
 
             stnLeft = signalToNoise[i - 1];
@@ -76,9 +75,7 @@ public class PeakPicker {
                 missing = 0;
                 leftBoundary = i - 1;
                 for (int left = 2; left < i + 1; left++) {
-
                     stnLeft = signalToNoise[i - left];
-
                     if (intensityArray[i - left] < leftBoundaryInt &&
                             (!Constants.CHECK_SPACINGS || (rtArray[leftBoundary] - rtArray[i - left] < Constants.SPACING_DIFFERENCE_GAP * minSpacing))) {
                         if (stnLeft >= Constants.SIGNAL_TO_NOISE_LIMIT &&
@@ -139,6 +136,105 @@ public class PeakPicker {
                 }
 
                 PeakSpline peakSpline = new PeakSpline();
+                peakSpline.init(rtArray, intensityArray, leftBoundary, rightBoundary);
+                leftHand = leftNeighborRt;
+                rightHand = rightNeighborRt;
+
+                while (rightHand - leftHand > Constants.THRESHOLD) {
+                    mid = (leftHand + rightHand) / 2.0d;
+                    midDerivVal = peakSpline.derivatives(mid);
+                    if (Math.abs(midDerivVal) < 0.001) {
+                        break;
+                    }
+                    if (midDerivVal < 0.0d) {
+                        rightHand = mid;
+                    } else {
+                        leftHand = mid;
+                    }
+                }
+
+                maxPeakRt = (leftHand + rightHand) / 2.0d;
+                maxPeakInt = peakSpline.eval(maxPeakRt);
+                maxPeakRtList.add(maxPeakRt);
+                maxPeakIntList.add(maxPeakInt);
+                i = rightBoundary;
+            }
+        }
+        Double[] rt = maxPeakRtList.toArray(new Double[0]);
+        Double[] intensity = maxPeakIntList.toArray(new Double[0]);
+        return new RtIntensityPairsDouble(rt, intensity);
+    }
+
+    /**
+     * 1）选取最高峰
+     * 2）对最高峰进行样条插值
+     * 3）根据插值判断maxPeak的rt位置
+     * 4）用插值与rt计算intensity
+     *
+     * @param intensityArray smoothed rtIntensityPairs
+     * @return maxPeaks
+     */
+    public RtIntensityPairsDouble pickMaxPeak(Double[] rtArray, Double[] intensityArray) {
+        if (rtArray.length < 5) {
+            return null;
+        }
+        List<Double> maxPeakRtList = new ArrayList<>();
+        List<Double> maxPeakIntList = new ArrayList<>();
+        double leftNeighborRt, rightNeighborRt;
+        double centralPeakInt, leftBoundaryInt, rightBoundaryInt;
+        int leftBoundary, rightBoundary;
+        double maxPeakRt;
+        double maxPeakInt;
+        double leftHand, rightHand;
+        double mid;
+        double midDerivVal;
+
+        for (int i = 2; i < rtArray.length - 2; i++) {
+            leftNeighborRt = rtArray[i - 1];
+            rightNeighborRt = rtArray[i + 1];
+
+            leftBoundaryInt = intensityArray[i - 1];
+            centralPeakInt = intensityArray[i];
+            rightBoundaryInt = intensityArray[i + 1];
+
+            if (rightBoundaryInt < 0.000001) continue;
+            if (leftBoundaryInt < 0.000001) continue;
+
+            //如果中间的比两边的都大
+            if (centralPeakInt > leftBoundaryInt && centralPeakInt > rightBoundaryInt) {
+                // 搜索左边的边界
+                leftBoundary = i - 1;
+                for (int left = 2; left < i + 1; left++) {
+                    if (intensityArray[i - left] < leftBoundaryInt) {
+                        leftBoundaryInt = intensityArray[i - left];
+                        leftBoundary = i - left;
+                    } else {
+                        break;
+                    }
+                    //zeroLeft
+                    if (intensityArray[i - left] == 0) {
+                        break;
+                    }
+                }
+
+                // 搜索右边的边界
+                rightBoundary = i + 1;
+                for (int right = 2; right < rtArray.length - i; right++) {
+                    if (intensityArray[i + right] < rightBoundaryInt) {
+                        rightBoundaryInt = intensityArray[i + right];
+                        rightBoundary = i + right;
+                    } else {
+                        break;
+                    }
+
+                    //zeroLeft
+                    if (intensityArray[i + right] == 0) {
+                        break;
+                    }
+                }
+
+                PeakSpline peakSpline = new PeakSpline();
+//                peakSpline.init(rtArray, intensityArray, leftBoundary, rightBoundary);
                 peakSpline.init(rtArray, intensityArray, leftBoundary, rightBoundary);
                 leftHand = leftNeighborRt;
                 rightHand = rightNeighborRt;

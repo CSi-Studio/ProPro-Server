@@ -62,6 +62,8 @@ public class ClinicController {
     Lda lda;
     @Autowired
     Scorer scorer;
+    @Autowired
+    GaussFilter gaussFilter;
 
     @GetMapping(value = "prepare")
     Result<ClinicPrepareDataVO> prepare(
@@ -194,7 +196,7 @@ public class ClinicController {
         if (smooth) {
             SigmaSpacing ss = SigmaSpacing.create();
             dataList.forEach(data -> {
-                HashMap<String, float[]> smoothInt = GaussFilter.filter(data.getRtArray(), (HashMap<String, float[]>) data.getIntMap(), ss);
+                HashMap<String, float[]> smoothInt = gaussFilter.filter(data.getRtArray(), (HashMap<String, float[]>) data.getIntMap(), ss);
                 data.setIntMap(smoothInt);
             });
         }

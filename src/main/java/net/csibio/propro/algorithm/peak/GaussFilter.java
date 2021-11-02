@@ -47,7 +47,7 @@ public class GaussFilter {
      * @param sigmaSpacing
      * @return
      */
-    public static HashMap<String, float[]> filter(float[] rtArray, HashMap<String, float[]> intensitiesMap, SigmaSpacing sigmaSpacing) {
+    public HashMap<String, float[]> filter(float[] rtArray, HashMap<String, float[]> intensitiesMap, SigmaSpacing sigmaSpacing) {
         Double[] rts = new Double[rtArray.length];
         for (int i = 0; i < rts.length; i++) {
             rts[i] = Double.valueOf(rtArray[i]);
@@ -63,7 +63,7 @@ public class GaussFilter {
             doubleMap.put(entry.getKey(), doubleInt);
         }
 
-        HashMap<String, Double[]> smoothMap = filter(rts,doubleMap,sigmaSpacing);
+        HashMap<String, Double[]> smoothMap = filter(rts, doubleMap, sigmaSpacing);
         HashMap<String, float[]> floatMap = new HashMap<>();
         for (HashMap.Entry<String, Double[]> entry : smoothMap.entrySet()) {
             Double[] intensity = entry.getValue();
@@ -82,7 +82,7 @@ public class GaussFilter {
      * @param sigmaSpacing
      * @return
      */
-    public static HashMap<String, Double[]> filter(Double[] rtArray, HashMap<String, Double[]> intensitiesMap, SigmaSpacing sigmaSpacing) {
+    public HashMap<String, Double[]> filter(Double[] rtArray, HashMap<String, Double[]> intensitiesMap, SigmaSpacing sigmaSpacing) {
 
         Double spacing = sigmaSpacing.getSpacingDouble();
         //coeffs: 以0为中心，sigma为标准差的正态分布参数
@@ -210,5 +210,122 @@ public class GaussFilter {
 
         }
         return newIntensitiesMap;
+    }
+
+    /**
+     * @param rtArray
+     * @param intensityArray
+     * @param sigmaSpacing
+     * @return
+     */
+    public Double[] filter(Double[] rtArray, Double[] intensityArray, SigmaSpacing sigmaSpacing) {
+
+        Double spacing = sigmaSpacing.getSpacingDouble();
+        //coeffs: 以0为中心，sigma为标准差的正态分布参数
+        double[] coeffs = sigmaSpacing.getCoeffs();
+        int middle = sigmaSpacing.getRightNum();
+        double middleSpacing = sigmaSpacing.getRightNumSpacing();
+
+        int rtLength = rtArray.length;
+        double startPosition, endPosition;
+        double minRt = rtArray[0];
+        double maxRt = rtArray[rtLength - 1];
+
+        Double distanceInGaussian;
+        int leftPosition;
+        int rightPosition;
+        double residualPercent;
+        double coeffRight;
+        double coeffLeft;
+        double norm = 0;
+
+        Double[] newIntensityArray = new Double[rtLength];
+
+        for (int i = 0; i < rtLength; i++) {
+            float t = 0f;
+            norm = 0;
+            //startPosition
+            if ((rtArray[i] - middleSpacing) > minRt) {
+                startPosition = MathUtil.keepLength(rtArray[i] - middleSpacing, Constants.PRECISION);
+            } else {
+                startPosition = minRt;
+            }
+
+            //endPostion
+            if ((rtArray[i] + middleSpacing) < maxRt) {
+                endPosition = MathUtil.keepLength(rtArray[i] + middleSpacing, Constants.PRECISION);
+            } else {
+                endPosition = maxRt;
+            }
+
+            //help index
+            int j = i;
+
+            // left side of i
+            while (j > 0 && rtArray[j - 1] > startPosition) {
+                distanceInGaussian = MathUtil.keepLength(rtArray[i] - rtArray[j], Constants.PRECISION);
+                leftPosition = (int) MathUtil.keepLength(distanceInGaussian / spacing, Constants.PRECISION);
+                rightPosition = leftPosition + 1;
+                residualPercent = (Math.abs(leftPosition * spacing) - distanceInGaussian) / spacing;
+                if (rightPosition < middle) {
+                    coeffRight = (1 - residualPercent) * coeffs[leftPosition] + residualPercent * coeffs[rightPosition];
+                } else {
+                    coeffRight = coeffs[leftPosition];
+                }
+
+                distanceInGaussian = MathUtil.keepLength(rtArray[i] - rtArray[j - 1], Constants.PRECISION);
+                leftPosition = (int) MathUtil.keepLength((distanceInGaussian / spacing), Constants.PRECISION);
+                rightPosition = leftPosition + 1;
+                residualPercent = (Math.abs(leftPosition * spacing - distanceInGaussian)) / spacing;
+                if (rightPosition < middle) {
+                    coeffLeft = (1 - residualPercent) * coeffs[leftPosition] + residualPercent * coeffs[rightPosition];
+                } else {
+                    coeffLeft = coeffs[leftPosition];
+                }
+
+                norm += Math.abs(rtArray[j - 1] - rtArray[j]) * (coeffRight + coeffLeft) / 2.0;
+                t += Math.abs(rtArray[j - 1] - rtArray[j]) * (intensityArray[j - 1] * coeffLeft + intensityArray[j] * coeffRight) / 2.0;
+                j--;
+
+            }
+
+            j = i;
+            // right side of i
+            while (j < rtLength - 1 && rtArray[j + 1] < endPosition) {
+                distanceInGaussian = MathUtil.keepLength(rtArray[j] - rtArray[i], Constants.PRECISION);
+                leftPosition = (int) MathUtil.keepLength(distanceInGaussian / spacing, Constants.PRECISION);
+                rightPosition = leftPosition + 1;
+                residualPercent = (Math.abs(leftPosition * spacing) - distanceInGaussian) / spacing;
+                if (rightPosition < middle) {
+                    coeffLeft = (1 - residualPercent) * coeffs[leftPosition] + residualPercent * coeffs[rightPosition];
+                } else {
+                    coeffLeft = coeffs[leftPosition];
+                }
+
+                distanceInGaussian = MathUtil.keepLength(rtArray[j + 1] - rtArray[i], Constants.PRECISION);
+                leftPosition = (int) MathUtil.keepLength(distanceInGaussian / spacing, Constants.PRECISION);
+                rightPosition = leftPosition + 1;
+
+                residualPercent = (Math.abs(leftPosition * spacing - distanceInGaussian)) / spacing;
+                if (rightPosition < middle) {
+                    coeffRight = (1 - residualPercent) * coeffs[leftPosition] + residualPercent * coeffs[rightPosition];
+                } else {
+                    coeffRight = coeffs[leftPosition];
+                }
+
+                norm += Math.abs(rtArray[j + 1] - rtArray[j]) * (coeffLeft + coeffRight) / 2.0;
+                t += Math.abs(rtArray[j + 1] - rtArray[j]) * (intensityArray[j] * coeffLeft + intensityArray[j + 1] * coeffRight) / 2.0;
+                j++;
+
+            }
+
+            if (t > 0) {
+                newIntensityArray[i] = t / norm;
+            } else {
+                newIntensityArray[i] = 0d;
+            }
+
+        }
+        return newIntensityArray;
     }
 }
