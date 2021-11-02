@@ -196,7 +196,7 @@ public class CoreFunc {
                 FragmentInfo temp = libFrags.get(i);
                 libFrags.remove(i);
                 currentRemoveCutInfo = temp.getCutInfo();
-                coord.setFragments(new HashSet<>(libFrags));
+                coord.setFragments(libFrags);
                 libFrags.add(i, temp);
                 data = extractOne(coord, rtMap, params);
                 if (data == null) {
@@ -343,7 +343,7 @@ public class CoreFunc {
             predictFragmentMap.put(cutInfo, libFragMap.get(cutInfo));
         });
         //Step3.对所有碎片进行EIC计算
-        coord.setFragments(proproFiList);
+        coord.setFragments(new ArrayList<>(proproFiList));
         DataDO data = extractOne(coord, rtMap, params);
         Map<String, float[]> intMap = data.getIntMap();
 
@@ -360,7 +360,7 @@ public class CoreFunc {
         double bestScore = -99999d;
         DataSumDO bestDataSum = null;
         DataDO bestData = null;
-        Set<FragmentInfo> bestIonGroup = null;
+        List<FragmentInfo> bestIonGroup = null;
 
         int replace = params.getChangeCharge() ? 6 : 1; //如果是新带点碎片预测,那么直接全部替换
         List<List<String>> allPossibleIonsGroup = Generator.combination(totalIonList).simple(replace).stream().collect(Collectors.toList()); //替换策略
@@ -375,7 +375,7 @@ public class CoreFunc {
             if (buildData == null) {
                 continue;
             }
-            Set<FragmentInfo> selectFragments = selectFragments(predictFragmentMap, ions);
+            List<FragmentInfo> selectFragments = selectFragments(predictFragmentMap, ions);
             if (selectFragments.size() < libIons.size()) {
                 continue;
             }
@@ -614,8 +614,8 @@ public class CoreFunc {
     }
 
 
-    private Set<FragmentInfo> selectFragments(Map<String, FragmentInfo> fragMap, List<String> selectedIons) {
-        Set<FragmentInfo> fragmentInfos = new HashSet<>();
+    private List<FragmentInfo> selectFragments(Map<String, FragmentInfo> fragMap, List<String> selectedIons) {
+        List<FragmentInfo> fragmentInfos = new ArrayList<>();
         for (String selectedIon : selectedIons) {
             fragmentInfos.add(fragMap.get(selectedIon));
         }

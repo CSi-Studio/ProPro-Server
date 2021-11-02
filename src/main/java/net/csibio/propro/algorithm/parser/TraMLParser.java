@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component("traMLParser")
 public class TraMLParser extends BaseLibraryParser {
@@ -200,6 +201,9 @@ public class TraMLParser extends BaseLibraryParser {
             }
 
             List<PeptideDO> peptideList = new ArrayList<>(map.values());
+            for (PeptideDO peptideDO : peptideList) {
+                peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+            }
             peptideService.insert(peptideList);
             Set<String> proteins = new HashSet<>();
 
@@ -259,7 +263,9 @@ public class TraMLParser extends BaseLibraryParser {
                 selectedPepSet.remove(peptideDO.getPeptideRef());
             }
             ArrayList<PeptideDO> peptides = new ArrayList<PeptideDO>(map.values());
-
+            for (PeptideDO peptideDO : peptides) {
+                peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+            }
             peptideService.insert(peptides);
             tranResult.setData(peptides);
             taskDO.addLog(peptides.size() + "条数据插入成功");

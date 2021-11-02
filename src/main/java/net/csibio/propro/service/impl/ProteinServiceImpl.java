@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service("ProteinService")
@@ -190,7 +191,7 @@ public class ProteinServiceImpl implements ProteinService {
                 peptide.setPeptideRef(peptide + "_" + i);
                 peptide.setCharge(i);
                 Set<FragmentInfo> fragmentInfos = simulateService.singlePredictFragment(peptide, spModel, isotope);
-                peptide.setFragments(fragmentInfos);
+                peptide.setFragments(fragmentInfos.stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
                 Set<String> proteinSet = new HashSet<>();
                 proteinSet.add(pPMap.get(item));
                 peptide.setProteins(proteinSet);

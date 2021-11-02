@@ -87,6 +87,7 @@ public class NicoGenerator extends BaseGenerator {
             convertedSequence = builder.toString();
         }
 
+        List<FragmentInfo> decoyFiList = new ArrayList<>();
         for (FragmentInfo targetFi : peptideDO.getFragments()) {
             FragmentInfo decoyFi = new FragmentInfo();
             decoyFi.setCutInfo(targetFi.getCutInfo());
@@ -123,9 +124,10 @@ public class NicoGenerator extends BaseGenerator {
                     unimodIds
             );
             decoyFi.setMz(productMz);
-            peptideDO.getDecoyFragments().add(decoyFi);
-        }
+            decoyFiList.add(decoyFi);
 
+        }
+        peptideDO.setDecoyFragments(decoyFiList);
         peptideDO.setDecoySequence(convertedSequence);
         peptideDO.setDecoyUnimodMap(newUnimodMap);
     }

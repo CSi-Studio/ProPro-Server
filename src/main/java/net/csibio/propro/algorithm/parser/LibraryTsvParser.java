@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by James Lu MiaoShan
@@ -90,6 +91,9 @@ public class LibraryTsvParser extends BaseLibraryParser {
                 addFragment(peptide, map);
             }
             List<PeptideDO> peptideDOList = new ArrayList<>(map.values());
+            for (PeptideDO peptideDO : peptideDOList) {
+                peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+            }
             //在导入Peptide的同时生成伪肽段
             shuffleGenerator.generate(peptideDOList);
             log.info("准备插入肽段:" + peptideDOList.size() + "条");
@@ -164,8 +168,11 @@ public class LibraryTsvParser extends BaseLibraryParser {
                     selectedPepSet.remove(peptideDO.getFullName());
                 }
             }
-
-            peptideService.insert(new ArrayList<>(map.values()));
+            List<PeptideDO> peptideList = new ArrayList<>(map.values());
+            for (PeptideDO peptideDO : peptideList) {
+                peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+            }
+            peptideService.insert(peptideList);
             taskDO.addLog(map.size() + "条肽段数据插入成功");
             taskService.update(taskDO);
             log.info(map.size() + "条肽段数据插入成功");

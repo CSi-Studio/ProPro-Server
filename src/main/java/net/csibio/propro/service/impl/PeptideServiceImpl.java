@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 /**
@@ -211,7 +212,7 @@ public class PeptideServiceImpl implements PeptideService {
         peptide.setPeptideRef(peptideRef);
         peptide.setRt(-1d);
 
-        peptide.setFragments(fragmentFactory.buildFragmentMap(peptide, minLength, ionTypes, chargeTypes));
+        peptide.setFragments(fragmentFactory.buildFragmentMap(peptide, minLength, ionTypes, chargeTypes).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
         return peptide;
     }
 
@@ -314,7 +315,7 @@ public class PeptideServiceImpl implements PeptideService {
             if (c.get() % 1000 == 0) {
                 logger.info("已经循环" + c.get() + "次");
             }
-            Set<FragmentInfo> fragments = peptideDO.getFragments();
+            List<FragmentInfo> fragments = peptideDO.getFragments();
             fragments.forEach(fragment -> {
                 for (SourceNode sourceNode : sourceNodeWithOutPet) {
                     String[] peptideRef = sourceNode.getId().split("-");

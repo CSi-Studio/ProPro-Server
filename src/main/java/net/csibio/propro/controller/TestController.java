@@ -14,13 +14,12 @@ import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
+import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
+import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.PeptideDO;
-import net.csibio.propro.domain.query.DataQuery;
-import net.csibio.propro.domain.query.OverviewQuery;
-import net.csibio.propro.domain.query.PeptideQuery;
-import net.csibio.propro.domain.query.ProjectQuery;
+import net.csibio.propro.domain.query.*;
 import net.csibio.propro.service.*;
 import net.csibio.propro.utils.ProProUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +33,7 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @RestController
@@ -186,6 +186,25 @@ public class TestController {
             }
         }
 
+        return Result.OK();
+    }
+
+    @GetMapping(value = "/lms3")
+    Result lms3() {
+        List<LibraryDO> libraryList = libraryService.getAll(new LibraryQuery());
+        log.info("总计有库:" + libraryList.size() + "个");
+        AtomicInteger count = new AtomicInteger(1);
+        libraryList.stream().parallel().forEach(library -> {
+            log.info("开始处理库:" + library.getName() + ":" + count.get() + "/" + libraryList.size());
+            count.getAndIncrement();
+            List<PeptideDO> peptideList = peptideService.getAll(new PeptideQuery(library.getId()));
+            peptideList.forEach(peptide -> {
+                peptide.setFragments(peptide.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+                peptide.setDecoyFragments(peptide.getDecoyFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+                peptideService.update(peptide);
+            });
+            log.info("库" + library.getName() + "处理完毕");
+        });
         return Result.OK();
     }
 

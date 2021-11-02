@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 对于TraML文件的高速解析引擎
@@ -81,6 +82,9 @@ public class FastTraMLParser extends BaseLibraryParser {
             }
 
             List<PeptideDO> peptideList = new ArrayList<>(peptideMap.values());
+            for (PeptideDO peptideDO : peptideList) {
+                peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+            }
             peptideService.insert(peptideList);
 
             Set<String> proteins = new HashSet<>();
@@ -131,7 +135,11 @@ public class FastTraMLParser extends BaseLibraryParser {
                 shuffleGenerator.generate(peptide);
             }
 
-            peptideService.insert(new ArrayList<>(peptideMap.values()));
+            List<PeptideDO> peptideList = new ArrayList<>(peptideMap.values());
+            for (PeptideDO peptideDO : peptideList) {
+                peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+            }
+            peptideService.insert(peptideList);
             taskDO.addLog(peptideMap.size() + "条肽段数据插入成功");
             taskService.update(taskDO);
             logger.info(peptideMap.size() + "条肽段数据插入成功");

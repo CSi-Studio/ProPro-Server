@@ -6,7 +6,6 @@ import net.csibio.propro.domain.db.PeptideDO;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,12 +27,13 @@ public class PeptideCoord {
      */
     String sequence;
     Integer charge;
+
     /**
      * 对应的前体荷质比
      */
     Double mz;
 
-    Set<FragmentInfo> fragments;
+    List<FragmentInfo> fragments;
 
     /**
      * 是否在蛋白中是unique类型的肽段
@@ -61,7 +61,7 @@ public class PeptideCoord {
      */
     String decoySequence;
     HashMap<Integer, String> decoyUnimodMap;
-    Set<FragmentInfo> decoyFragments;
+    List<FragmentInfo> decoyFragments;
 
     /**
      * 是否作为伪肽段存在,不存储到数据库中
@@ -92,12 +92,12 @@ public class PeptideCoord {
         this.decoyFragments = peptide.getDecoyFragments();
     }
 
-    public Set<FragmentInfo> getFragments() {
+    public List<FragmentInfo> getFragments() {
         return decoy ? decoyFragments : fragments;
     }
 
     public Map<String, FragmentInfo> buildFragmentMap() {
-        Set<FragmentInfo> infos = decoy ? decoyFragments : fragments;
+        List<FragmentInfo> infos = decoy ? decoyFragments : fragments;
         return infos.stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
     }
 
