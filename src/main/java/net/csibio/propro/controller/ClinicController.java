@@ -183,6 +183,9 @@ public class ClinicController {
                 data = dataService.getDataFromDB(projectId, overview.getExpId(), overview.getId(), peptideRef);
             }
             if (data != null) {
+                if (data.getStatus() == null) {
+                    data.setStatus(IdentifyStatus.FAILED.getCode());
+                }
                 data.setMinTotalScore(overview.getMinTotalScore());
                 lda.scoreForPeakGroups(data.getScoreList(), overview.getWeights(), overview.getParams().getMethod().getScore().getScoreTypes());
                 dataList.add(data);

@@ -1,6 +1,7 @@
 package net.csibio.propro.domain.bean.score;
 
 import lombok.Data;
+import net.csibio.propro.algorithm.score.ScoreType;
 import org.springframework.data.annotation.Transient;
 
 import java.util.HashMap;
@@ -52,6 +53,20 @@ public class PeakGroupScore extends BaseScores {
 
     public PeakGroupScore(int scoreTypesSize) {
         this.scores = new Double[scoreTypesSize];
+    }
+
+    public boolean fine() {
+        return this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) > 0.8 &&
+                this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) > 0.8 &&
+                this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes()) > 0.9 &&
+                this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes()) > 0.8;
+    }
+
+    public double total() {
+        return this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) +
+                this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) +
+                this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes()) +
+                this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
     }
 
 }

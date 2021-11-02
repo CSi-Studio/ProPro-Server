@@ -13,7 +13,6 @@ import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.AnyPair;
-import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
@@ -30,7 +29,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component("extractor")
@@ -138,7 +136,7 @@ public class Extractor {
             coord.setRtRange(-1, 99999);
         } else {
             double targetRt = exp.getIrt().getSi().realRt(rt);
-            coord.setRtRange(targetRt - 300, targetRt + 300);
+            coord.setRtRange(targetRt - 500, targetRt + 500);
         }
 
         Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(exp, coord);
@@ -295,7 +293,7 @@ public class Extractor {
     }
 
     public void calcIonsCount(DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap) {
-        String maxIon = coord.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()).get(0).getCutInfo();
+        String maxIon = coord.getFragments().get(0).getCutInfo();
         int[] ionsCount = new int[dataDO.getRtArray().length];
         for (int i = 0; i < dataDO.getRtArray().length; i++) {
             MzIntensityPairs pairs = rtMap.get(dataDO.getRtArray()[i]);
@@ -306,7 +304,7 @@ public class Extractor {
             } else {
                 maxIonIntensityInThisSpectrum = intensities[i];
             }
-            ionsCount[i] = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 0f, maxIonIntensityInThisSpectrum);
+            ionsCount[i] = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 300f, maxIonIntensityInThisSpectrum);
         }
 
         dataDO.setIonsCounts(ionsCount);

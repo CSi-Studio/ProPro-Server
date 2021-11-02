@@ -104,15 +104,6 @@ public class Scorer {
         HashMap<String, Double> normedLibIntMap = peakGroupListWrapper.getNormedIntMap(); //归一化的库强度值
         HashMap<String, Float> productMzMap = new HashMap<>(); //碎片mz map
         HashMap<String, Integer> productChargeMap = new HashMap<>(); //碎片带电量map
-        String maxLibIon = null;
-        double maxLibIonIntensity = -1d;
-
-        for (FragmentInfo fragment : coord.getFragments()) {
-            if (fragment.getIntensity() > maxLibIonIntensity) {
-                maxLibIonIntensity = fragment.getIntensity();
-                maxLibIon = fragment.getCutInfo();
-            }
-        }
 
         dataDO.getCutInfoMap().forEach((key, value) -> {
             int charge = PeptideUtil.parseChargeFromCutInfo(key);
@@ -123,7 +114,7 @@ public class Scorer {
         HashMap<Double, MzIntensityPairs> peakSpecMap = new HashMap<>();
         int maxIonsCount = Arrays.stream(dataDO.getIonsCounts()).max().getAsInt();
 
-//        calcNearestRtAndTotalIons(dataDO, coord, maxLibIon, peakGroupList, rtMap);
+//        calcNearestRtAndTotalIons(dataDO, coord, coord.getFragments().get(0).getCutInfo(), peakGroupList, rtMap);
         for (PeakGroup peakGroup : peakGroupList) {
             peakSpecMap.put(peakGroup.getApexRt(), rtMap.get(peakGroup.getNearestRt()));
         }

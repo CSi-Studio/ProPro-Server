@@ -77,7 +77,7 @@ public class FeatureFinder {
             RtIntensityPairsDouble rtInt = ionPeaks.get(maxCutInfo);
             rtInt.getIntensityArray()[maxIndex] = 0.0d;
 
-            removeOverlappingFeatures(ionPeaks, leftIndex, rightIndex, ionPeakParams);
+            removeOverlappingPeakGroups(ionPeaks, leftIndex, rightIndex, ionPeakParams);
 
             Double[] rtArray = unSearchPeakGroup.getRtArray();
 
@@ -364,6 +364,7 @@ public class FeatureFinder {
             }
         }
         int[] ionsCounts = unSearchPeakGroup.getIonsCount();
+        Double[] smoothIonsCounts = unSearchPeakGroup.getSmoothIonsCount();
 
         List<PeakGroup> peakGroupList = new ArrayList<>();
         while (true) {
@@ -388,7 +389,7 @@ public class FeatureFinder {
             RtIntensityPairsDouble rtInt = unSearchPeakGroup.getMaxPeaksForIons().get(maxCutInfo);
             rtInt.getIntensityArray()[maxIndex] = 0.0d;
 
-            removeOverlappingFeatures(unSearchPeakGroup.getMaxPeaksForIons(), leftIndex, rightIndex, unSearchPeakGroup.getPeaksForIons());
+            removeOverlappingPeakGroups(unSearchPeakGroup.getMaxPeaksForIons(), leftIndex, rightIndex, unSearchPeakGroup.getPeaksForIons());
 
             //如果PeakGroup不在IonCount最优峰范围内,直接忽略
             boolean hit = false;
@@ -398,24 +399,20 @@ public class FeatureFinder {
                     hit = true;
                     peakGroup.setApexRt(pairs.get(k).left());
                     int binarySearchIndex = Arrays.binarySearch(unSearchPeakGroup.getRtArray(), pairs.get(k).left());
-                    int maxIonCount = -1;
                     int bestRtIndex = -1;
                     if (binarySearchIndex < 0) {
                         binarySearchIndex = -binarySearchIndex - 1;
                         if (binarySearchIndex == 0) {
-                            maxIonCount = ionsCounts[1];
                             bestRtIndex = 1;
                         } else {
-                            int left = ionsCounts[binarySearchIndex];
-                            int right = ionsCounts[binarySearchIndex + 1];
-                            maxIonCount = Math.max(left, right);
+                            double left = smoothIonsCounts[binarySearchIndex];
+                            double right = smoothIonsCounts[binarySearchIndex + 1];
                             bestRtIndex = left > right ? binarySearchIndex : (binarySearchIndex + 1);
                         }
                     } else {
-                        maxIonCount = ionsCounts[binarySearchIndex];
                         bestRtIndex = binarySearchIndex;
                     }
-                    peakGroup.setTotalIons(maxIonCount);
+                    peakGroup.setTotalIons(ionsCounts[bestRtIndex]);
                     peakGroup.setNearestRt(unSearchPeakGroup.getFloatRtArray()[bestRtIndex]);
                     break;
                 }
@@ -504,7 +501,7 @@ public class FeatureFinder {
      * @param bestRight     同上
      * @param ionPeakParams
      */
-    private void removeOverlappingFeatures(HashMap<String, RtIntensityPairsDouble> ionPeaks, int bestLeft, int bestRight, HashMap<String, List<IonPeak>> ionPeakParams) {
+    private void removeOverlappingPeakGroups(HashMap<String, RtIntensityPairsDouble> ionPeaks, int bestLeft, int bestRight, HashMap<String, List<IonPeak>> ionPeakParams) {
         for (String cutInfo : ionPeaks.keySet()) {
             Double[] intensity = ionPeaks.get(cutInfo).getIntensityArray();
             for (int j = 0; j < intensity.length; j++) {

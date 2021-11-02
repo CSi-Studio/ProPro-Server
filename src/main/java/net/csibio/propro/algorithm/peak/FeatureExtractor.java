@@ -86,10 +86,13 @@ public class FeatureExtractor {
 
         UnSearchPeakGroup unSearchPeakGroup = new UnSearchPeakGroup();
         //计算IonCount对应的值
-        unSearchPeakGroup.setIonsCount(data.getIonsCounts());
         Double[] ionCountIntensity = ArrayUtil.intToDouble(data.getIonsCounts());
         float[] ionCountIntensityFloat = ArrayUtil.intTofloat(data.getIonsCounts());
         Double[] ionCountSmoothIntensity = gaussFilter.filter(rtArray, ionCountIntensity, ss);
+
+        unSearchPeakGroup.setIonsCount(data.getIonsCounts());
+        unSearchPeakGroup.setSmoothIonsCount(ionCountSmoothIntensity);
+
         RtIntensityPairsDouble maxPeaksForIonCount = peakPicker.pickMaxPeak(rtArray, ionCountSmoothIntensity);
 //        RtIntensityPairsDouble maxPeaksForIonCount2 = peakPicker.pickMaxPeak(rtArray, ionCountIntensity);
         if (maxPeaksForIonCount == null || maxPeaksForIonCount.getRtArray() == null) { //如果IonsCount没有找到任何峰,则直接认为没有鉴定成功

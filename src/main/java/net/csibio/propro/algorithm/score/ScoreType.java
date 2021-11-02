@@ -204,4 +204,19 @@ public enum ScoreType {
         scoreTypes4Irt.add(ScoreType.LibraryDotprod.getName());
         return scoreTypes4Irt;
     }
+
+
+    public static List<String> usedScoreTypes() {
+        List<String> scoreTypes = new ArrayList<>();
+        scoreTypes.add(ScoreType.WeightedTotalScore.getName());
+        scoreTypes.add(ScoreType.InitScore.getName());
+        scoreTypes.add(ScoreType.IonsCountDeltaScore.getName());
+        scoreTypes.add(ScoreType.IsotopeCorrelationScore.getName());
+        scoreTypes.add(ScoreType.XcorrCoelution.getName());
+        scoreTypes.add(ScoreType.XcorrCoelutionWeighted.getName());
+        scoreTypes.add(ScoreType.XcorrShape.getName());
+        scoreTypes.add(ScoreType.XcorrShapeWeighted.getName());
+        scoreTypes.add(ScoreType.LibraryDotprod.getName());
+        return scoreTypes;
+    }
 }

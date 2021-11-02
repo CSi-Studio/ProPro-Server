@@ -12,9 +12,11 @@ import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.score.features.DIAScorer;
 import net.csibio.propro.constants.constant.CutInfoConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
+import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.ExperimentDO;
@@ -297,22 +299,50 @@ public class CoreFunc {
         scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
         dataDO.setId(params.getOverviewId() + dataDO.getPeptideRef());
         DataSumDO sum = new DataSumDO();
+        sum.setOverviewId(params.getOverviewId());
+        sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
+        sum.setProteins(dataDO.getProteins());
+        sum.setPeptideRef(dataDO.getPeptideRef());
+
         if (dataDO.getOnly()) {
-            sum.setOverviewId(params.getOverviewId());
-            sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
-            sum.setProteins(dataDO.getProteins());
-            sum.setRealRt(dataDO.getScoreList().get(0).getRt());
-            sum.setNearestRt(dataDO.getScoreList().get(0).getNearestRt());
-            sum.setPeptideRef(dataDO.getPeptideRef());
-            sum.setSum(dataDO.getScoreList().get(0).getIntensitySum());
-            sum.setTotalIons(dataDO.getScoreList().get(0).getTotalIons());
-            sum.setStatus(IdentifyStatus.SUCCESS.getCode());
+            PeakGroupScore pgs = dataDO.getScoreList().get(0);
+            sum.setRealRt(pgs.getRt());
+            sum.setNearestRt(pgs.getNearestRt());
+            sum.setSum(pgs.getIntensitySum());
+            sum.setTotalIons(pgs.getTotalIons());
+
+            if (pgs.fine()) {
+                sum.setStatus(IdentifyStatus.SUCCESS.getCode());
+                dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
+            } else {
+                sum.setStatus(IdentifyStatus.FAILED.getCode());
+                dataDO.setStatus(IdentifyStatus.FAILED.getCode());
+            }
+
         } else {
-            sum.setOverviewId(params.getOverviewId());
-            sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
-            sum.setProteins(dataDO.getProteins());
-            sum.setPeptideRef(dataDO.getPeptideRef());
-            sum.setStatus(IdentifyStatus.FAILED.getCode());
+            List<PeakGroupScore> peakGroupList = dataDO.getScoreList();
+            if (peakGroupList == null || peakGroupList.size() == 0) {
+                if (dataDO.getStatus() == null || dataDO.getStatus().equals(IdentifyStatus.WAIT.getCode())) {
+                    sum.setStatus(IdentifyStatus.WAIT.getCode());
+                    dataDO.setStatus(IdentifyStatus.WAIT.getCode());
+                } else {
+                    sum.setStatus(dataDO.getStatus());
+                }
+            } else {
+                List<PeakGroupScore> candidateList = peakGroupList.stream().filter(PeakGroupScore::fine).collect(Collectors.toList());
+                if (candidateList.size() > 0) {
+                    PeakGroupScore bestPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroupScore::total).reversed()).collect(Collectors.toList()).get(0);
+                    sum.setRealRt(bestPgs.getRt());
+                    sum.setNearestRt(bestPgs.getNearestRt());
+                    sum.setSum(bestPgs.getIntensitySum());
+                    sum.setTotalIons(bestPgs.getTotalIons());
+                    sum.setStatus(IdentifyStatus.SUCCESS.getCode());
+                    dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
+                } else {
+                    sum.setStatus(IdentifyStatus.FAILED.getCode());
+                    dataDO.setStatus(IdentifyStatus.FAILED.getCode());
+                }
+            }
         }
         return new AnyPair<>(dataDO, sum);
     }
@@ -568,27 +598,47 @@ public class CoreFunc {
             scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
             dataDO.setId(params.getOverviewId() + dataDO.getPeptideRef());
             DataSumDO sum = new DataSumDO();
+            sum.setOverviewId(params.getOverviewId());
+            sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
+            sum.setProteins(dataDO.getProteins());
+            sum.setPeptideRef(dataDO.getPeptideRef());
+
             if (dataDO.getOnly()) {
-                sum.setOverviewId(params.getOverviewId());
-                sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
-                sum.setProteins(dataDO.getProteins());
-                sum.setRealRt(dataDO.getScoreList().get(0).getRt());
-                sum.setNearestRt(dataDO.getScoreList().get(0).getNearestRt());
-                sum.setPeptideRef(dataDO.getPeptideRef());
-                sum.setSum(dataDO.getScoreList().get(0).getIntensitySum());
-                sum.setTotalIons(dataDO.getScoreList().get(0).getTotalIons());
-                sum.setStatus(IdentifyStatus.SUCCESS.getCode());
-                dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
-            } else {
-                sum.setOverviewId(params.getOverviewId());
-                sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
-                sum.setProteins(dataDO.getProteins());
-                sum.setPeptideRef(dataDO.getPeptideRef());
-                if (dataDO.getStatus() == null || dataDO.getStatus().equals(IdentifyStatus.WAIT.getCode())) {
+                PeakGroupScore pgs = dataDO.getScoreList().get(0);
+                sum.setRealRt(pgs.getRt());
+                sum.setNearestRt(pgs.getNearestRt());
+                sum.setSum(pgs.getIntensitySum());
+                sum.setTotalIons(pgs.getTotalIons());
+                if (pgs.fine()) {
+                    sum.setStatus(IdentifyStatus.SUCCESS.getCode());
+                    dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
+                } else {
                     sum.setStatus(IdentifyStatus.FAILED.getCode());
                     dataDO.setStatus(IdentifyStatus.FAILED.getCode());
+                }
+            } else {
+                List<PeakGroupScore> peakGroupList = dataDO.getScoreList();
+                if (peakGroupList == null || peakGroupList.size() == 0) {
+                    if (dataDO.getStatus() == null || dataDO.getStatus().equals(IdentifyStatus.WAIT.getCode())) {
+                        sum.setStatus(IdentifyStatus.WAIT.getCode());
+                        dataDO.setStatus(IdentifyStatus.WAIT.getCode());
+                    } else {
+                        sum.setStatus(dataDO.getStatus());
+                    }
                 } else {
-                    sum.setStatus(dataDO.getStatus());
+                    List<PeakGroupScore> candidateList = peakGroupList.stream().filter(PeakGroupScore::fine).collect(Collectors.toList());
+                    if (candidateList.size() > 0) {
+                        PeakGroupScore bestPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroupScore::total).reversed()).collect(Collectors.toList()).get(0);
+                        sum.setRealRt(bestPgs.getRt());
+                        sum.setNearestRt(bestPgs.getNearestRt());
+                        sum.setSum(bestPgs.getIntensitySum());
+                        sum.setTotalIons(bestPgs.getTotalIons());
+                        sum.setStatus(IdentifyStatus.SUCCESS.getCode());
+                        dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
+                    } else {
+                        sum.setStatus(IdentifyStatus.FAILED.getCode());
+                        dataDO.setStatus(IdentifyStatus.FAILED.getCode());
+                    }
                 }
             }
             sumList.add(sum);
@@ -608,11 +658,13 @@ public class CoreFunc {
 //        if (dataList.stream().filter(data -> data.getStatus() == null).toList().size() > 0) {
 //            log.info("居然有问题");
 //        }
-        dataSumService.insert(sumList, exp.getProjectId());
+        Result<List<DataSumDO>> result = dataSumService.insert(sumList, exp.getProjectId());
+        if (result.isFailed()) {
+            log.error(result.getErrorMessage());
+        }
         log.info("唯一解数目:" + dataList.stream().filter(DataDO::getOnly).count());
         return dataList;
     }
-
 
     private List<FragmentInfo> selectFragments(Map<String, FragmentInfo> fragMap, List<String> selectedIons) {
         List<FragmentInfo> fragmentInfos = new ArrayList<>();
