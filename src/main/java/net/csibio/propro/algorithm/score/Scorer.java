@@ -91,7 +91,7 @@ public class Scorer {
         if (!peakGroupListWrapper.isFeatureFound()) {
             dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
             if (!dataDO.getDecoy()) {
-                log.info("作为库中真肽段居然一个峰组都没有找到,也是牛逼：PeptideRef: " + dataDO.getPeptideRef());
+//                log.info("作为库中真肽段居然一个峰组都没有找到,也是牛逼：PeptideRef: " + dataDO.getPeptideRef());
             }
             return;
         }

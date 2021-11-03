@@ -5,6 +5,7 @@ import net.csibio.propro.algorithm.score.ScoreType;
 import org.springframework.data.annotation.Transient;
 
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Time: 2018-08-05 22:42
@@ -56,7 +57,13 @@ public class PeakGroupScore extends BaseScores {
     }
 
     public boolean fine() {
-        return this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) > 0.8 &&
+        AtomicBoolean allHit = new AtomicBoolean(true);
+        ionIntensity.values().forEach(value -> {
+            if (value == 0) {
+                allHit.set(false);
+            }
+        });
+        return allHit.get() && this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) > 0.8 &&
                 this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) > 0.8 &&
                 this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes()) > 0.9 &&
                 this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes()) > 0.8;

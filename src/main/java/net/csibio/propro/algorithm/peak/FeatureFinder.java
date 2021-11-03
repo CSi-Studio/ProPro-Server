@@ -403,11 +403,11 @@ public class FeatureFinder {
                     if (binarySearchIndex < 0) {
                         binarySearchIndex = -binarySearchIndex - 1;
                         if (binarySearchIndex == 0) {
-                            bestRtIndex = 1;
+                            bestRtIndex = 0;
                         } else {
-                            double left = smoothIonsCounts[binarySearchIndex];
-                            double right = smoothIonsCounts[binarySearchIndex + 1];
-                            bestRtIndex = left > right ? binarySearchIndex : (binarySearchIndex + 1);
+                            double left = smoothIonsCounts[binarySearchIndex - 1];
+                            double right = smoothIonsCounts[binarySearchIndex];
+                            bestRtIndex = left > right ? (binarySearchIndex - 1) : binarySearchIndex;
                         }
                     } else {
                         bestRtIndex = binarySearchIndex;

@@ -18,10 +18,8 @@ import net.csibio.propro.utils.MathUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component("featureExtractor")
@@ -94,7 +92,6 @@ public class FeatureExtractor {
         unSearchPeakGroup.setSmoothIonsCount(ionCountSmoothIntensity);
 
         RtIntensityPairsDouble maxPeaksForIonCount = peakPicker.pickMaxPeak(rtArray, ionCountSmoothIntensity);
-//        RtIntensityPairsDouble maxPeaksForIonCount2 = peakPicker.pickMaxPeak(rtArray, ionCountIntensity);
         if (maxPeaksForIonCount == null || maxPeaksForIonCount.getRtArray() == null) { //如果IonsCount没有找到任何峰,则直接认为没有鉴定成功
             log.warn("离子碎片定位峰没有找到任何信号,PeptideRef:" + data.getPeptideRef());
             return new PeakGroupListWrapper(false);
@@ -109,30 +106,33 @@ public class FeatureExtractor {
         data.getCutInfoMap().put("O", 0f);
 
         List<DoublePair> pairs = maxPeaksForIonCount.toPairs();
-        pairs = pairs.stream().sorted(Comparator.comparingDouble(DoublePair::right).reversed()).collect(Collectors.toList()); //按照强度比从大到小排序
-        if (pairs.size() > 1) {
-            if (pairs.get(0).right() >= 3) {
-                for (int i = 0; i < pairs.size() - 1; i++) {
-                    double delta = pairs.get(i).right() - pairs.get(i + 1).right();
-                    double weight = delta / pairs.get(i).right();
+//        pairs = pairs.stream().sorted(Comparator.comparingDouble(DoublePair::right).reversed()).collect(Collectors.toList()); //按照强度比从大到小排序
+//        if (pairs.size() > 1) {
+//            if (pairs.get(0).right() >= 3) {
+//                for (int i = 0; i < pairs.size() - 1; i++) {
+//                    double delta = pairs.get(i).right() - pairs.get(i + 1).right();
+//                    double weight = delta / pairs.get(i).right();
+//
+//                    if (pairs.get(i).right() > 3 && (weight > 0.5 && pairs.get(i).right() > 4) ||
+//                            (pairs.get(i).right() <= 4 && delta > 2.5)) {
+//                        pairs = pairs.subList(0, i + 1);
+//                        break;
+//                    }
+//                }
+//            } else {
+//                return new PeakGroupListWrapper(false);
+//            }
+//        } else if (pairs.size() == 1) {
+//            if (pairs.get(0).right() < 6) {
+//                return new PeakGroupListWrapper(false);
+//            }
+//        } else {
+//            return new PeakGroupListWrapper(false);
+//        }
 
-                    if (pairs.get(i).right() > 3 && (weight > 0.5 && pairs.get(i).right() > 4) ||
-                            (pairs.get(i).right() <= 4 && delta > 2.5)) {
-                        pairs = pairs.subList(0, i + 1);
-                        break;
-                    }
-                }
-            } else {
-                return new PeakGroupListWrapper(false);
-            }
-        } else if (pairs.size() == 1) {
-            if (pairs.get(0).right() < 6) {
-                return new PeakGroupListWrapper(false);
-            }
-        } else {
+        if (pairs.size() == 0) {
             return new PeakGroupListWrapper(false);
         }
-
         unSearchPeakGroup.setMaxPeaksForIonCount(pairs);
 
         //对每一个片段离子选峰
@@ -167,10 +167,7 @@ public class FeatureExtractor {
         unSearchPeakGroup.setPeaksForIons(peaksForIons);
 
         List<PeakGroup> peakGroups = featureFinder.findPeakGroupsV2(unSearchPeakGroup);
-        if (pairs.size() == 1 && peakGroups.size() > 0) {
-            data.setOnly(true);
-        }
-        if (pairs.size() == 1 && peakGroups.size() == 0) {
+        if (peakGroups.size() == 0) {
             log.error("居然没有匹配到,蛋疼:" + data.getPeptideRef());
         }
 

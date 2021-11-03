@@ -62,4 +62,16 @@ public class DataSumDO extends BaseDO {
         dataSum.setTotalScore(selectPeakGroup.getTotalScore());
         return dataSum;
     }
+
+    public DataSumDO() {
+    }
+
+    public DataSumDO(DataDO data) {
+        overviewId = data.getOverviewId();
+        id = data.getId();
+        proteins = data.getProteins();
+        peptideRef = data.getPeptideRef();
+        decoy = data.getDecoy();
+        status = data.getStatus();
+    }
 }

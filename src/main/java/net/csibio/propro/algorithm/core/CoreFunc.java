@@ -100,6 +100,8 @@ public class CoreFunc {
         data.setRtArray(rtArray);
         if (StringUtils.isNotEmpty(params.getOverviewId())) {
             data.setOverviewId(params.getOverviewId());
+            //在此处直接设置data的Id
+            data.setId(params.getOverviewId() + coord.getPeptideRef() + data.getDecoy());
         }
 
         boolean isHit = false;
@@ -297,53 +299,7 @@ public class CoreFunc {
         }
 
         scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
-        dataDO.setId(params.getOverviewId() + dataDO.getPeptideRef());
-        DataSumDO sum = new DataSumDO();
-        sum.setOverviewId(params.getOverviewId());
-        sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
-        sum.setProteins(dataDO.getProteins());
-        sum.setPeptideRef(dataDO.getPeptideRef());
-
-        if (dataDO.getOnly()) {
-            PeakGroupScore pgs = dataDO.getScoreList().get(0);
-            sum.setRealRt(pgs.getRt());
-            sum.setNearestRt(pgs.getNearestRt());
-            sum.setSum(pgs.getIntensitySum());
-            sum.setTotalIons(pgs.getTotalIons());
-
-            if (pgs.fine()) {
-                sum.setStatus(IdentifyStatus.SUCCESS.getCode());
-                dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
-            } else {
-                sum.setStatus(IdentifyStatus.FAILED.getCode());
-                dataDO.setStatus(IdentifyStatus.FAILED.getCode());
-            }
-
-        } else {
-            List<PeakGroupScore> peakGroupList = dataDO.getScoreList();
-            if (peakGroupList == null || peakGroupList.size() == 0) {
-                if (dataDO.getStatus() == null || dataDO.getStatus().equals(IdentifyStatus.WAIT.getCode())) {
-                    sum.setStatus(IdentifyStatus.WAIT.getCode());
-                    dataDO.setStatus(IdentifyStatus.WAIT.getCode());
-                } else {
-                    sum.setStatus(dataDO.getStatus());
-                }
-            } else {
-                List<PeakGroupScore> candidateList = peakGroupList.stream().filter(PeakGroupScore::fine).collect(Collectors.toList());
-                if (candidateList.size() > 0) {
-                    PeakGroupScore bestPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroupScore::total).reversed()).collect(Collectors.toList()).get(0);
-                    sum.setRealRt(bestPgs.getRt());
-                    sum.setNearestRt(bestPgs.getNearestRt());
-                    sum.setSum(bestPgs.getIntensitySum());
-                    sum.setTotalIons(bestPgs.getTotalIons());
-                    sum.setStatus(IdentifyStatus.SUCCESS.getCode());
-                    dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
-                } else {
-                    sum.setStatus(IdentifyStatus.FAILED.getCode());
-                    dataDO.setStatus(IdentifyStatus.FAILED.getCode());
-                }
-            }
-        }
+        DataSumDO sum = judge(dataDO);
         return new AnyPair<>(dataDO, sum);
     }
 
@@ -584,63 +540,21 @@ public class CoreFunc {
         //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
         coordinates.parallelStream().forEach(coord -> {
             DataDO dataDO = extractOne(coord, rtMap, params);
+
             //EIC结果如果为空则没有继续的必要了
             if (dataDO == null) {
                 log.info(coord.getPeptideRef() + ":EIC结果为空");
                 return;
             }
-            //如果
-            if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
+            //如果获取的离子碎片数少于一半,则判定为碎片峰不足
+            if (dataDO.getIntMap() == null || (dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
                 dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
                 return;
             }
 
             scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
-            dataDO.setId(params.getOverviewId() + dataDO.getPeptideRef());
-            DataSumDO sum = new DataSumDO();
-            sum.setOverviewId(params.getOverviewId());
-            sum.setId(params.getOverviewId() + dataDO.getPeptideRef());
-            sum.setProteins(dataDO.getProteins());
-            sum.setPeptideRef(dataDO.getPeptideRef());
+            DataSumDO sum = judge(dataDO);
 
-            if (dataDO.getOnly()) {
-                PeakGroupScore pgs = dataDO.getScoreList().get(0);
-                sum.setRealRt(pgs.getRt());
-                sum.setNearestRt(pgs.getNearestRt());
-                sum.setSum(pgs.getIntensitySum());
-                sum.setTotalIons(pgs.getTotalIons());
-                if (pgs.fine()) {
-                    sum.setStatus(IdentifyStatus.SUCCESS.getCode());
-                    dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
-                } else {
-                    sum.setStatus(IdentifyStatus.FAILED.getCode());
-                    dataDO.setStatus(IdentifyStatus.FAILED.getCode());
-                }
-            } else {
-                List<PeakGroupScore> peakGroupList = dataDO.getScoreList();
-                if (peakGroupList == null || peakGroupList.size() == 0) {
-                    if (dataDO.getStatus() == null || dataDO.getStatus().equals(IdentifyStatus.WAIT.getCode())) {
-                        sum.setStatus(IdentifyStatus.WAIT.getCode());
-                        dataDO.setStatus(IdentifyStatus.WAIT.getCode());
-                    } else {
-                        sum.setStatus(dataDO.getStatus());
-                    }
-                } else {
-                    List<PeakGroupScore> candidateList = peakGroupList.stream().filter(PeakGroupScore::fine).collect(Collectors.toList());
-                    if (candidateList.size() > 0) {
-                        PeakGroupScore bestPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroupScore::total).reversed()).collect(Collectors.toList()).get(0);
-                        sum.setRealRt(bestPgs.getRt());
-                        sum.setNearestRt(bestPgs.getNearestRt());
-                        sum.setSum(bestPgs.getIntensitySum());
-                        sum.setTotalIons(bestPgs.getTotalIons());
-                        sum.setStatus(IdentifyStatus.SUCCESS.getCode());
-                        dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
-                    } else {
-                        sum.setStatus(IdentifyStatus.FAILED.getCode());
-                        dataDO.setStatus(IdentifyStatus.FAILED.getCode());
-                    }
-                }
-            }
             sumList.add(sum);
             dataList.add(dataDO);
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
@@ -662,7 +576,7 @@ public class CoreFunc {
         if (result.isFailed()) {
             log.error(result.getErrorMessage());
         }
-        log.info("唯一解数目:" + dataList.stream().filter(DataDO::getOnly).count());
+        log.info("唯一解数目:" + sumList.stream().filter(sum -> sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())).count());
         return dataList;
     }
 
@@ -714,6 +628,37 @@ public class CoreFunc {
         //按照cv从大到小排序
         statList = statList.stream().sorted(Comparator.comparing(IonStat::stat).reversed()).toList();
         return statList;
+    }
+
+    private DataSumDO judge(DataDO dataDO) {
+
+        DataSumDO sum = new DataSumDO(dataDO);
+        PeakGroupScore finalPgs = null;
+        List<PeakGroupScore> peakGroupList = dataDO.getScoreList();
+        if (peakGroupList != null && peakGroupList.size() > 0) {
+            List<PeakGroupScore> candidateList = peakGroupList.stream().filter(PeakGroupScore::fine).collect(Collectors.toList());
+            if (candidateList.size() > 0) {
+                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroupScore::total).reversed()).collect(Collectors.toList()).get(0);
+            }
+        }
+
+        if (finalPgs != null) {
+            sum.setRealRt(finalPgs.getRt());
+            sum.setNearestRt(finalPgs.getNearestRt());
+            sum.setSum(finalPgs.getIntensitySum());
+            sum.setTotalIons(finalPgs.getTotalIons());
+            dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
+            sum.setStatus(IdentifyStatus.SUCCESS.getCode());
+        } else {
+            if (dataDO.getStatus() == null || dataDO.getStatus().equals(IdentifyStatus.WAIT.getCode())) {
+                sum.setStatus(IdentifyStatus.FAILED.getCode());
+                dataDO.setStatus(IdentifyStatus.FAILED.getCode());
+            } else {
+                sum.setStatus(dataDO.getStatus());
+            }
+        }
+
+        return sum;
     }
 
 }
