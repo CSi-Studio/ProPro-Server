@@ -2,6 +2,7 @@ package net.csibio.propro.domain.bean.data;
 
 import lombok.Data;
 import net.csibio.propro.domain.bean.common.DoublePair;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.IonPeak;
 
 import java.util.HashMap;
@@ -9,6 +10,8 @@ import java.util.List;
 
 @Data
 public class UnSearchPeakGroup {
+
+    PeptideCoord coord;
     //当前PeptideRef对应的rt数组
     float[] floatRtArray;
 

@@ -10,7 +10,6 @@ import net.csibio.propro.algorithm.score.features.*;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.bean.data.PeptideScore;
-import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.PeakGroupListWrapper;
@@ -55,8 +54,6 @@ public class Scorer {
     @Autowired
     TaskService taskService;
     @Autowired
-    FeatureExtractor featureExtractor;
-    @Autowired
     ExperimentService experimentService;
     @Autowired
     XicScorer xicScorer;
@@ -87,7 +84,7 @@ public class Scorer {
 
         //获取标准库中对应的PeptideRef组
         //重要步骤,"或许是目前整个工程最重要的核心算法--选峰算法."--陆妙善
-        PeakGroupListWrapper peakGroupListWrapper = featureExtractor.searchPeakGroups(dataDO, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
+        PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchPeakGroups(dataDO, coord, params.getMethod().getIrt().getSs());
         if (!peakGroupListWrapper.isFeatureFound()) {
             dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
             if (!dataDO.getDecoy()) {
@@ -190,15 +187,13 @@ public class Scorer {
         }
 
         SigmaSpacing ss = SigmaSpacing.create();
-        PeakGroupListWrapper peakGroupListWrapper = featureExtractor.searchPeakGroups(dataDO, coord.buildIntensityMap(), ss);
+        PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchPeakGroups(dataDO, coord, ss);
         if (!peakGroupListWrapper.isFeatureFound()) {
             return;
         }
 
-
         List<PeakGroupScore> peakGroupScoreList = new ArrayList<>();
         List<PeakGroup> peakGroupList = peakGroupListWrapper.getList();
-        String maxLibIon = coord.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).toList().get(0).getCutInfo();
 //        calcNearestRtAndTotalIons(dataDO, coord, maxLibIon, peakGroupList, rtMap);
 
         HashMap<String, Double> normedLibIntMap = peakGroupListWrapper.getNormedIntMap();

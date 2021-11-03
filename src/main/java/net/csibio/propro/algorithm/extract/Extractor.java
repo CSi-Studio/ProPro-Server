@@ -144,7 +144,7 @@ public class Extractor {
             return Result.Error(rtMapResult.getErrorCode());
         }
 
-        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneNiubi(coord, rtMapResult.getData(), exp, overview, params);
+        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneNiubi(coord, rtMapResult.getData(), exp, params);
 //        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneReplace(coord, rtMapResult.getData(), exp, overview, params);
         if (dataPair == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
@@ -336,11 +336,8 @@ public class Extractor {
         }
         Result result = overviewService.insert(overview);
         if (result.isFailed()) {
-            log.error(result.getErrorMessage());
+            log.error("Insert Overview Exception: " + overview.getName() + "-" + result.getErrorMessage());
             return null;
-        }
-        if (overview.getId() == null) {
-            log.error("插入有问题");
         }
         params.setOverviewId(overview.getId());
         return overview;

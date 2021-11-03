@@ -144,6 +144,7 @@ public class CoreFunc {
 
         //如果所有的片段均没有提取到XIC的结果,则直接返回null
         if (!isHit) {
+            log.info(coord.getPeptideRef() + ":EIC结果为空");
             return null;
         }
         //计算每一帧的离子碎片总数
@@ -284,7 +285,7 @@ public class CoreFunc {
         return bestPair;
     }
 
-    public AnyPair<DataDO, DataSumDO> predictOneNiubi(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
+    public AnyPair<DataDO, DataSumDO> predictOneNiubi(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, AnalyzeParams params) {
 //        coord.setFragments(coord.getFragments().stream().filter(f -> !f.getCutInfo().equals("y7")).collect(Collectors.toSet()));
         DataDO dataDO = extractOne(coord, rtMap, params);
         //EIC结果如果为空则没有继续的必要了
@@ -540,15 +541,7 @@ public class CoreFunc {
         //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
         coordinates.parallelStream().forEach(coord -> {
             DataDO dataDO = extractOne(coord, rtMap, params);
-
-            //EIC结果如果为空则没有继续的必要了
             if (dataDO == null) {
-                log.info(coord.getPeptideRef() + ":EIC结果为空");
-                return;
-            }
-            //如果获取的离子碎片数少于一半,则判定为碎片峰不足
-            if (dataDO.getIntMap() == null || (dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
-                dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
                 return;
             }
 

@@ -334,8 +334,10 @@ public class DIAScorer {
     private int getSeriesScore(List<Double> seriesList, float[] spectrumMzArray, float[] spectrumIntArray, float minIntensity, float maxIntensity) {
         int seriesScore = 0;
         for (double seriesMz : seriesList) {
-            Double left = seriesMz - Constants.DIA_EXTRACT_WINDOW;
-            Double right = seriesMz + Constants.DIA_EXTRACT_WINDOW;
+//            Double left = seriesMz - Constants.DIA_EXTRACT_WINDOW;
+//            Double right = seriesMz + Constants.DIA_EXTRACT_WINDOW;
+            Double left = seriesMz - 0.015;
+            Double right = seriesMz + 0.015;
 
             IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left.floatValue(), right.floatValue());
             if (mzIntensity.isSignalFound() &&

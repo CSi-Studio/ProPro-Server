@@ -68,9 +68,6 @@ public class DataServiceImpl implements DataService {
         }
         DataSumDO dataSum = dataSumService.getById(data.getId(), projectId);
         dataVO.merge(data, dataSum);
-
-//        dataVO.getIntMap().put("Ions", ArrayUtil.intTofloat(data.getIonsCounts()));
-//        dataVO.getCutInfoMap().put("Ions", 0f);
         return dataVO;
     }
 
@@ -94,6 +91,7 @@ public class DataServiceImpl implements DataService {
         }
         AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
         params.setChangeCharge(changeCharge);
+        params.setOverviewId(overviewId);
         Result<ExpDataVO> result = extractor.predictOne(exp, overview, coord, params);
         return result;
     }

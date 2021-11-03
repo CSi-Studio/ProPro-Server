@@ -3,7 +3,7 @@ package net.csibio.propro.algorithm.irt;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.extract.Extractor;
 import net.csibio.propro.algorithm.fitter.LinearFitter;
-import net.csibio.propro.algorithm.peak.FeatureExtractor;
+import net.csibio.propro.algorithm.peak.PeakPicker;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.score.features.RtNormalizerScorer;
 import net.csibio.propro.constants.constant.Constants;
@@ -43,7 +43,7 @@ public abstract class Irt {
     @Autowired
     BlockIndexService blockIndexService;
     @Autowired
-    FeatureExtractor featureExtractor;
+    PeakPicker peakPicker;
     @Autowired
     RtNormalizerScorer rtNormalizerScorer;
     @Autowired
@@ -97,7 +97,7 @@ public abstract class Irt {
         for (DataDO data : dataList) {
             int maxIonsCount = Arrays.stream(data.getIonsCounts()).max().getAsInt();
             PeptideCoord coord = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
-            PeakGroupListWrapper peakGroupListWrapper = featureExtractor.searchPeakGroups(data, coord.buildIntensityMap(), params.getMethod().getIrt().getSs());
+            PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchPeakGroups(data, coord, params.getMethod().getIrt().getSs());
             if (!peakGroupListWrapper.isFeatureFound()) {
                 continue;
             }
