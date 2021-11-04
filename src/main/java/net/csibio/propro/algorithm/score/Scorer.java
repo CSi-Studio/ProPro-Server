@@ -112,6 +112,7 @@ public class Scorer {
         int maxIonsCount = Arrays.stream(dataDO.getIonsCounts()).max().getAsInt();
 
 //        calcNearestRtAndTotalIons(dataDO, coord, coord.getFragments().get(0).getCutInfo(), peakGroupList, rtMap);
+
         for (PeakGroup peakGroup : peakGroupList) {
             peakSpecMap.put(peakGroup.getApexRt(), rtMap.get(peakGroup.getNearestRt()));
         }
@@ -148,6 +149,9 @@ public class Scorer {
 //            }
 
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, peakGroupScore, scoreTypes);
+            peakGroupScore.put(ScoreType.IonsCountDeltaScore, (maxIonsCount - peakGroup.getTotalIons()) * 1d / maxIonsCount, scoreTypes);
+            initScorer.calcInitScore(peakGroupScore, scoreTypes);
+            peakGroupScore.put(ScoreType.WeightedTotalScore, peakGroupScore.total(), scoreTypes);
 //            if (scoreTypes.contains(ScoreType.NormRtScore.getName())) {
 //                libraryScorer.calculateNormRtScore(peakGroup, exp.getIrt().getSi(), dataDO.getLibRt(), peakGroupScore, scoreTypes);
 //            }
@@ -169,13 +173,6 @@ public class Scorer {
             return;
         }
 
-        if (params.getMethod().getScore().isDiaScores() && scoreTypes.contains(ScoreType.IonsCountDeltaScore.getName())) {
-            for (PeakGroupScore peakGroupScore : peakGroupScoreList) {
-                double ionCountDelta = (maxIonsCount - peakGroupScore.getTotalIons());
-                peakGroupScore.put(ScoreType.IonsCountDeltaScore, ionCountDelta, scoreTypes);
-                initScorer.calcInitScore(peakGroupScore, scoreTypes);
-            }
-        }
         dataDO.setStatus(IdentifyStatus.WAIT.getCode());
         dataDO.setScoreList(peakGroupScoreList);
     }

@@ -63,17 +63,19 @@ public class PeakGroupScore extends BaseScores {
                 allHit.set(false);
             }
         });
-        return allHit.get() && this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) > 0.8 &&
-                this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) > 0.8 &&
+        return allHit.get() && (this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) +
+                this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes())) / 2 > 0.8 &&
                 this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes()) > 0.9 &&
                 this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes()) > 0.8;
     }
 
     public double total() {
         return this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) +
-                this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) +
+                this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes()) +
                 this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes()) +
-                this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
+                this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes()) -
+                this.get(ScoreType.IonsCountDeltaScore, ScoreType.usedScoreTypes())
+                ;
     }
 
 }
