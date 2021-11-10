@@ -23,7 +23,7 @@ public class SelectedPeakGroupScore extends BaseScores {
     Double rt;
 
     Double nearestRt;
-    
+
     //定量结果
     Double intensitySum;
 
@@ -34,7 +34,7 @@ public class SelectedPeakGroupScore extends BaseScores {
 
     Double qValue;
 
-    Integer totalIons;
+    Integer ions50;
 
     Double fdr;
 

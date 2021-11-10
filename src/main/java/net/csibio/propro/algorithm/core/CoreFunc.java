@@ -14,6 +14,7 @@ import net.csibio.propro.constants.constant.CutInfoConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.AnyPair;
+import net.csibio.propro.domain.bean.common.IntegerPair;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroupScore;
@@ -177,16 +178,16 @@ public class CoreFunc {
         String maxIons = libFrags.get(0).getCutInfo();
         HashMap<Double, List<AnyPair<DataDO, DataSumDO>>> hitPairMap = new HashMap<>();
 
-        int[] ionsArray = new int[rtMap.size()];
+        int[] ions50 = new int[rtMap.size()];
         AtomicInteger iter = new AtomicInteger(0);
         DataDO finalData = data;
         rtMap.forEach((key, value) -> {
             float maxIntensity = finalData.getIntMap().get(maxIons)[iter.get()];
-            int ions = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 50, maxIntensity);
-            ionsArray[iter.get()] = ions;
+            IntegerPair pair = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 50, 300, maxIntensity);
+            ions50[iter.get()] = pair.left();
             iter.getAndIncrement();
         });
-        data.setIonsCounts(ionsArray);
+        data.setIons50(ions50);
         double bestScore = -99999d;
         AnyPair<DataDO, DataSumDO> bestPair = null;
         AnyPair<DataDO, DataSumDO> bestIonsPair = null;
@@ -207,11 +208,11 @@ public class CoreFunc {
                 if (data == null) {
                     continue;
                 }
-                data.setIonsCounts(ionsArray);
+                data.setIons50(ions50);
             }
 
             try {
-                scorer.scoreForOne(exp, data, coord, rtMap, params);
+                data = scorer.scoreForOne(exp, data, coord, rtMap, params);
             } catch (Exception e) {
                 e.printStackTrace();
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
@@ -262,9 +263,9 @@ public class CoreFunc {
         }
 
         bestPair.getLeft().getCutInfoMap().put(CutInfoConst.ION_COUNT, 0f);
-        float[] ionsFloatArray = new float[ionsArray.length];
-        for (int i = 0; i < ionsArray.length; i++) {
-            ionsFloatArray[i] = ionsArray[i];
+        float[] ionsFloatArray = new float[ions50.length];
+        for (int i = 0; i < ions50.length; i++) {
+            ionsFloatArray[i] = ions50[i];
         }
         bestPair.getLeft().getIntMap().put(CutInfoConst.ION_COUNT, ionsFloatArray);
         if (maxHitRt.get() != bestPair.getRight().getNearestRt()) {
@@ -299,7 +300,7 @@ public class CoreFunc {
             return null;
         }
 
-        scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+        dataDO = scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
         DataSumDO sum = judge(dataDO);
         return new AnyPair<>(dataDO, sum);
     }
@@ -368,7 +369,7 @@ public class CoreFunc {
             }
             coord.setFragments(selectFragments);
             try {
-                scorer.scoreForOne(exp, buildData, coord, rtMap, params);
+                buildData = scorer.scoreForOne(exp, buildData, coord, rtMap, params);
             } catch (Exception e) {
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
             }
@@ -433,7 +434,7 @@ public class CoreFunc {
             }
 
             //Step2. 常规选峰及打分,未满足条件的直接忽略
-            scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+            dataDO = scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
             dataList.add(dataDO);
 
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
@@ -452,7 +453,7 @@ public class CoreFunc {
             }
 
             //Step5. 对Decoy进行打分
-            scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
+            decoyData = scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
             dataList.add(decoyData);
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
@@ -484,7 +485,7 @@ public class CoreFunc {
                 return;
             }
             //Step2. 常规选峰及打分,未满足条件的直接忽略
-            scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+            dataDO = scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
             lda.scoreForPeakGroups(dataDO.getScoreList(), params.getBaseOverview().getWeights(), params.getBaseOverview().getParams().getMethod().getScore().getScoreTypes());
             DataSumDO tempSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview(), null);
             if (tempSum == null || tempSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
@@ -515,7 +516,7 @@ public class CoreFunc {
             }
 
             //Step5. 对Decoy进行打分
-            scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
+            decoyData = scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
             dataList.add(decoyData);
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
@@ -545,7 +546,7 @@ public class CoreFunc {
                 return;
             }
 
-            scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+            dataDO = scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
             DataSumDO sum = judge(dataDO);
 
             sumList.add(sum);
@@ -639,7 +640,7 @@ public class CoreFunc {
             sum.setRealRt(finalPgs.getRt());
             sum.setNearestRt(finalPgs.getNearestRt());
             sum.setSum(finalPgs.getIntensitySum());
-            sum.setTotalIons(finalPgs.getTotalIons());
+            sum.setIons50(finalPgs.getIons50());
             dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
             sum.setStatus(IdentifyStatus.SUCCESS.getCode());
         } else {

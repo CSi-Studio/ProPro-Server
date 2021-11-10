@@ -48,7 +48,9 @@ public class DataDO extends BaseDO {
 
     List<PeakGroupScore> scoreList;
 
-    int[] ionsCounts; //用于存储每一张Spectrum的ionsCount数目
+    int[] ions300; //用于存储每一张Spectrum的碎片强度值大于300的碎片数目
+
+    int[] ions50; //用于存储每一张Spectrum的碎片强度值大于0的碎片数目
 
     //压缩后的rt列表,对应rtArray
     byte[] rtBytes;

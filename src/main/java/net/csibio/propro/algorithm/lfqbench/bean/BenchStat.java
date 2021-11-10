@@ -8,9 +8,11 @@ import java.util.List;
 
 @Data
 public class BenchStat<T> {
-
-
+    
     long identifyNumA; //A组鉴定数(唯一肽段)
+    long humanA; //A组鉴定的Human蛋白
+    long yeastA; //A组鉴定的Yeast蛋白
+    long ecoliA; //A组鉴定的Ecoli蛋白
     long identifyProteinNumA; //A组鉴定数(唯一肽段)
     double missingRatioA; //A组缺失率,缺失值/总数
     int hit1A; //单次命中
@@ -18,6 +20,9 @@ public class BenchStat<T> {
     int hit3A; //三次命中
 
     long identifyNumB; //B组鉴定数(唯一肽段)
+    long humanB; //B组鉴定的Human蛋白
+    long yeastB; //B组鉴定的Yeast蛋白
+    long ecoliB; //B组鉴定的Ecoli蛋白
     long identifyProteinNumB; //B组鉴定数(唯一肽段)
     double missingRatioB;  //B组缺失率,缺失值/总数
     int hit1B; //单次命中

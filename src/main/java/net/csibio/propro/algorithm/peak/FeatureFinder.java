@@ -365,10 +365,11 @@ public class FeatureFinder {
                 totalXic += intensity;
             }
         }
-        int[] ionsCounts = unSearchPeakGroup.getIonsCount();
-        Double[] smoothIonsCounts = unSearchPeakGroup.getSmoothIonsCount();
+        int[] ions300 = unSearchPeakGroup.getIons300();
+        int[] ions50 = unSearchPeakGroup.getIons50();
+        Double[] ions300Smooth = unSearchPeakGroup.getIons300Smooth();
 
-        Set<String> max3Ions = unSearchPeakGroup.getCoord().getFragments().subList(0, 3).stream().map(FragmentInfo::getCutInfo).collect(Collectors.toSet());
+        Set<String> max6Ions = unSearchPeakGroup.getCoord().getFragments().subList(0, 6).stream().map(FragmentInfo::getCutInfo).collect(Collectors.toSet());
         List<PeakGroup> peakGroupList = new ArrayList<>();
         while (true) {
             PeakGroup peakGroup = new PeakGroup();
@@ -408,14 +409,14 @@ public class FeatureFinder {
                         if (binarySearchIndex == 0) {
                             bestRtIndex = 0;
                         } else {
-                            double left = smoothIonsCounts[binarySearchIndex - 1];
-                            double right = smoothIonsCounts[binarySearchIndex];
+                            double left = ions300Smooth[binarySearchIndex - 1];
+                            double right = ions300Smooth[binarySearchIndex];
                             bestRtIndex = left > right ? (binarySearchIndex - 1) : binarySearchIndex;
                         }
                     } else {
                         bestRtIndex = binarySearchIndex;
                     }
-                    peakGroup.setTotalIons(ionsCounts[bestRtIndex]);
+                    peakGroup.setIons50(ions50[bestRtIndex]); //特别注意,最高点的碎片值使用的是Ions50而不是Ions300,Ions300仅用于选峰
                     peakGroup.setNearestRt(unSearchPeakGroup.getFloatRtArray()[bestRtIndex]);
                     break;
                 }
@@ -440,7 +441,7 @@ public class FeatureFinder {
                 Double[] intArray = unSearchPeakGroup.getIntensitiesMap().get(cutInfo);
 
                 //库中排名前3的碎片离子在最高峰处的信号不能为0,否则直接忽略
-                if (max3Ions.contains(cutInfo)) {
+                if (max6Ions.contains(cutInfo)) {
                     if (intArray[bestRtIndex] == 0d) {
 //                        log.info("精彩的判定:" + unSearchPeakGroup.getCoord().getPeptideRef());
                         hit = false;

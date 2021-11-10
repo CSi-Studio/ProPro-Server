@@ -5,6 +5,7 @@ import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.constants.constant.IsotopeConstants;
+import net.csibio.propro.domain.bean.common.IntegerPair;
 import net.csibio.propro.domain.bean.score.BYSeries;
 import net.csibio.propro.domain.bean.score.IntegrateWindowMzIntensity;
 import net.csibio.propro.domain.bean.score.PeakGroup;
@@ -223,25 +224,44 @@ public class DIAScorer {
 //        scores.put(ScoreType.IonsCountWeightScore.getName(), ionsCount * 1.0 / sequence.length(), scoreTypes);
     }
 
-    public int calcTotalIons(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge) {
-        return calcTotalIons(spectrumMzArray, spectrumIntArray, unimodHashMap, sequence, charge, 300, Float.MAX_VALUE);
+    public IntegerPair calcTotalIons(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge) {
+        return calcTotalIons(spectrumMzArray, spectrumIntArray, unimodHashMap, sequence, charge, 0f, 300f, Float.MAX_VALUE);
     }
 
-    public int calcTotalIons(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge, float minIntensity, float maxIntensity) {
+    public IntegerPair calcTotalIons(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge, float minIntensity, float minIntensity2, float maxIntensity) {
         //计算理论值
-        int count = 0;
+        int totalCount1 = 0;
+        int totalCount2 = 0;
         for (int i = 1; i <= charge; i++) {
             BYSeries bySeries = fragmentFactory.getBYSeries(unimodHashMap, sequence, i);
-            List<Double> bSeriesList = bySeries.getBSeries();
-            int bSeriesScore = getSeriesScore(bSeriesList, spectrumMzArray, spectrumIntArray, minIntensity, maxIntensity);
+            List<Double> totalIons = new ArrayList<>();
+            totalIons.addAll(bySeries.getBSeries());
+            totalIons.addAll(bySeries.getYSeries());
 
-            List<Double> ySeriesList = bySeries.getYSeries();
-            int ySeriesScore = getSeriesScore(ySeriesList, spectrumMzArray, spectrumIntArray, minIntensity, maxIntensity);
+            int count1 = 0;
+            int count2 = 0;
+            for (double seriesMz : totalIons) {
+                Double left = seriesMz - 0.015;
+                Double right = seriesMz + 0.015;
 
-            count += (bSeriesScore + ySeriesScore);
+                IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left.floatValue(), right.floatValue());
+                if (mzIntensity.isSignalFound() &&
+                        (Math.abs(seriesMz - mzIntensity.getMz()) * 1000000 / seriesMz) < Constants.DIA_BYSERIES_PPM_DIFF &&
+                        mzIntensity.getIntensity() > minIntensity && mzIntensity.getIntensity() <= maxIntensity) {
+                    if (mzIntensity.getIntensity() > minIntensity) {
+                        count1++;
+                    }
+                    if (mzIntensity.getIntensity() > minIntensity2) {
+                        count2++;
+                    }
+                }
+            }
+
+            totalCount1 += count1;
+            totalCount2 += count2;
         }
 
-        return count;
+        return new IntegerPair(totalCount1, totalCount2);
     }
 
     private List<Double> getIsotopePercent(List<String> isotopeLog) {
@@ -321,31 +341,5 @@ public class DIAScorer {
             }
         }
         return result;
-    }
-
-    /**
-     * scoreForAll unit of BYSeries scores
-     *
-     * @param seriesList       ySeriesList or bSeriesList
-     * @param spectrumMzArray  mzArray of certain spectrum
-     * @param spectrumIntArray intArray of certain spectrum
-     * @return scoreForAll of b or y
-     */
-    private int getSeriesScore(List<Double> seriesList, float[] spectrumMzArray, float[] spectrumIntArray, float minIntensity, float maxIntensity) {
-        int seriesScore = 0;
-        for (double seriesMz : seriesList) {
-//            Double left = seriesMz - Constants.DIA_EXTRACT_WINDOW;
-//            Double right = seriesMz + Constants.DIA_EXTRACT_WINDOW;
-            Double left = seriesMz - 0.015;
-            Double right = seriesMz + 0.015;
-
-            IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left.floatValue(), right.floatValue());
-            if (mzIntensity.isSignalFound() &&
-                    (Math.abs(seriesMz - mzIntensity.getMz()) * 1000000 / seriesMz) < Constants.DIA_BYSERIES_PPM_DIFF &&
-                    mzIntensity.getIntensity() > minIntensity && mzIntensity.getIntensity() <= maxIntensity) {
-                seriesScore++;
-            }
-        }
-        return seriesScore;
     }
 }

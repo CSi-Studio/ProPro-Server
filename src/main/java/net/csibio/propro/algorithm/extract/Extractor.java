@@ -13,6 +13,7 @@ import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.AnyPair;
+import net.csibio.propro.domain.bean.common.IntegerPair;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
@@ -84,6 +85,7 @@ public class Extractor {
         try {
             parser = new DIAParser(exp.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
             rtMap = parser.getSpectrumsByRtRange(index.getStartPtr(), index.getRts(), index.getMzs(), index.getInts(), (float) coord.getRtStart(), (float) coord.getRtEnd());
+//            rtMap = parser.getSpectrums(index.getStartPtr(), index.getEndPtr(), index.getRts(), index.getMzs(), index.getInts());
         } catch (Exception e) {
             log.error(e.getMessage());
             return Result.Error(ResultCode.PARSE_ERROR);
@@ -136,7 +138,7 @@ public class Extractor {
             coord.setRtRange(-1, 99999);
         } else {
             double targetRt = exp.getIrt().getSi().realRt(rt);
-            coord.setRtRange(targetRt - 500, targetRt + 500);
+            coord.setRtRange(targetRt - 300, targetRt + 300);
         }
 
         Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(exp, coord);
@@ -294,7 +296,8 @@ public class Extractor {
 
     public void calcIonsCount(DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap) {
         String maxIon = coord.getFragments().get(0).getCutInfo();
-        int[] ionsCount = new int[dataDO.getRtArray().length];
+        int[] ions50 = new int[dataDO.getRtArray().length];
+        int[] ions300 = new int[dataDO.getRtArray().length];
         for (int i = 0; i < dataDO.getRtArray().length; i++) {
             MzIntensityPairs pairs = rtMap.get(dataDO.getRtArray()[i]);
             float[] intensities = dataDO.getIntMap().get(maxIon); //获取该spectrum中maxIon的强度列表
@@ -304,10 +307,13 @@ public class Extractor {
             } else {
                 maxIonIntensityInThisSpectrum = intensities[i];
             }
-            ionsCount[i] = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 300f, maxIonIntensityInThisSpectrum);
+            IntegerPair pair = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 50f, 300f, maxIonIntensityInThisSpectrum);
+            ions50[i] = pair.left();
+            ions300[i] = pair.right();
         }
 
-        dataDO.setIonsCounts(ionsCount);
+        dataDO.setIons50(ions50);
+        dataDO.setIons300(ions300);
     }
 
     /**

@@ -3,6 +3,7 @@ package net.csibio.propro.algorithm.score;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
+import net.csibio.propro.algorithm.core.CoreFunc;
 import net.csibio.propro.algorithm.fitter.LinearFitter;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.*;
@@ -73,12 +74,14 @@ public class Scorer {
     Lda lda;
     @Autowired
     Scorer scorer;
+    @Autowired
+    CoreFunc coreFunc;
 
-    public void scoreForOne(ExperimentDO exp, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public DataDO scoreForOne(ExperimentDO exp, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
 
         if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
             dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
-            return;
+            return dataDO;
         }
 //        dataDO.setIsUnique(peptide.getIsUnique());
 
@@ -86,11 +89,21 @@ public class Scorer {
         //重要步骤,"或许是目前整个工程最重要的核心算法--选峰算法."--陆妙善
         PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchPeakGroups(dataDO, coord, params.getMethod().getIrt().getSs());
         if (!peakGroupListWrapper.isFeatureFound()) {
-            dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
-            if (!dataDO.getDecoy()) {
-//                log.info("作为库中真肽段居然一个峰组都没有找到,也是牛逼：PeptideRef: " + dataDO.getPeptideRef());
+            //如果没有信号,首先扩大搜索范围
+            coord.setRtRange(coord.getRtStart() - 200, coord.getRtEnd() + 200);
+            dataDO = coreFunc.extractOne(coord, rtMap, params);
+            if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
+                dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
+                return dataDO;
             }
-            return;
+            peakGroupListWrapper = peakPicker.searchPeakGroups(dataDO, coord, params.getMethod().getIrt().getSs());
+            if (!peakGroupListWrapper.isFeatureFound()) {
+                dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
+                if (!dataDO.getDecoy()) {
+//                log.info("作为库中真肽段居然一个峰组都没有找到,也是牛逼：PeptideRef: " + dataDO.getPeptideRef());
+                }
+                return dataDO;
+            }
         }
 
         List<String> scoreTypes = params.getMethod().getScore().getScoreTypes();
@@ -109,7 +122,7 @@ public class Scorer {
         });
 
         HashMap<Double, MzIntensityPairs> peakSpecMap = new HashMap<>();
-        int maxIonsCount = Arrays.stream(dataDO.getIonsCounts()).max().getAsInt();
+        int maxIonsCount = Arrays.stream(dataDO.getIons50()).max().getAsInt();
 
 //        calcNearestRtAndTotalIons(dataDO, coord, coord.getFragments().get(0).getCutInfo(), peakGroupList, rtMap);
 
@@ -118,7 +131,7 @@ public class Scorer {
         }
 
         //如果数组长度超过20,则筛选ions数目最大的20个碎片
-        peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getTotalIons).reversed()).toList();
+        peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getIons50).reversed()).toList();
         if (peakGroupList.size() > 20) {
             peakGroupList = peakGroupList.subList(0, 20);
         }
@@ -149,7 +162,7 @@ public class Scorer {
 //            }
 
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, peakGroupScore, scoreTypes);
-            peakGroupScore.put(ScoreType.IonsCountDeltaScore, (maxIonsCount - peakGroup.getTotalIons()) * 1d / maxIonsCount, scoreTypes);
+            peakGroupScore.put(ScoreType.IonsCountDeltaScore, (maxIonsCount - peakGroup.getIons50()) * 1d / maxIonsCount, scoreTypes);
             initScorer.calcInitScore(peakGroupScore, scoreTypes);
             peakGroupScore.put(ScoreType.WeightedTotalScore, peakGroupScore.total(), scoreTypes);
 //            if (scoreTypes.contains(ScoreType.NormRtScore.getName())) {
@@ -163,18 +176,19 @@ public class Scorer {
             peakGroupScore.setMaxIon(peakGroup.getMaxIon());
             peakGroupScore.setMaxIonIntensity(peakGroup.getMaxIonIntensity());
             peakGroupScore.setIonIntensity(peakGroup.getIonIntensity());
-            peakGroupScore.setTotalIons(peakGroup.getTotalIons());
+            peakGroupScore.setIons50(peakGroup.getIons50());
             peakGroupScore.setNearestRt(peakGroup.getNearestRt());
             peakGroupScoreList.add(peakGroupScore);
         }
 
         if (peakGroupScoreList.size() == 0) {
             dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
-            return;
+            return dataDO;
         }
 
         dataDO.setStatus(IdentifyStatus.WAIT.getCode());
         dataDO.setScoreList(peakGroupScoreList);
+        return dataDO;
     }
 
     public void strictScoreForOne(DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, double shapeScoreThreshold) {
@@ -251,7 +265,7 @@ public class Scorer {
         }
         double maxIonsCount = -1;
         for (PeakGroupScore peakGroupScore : data.getScoreList()) {
-            double currentIonsCount = peakGroupScore.getTotalIons();
+            double currentIonsCount = peakGroupScore.getIons50();
             if (currentIonsCount > maxIonsCount) {
                 maxIonsCount = currentIonsCount;
             }
@@ -318,7 +332,7 @@ public class Scorer {
                 if (topFeatureScore.getChanged() && !peptideScore.getDecoy()) {
                     changedPeptideRefList.add(peptideScore.getPeptideRef());
                 }
-                bestFeatureScores.setTotalIons(topFeatureScore.getTotalIons());
+                bestFeatureScores.setIons50(topFeatureScore.getIons50());
                 bestFeatureScores.setMainScore(topFeatureScore.get(targetScoreType, scoreTypes));
                 bestFeatureScores.setScores(topFeatureScore.getScores());
                 bestFeatureScores.setRt(topFeatureScore.getRt());
@@ -378,10 +392,10 @@ public class Scorer {
         int selectPeakGroupIndex = bestIndex;
         if (candidateIndexList.size() > 0) {
             //BY离子分与isotope分均高的才切换
-            double bestBYIons = peakGroupScoreList.get(bestIndex).getTotalIons();
+            double bestBYIons = peakGroupScoreList.get(bestIndex).getIons50();
             double bestIsotope = peakGroupScoreList.get(bestIndex).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
             for (Integer index : candidateIndexList) {
-                double currentBYIons = peakGroupScoreList.get(index).getTotalIons();
+                double currentBYIons = peakGroupScoreList.get(index).getIons50();
                 double currentIsotope = peakGroupScoreList.get(index).get(ScoreType.IsotopeCorrelationScore, scoreTypes);
                 //切换条件, 碎片数更大,同时Isotope分数差值不能超过0.1
                 boolean condition1 = (currentBYIons > bestBYIons && (currentIsotope > bestIsotope || (bestIsotope - currentIsotope < 0.02 * (currentBYIons - bestBYIons))));
@@ -410,8 +424,8 @@ public class Scorer {
         }
 
         PeakGroupScore pgs = peakGroupScoreList.get(selectPeakGroupIndex);
-        List<Integer> sorted = peakGroupScoreList.stream().map(PeakGroupScore::getTotalIons).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
-        int index = sorted.indexOf(pgs.getTotalIons());
+        List<Integer> sorted = peakGroupScoreList.stream().map(PeakGroupScore::getIons50).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+        int index = sorted.indexOf(pgs.getIons50());
 
         //排名连前五都没有混到
         if (index > 5 && pgs.getTotalScore() >= minTotalScore) {
@@ -432,11 +446,12 @@ public class Scorer {
             AnyPair<Float, Float> nearestRtPair = blockIndexService.getNearestSpectrumByRt(rtMap, peakGroup.getApexRt());
             float maxIntensityLeft = maxIonsIntArray == null ? Float.MAX_VALUE : maxIonsIntArray[rtList.indexOf(nearestRtPair.getLeft())];
             float maxIntensityRight = maxIonsIntArray == null ? Float.MAX_VALUE : maxIonsIntArray[rtList.indexOf(nearestRtPair.getRight())];
-            int left = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getLeft()).getMzArray(), rtMap.get(nearestRtPair.getLeft()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 300, maxIntensityLeft);
-            int right = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getRight()).getMzArray(), rtMap.get(nearestRtPair.getRight()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 300, maxIntensityRight);
+
+            int left = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getLeft()).getMzArray(), rtMap.get(nearestRtPair.getLeft()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 50, 300, maxIntensityLeft).left();
+            int right = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getRight()).getMzArray(), rtMap.get(nearestRtPair.getRight()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 50, 300, maxIntensityRight).left();
             float bestRt = right > left ? nearestRtPair.getRight() : nearestRtPair.getLeft();
             int ionCount = Math.max(right, left);
-            peakGroup.setTotalIons(ionCount);
+            peakGroup.setIons50(ionCount);
             peakGroup.setNearestRt(bestRt);
         }
     }

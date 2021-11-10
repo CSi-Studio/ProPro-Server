@@ -46,7 +46,7 @@ public class DataSumDO extends BaseDO {
     //Intensity Sum
     Double sum;
 
-    Integer totalIons;
+    Integer ions50;
 
     //最终的定量值
     String fragIntFeature;
@@ -55,7 +55,7 @@ public class DataSumDO extends BaseDO {
         DataSumDO dataSum = new DataSumDO();
         dataSum.setPeptideRef(peptideRef);
         dataSum.setProteins(proteins);
-        dataSum.setTotalIons(selectPeakGroup.getTotalIons());
+        dataSum.setIons50(selectPeakGroup.getIons50());
         dataSum.setSum(selectPeakGroup.getIntensitySum());
         dataSum.setRealRt(selectPeakGroup.getRt());
         dataSum.setNearestRt(selectPeakGroup.getNearestRt());

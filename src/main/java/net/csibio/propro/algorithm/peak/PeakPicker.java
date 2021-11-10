@@ -93,26 +93,30 @@ public class PeakPicker {
 
         UnSearchPeakGroup unSearchPeakGroup = new UnSearchPeakGroup();
         //计算IonCount对应的值
-        Double[] ionCountIntensity = ArrayUtil.intToDouble(data.getIonsCounts());
-        float[] ionCountIntensityFloat = ArrayUtil.intTofloat(data.getIonsCounts());
-        Double[] ionCountSmoothIntensity = gaussFilter.filter(rtArray, ionCountIntensity, ss);
+        Double[] ions300 = ArrayUtil.intToDouble(data.getIons300());
+        float[] ions50Float = ArrayUtil.intTofloat(data.getIons50());
+        float[] ions300Float = ArrayUtil.intTofloat(data.getIons300());
+        Double[] ions300Smooth = gaussFilter.filter(rtArray, ions300, ss); //使用ions300进行平滑选峰
 
-        unSearchPeakGroup.setIonsCount(data.getIonsCounts());
-        unSearchPeakGroup.setSmoothIonsCount(ionCountSmoothIntensity);
+        unSearchPeakGroup.setIons50(data.getIons50());
+        unSearchPeakGroup.setIons300(data.getIons300());
+        unSearchPeakGroup.setIons300Smooth(ions300Smooth);
 
-        RtIntensityPairsDouble maxPeaksForIonCount = peakPicker.pickMaxPeak(rtArray, ionCountSmoothIntensity);
+        RtIntensityPairsDouble maxPeaksForIonCount = peakPicker.pickMaxPeak(rtArray, ions300Smooth);
         if (maxPeaksForIonCount == null || maxPeaksForIonCount.getRtArray() == null) { //如果IonsCount没有找到任何峰,则直接认为没有鉴定成功
             log.warn("离子碎片定位峰没有找到任何信号,PeptideRef:" + data.getPeptideRef());
             return new PeakGroupListWrapper(false);
         }
-        float[] ionCountFloat = new float[ionCountSmoothIntensity.length];
-        for (int i = 0; i < ionCountSmoothIntensity.length; i++) {
-            ionCountFloat[i] = ionCountSmoothIntensity[i].floatValue();
+        float[] ionCountFloat = new float[ions300Smooth.length];
+        for (int i = 0; i < ions300Smooth.length; i++) {
+            ionCountFloat[i] = ions300Smooth[i].floatValue();
         }
-        data.getIntMap().put("S", ionCountFloat);
-        data.getIntMap().put("O", ionCountIntensityFloat);
-        data.getCutInfoMap().put("S", 0f);
-        data.getCutInfoMap().put("O", 0f);
+        data.getIntMap().put("Ions300S", ionCountFloat);
+        data.getIntMap().put("Ions300", ions300Float);
+        data.getIntMap().put("Ions50", ions50Float);
+        data.getCutInfoMap().put("Ions300S", 0f);
+        data.getCutInfoMap().put("Ions300", 0f);
+        data.getCutInfoMap().put("Ions50", 0f);
 
         List<DoublePair> pairs = maxPeaksForIonCount.toPairs();
 //        pairs = pairs.stream().sorted(Comparator.comparingDouble(DoublePair::right).reversed()).collect(Collectors.toList()); //按照强度比从大到小排序

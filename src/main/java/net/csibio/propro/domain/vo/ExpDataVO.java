@@ -59,7 +59,7 @@ public class ExpDataVO {
     //Intensity Sum
     Double sum;
 
-    Integer totalIons;
+    Integer ions50;
 
     //最终的定量值
     String fragIntFeature;

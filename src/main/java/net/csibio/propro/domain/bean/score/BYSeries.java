@@ -10,5 +10,4 @@ public class BYSeries {
     List<Double> bSeries;
 
     List<Double> ySeries;
-
 }

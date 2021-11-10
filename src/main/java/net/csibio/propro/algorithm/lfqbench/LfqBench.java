@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -58,6 +59,33 @@ public class LfqBench {
         List<PeptideRatio> humanPoints = new ArrayList<>();
         List<PeptideRatio> yeastPoints = new ArrayList<>();
         List<PeptideRatio> ecoliPoints = new ArrayList<>();
+        AtomicLong humanA = new AtomicLong(0);
+        AtomicLong yeastA = new AtomicLong(0);
+        AtomicLong ecoliA = new AtomicLong(0);
+        AtomicLong humanB = new AtomicLong(0);
+        AtomicLong yeastB = new AtomicLong(0);
+        AtomicLong ecoliB = new AtomicLong(0);
+
+        statForA.getDataMap().values().forEach(sum -> {
+            if (sum.getProteins().get(0).endsWith(HUMAN)) {
+                humanA.getAndIncrement();
+            } else if (sum.getProteins().get(0).endsWith(YEAS8)) {
+                yeastA.getAndIncrement();
+            } else {
+                ecoliA.getAndIncrement();
+            }
+        });
+
+        statForB.getDataMap().values().forEach(sum -> {
+            if (sum.getProteins().get(0).endsWith(HUMAN)) {
+                humanB.getAndIncrement();
+            } else if (sum.getProteins().get(0).endsWith(YEAS8)) {
+                yeastB.getAndIncrement();
+            } else {
+                ecoliB.getAndIncrement();
+            }
+        });
+
         statForA.getDataMap().forEach((key, a) -> {
             if (statForB.getDataMap().containsKey(key)) {
                 DataSum b = statForB.getDataMap().get(key);
@@ -99,6 +127,12 @@ public class LfqBench {
         points.setHumanStat(human);
         points.setYeastStat(yeast);
         points.setEcoliStat(ecoli);
+        points.setHumanA(humanA.get());
+        points.setYeastA(yeastA.get());
+        points.setEcoliA(ecoliA.get());
+        points.setHumanB(humanB.get());
+        points.setYeastB(yeastB.get());
+        points.setEcoliB(ecoliB.get());
         return Result.OK(points);
     }
 }

@@ -55,8 +55,8 @@ public class RtNormalizerScorer {
             xicScorer.calcXICScores(peakGroup, normedLibIntMap, scores, scoreTypes4Irt);
 //            xicScorer.calculateLogSnScore(peakGroup, scores, defaultScoreTypes);
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scores, scoreTypes4Irt);
-            scores.put(ScoreType.IonsCountDeltaScore.getName(), (maxIonsCount - peakGroup.getTotalIons()) * 1d / maxIonsCount, scoreTypes4Irt);
-            double deltaWeight = (maxIonsCount - peakGroup.getTotalIons()) * 1d / maxIonsCount;
+            scores.put(ScoreType.IonsCountDeltaScore.getName(), (maxIonsCount - peakGroup.getIons50()) * 1d / maxIonsCount, scoreTypes4Irt);
+            double deltaWeight = (maxIonsCount - peakGroup.getIons50()) * 1d / maxIonsCount;
             scores.put(ScoreType.IonsCountDeltaScore, deltaWeight, scoreTypes4Irt);
 
             double ldaScore = calculateLdaPrescore(scores, scoreTypes4Irt);

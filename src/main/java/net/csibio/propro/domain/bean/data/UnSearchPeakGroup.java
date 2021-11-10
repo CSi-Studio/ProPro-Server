@@ -28,7 +28,8 @@ public class UnSearchPeakGroup {
     //IonCount相关数据独立列出
     List<DoublePair> maxPeaksForIonCount; //left为rt, right为平滑后的ionsCount
     List<IonPeak> ionPeaksForIonCount;
-    int[] ionsCount; //原始的IonsCount,数组长度与rtArray一致且一一对应
-    Double[] smoothIonsCount; //平滑后的IonsCount,数组长度与rtArray一致且一一对应
+    int[] ions50; //原始的ions50,数组长度与rtArray一致且一一对应
+    int[] ions300; //原始的ions300,数组长度与rtArray一致且一一对应
+    Double[] ions300Smooth; //平滑后的IonsCount,数组长度与rtArray一致且一一对应
     double[] noise1000ForIonCount;
 }

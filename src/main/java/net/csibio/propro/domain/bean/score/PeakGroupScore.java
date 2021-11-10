@@ -33,7 +33,7 @@ public class PeakGroupScore extends BaseScores {
     String fragIntFeature;
 
     //原BYSeries分数,ApexRt处所有的可能的离子碎片数目
-    Integer totalIons;
+    Integer ions50;
     //强度最高的碎片cutInfo
     String maxIon;
     //强度最高的碎片的强度
@@ -63,10 +63,10 @@ public class PeakGroupScore extends BaseScores {
                 allHit.set(false);
             }
         });
-        return allHit.get() && (this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) +
-                this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes())) / 2 > 0.8 &&
-                this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes()) > 0.9 &&
-                this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes()) > 0.8;
+        boolean condition1 = (this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) + this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes())) / 2 > 0.8;
+        boolean condition2 = this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes()) > 0.9;
+        boolean condition3 = this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes()) > 0.6;
+        return allHit.get() && condition1 && condition2 && condition3;
     }
 
     public double total() {
