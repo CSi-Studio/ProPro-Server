@@ -155,4 +155,18 @@ public class CompressUtil {
         byteBuffer.clear();
         return floatValues;
     }
+
+    public static int[] transToInt(byte[] value) {
+        ByteBuffer byteBuffer = ByteBuffer.wrap(value);
+        byteBuffer = ByteBuffer.wrap(CompressUtil.zlibDecompress(byteBuffer.array()));
+
+        IntBuffer ints = byteBuffer.asIntBuffer();
+        int[] intValues = new int[ints.capacity()];
+        for (int i = 0; i < ints.capacity(); i++) {
+            intValues[i] = ints.get(i);
+        }
+
+        byteBuffer.clear();
+        return intValues;
+    }
 }

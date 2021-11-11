@@ -146,7 +146,7 @@ public class PeakPicker {
         if (pairs.size() == 0) {
             return new PeakGroupListWrapper(false);
         }
-        unSearchPeakGroup.setMaxPeaksForIonCount(pairs);
+        unSearchPeakGroup.setMaxPeaksForIons300(pairs);
 
         //对每一个片段离子选峰
         double libIntSum = MathUtil.sum(libIntMap.values());
@@ -181,7 +181,7 @@ public class PeakPicker {
         unSearchPeakGroup.setCoord(coord);
         List<PeakGroup> peakGroups = featureFinder.findPeakGroupsV2(unSearchPeakGroup);
         if (peakGroups.size() == 0) {
-            log.error("居然没有匹配到,蛋疼:" + data.getPeptideRef());
+//            log.error("居然没有匹配到,蛋疼:" + data.getPeptideRef());
         }
 
         featureResult.setList(peakGroups);

@@ -298,7 +298,7 @@ public class FeatureFinder {
 
             //如果PeakGroup不在IonCount最优峰范围内,直接忽略
             boolean hit = false;
-            List<DoublePair> pairs = unSearchPeakGroup.getMaxPeaksForIonCount();
+            List<DoublePair> pairs = unSearchPeakGroup.getMaxPeaksForIons300();
             for (int k = 0; k < pairs.size(); k++) {
                 if (pairs.get(k).left() <= bestRight && pairs.get(k).left() >= bestLeft) {
                     hit = true;
@@ -397,25 +397,43 @@ public class FeatureFinder {
 
             //如果PeakGroup不在IonCount最优峰范围内,直接忽略
             boolean hit = false;
-            List<DoublePair> pairs = unSearchPeakGroup.getMaxPeaksForIonCount();
+            List<DoublePair> pairs = unSearchPeakGroup.getMaxPeaksForIons300();
             int bestRtIndex = -1;
             for (int k = 0; k < pairs.size(); k++) {
-                if (pairs.get(k).left() <= bestRight && pairs.get(k).left() >= bestLeft) {
+                double ionsApexRt = pairs.get(k).left();
+                if (ionsApexRt <= bestRight && ionsApexRt >= bestLeft) {
                     hit = true;
-                    peakGroup.setApexRt(pairs.get(k).left());
-                    int binarySearchIndex = Arrays.binarySearch(unSearchPeakGroup.getRtArray(), pairs.get(k).left());
-                    if (binarySearchIndex < 0) {
-                        binarySearchIndex = -binarySearchIndex - 1;
-                        if (binarySearchIndex == 0) {
-                            bestRtIndex = 0;
-                        } else {
-                            double left = ions300Smooth[binarySearchIndex - 1];
-                            double right = ions300Smooth[binarySearchIndex];
-                            bestRtIndex = left > right ? (binarySearchIndex - 1) : binarySearchIndex;
+                    peakGroup.setApexRt(ionsApexRt);
+                    int maxIons300 = -1;
+                    for (int j = leftIndex; j <= rightIndex; j++) {
+                        if (ions300[j] > maxIons300) {
+                            maxIons300 = ions300[j];
+                            bestRtIndex = j;
+                        } else if (ions300[j] == maxIons300) { //如果ions300的值相同,则比较ions50的值
+                            if (ions50[j] > ions50[bestRtIndex]) {
+                                maxIons300 = ions300[j];
+                                bestRtIndex = j;
+                            } else if (ions50[j] == ions50[bestRtIndex]) {
+                                if (Math.abs(unSearchPeakGroup.getRtArray()[bestRtIndex] - apexRt) > Math.abs(unSearchPeakGroup.getRtArray()[j] - apexRt)) {
+                                    maxIons300 = ions300[j];
+                                    bestRtIndex = j;
+                                }
+                            }
                         }
-                    } else {
-                        bestRtIndex = binarySearchIndex;
                     }
+//                    int binarySearchIndex = Arrays.binarySearch(unSearchPeakGroup.getRtArray(), ionsApexRt);
+//                    if (binarySearchIndex < 0) {
+//                        binarySearchIndex = -binarySearchIndex - 1;
+//                        if (binarySearchIndex == 0) {
+//                            bestRtIndex = 0;
+//                        } else {
+//                            double left = ions300[binarySearchIndex - 1];
+//                            double right = ions300[binarySearchIndex];
+//                            bestRtIndex = left > right ? (binarySearchIndex - 1) : binarySearchIndex;
+//                        }
+//                    } else {
+//                        bestRtIndex = binarySearchIndex;
+//                    }
                     peakGroup.setIons50(ions50[bestRtIndex]); //特别注意,最高点的碎片值使用的是Ions50而不是Ions300,Ions300仅用于选峰
                     peakGroup.setNearestRt(unSearchPeakGroup.getFloatRtArray()[bestRtIndex]);
                     break;

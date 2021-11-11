@@ -12,19 +12,28 @@ public class DataUtil {
         data.setRtArray(null);
         data.setIntMap(null);
         data.setCutInfoMap(null);
+        data.setIons50(null);
+        data.setIons300(null);
     }
 
     public static void clearCompressed(DataDO data) {
         data.setRtBytes(null);
         data.setIntMapBytes(null);
         data.setCutInfosFeature(null);
+        data.setIons50Bytes(null);
+        data.setIons300Bytes(null);
     }
 
     public static void compress(DataDO data) {
         if (data.getRtArray() != null) {
             data.setRtBytes(CompressUtil.compressedToBytes(data.getRtArray()));
         }
-
+        if (data.getIons50() != null) {
+            data.setIons50Bytes(CompressUtil.compressedToBytes(data.getIons50()));
+        }
+        if (data.getIons300() != null) {
+            data.setIons300Bytes(CompressUtil.compressedToBytes(data.getIons300()));
+        }
         if (data.getIntMap() != null && data.getIntMap().size() > 0) {
             HashMap<String, byte[]> intMap = new HashMap<>();
             data.getIntMap().forEach((key, value) -> {
@@ -44,7 +53,12 @@ public class DataUtil {
         if (data.getRtBytes() != null) {
             data.setRtArray(CompressUtil.transToFloat(data.getRtBytes()));
         }
-
+        if (data.getIons50Bytes() != null) {
+            data.setIons50(CompressUtil.transToInt(data.getIons50Bytes()));
+        }
+        if (data.getIons300Bytes() != null) {
+            data.setIons300(CompressUtil.transToInt(data.getIons300Bytes()));
+        }
         if (data.getIntMapBytes() != null && data.getIntMapBytes().size() > 0) {
             HashMap<String, float[]> intensityMap = new HashMap<>();
             data.getIntMapBytes().forEach((key, value) -> {

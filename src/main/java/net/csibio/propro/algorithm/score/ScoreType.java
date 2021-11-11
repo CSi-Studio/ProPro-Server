@@ -49,10 +49,10 @@ public enum ScoreType {
     XcorrShapeWeighted("XcorrShapeWeighted", "var_XcorrShapeWeighted",
             "带权重的互相关序列最大值的平均值",
             true, true),
-    //    LibraryCorr("LibraryCorr", "var_LibraryCorr",
-//            "对experiment和library intensity算Pearson相关系",
-//            true, true),
-//    LibraryRsmd("LibraryRsmd", "var_LibraryRsmd",
+    LibraryCorr("LibraryCorr", "var_LibraryCorr",
+            "对experiment和library intensity算Pearson相关系",
+            true, true),
+    //    LibraryRsmd("LibraryRsmd", "var_LibraryRsmd",
 //            "对归一化后 库强度与实验强度的差平均值Avg(|LibInt-ExpInt|)",
 //            false, true),
     LibraryDotprod("LibraryDotprod", "var_LibraryDotprod",
@@ -216,7 +216,9 @@ public enum ScoreType {
         scoreTypes.add(ScoreType.XcorrCoelutionWeighted.getName());
         scoreTypes.add(ScoreType.XcorrShape.getName());
         scoreTypes.add(ScoreType.XcorrShapeWeighted.getName());
+        scoreTypes.add(ScoreType.LibraryCorr.getName());
         scoreTypes.add(ScoreType.LibraryDotprod.getName());
+
         return scoreTypes;
     }
 }

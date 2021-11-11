@@ -48,10 +48,10 @@ public class DataDO extends BaseDO {
 
     List<PeakGroupScore> scoreList;
 
-    int[] ions300; //用于存储每一张Spectrum的碎片强度值大于300的碎片数目
+    byte[] ions300Bytes;
 
-    int[] ions50; //用于存储每一张Spectrum的碎片强度值大于0的碎片数目
-
+    byte[] ions50Bytes;
+    
     //压缩后的rt列表,对应rtArray
     byte[] rtBytes;
     //压缩后的intensityMap,对应intensityMap
@@ -64,6 +64,10 @@ public class DataDO extends BaseDO {
     Map<String, float[]> intMap = new HashMap<>();  //key为cutInfo, value为对应的intensity值列表(也即该碎片的光谱图信息)
     @Transient
     Map<String, Float> cutInfoMap; //冗余的peptide切片信息,key为cutInfo,value为mz
+    @Transient
+    int[] ions300; //用于存储每一张Spectrum的碎片强度值大于300的碎片数目
+    @Transient
+    int[] ions50; //用于存储每一张Spectrum的碎片强度值大于0的碎片数目
 
     public DataDO() {
     }

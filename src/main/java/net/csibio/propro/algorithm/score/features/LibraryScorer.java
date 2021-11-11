@@ -1,8 +1,11 @@
 package net.csibio.propro.algorithm.score.features;
 
 import net.csibio.propro.algorithm.score.ScoreType;
+import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.options.DeveloperParams;
+import net.csibio.propro.utils.ScoreUtil;
 import org.apache.commons.math3.util.FastMath;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +37,7 @@ public class LibraryScorer {
         assert experimentIntensity.size() == normedLibIntMap.size();
 
         List<Double> normedLibInt = new ArrayList<>(normedLibIntMap.values());
-//        List<Double> normedExpInt = ScoreUtil.normalizeSumDouble(experimentIntensity, peakGroup.getPeakGroupInt());
+        List<Double> normedExpInt = ScoreUtil.normalizeSumDouble(experimentIntensity, peakGroup.getPeakGroupInt());
         //library_norm_manhattan
         //占比差距平均
 //        if (scoreTypes.contains(ScoreType.LibraryRsmd.getName())) {
@@ -55,21 +58,21 @@ public class LibraryScorer {
         }
         //library_corr pearson 相关系数
         //需要的前置变量：dotprod, sum, 2sum
-//        if (scoreTypes.contains(ScoreType.LibraryCorr.getName())) {
-//            if (DeveloperParams.USE_NEW_LIBRARY_SHIFT_SCORE) {
-//                scores.put(ScoreType.LibraryCorr.getName(), calculateLibraryShiftScore(normedLibInt, normedExpInt), scoreTypes);
-//            } else {
-//                double expDeno = experiment2Sum - experimentSum * experimentSum / normedLibInt.size();
-//                double libDeno = library2Sum - librarySum * librarySum / normedLibInt.size();
-//                if (expDeno <= Constants.MIN_DOUBLE || libDeno <= Constants.MIN_DOUBLE) {
-//                    scores.put(ScoreType.LibraryCorr.getName(), 0d, scoreTypes);
-//                } else {
-//                    double pearsonR = dotprod - experimentSum * librarySum / normedLibInt.size();
-//                    pearsonR /= FastMath.sqrt(expDeno * libDeno);
-//                    scores.put(ScoreType.LibraryCorr.getName(), pearsonR, scoreTypes);
-//                }
-//            }
-//        }
+        if (scoreTypes.contains(ScoreType.LibraryCorr.getName())) {
+            if (DeveloperParams.USE_NEW_LIBRARY_SHIFT_SCORE) {
+                scores.put(ScoreType.LibraryCorr.getName(), calculateLibraryShiftScore(normedLibInt, normedExpInt), scoreTypes);
+            } else {
+                double expDeno = experiment2Sum - experimentSum * experimentSum / normedLibInt.size();
+                double libDeno = library2Sum - librarySum * librarySum / normedLibInt.size();
+                if (expDeno <= Constants.MIN_DOUBLE || libDeno <= Constants.MIN_DOUBLE) {
+                    scores.put(ScoreType.LibraryCorr.getName(), 0d, scoreTypes);
+                } else {
+                    double pearsonR = dotprod - experimentSum * librarySum / normedLibInt.size();
+                    pearsonR /= FastMath.sqrt(expDeno * libDeno);
+                    scores.put(ScoreType.LibraryCorr.getName(), pearsonR, scoreTypes);
+                }
+            }
+        }
 
         double[] expSqrt = new double[experimentIntensity.size()];
         double[] libSqrt = new double[normedLibInt.size()];

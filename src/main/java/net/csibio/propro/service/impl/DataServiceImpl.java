@@ -81,18 +81,40 @@ public class DataServiceImpl implements DataService {
         if (overview == null) {
             return Result.Error(ResultCode.OVERVIEW_NOT_EXISTED);
         }
+
+        AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
+        params.setChangeCharge(changeCharge);
+        params.setOverviewId(overviewId);
+
         PeptideCoord coord = brother.toTargetPeptide();
         if (changeCharge) {
             if (brother.getCharge() == 2) {
                 coord.setMz(coord.getMz() * 2 / 3);
+                coord.setCharge(3);
+                coord.setPeptideRef(coord.getPeptideRef().replace("2", "3"));
             } else {
                 coord.setMz(coord.getMz() * 3 / 2);
+                coord.setCharge(2);
+                coord.setPeptideRef(coord.getPeptideRef().replace("3", "2"));
             }
         }
-        AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
-        params.setChangeCharge(changeCharge);
-        params.setOverviewId(overviewId);
+
         Result<ExpDataVO> result = extractor.predictOne(exp, overview, coord, params);
+        if (result.isFailed() && result.getErrorMessage().equals(ResultCode.BLOCK_INDEX_NOT_EXISTED.getCode())) {
+            if (changeCharge) {
+                if (brother.getCharge() == 2) {
+                    coord.setMz(coord.getMz() * 2);
+                    coord.setCharge(1);
+                    coord.setPeptideRef(coord.getPeptideRef().replace("2", "1"));
+                } else {
+                    coord.setMz(coord.getMz() * 3 / 4);
+                    coord.setCharge(4);
+                    coord.setPeptideRef(coord.getPeptideRef().replace("3", "4"));
+                }
+            }
+            result = extractor.predictOne(exp, overview, coord, params);
+        }
+
         return result;
     }
 }
