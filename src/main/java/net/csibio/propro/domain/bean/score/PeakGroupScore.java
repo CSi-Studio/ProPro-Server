@@ -72,25 +72,23 @@ public class PeakGroupScore extends BaseScores {
         double libDotProd = this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
         double libCorr = this.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
         double ionsCount = this.get(ScoreType.IonsCountDeltaScore, ScoreType.usedScoreTypes());
-        double coelutionAvg = (this.get(ScoreType.XcorrCoelution, ScoreType.usedScoreTypes()) + this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes())) / 2;
-//        double iso = this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes());
+        double coelutionWeight = this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes());
+        double iso = this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes());
 
         //Shape分和DotProd分数都十分优秀的进入筛选轮
-        boolean condition1 = shapeAvg > 0.8 && libCorr > 0.9 && libDotProd > 0.9 && ionsCount < 0.2;
+        boolean condition1 = shapeAvg > 0.8 && libCorr > 0.9 && libDotProd > 0.95 && ionsCount < 0.2 && iso > 0.9;
         if (condition1) {
             return true;
         }
 
-        boolean baseCondition = shapeAvg >= 0.7 && libCorr >= 0.7 && ionsCount <= 0.4;
-        //DotProd分数超优秀, IonsCount分超优秀, CoelutionAvg超优秀 可以适当放宽形状条件,这个在低信号的时候很有用
-        boolean condition2 = (libCorr >= 0.95 && ionsCount <= 0.05 && coelutionAvg <= 0.1) && baseCondition;
-        if (condition2) {
-            return true;
-        }
+//        boolean baseCondition = shapeAvg >= 0.7 && libCorr >= 0.7 && ionsCount <= 0.4;
+//        //DotProd分数超优秀, IonsCount分超优秀, CoelutionAvg超优秀 可以适当放宽形状条件,这个在低信号的时候很有用
+//        boolean condition2 = ((libCorr + libDotProd) / 2 >= 0.99 || coelutionWeight <= 0.05) && baseCondition;
+//        if (condition2) {
+//            return true;
+//        }
 
         return false;
-//        boolean condition3 = this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes()) > 0.6;
-//        return allHit.get() && condition1 && condition2;
     }
 
     public double total() {
@@ -98,7 +96,8 @@ public class PeakGroupScore extends BaseScores {
                 this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes()) +
                 this.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes()) +
                 this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes()) -
-                this.get(ScoreType.IonsCountDeltaScore, ScoreType.usedScoreTypes())
+                this.get(ScoreType.IonsCountDeltaScore, ScoreType.usedScoreTypes()) -
+                this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes())
                 ;
     }
 }

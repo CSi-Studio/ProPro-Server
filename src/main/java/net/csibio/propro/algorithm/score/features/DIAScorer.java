@@ -103,7 +103,7 @@ public class DIAScorer {
      * @param productChargeMap charge in peptide
      * @param scores           scoreForAll for JProphet
      */
-    public void calculateDiaIsotopeScores(PeakGroup peakGroupFeature, HashMap<String, Float> productMzMap, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Integer> productChargeMap, PeakGroupScore scores, List<String> scoreTypes) {
+    public double calculateDiaIsotopeScores(PeakGroup peakGroupFeature, HashMap<String, Float> productMzMap, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Integer> productChargeMap, PeakGroupScore scores, List<String> scoreTypes) {
         double isotopeCorr = 0d;
         double isotopeOverlap = 0d;
         int maxIsotope = Constants.DIA_NR_ISOTOPES + 1;
@@ -181,7 +181,6 @@ public class DIAScorer {
                 isotopeCorr += relIntensity * corr;
             }
 
-
             //get scores.isotope_overlap
             int largePeaksBeforeFirstIsotope = 0;
             double ratio;
@@ -210,6 +209,7 @@ public class DIAScorer {
             isotopeOverlap += largePeaksBeforeFirstIsotope * relIntensity;//带离子强度权重的largePeaksBeforeFirstIsotope数量统计
         }
         scores.put(ScoreType.IsotopeCorrelationScore.getName(), isotopeCorr, scoreTypes);
+        return isotopeCorr;
 //        scores.put(ScoreType.IsotopeOverlapScore.getName(), isotopeOverlap, scoreTypes);
     }
 

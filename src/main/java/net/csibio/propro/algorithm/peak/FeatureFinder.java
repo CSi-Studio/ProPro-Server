@@ -116,7 +116,7 @@ public class FeatureFinder {
             peakGroup.setPeakGroupInt(peakGroupInt);
             peakGroup.setTotalXic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
-            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
+//            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
             peakGroup.setMaxIon(maxCutInfo);
             peakGroup.setMaxIonIntensity(peakGroup.getIonIntensity().get(maxCutInfo));
             peakGroupList.add(peakGroup);
@@ -236,7 +236,7 @@ public class FeatureFinder {
             peakGroup.setPeakGroupInt(peakGroupInt);
             peakGroup.setTotalXic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
-            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
+//            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
             peakGroup.setMaxIon(maxIon);
             peakGroup.setMaxIonIntensity(peakGroup.getIonIntensity().get(maxIon));
             peakGroupList.add(peakGroup);
@@ -336,7 +336,7 @@ public class FeatureFinder {
                 ionIntensity.put(cutInfo, ionIntTemp);
 
                 //信噪比
-                signalToNoiseSum += unSearchPeakGroup.getNoise1000Map().get(cutInfo)[maxSpectrumIndex];
+//                signalToNoiseSum += unSearchPeakGroup.getNoise1000Map().get(cutInfo)[maxSpectrumIndex];
             }
             if (peakGroupInt == 0d) {
                 continue;
@@ -347,7 +347,7 @@ public class FeatureFinder {
             peakGroup.setPeakGroupInt(peakGroupInt);
             peakGroup.setTotalXic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
-            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
+//            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
             peakGroup.setMaxIon(maxIon);
             peakGroup.setMaxIonIntensity(peakGroup.getIonIntensity().get(maxIon));
             peakGroupList.add(peakGroup);
@@ -358,19 +358,14 @@ public class FeatureFinder {
 
     public List<PeakGroup> findPeakGroupsV2(UnSearchPeakGroup unSearchPeakGroup) {
 
-        //totalXIC
-        double totalXic = 0.0d;
-        for (Double[] intensityTmp : unSearchPeakGroup.getIntensitiesMap().values()) {
-            for (double intensity : intensityTmp) {
-                totalXic += intensity;
-            }
-        }
         int[] ions300 = unSearchPeakGroup.getIons300();
         int[] ions50 = unSearchPeakGroup.getIons50();
         Double[] ions300Smooth = unSearchPeakGroup.getIons300Smooth();
-
+        Double[] rtArray = unSearchPeakGroup.getRtArray();
         Set<String> max6Ions = unSearchPeakGroup.getCoord().getFragments().subList(0, 6).stream().map(FragmentInfo::getCutInfo).collect(Collectors.toSet());
         List<PeakGroup> peakGroupList = new ArrayList<>();
+        List<DoublePair> pairs = unSearchPeakGroup.getMaxPeaksForIons300();
+
         while (true) {
             PeakGroup peakGroup = new PeakGroup();
             Pair<String, Integer> maxPeakLocation = findLargestPeak(unSearchPeakGroup.getMaxPeaksForIons());
@@ -382,12 +377,12 @@ public class FeatureFinder {
             int leftIndex = unSearchPeakGroup.getPeaksForIons().get(maxCutInfo).get(maxIndex).getLeftRtIndex();
             int rightIndex = unSearchPeakGroup.getPeaksForIons().get(maxCutInfo).get(maxIndex).getRightRtIndex();
             double apexRt = unSearchPeakGroup.getMaxPeaksForIons().get(maxCutInfo).getRtArray()[maxIndex];
-            double bestLeft = unSearchPeakGroup.getRtArray()[leftIndex];
-            double bestRight = unSearchPeakGroup.getRtArray()[rightIndex];
+            double bestLeftRt = rtArray[leftIndex];
+            double bestRightRt = rtArray[rightIndex];
 
             peakGroup.setApexRt(apexRt);
-            peakGroup.setBestLeftRt(bestLeft);
-            peakGroup.setBestRightRt(bestRight);
+            peakGroup.setBestLeftRt(bestLeftRt);
+            peakGroup.setBestRightRt(bestRightRt);
 
             //计算完毕,准备抛弃
             RtIntensityPairsDouble rtInt = unSearchPeakGroup.getMaxPeaksForIons().get(maxCutInfo);
@@ -397,45 +392,45 @@ public class FeatureFinder {
 
             //如果PeakGroup不在IonCount最优峰范围内,直接忽略
             boolean hit = false;
-            List<DoublePair> pairs = unSearchPeakGroup.getMaxPeaksForIons300();
+
             int bestRtIndex = -1;
             for (int k = 0; k < pairs.size(); k++) {
                 double ionsApexRt = pairs.get(k).left();
-                if (ionsApexRt <= bestRight && ionsApexRt >= bestLeft) {
+                if (ionsApexRt <= bestRightRt && ionsApexRt >= bestLeftRt) {
                     hit = true;
                     peakGroup.setApexRt(ionsApexRt);
                     int maxIons300 = -1;
+                    //搜索范围内Ions300最高的点,如果存在两个相同最高点,那么比对他们的Ions50的点,如果Ions50的点仍然相同,那么选择离ApexRT更近的点
                     for (int j = leftIndex; j <= rightIndex; j++) {
                         if (ions300[j] > maxIons300) {
                             maxIons300 = ions300[j];
                             bestRtIndex = j;
                         } else if (ions300[j] == maxIons300) { //如果ions300的值相同,则比较ions50的值
-                            if (ions50[j] > ions50[bestRtIndex]) {
+                            if (Math.abs(rtArray[bestRtIndex] - apexRt) > Math.abs(rtArray[j] - apexRt)) {
                                 maxIons300 = ions300[j];
                                 bestRtIndex = j;
-                            } else if (ions50[j] == ions50[bestRtIndex]) {
-                                if (Math.abs(unSearchPeakGroup.getRtArray()[bestRtIndex] - apexRt) > Math.abs(unSearchPeakGroup.getRtArray()[j] - apexRt)) {
-                                    maxIons300 = ions300[j];
-                                    bestRtIndex = j;
-                                }
                             }
                         }
                     }
-//                    int binarySearchIndex = Arrays.binarySearch(unSearchPeakGroup.getRtArray(), ionsApexRt);
-//                    if (binarySearchIndex < 0) {
-//                        binarySearchIndex = -binarySearchIndex - 1;
-//                        if (binarySearchIndex == 0) {
-//                            bestRtIndex = 0;
-//                        } else {
-//                            double left = ions300[binarySearchIndex - 1];
-//                            double right = ions300[binarySearchIndex];
-//                            bestRtIndex = left > right ? (binarySearchIndex - 1) : binarySearchIndex;
-//                        }
-//                    } else {
-//                        bestRtIndex = binarySearchIndex;
-//                    }
+                    if (bestRtIndex == rightIndex && rightIndex < unSearchPeakGroup.getFloatRtArray().length - 1) {
+                        rightIndex++;
+                    }
+                    if (bestRtIndex == leftIndex && leftIndex != 0) {
+                        leftIndex--;
+                    }
                     peakGroup.setIons50(ions50[bestRtIndex]); //特别注意,最高点的碎片值使用的是Ions50而不是Ions300,Ions300仅用于选峰
                     peakGroup.setNearestRt(unSearchPeakGroup.getFloatRtArray()[bestRtIndex]);
+                    if (bestRtIndex != 0) {
+                        peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex - 1]);
+                    }
+
+                    peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex]);
+                    if (bestRtIndex < unSearchPeakGroup.getFloatRtArray().length - 1) {
+                        peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex + 1]);
+                    }
+
+                    peakGroup.setBestLeftRt(rtArray[leftIndex]);
+                    peakGroup.setBestRightRt(rtArray[rightIndex]);
                     break;
                 }
             }
@@ -443,7 +438,13 @@ public class FeatureFinder {
                 continue;
             }
 
-            Double[] rtArray = unSearchPeakGroup.getRtArray();
+            //totalXIC
+            double totalXic = 0.0d;
+            for (Double[] intensityTmp : unSearchPeakGroup.getIntensitiesMap().values()) {
+                for (double intensity : intensityTmp) {
+                    totalXic += intensity;
+                }
+            }
             int peakLength = rightIndex - leftIndex + 1;
             int bestRtIndexInGroup = bestRtIndex - leftIndex;
             //取得[bestLeft,bestRight]对应范围的Rt
@@ -455,9 +456,7 @@ public class FeatureFinder {
             Double peakGroupInt = 0D;
             double signalToNoiseSum = 0d;
             for (String cutInfo : unSearchPeakGroup.getPeaksForIons().keySet()) {
-
                 Double[] intArray = unSearchPeakGroup.getIntensitiesMap().get(cutInfo);
-
                 //库中排名前3的碎片离子在最高峰处的信号不能为0,否则直接忽略
                 if (max6Ions.contains(cutInfo)) {
                     if (intArray[bestRtIndex] == 0d) {
@@ -476,7 +475,7 @@ public class FeatureFinder {
                 //离子峰强度
                 ionIntensity.put(cutInfo, ionIntTemp);
                 //信噪比
-                signalToNoiseSum += unSearchPeakGroup.getNoise1000Map().get(cutInfo)[bestRtIndex];
+//                signalToNoiseSum += unSearchPeakGroup.getNoise1000Map().get(cutInfo)[bestRtIndex];
             }
 
             if (peakGroupInt == 0D || !hit) {
@@ -489,9 +488,179 @@ public class FeatureFinder {
             peakGroup.setTotalXic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
             peakGroup.setNearestRtIndexInGroup(bestRtIndexInGroup);
-            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
+//            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
             peakGroup.setMaxIon(maxCutInfo);
             peakGroup.setMaxIonIntensity(peakGroup.getIonIntensity().get(maxCutInfo));
+            peakGroupList.add(peakGroup);
+            if (peakGroupInt > 0 && peakGroupInt / totalXic < Constants.STOP_AFTER_INTENSITY_RATIO) {
+                break;
+            }
+        }
+
+        return peakGroupList;
+    }
+
+    //直接按照IC算法进行选峰
+    public List<PeakGroup> findPeakGroupsV3(UnSearchPeakGroup unSearchPeakGroup) {
+
+        int[] ions300 = unSearchPeakGroup.getIons300();
+        int[] ions50 = unSearchPeakGroup.getIons50();
+        Double[] ions300Smooth = unSearchPeakGroup.getIons300Smooth();
+        Double[] rtArray = unSearchPeakGroup.getRtArray();
+        Set<String> max6Ions = unSearchPeakGroup.getCoord().getFragments().subList(0, 6).stream().map(FragmentInfo::getCutInfo).collect(Collectors.toSet());
+        List<PeakGroup> peakGroupList = new ArrayList<>();
+
+        List<DoublePair> pairs = unSearchPeakGroup.getMaxPeaksForIons300(); //所有的峰顶
+        int maxIndex = ions300.length - 1;
+        for (DoublePair pair : pairs) {
+            PeakGroup peakGroup = new PeakGroup();
+            double apexRt = pair.left();
+
+            int binarySearchIndex = Arrays.binarySearch(rtArray, apexRt);
+            int apexRtIndex = -1;
+            if (binarySearchIndex < 0) {
+                binarySearchIndex = -binarySearchIndex - 1;
+                if (binarySearchIndex == 0) {
+                    apexRtIndex = 0;
+                } else {
+//                    double left = ions300[binarySearchIndex - 1];
+//                    double right = ions300[binarySearchIndex];
+
+                    double left = apexRt - rtArray[binarySearchIndex - 1];
+                    double right = rtArray[binarySearchIndex] - apexRt;
+                    apexRtIndex = left > right ? (binarySearchIndex - 1) : binarySearchIndex;
+                }
+            } else {
+                apexRtIndex = binarySearchIndex;
+            }
+
+//            int apexRtIndex = rtList.indexOf(apexRt);
+            //向左搜索
+            if (apexRtIndex == 0 || apexRtIndex == maxIndex) {
+                continue;
+            }
+            int leftIndex = apexRtIndex - 1;
+            int rightIndex = apexRtIndex + 1;
+            while (true) {
+                if (leftIndex == 0) {
+                    break;
+                }
+                if (ions300[leftIndex] == 0) {
+                    break;
+                }
+                if (ions300[leftIndex - 1] <= ions300[leftIndex]) {
+                    leftIndex--;
+                } else {
+                    break;
+                }
+            }
+
+            while (true) {
+                if (rightIndex == maxIndex) {
+                    break;
+                }
+                if (ions300[rightIndex] == 0) {
+                    break;
+                }
+                if (ions300[rightIndex + 1] <= ions300[rightIndex]) {
+                    rightIndex++;
+                } else {
+                    break;
+                }
+            }
+
+            //左右非对称峰型
+            if (apexRtIndex - leftIndex != rightIndex - apexRtIndex) {
+
+            }
+
+            peakGroup.setBestLeftRt(rtArray[leftIndex]);
+            peakGroup.setBestRightRt(rtArray[rightIndex]);
+            int maxIons300 = -1;
+            int bestRtIndex = -1;
+            for (int i = leftIndex; i <= rightIndex; i++) {
+                if (ions300[i] > maxIons300) {
+                    maxIons300 = ions300[i];
+                    bestRtIndex = i;
+                } else if (ions300[i] == maxIons300) { //如果ions300的值相同,则比较ions50的值
+                    if (Math.abs(rtArray[bestRtIndex] - apexRt) > Math.abs(rtArray[i] - apexRt)) {
+                        maxIons300 = ions300[i];
+                        bestRtIndex = i;
+                    }
+                }
+            }
+            peakGroup.setApexRt(rtArray[bestRtIndex]);
+            peakGroup.setIons50(ions50[bestRtIndex]); //特别注意,最高点的碎片值使用的是Ions50而不是Ions300,Ions300仅用于选峰
+            peakGroup.setNearestRt(unSearchPeakGroup.getFloatRtArray()[bestRtIndex]);
+            if (bestRtIndex != 0) {
+                peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex - 1]);
+            }
+
+            peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex]);
+            if (bestRtIndex < unSearchPeakGroup.getFloatRtArray().length - 1) {
+                peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex + 1]);
+            }
+
+            boolean hit = true;
+            //totalXIC
+            double totalXic = 0.0d;
+            for (Double[] intensityTmp : unSearchPeakGroup.getIntensitiesMap().values()) {
+                for (double intensity : intensityTmp) {
+                    totalXic += intensity;
+                }
+            }
+            int peakLength = rightIndex - leftIndex + 1;
+            int bestRtIndexInGroup = bestRtIndex - leftIndex;
+            //取得[bestLeft,bestRight]对应范围的Rt
+            Double[] rasteredRt = new Double[peakLength];
+            System.arraycopy(rtArray, leftIndex, rasteredRt, 0, peakLength);
+            //取得[bestLeft,bestRight]对应范围的Intensity
+            HashMap<String, Double[]> ionHullInt = new HashMap<>();
+            HashMap<String, Double> ionIntensity = new HashMap<>();
+            Double peakGroupInt = 0D;
+            double signalToNoiseSum = 0d;
+            String maxCutInfo = null;
+            double maxCutInfoIntensity = -1d;
+            for (String cutInfo : unSearchPeakGroup.getIntensitiesMap().keySet()) {
+                Double[] intArray = unSearchPeakGroup.getIntensitiesMap().get(cutInfo);
+                //库中排名前3的碎片离子在最高峰处的信号不能为0,否则直接忽略
+                if (max6Ions.contains(cutInfo)) {
+                    if (intArray[bestRtIndex] == 0d) {
+//                        log.info("精彩的判定:" + unSearchPeakGroup.getCoord().getPeptideRef());
+                        hit = false;
+                        break;
+                    }
+                    if (intArray[bestRtIndex] > maxCutInfoIntensity) {
+                        maxCutInfoIntensity = intArray[bestRtIndex];
+                        maxCutInfo = cutInfo;
+                    }
+                }
+                //离子峰
+                Double[] rasteredInt = new Double[peakLength];
+                System.arraycopy(intArray, leftIndex, rasteredInt, 0, peakLength);
+                ionHullInt.put(cutInfo, rasteredInt);
+                //peakGroup强度
+                Double ionIntTemp = MathUtil.sum(rasteredInt);
+                peakGroupInt += ionIntTemp;
+                //离子峰强度
+                ionIntensity.put(cutInfo, ionIntTemp);
+                //信噪比
+//                signalToNoiseSum += unSearchPeakGroup.getNoise1000Map().get(cutInfo)[bestRtIndex];
+            }
+
+            if (peakGroupInt == 0D || !hit) {
+                continue;
+            }
+            peakGroup.setIonCount(unSearchPeakGroup.getIntensitiesMap().size());
+            peakGroup.setIonHullRt(rasteredRt);
+            peakGroup.setIonHullInt(ionHullInt);
+            peakGroup.setPeakGroupInt(peakGroupInt);
+            peakGroup.setTotalXic(totalXic);
+            peakGroup.setIonIntensity(ionIntensity);
+            peakGroup.setNearestRtIndexInGroup(bestRtIndexInGroup);
+//            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
+            peakGroup.setMaxIon(maxCutInfo);
+            peakGroup.setMaxIonIntensity(maxCutInfoIntensity);
             peakGroupList.add(peakGroup);
             if (peakGroupInt > 0 && peakGroupInt / totalXic < Constants.STOP_AFTER_INTENSITY_RATIO) {
                 break;

@@ -50,7 +50,7 @@ public enum ScoreType {
             "带权重的互相关序列最大值的平均值",
             true, true),
     LibraryCorr("LibraryCorr", "var_LibraryCorr",
-            "对experiment和library intensity算Pearson相关系",
+            "对experiment和library intensity算Pearson相关系,当有干扰碎片的时候得分会很差",
             true, true),
     //    LibraryRsmd("LibraryRsmd", "var_LibraryRsmd",
 //            "对归一化后 库强度与实验强度的差平均值Avg(|LibInt-ExpInt|)",
