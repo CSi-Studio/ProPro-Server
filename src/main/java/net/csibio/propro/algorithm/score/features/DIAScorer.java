@@ -83,12 +83,12 @@ public class DIAScorer {
                 e.printStackTrace();
             }
         }
-//        if (scoreTypes.contains(ScoreType.MassdevScore.getName())) {
-//            scores.put(ScoreType.MassdevScore.getName(), ppmScore, scoreTypes);
-//        }
-//        if (scoreTypes.contains(ScoreType.MassdevScoreWeighted.getName())) {
-//            scores.put(ScoreType.MassdevScoreWeighted.getName(), ppmScoreWeighted, scoreTypes);
-//        }
+        if (scoreTypes.contains(ScoreType.MassdevScore.getName())) {
+            scores.put(ScoreType.MassdevScore.getName(), ppmScore, scoreTypes);
+        }
+        if (scoreTypes.contains(ScoreType.MassdevScoreWeighted.getName())) {
+            scores.put(ScoreType.MassdevScoreWeighted.getName(), ppmScoreWeighted, scoreTypes);
+        }
     }
 
 
@@ -96,26 +96,26 @@ public class DIAScorer {
      * scores.isotope_correlation
      * scores.isotope_overlap //feature intensity加权的可能（带电量1-4）无法区分同位素峰值的平均发生次数之和
      *
-     * @param peakGroupFeature single mrmFeature
+     * @param peakGroup        single mrmFeature
      * @param productMzMap     mz of fragment
      * @param spectrumMzArray  mz array of selected Rt
      * @param spectrumIntArray intensity array of selected Rt
      * @param productChargeMap charge in peptide
      * @param scores           scoreForAll for JProphet
      */
-    public double calculateDiaIsotopeScores(PeakGroup peakGroupFeature, HashMap<String, Float> productMzMap, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Integer> productChargeMap, PeakGroupScore scores, List<String> scoreTypes) {
+    public void calculateIsotopeScores(PeakGroup peakGroup, HashMap<String, Float> productMzMap, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Integer> productChargeMap, PeakGroupScore scores, List<String> scoreTypes) {
         double isotopeCorr = 0d;
         double isotopeOverlap = 0d;
         int maxIsotope = Constants.DIA_NR_ISOTOPES + 1;
 
         //getFirstIsotopeRelativeIntensities
         double relIntensity;//离子强度占peak group总强度的比例
-        double intensitySum = peakGroupFeature.getPeakGroupInt();
+        double intensitySum = peakGroup.getPeakGroupInt();
 
-        for (String cutInfo : peakGroupFeature.getIonIntensity().keySet()) {
+        for (String cutInfo : peakGroup.getIonIntensity().keySet()) {
             float monoPeakMz = productMzMap.get(cutInfo);
             int putativeFragmentCharge = productChargeMap.get(cutInfo);
-            relIntensity = (peakGroupFeature.getIonIntensity().get(cutInfo) / intensitySum);
+            relIntensity = peakGroup.getIonIntensity().get(cutInfo) / intensitySum;
             Double[] expDistribution = new Double[maxIsotope];
             double maxIntensity = 0.0d; //记录强度最大的一个同位素对应的强度值
             for (int iso = 0; iso < maxIsotope; iso++) {
@@ -186,9 +186,9 @@ public class DIAScorer {
             double ratio;
             double monoPeakIntensity = expDistribution[0];
             for (int charge = 1; charge < maxIsotope; charge++) {
-                double leftPeakMz = monoPeakMz - Constants.C13C12_MASSDIFF_U / charge;
-                Double left = leftPeakMz - Constants.DIA_EXTRACT_WINDOW;
-                Double right = leftPeakMz + Constants.DIA_EXTRACT_WINDOW;
+                double center = monoPeakMz - Constants.C13C12_MASSDIFF_U / charge;
+                Double left = center - Constants.DIA_EXTRACT_WINDOW;
+                Double right = center + Constants.DIA_EXTRACT_WINDOW;
 
                 //对于多种带电量，对-i同位素的mz位置进行数据提取，若强度高于0同位素强度，且-i同位素的理论mz与实际mz差距小于阈值，认为-i同位素出现
                 IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left.floatValue(), right.floatValue());
@@ -201,16 +201,14 @@ public class DIAScorer {
                     ratio = 0d;
                 }
                 //从OpenSWATH源代码1.0改为Constants.C13C12_MASSDIFF_U,作为leftPeakMz
-                if (ratio > 1 && (Math.abs(mzIntensity.getMz() - (monoPeakMz - 1.0d / charge)) / monoPeakMz) < Constants.PEAK_BEFORE_MONO_MAX_PPM_DIFF) {
+                if (ratio > 1 && (Math.abs(mzIntensity.getMz() - center) / center) < Constants.PEAK_BEFORE_MONO_MAX_PPM_DIFF) {
                     largePeaksBeforeFirstIsotope++;//-i同位素出现的次数
                 }
-
             }
             isotopeOverlap += largePeaksBeforeFirstIsotope * relIntensity;//带离子强度权重的largePeaksBeforeFirstIsotope数量统计
         }
         scores.put(ScoreType.IsotopeCorrelationScore.getName(), isotopeCorr, scoreTypes);
-        return isotopeCorr;
-//        scores.put(ScoreType.IsotopeOverlapScore.getName(), isotopeOverlap, scoreTypes);
+        scores.put(ScoreType.IsotopeOverlapScore.getName(), isotopeOverlap, scoreTypes);
     }
 
     /**

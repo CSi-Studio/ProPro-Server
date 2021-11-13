@@ -149,6 +149,18 @@ public class ExperimentTask extends BaseTask {
             return;
         }
 
+        //Step6. 机器学习,LDA分类
+        logger.info(exp.getAlias() + "开始执行机器学习部分");
+        LearningParams ap = new LearningParams();
+        ap.setScoreTypes(params.getMethod().getScore().getScoreTypes());
+        ap.setFdr(params.getMethod().getClassifier().getFdr());
+        FinalResult finalResult = semiSupervise.doSemiSupervise(params.getOverviewId(), ap);
+        taskDO.addLog("流程执行完毕,总耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
+        log.info("流程执行完毕,总耗时:" + ((System.currentTimeMillis() - start) / 1000) + "秒");
+        if (finalResult.getMatchedUniqueProteinCount() != null && finalResult.getMatchedUniqueProteinCount() != 0) {
+            taskDO.addLog("Peptide/Protein Rate:" + finalResult.getMatchedPeptideCount() / finalResult.getMatchedUniqueProteinCount());
+        }
+        
         //Step7. Reselect ions
         taskDO.finish(TaskStatus.SUCCESS.getName());
         taskService.update(taskDO);

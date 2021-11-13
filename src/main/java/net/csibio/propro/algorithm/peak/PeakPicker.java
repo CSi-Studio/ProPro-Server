@@ -156,7 +156,7 @@ public class PeakPicker {
 //        unSearchPeakGroup.setNoise1000Map(noise1000Map);
         unSearchPeakGroup.setPeaksForIons(peaksForIons);
         unSearchPeakGroup.setCoord(coord);
-        List<PeakGroup> peakGroups = featureFinder.findPeakGroupsV3(unSearchPeakGroup);
+        List<PeakGroup> peakGroups = featureFinder.findPeakGroupsV2(unSearchPeakGroup);
         if (peakGroups.size() == 0) {
 //            log.error("居然没有匹配到,蛋疼:" + data.getPeptideRef());
         }
@@ -185,7 +185,7 @@ public class PeakPicker {
         HashMap<String, List<IonPeak>> peaksForIons = new HashMap<>();
 
         //对每一个chromatogram进行运算,dataDO中不含有ms1
-//        HashMap<String, double[]> noise1000Map = new HashMap<>();
+        HashMap<String, double[]> noise1000Map = new HashMap<>();
         HashMap<String, Double[]> intensitiesMap = new HashMap<>();
 
         //将没有提取到信号的CutInfo过滤掉,同时将Float类型的参数调整为Double类型进行计算
@@ -243,12 +243,15 @@ public class PeakPicker {
         double libIntSum = MathUtil.sum(libIntMap.values());
         HashMap<String, Double> normedLibIntMap = new HashMap<>();
         for (String cutInfo : intensitiesMap.keySet()) {
+            double[] noisesOri1000 = signalToNoiseEstimator.computeSTN(rtArray, intensitiesMap.get(cutInfo), 1000, 30);
             normedLibIntMap.put(cutInfo, libIntMap.get(cutInfo) / libIntSum);
+            noise1000Map.put(cutInfo, noisesOri1000);
         }
 
         unSearchPeakGroup.setFloatRtArray(data.getRtArray());
         unSearchPeakGroup.setRtArray(rtArray);
         unSearchPeakGroup.setIntensitiesMap(intensitiesMap);
+        unSearchPeakGroup.setNoise1000Map(noise1000Map);
         unSearchPeakGroup.setMaxPeaksForIons(maxPeaksForIons);
         unSearchPeakGroup.setPeaksForIons(peaksForIons);
         unSearchPeakGroup.setCoord(coord);

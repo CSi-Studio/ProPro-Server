@@ -133,11 +133,11 @@ public class Lda extends Classifier {
         trainPeaks.setTopDecoys(decoyPeaks);
 
         SelectedPeakGroupScore bestTargetScore = new SelectedPeakGroupScore(learningParams.getScoreTypes().size());
-//        bestTargetScore.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.XcorrShapeWeighted.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.XcorrCoelution.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.XcorrCoelutionWeighted.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.LibraryCorr.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibraryCorr.getName(), 1d, scoreTypes);
 //        bestTargetScore.put(ScoreType.LibraryRsmd.getName(), 0d, scoreTypes);
 //        bestTargetScore.put(ScoreType.LibraryManhattan.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.LibraryDotprod.getName(), 1d, scoreTypes);
@@ -146,7 +146,7 @@ public class Lda extends Classifier {
 //        bestTargetScore.put(ScoreType.NormRtScore.getName(), 0d, scoreTypes);
 //        bestTargetScore.put(ScoreType.IntensityScore.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.IsotopeCorrelationScore.getName(), 1d, scoreTypes);
-//        bestTargetScore.put(ScoreType.IsotopeOverlapScore.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.IsotopeOverlapScore.getName(), 0d, scoreTypes);
 //        bestTargetScore.put(ScoreType.MassdevScore.getName(), 0d, scoreTypes);
 //        bestTargetScore.put(ScoreType.MassdevScoreWeighted.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.IonsCountDeltaScore.getName(), 0d, scoreTypes);

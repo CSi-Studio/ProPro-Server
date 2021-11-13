@@ -420,15 +420,6 @@ public class FeatureFinder {
                     }
                     peakGroup.setIons50(ions50[bestRtIndex]); //特别注意,最高点的碎片值使用的是Ions50而不是Ions300,Ions300仅用于选峰
                     peakGroup.setNearestRt(unSearchPeakGroup.getFloatRtArray()[bestRtIndex]);
-                    if (bestRtIndex != 0) {
-                        peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex - 1]);
-                    }
-
-                    peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex]);
-                    if (bestRtIndex < unSearchPeakGroup.getFloatRtArray().length - 1) {
-                        peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex + 1]);
-                    }
-
                     peakGroup.setBestLeftRt(rtArray[leftIndex]);
                     peakGroup.setBestRightRt(rtArray[rightIndex]);
                     break;
@@ -528,7 +519,7 @@ public class FeatureFinder {
 
                     double left = apexRt - rtArray[binarySearchIndex - 1];
                     double right = rtArray[binarySearchIndex] - apexRt;
-                    apexRtIndex = left > right ? (binarySearchIndex - 1) : binarySearchIndex;
+                    apexRtIndex = left < right ? (binarySearchIndex - 1) : binarySearchIndex;
                 }
             } else {
                 apexRtIndex = binarySearchIndex;
@@ -541,6 +532,16 @@ public class FeatureFinder {
             }
             int leftIndex = apexRtIndex - 1;
             int rightIndex = apexRtIndex + 1;
+            if (apexRtIndex > 1) {
+                leftIndex--;
+            }
+            if (apexRtIndex < maxIndex - 1) {
+                rightIndex++;
+            }
+
+            //允许的最大波动值
+            int maxFluctuation = ions300[apexRtIndex] >= 6 ? 1 : 0;
+
             while (true) {
                 if (leftIndex == 0) {
                     break;
@@ -550,11 +551,16 @@ public class FeatureFinder {
                 }
                 if (ions300[leftIndex - 1] <= ions300[leftIndex]) {
                     leftIndex--;
+                    continue;
+                } else if (ions300[leftIndex - 1] - ions300[leftIndex] == 1 && maxFluctuation == 1) {
+                    leftIndex--;
+                    maxFluctuation--;
                 } else {
                     break;
                 }
             }
 
+            maxFluctuation = ions300[apexRtIndex] >= 6 ? 1 : 0;
             while (true) {
                 if (rightIndex == maxIndex) {
                     break;
@@ -564,6 +570,11 @@ public class FeatureFinder {
                 }
                 if (ions300[rightIndex + 1] <= ions300[rightIndex]) {
                     rightIndex++;
+                    continue;
+                }
+                if (ions300[rightIndex + 1] - ions300[rightIndex] == 1 && maxFluctuation == 1) {
+                    rightIndex++;
+                    maxFluctuation--;
                 } else {
                     break;
                 }
@@ -592,14 +603,6 @@ public class FeatureFinder {
             peakGroup.setApexRt(rtArray[bestRtIndex]);
             peakGroup.setIons50(ions50[bestRtIndex]); //特别注意,最高点的碎片值使用的是Ions50而不是Ions300,Ions300仅用于选峰
             peakGroup.setNearestRt(unSearchPeakGroup.getFloatRtArray()[bestRtIndex]);
-            if (bestRtIndex != 0) {
-                peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex - 1]);
-            }
-
-            peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex]);
-            if (bestRtIndex < unSearchPeakGroup.getFloatRtArray().length - 1) {
-                peakGroup.getValidRts().add(unSearchPeakGroup.getFloatRtArray()[bestRtIndex + 1]);
-            }
 
             boolean hit = true;
             //totalXIC
@@ -645,7 +648,7 @@ public class FeatureFinder {
                 //离子峰强度
                 ionIntensity.put(cutInfo, ionIntTemp);
                 //信噪比
-//                signalToNoiseSum += unSearchPeakGroup.getNoise1000Map().get(cutInfo)[bestRtIndex];
+                signalToNoiseSum += unSearchPeakGroup.getNoise1000Map().get(cutInfo)[bestRtIndex];
             }
 
             if (peakGroupInt == 0D || !hit) {
@@ -658,13 +661,10 @@ public class FeatureFinder {
             peakGroup.setTotalXic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
             peakGroup.setNearestRtIndexInGroup(bestRtIndexInGroup);
-//            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
+            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
             peakGroup.setMaxIon(maxCutInfo);
             peakGroup.setMaxIonIntensity(maxCutInfoIntensity);
             peakGroupList.add(peakGroup);
-            if (peakGroupInt > 0 && peakGroupInt / totalXic < Constants.STOP_AFTER_INTENSITY_RATIO) {
-                break;
-            }
         }
 
         return peakGroupList;

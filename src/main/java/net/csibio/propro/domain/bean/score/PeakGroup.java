@@ -2,9 +2,7 @@ package net.csibio.propro.domain.bean.score;
 
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 @Data
 public class PeakGroup {
@@ -20,9 +18,6 @@ public class PeakGroup {
 
     //最接近apexRt的光谱rt值
     float nearestRt;
-
-    //用于需要被验证的时间帧
-    List<Float> validRts = new ArrayList<>();
 
     //在ionHullInt数组中对应的nearestRt对应的数组索引
     int nearestRtIndexInGroup;
@@ -49,7 +44,7 @@ public class PeakGroup {
 
     HashMap<String, Double[]> ionHullInt;
 
-//    double signalToNoiseSum;
+    double signalToNoiseSum;
 
     //最大强度碎片cutInfo
     String maxIon;

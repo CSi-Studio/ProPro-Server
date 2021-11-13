@@ -98,17 +98,17 @@ public class XicScorer {
         }
     }
 
-//    public void calculateLogSnScore(PeakGroup peakGroup, PeakGroupScore scores, List<String> scoreTypes) {
-//        //logSnScore
-//        // log(mean of Apex sn s)
-//        double snScore = peakGroup.getSignalToNoiseSum();
-//        snScore /= peakGroup.getIonCount();
-//        if (snScore < 1) {
-//            scores.put(ScoreType.LogSnScore.getName(), 0d, scoreTypes);
-//        } else {
-//            scores.put(ScoreType.LogSnScore.getName(), FastMath.log(snScore), scoreTypes);
-//        }
-//    }
+    public void calculateLogSnScore(PeakGroup peakGroup, PeakGroupScore scores, List<String> scoreTypes) {
+        //logSnScore
+        // log(mean of Apex sn s)
+        double snScore = peakGroup.getSignalToNoiseSum();
+        snScore /= peakGroup.getIonCount();
+        if (snScore < 1) {
+            scores.put(ScoreType.LogSnScore.getName(), 0d, scoreTypes);
+        } else {
+            scores.put(ScoreType.LogSnScore.getName(), FastMath.log(snScore), scoreTypes);
+        }
+    }
 
 
     /**

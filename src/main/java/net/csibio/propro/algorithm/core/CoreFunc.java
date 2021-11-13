@@ -12,7 +12,6 @@ import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.score.features.DIAScorer;
 import net.csibio.propro.constants.constant.CutInfoConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
-import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.bean.common.IntegerPair;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
@@ -547,17 +546,28 @@ public class CoreFunc {
             }
 
             dataDO = scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
-            DataSumDO sum = judge(dataDO);
-
-            sumList.add(sum);
+//            sumList.add(judge(dataDO));
             dataList.add(dataDO);
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
             DataUtil.compress(dataDO);
 
             //如果没有打分数据,那么对应的decoy也不再计算,以保持target与decoy 1:1的混合比例,这里需要注意的是,即便是scoreList是空,也需要将DataDO存储到数据库中,以便后续的重新统计和分析
-//            if (dataDO.getScoreList() == null) {
-//                return;
-//            }
+            if (dataDO.getScoreList() == null) {
+                return;
+            }
+
+            coord.setDecoy(true);
+            DataDO decoyData = extractOne(coord, rtMap, params);
+            if (decoyData == null) {
+                return;
+            }
+
+            //Step5. 对Decoy进行打分
+            decoyData = scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
+            dataList.add(decoyData);
+
+            //Step6. 忽略过程数据,将数据提取结果加入最终的列表
+            DataUtil.compress(decoyData);
         });
 
 //        LogUtil.log("XIC+选峰+打分耗时", start);
@@ -566,11 +576,11 @@ public class CoreFunc {
 //        if (dataList.stream().filter(data -> data.getStatus() == null).toList().size() > 0) {
 //            log.info("居然有问题");
 //        }
-        Result<List<DataSumDO>> result = dataSumService.insert(sumList, exp.getProjectId());
-        if (result.isFailed()) {
-            log.error(result.getErrorMessage());
-        }
-        log.info("唯一解数目:" + sumList.stream().filter(sum -> sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())).count());
+//        Result<List<DataSumDO>> result = dataSumService.insert(sumList, exp.getProjectId());
+//        if (result.isFailed()) {
+//            log.error(result.getErrorMessage());
+//        }
+//        log.info("检测到肽段数目:" + sumList.stream().filter(sum -> sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())).count());
         return dataList;
     }
 
@@ -632,7 +642,7 @@ public class CoreFunc {
         if (peakGroupList != null && peakGroupList.size() > 0) {
             List<PeakGroupScore> candidateList = peakGroupList.stream().filter(PeakGroupScore::fine).collect(Collectors.toList());
             if (candidateList.size() > 0) {
-                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroupScore::total).reversed()).collect(Collectors.toList()).get(0);
+                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroupScore::getTotal).reversed()).collect(Collectors.toList()).get(0);
             }
         }
 

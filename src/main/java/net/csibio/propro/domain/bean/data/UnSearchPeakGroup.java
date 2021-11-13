@@ -23,7 +23,7 @@ public class UnSearchPeakGroup {
     //每一个cutInfo对应的峰组
     HashMap<String, List<IonPeak>> peaksForIons;
     //每一个cutInfo对应的noise1000信噪比数组
-//    HashMap<String, double[]> noise1000Map;
+    HashMap<String, double[]> noise1000Map;
 
     //IonCount相关数据独立列出
     List<DoublePair> maxPeaksForIons300; //left为rt, right为平滑后的ionsCount

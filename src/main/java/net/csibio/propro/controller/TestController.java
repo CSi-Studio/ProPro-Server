@@ -89,7 +89,8 @@ public class TestController {
         String projectId = "6166a5fd6113c157a6431ab9";
         List<IdName> idNameList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), IdName.class);
         List<String> overviewIds = idNameList.stream().map(IdName::id).collect(Collectors.toList());
-        overviewIds.add("617a1168cbe5541deb772b09");
+        overviewIds.clear();
+        overviewIds.add("618e88d2ef9fa50368158ef8");
 //        overviewIds.add("61713f52749794487dd90937");
 //        overviewIds.add("61713f52749794487dd90938");
 //        overviewIds.add("61713f52749794487dd90934");

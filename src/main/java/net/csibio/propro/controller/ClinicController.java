@@ -187,7 +187,7 @@ public class ClinicController {
                     data.setStatus(IdentifyStatus.FAILED.getCode());
                 }
                 data.setMinTotalScore(overview.getMinTotalScore());
-//                lda.scoreForPeakGroups(data.getScoreList(), overview.getWeights(), overview.getParams().getMethod().getScore().getScoreTypes());
+                lda.scoreForPeakGroups(data.getScoreList(), overview.getWeights(), overview.getParams().getMethod().getScore().getScoreTypes());
                 dataList.add(data);
             }
         }
