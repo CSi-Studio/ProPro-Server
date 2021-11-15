@@ -132,6 +132,7 @@ public class Scorer {
         //如果数组长度超过20,则筛选ions数目最大的20个碎片
         peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getIons50).reversed()).toList();
         if (peakGroupList.size() > 20) {
+            log.info("PeakGroup数组过多,仅保留Ions50前20的峰组");
             peakGroupList = peakGroupList.subList(0, 20);
         }
         peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getApexRt)).collect(Collectors.toList());
@@ -153,8 +154,10 @@ public class Scorer {
             libraryScorer.calculateNormRtScore(peakGroup, exp.getIrt().getSi(), dataDO.getLibRt(), peakGroupScore, scoreTypes);
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, peakGroupScore, scoreTypes);
             peakGroupScore.put(ScoreType.IonsCountDeltaScore, (maxIonsCount - peakGroup.getIons50()) * 1d / maxIonsCount, scoreTypes);
-            initScorer.calcInitScore(peakGroupScore, scoreTypes);
-            peakGroupScore.put(ScoreType.WeightedTotalScore, peakGroupScore.getTotal(), scoreTypes);
+
+            peakGroupScore.setInit(peakGroupScore.getTotal());
+            peakGroupScore.put(ScoreType.InitScore, peakGroupScore.getInit(), scoreTypes);
+
             peakGroupScore.setRt(peakGroup.getApexRt());
             peakGroupScore.setRtRangeFeature(FeatureUtil.toString(peakGroup.getBestLeftRt(), peakGroup.getBestRightRt()));
             peakGroupScore.setIntensitySum(peakGroup.getPeakGroupInt());
@@ -164,6 +167,7 @@ public class Scorer {
             peakGroupScore.setIonIntensity(peakGroup.getIonIntensity());
             peakGroupScore.setIons50(peakGroup.getIons50());
             peakGroupScore.setNearestRt(peakGroup.getNearestRt());
+            peakGroupScore.setFine(peakGroupScore.fine());
             peakGroupScoreList.add(peakGroupScore);
         }
 
@@ -310,6 +314,7 @@ public class Scorer {
             }
             SelectedPeakGroupScore bestFeatureScores = new SelectedPeakGroupScore(peptideScore.getId(), peptideScore.getProteins(), peptideScore.getPeptideRef(), peptideScore.getDecoy());
 
+            //核心代码
             PeakGroupScore topFeatureScore = scorer.getBestPeakGroup(peptideScore.getScoreList(), minTotalScore, scoreTypes, null);
             if (topFeatureScore != null) {
                 if (topFeatureScore.getMark() && !peptideScore.getDecoy() && topFeatureScore.get(targetScoreType, scoreTypes) > minTotalScore) {
@@ -366,7 +371,7 @@ public class Scorer {
             }
 
             Double currentTotalScore = peakGroup.getTotalScore(scoreTypes);
-            if ((currentTotalScore != null && currentTotalScore > minTotalScore) || peakGroup.fine()) {
+            if ((currentTotalScore != null && currentTotalScore > minTotalScore)) {
                 candidateIndexList.add(i);
             }
 
@@ -377,14 +382,13 @@ public class Scorer {
         }
 
         int selectPeakGroupIndex = bestIndex;
-        if (candidateIndexList.size() > 0) {
+        if (candidateIndexList.size() > 0 && bestIndex != -1) {
             //BY离子分与isotope分均高的才切换
-            double bestTotal = peakGroupScoreList.get(bestIndex).getTotal();
+            double bestTotal = peakGroupScoreList.get(bestIndex).getInit() + peakGroupScoreList.get(bestIndex).getTotalScore();
             for (Integer index : candidateIndexList) {
-
                 //按照total分数进行排序
-                if (peakGroupScoreList.get(index).getTotal() > bestTotal) {
-                    bestTotal = peakGroupScoreList.get(index).getTotal();
+                if (peakGroupScoreList.get(index).getInit() + peakGroupScoreList.get(index).getTotalScore() > bestTotal) {
+                    bestTotal = peakGroupScoreList.get(index).getInit() + peakGroupScoreList.get(index).getTotalScore();
                     selectPeakGroupIndex = index;
                 }
             }

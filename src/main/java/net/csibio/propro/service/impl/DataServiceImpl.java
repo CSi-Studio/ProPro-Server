@@ -11,7 +11,6 @@ import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.DataQuery;
-import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.domain.vo.ExpDataVO;
 import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.*;
@@ -72,9 +71,8 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public Result<ExpDataVO> predictDataFromFile(ExperimentDO exp, String libraryId, String originalPeptide, Boolean changeCharge, String overviewId) {
-        PeptideDO brother = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(originalPeptide), PeptideDO.class);
-        if (brother == null) {
+    public Result<ExpDataVO> predictDataFromFile(ExperimentDO exp, PeptideDO peptide, Boolean changeCharge, String overviewId) {
+        if (peptide == null) {
             return Result.Error(ResultCode.PEPTIDE_NOT_EXIST);
         }
         OverviewDO overview = overviewService.getById(overviewId);
@@ -86,9 +84,9 @@ public class DataServiceImpl implements DataService {
         params.setChangeCharge(changeCharge);
         params.setOverviewId(overviewId);
 
-        PeptideCoord coord = brother.toTargetPeptide();
+        PeptideCoord coord = peptide.toTargetPeptide();
         if (changeCharge) {
-            if (brother.getCharge() == 2) {
+            if (peptide.getCharge() == 2) {
                 coord.setMz(coord.getMz() * 2 / 3);
                 coord.setCharge(3);
                 coord.setPeptideRef(coord.getPeptideRef().replace("2", "3"));
@@ -102,7 +100,7 @@ public class DataServiceImpl implements DataService {
         Result<ExpDataVO> result = extractor.predictOne(exp, overview, coord, params);
         if (result.isFailed() && result.getErrorMessage().equals(ResultCode.BLOCK_INDEX_NOT_EXISTED.getCode())) {
             if (changeCharge) {
-                if (brother.getCharge() == 2) {
+                if (peptide.getCharge() == 2) {
                     coord.setMz(coord.getMz() * 2);
                     coord.setCharge(1);
                     coord.setPeptideRef(coord.getPeptideRef().replace("2", "1"));

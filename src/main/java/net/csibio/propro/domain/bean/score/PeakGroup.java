@@ -19,9 +19,6 @@ public class PeakGroup {
     //最接近apexRt的光谱rt值
     float nearestRt;
 
-    //在ionHullInt数组中对应的nearestRt对应的数组索引
-    int nearestRtIndexInGroup;
-
     //peak group中每一个碎片的最大强度
     HashMap<String, Double> ionIntensity;
 

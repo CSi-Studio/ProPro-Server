@@ -437,7 +437,6 @@ public class FeatureFinder {
                 }
             }
             int peakLength = rightIndex - leftIndex + 1;
-            int bestRtIndexInGroup = bestRtIndex - leftIndex;
             //取得[bestLeft,bestRight]对应范围的Rt
             Double[] rasteredRt = new Double[peakLength];
             System.arraycopy(rtArray, leftIndex, rasteredRt, 0, peakLength);
@@ -478,7 +477,6 @@ public class FeatureFinder {
             peakGroup.setPeakGroupInt(peakGroupInt);
             peakGroup.setTotalXic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
-            peakGroup.setNearestRtIndexInGroup(bestRtIndexInGroup);
 //            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
             peakGroup.setMaxIon(maxCutInfo);
             peakGroup.setMaxIonIntensity(peakGroup.getIonIntensity().get(maxCutInfo));
@@ -498,7 +496,7 @@ public class FeatureFinder {
         int[] ions50 = unSearchPeakGroup.getIons50();
         Double[] ions300Smooth = unSearchPeakGroup.getIons300Smooth();
         Double[] rtArray = unSearchPeakGroup.getRtArray();
-        Set<String> max6Ions = unSearchPeakGroup.getCoord().getFragments().subList(0, 6).stream().map(FragmentInfo::getCutInfo).collect(Collectors.toSet());
+        Set<String> allIons = unSearchPeakGroup.getCoord().getFragments().stream().map(FragmentInfo::getCutInfo).collect(Collectors.toSet());
         List<PeakGroup> peakGroupList = new ArrayList<>();
 
         List<DoublePair> pairs = unSearchPeakGroup.getMaxPeaksForIons300(); //所有的峰顶
@@ -613,7 +611,6 @@ public class FeatureFinder {
                 }
             }
             int peakLength = rightIndex - leftIndex + 1;
-            int bestRtIndexInGroup = bestRtIndex - leftIndex;
             //取得[bestLeft,bestRight]对应范围的Rt
             Double[] rasteredRt = new Double[peakLength];
             System.arraycopy(rtArray, leftIndex, rasteredRt, 0, peakLength);
@@ -627,7 +624,7 @@ public class FeatureFinder {
             for (String cutInfo : unSearchPeakGroup.getIntensitiesMap().keySet()) {
                 Double[] intArray = unSearchPeakGroup.getIntensitiesMap().get(cutInfo);
                 //库中排名前3的碎片离子在最高峰处的信号不能为0,否则直接忽略
-                if (max6Ions.contains(cutInfo)) {
+                if (allIons.contains(cutInfo)) {
                     if (intArray[bestRtIndex] == 0d) {
 //                        log.info("精彩的判定:" + unSearchPeakGroup.getCoord().getPeptideRef());
                         hit = false;
@@ -660,7 +657,6 @@ public class FeatureFinder {
             peakGroup.setPeakGroupInt(peakGroupInt);
             peakGroup.setTotalXic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
-            peakGroup.setNearestRtIndexInGroup(bestRtIndexInGroup);
             peakGroup.setSignalToNoiseSum(signalToNoiseSum);
             peakGroup.setMaxIon(maxCutInfo);
             peakGroup.setMaxIonIntensity(maxCutInfoIntensity);

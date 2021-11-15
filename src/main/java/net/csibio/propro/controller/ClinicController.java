@@ -150,7 +150,8 @@ public class ClinicController {
         log.info("开始获取新预测数据-------------------------------------------------------------------------------");
         List<ExpDataVO> dataList = new ArrayList<>();
         PeptideDO peptide = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(peptideRef), PeptideDO.class);
-        Map<String, Double> intensityMap = peptide.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, FragmentInfo::getIntensity));
+
+
         for (int i = 0; i < overviewIds.size(); i++) {
             String overviewId = overviewIds.get(i);
             OverviewDO overview = overviewService.getById(overviewId);
@@ -170,7 +171,8 @@ public class ClinicController {
 //                    data.setAlias(exp.getAlias());
 //                    data.setExpId(exp.getId());
 //                } else {
-                Result<ExpDataVO> res = dataService.predictDataFromFile(exp, libraryId, peptideRef, changeCharge, overview.getId());
+                peptide.setFragments(peptide.getFragments().stream().filter(f -> !f.getCutInfo().equals("y14^2")).toList());
+                Result<ExpDataVO> res = dataService.predictDataFromFile(exp, peptide, changeCharge, overview.getId());
                 if (res.isSuccess()) {
                     data = res.getData();
                     data.setGroup(exp.getGroup());
@@ -220,11 +222,9 @@ public class ClinicController {
             });
         }
 
-//        for (ExpDataVO expDataVO : dataList) {
-//            expDataVO.setScoreList(expDataVO.getScoreList().stream().sorted(Comparator.comparing(PeakGroupScore::getRt)).collect(Collectors.toList()));
-//        }
         Result<List<ExpDataVO>> result = new Result<List<ExpDataVO>>(true);
         result.setData(dataList);
+        Map<String, Double> intensityMap = peptide.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, FragmentInfo::getIntensity));
         result.getFeatureMap().put("intensityMap", intensityMap);
         return result;
     }

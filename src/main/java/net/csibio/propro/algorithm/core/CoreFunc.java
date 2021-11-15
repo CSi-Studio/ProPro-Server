@@ -533,7 +533,7 @@ public class CoreFunc {
 
     public List<DataDO> csi(ExperimentDO exp, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
-        List<DataSumDO> sumList = Collections.synchronizedList(new ArrayList<>());
+//        List<DataSumDO> sumList = Collections.synchronizedList(new ArrayList<>());
         if (coordinates == null || coordinates.size() == 0) {
             log.error("肽段坐标为空");
             return null;
@@ -642,7 +642,7 @@ public class CoreFunc {
         if (peakGroupList != null && peakGroupList.size() > 0) {
             List<PeakGroupScore> candidateList = peakGroupList.stream().filter(PeakGroupScore::fine).collect(Collectors.toList());
             if (candidateList.size() > 0) {
-                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroupScore::getTotal).reversed()).collect(Collectors.toList()).get(0);
+                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroupScore::getInit).reversed()).collect(Collectors.toList()).get(0);
             }
         }
 

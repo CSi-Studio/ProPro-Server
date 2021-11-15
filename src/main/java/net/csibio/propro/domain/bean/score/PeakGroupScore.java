@@ -34,10 +34,17 @@ public class PeakGroupScore extends BaseScores {
 
     //原BYSeries分数,ApexRt处所有的可能的离子碎片数目
     Integer ions50;
+
     //强度最高的碎片cutInfo
     String maxIon;
+
     //强度最高的碎片的强度
     Double maxIonIntensity;
+
+    //初始分
+    Double init;
+
+    Boolean fine;
 
     //中间计算变量,不需要存入数据库
     @Transient
@@ -56,7 +63,12 @@ public class PeakGroupScore extends BaseScores {
         this.scores = new Double[scoreTypesSize];
     }
 
-    public boolean fine() {
+    /**
+     * 必须要满足的条件
+     *
+     * @return
+     */
+    public boolean base() {
         if (ionIntensity != null) {
             AtomicBoolean allHit = new AtomicBoolean(true);
             ionIntensity.values().forEach(value -> {
@@ -67,6 +79,14 @@ public class PeakGroupScore extends BaseScores {
             if (!allHit.get()) {
                 return false;
             }
+        }
+        return true;
+    }
+
+    public boolean fine() {
+
+        if (!base()) {
+            return false;
         }
 
         //Shape均分,但是在强度很低的时候Shape均分也不一定高
@@ -79,15 +99,57 @@ public class PeakGroupScore extends BaseScores {
         double isoBack = this.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
 
         //Shape分和DotProd分数都十分优秀的进入筛选轮
-        boolean condition1 = shapeAvg > 0.8 && libCorr > 0.9 && libDotProd > 0.95 && ionsCount < 0.2 && isoForward > 0.9 && isoBack < 0.05;
+        boolean condition1 = shapeAvg > 0.85 && libDotProd > 0.9 && ionsCount < 0.2 && isoForward > 0.9 && isoBack < 0.05;
         if (condition1) {
             return true;
         }
 
-        boolean baseCondition = shapeAvg >= 0.7 && libCorr >= 0.7 && ionsCount <= 0.4 && isoBack <= 0.1 && coelutionWeight <= 1;
-        //DotProd分数超优秀, IonsCount分超优秀, CoelutionAvg超优秀 可以适当放宽形状条件,这个在低信号的时候很有用
-        boolean condition2 = ((libCorr + libDotProd) / 2 >= 0.99 || coelutionWeight <= 0.05 || isoBack <= 0.01) && baseCondition;
-        if (condition2) {
+//        boolean baseCondition = shapeAvg >= 0.7 && libCorr >= 0.7 && ionsCount <= 0.4 && isoBack <= 0.1 && coelutionWeight <= 1;
+//        //DotProd分数超优秀, IonsCount分超优秀, CoelutionAvg超优秀 可以适当放宽形状条件,这个在低信号的时候很有用
+//        boolean condition2 = ((libCorr + libDotProd) / 2 >= 0.95 || coelutionWeight <= 0.05 || isoBack <= 0.01) && baseCondition;
+//        if (condition2) {
+//            return true;
+//        }
+
+        return false;
+    }
+
+    public boolean excellent() {
+        if (!base()) {
+            return false;
+        }
+        double shapeAvg = (this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) + this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes())) / 2;
+        double libDotProd = this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
+        double libCorr = this.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
+        double ionsCount = this.get(ScoreType.IonsCountDeltaScore, ScoreType.usedScoreTypes());
+        double coelutionWeight = this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes());
+        double isoForward = this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes());
+        double isoBack = this.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
+
+        //Shape分和DotProd分数都十分优秀的进入筛选轮
+        boolean condition1 = shapeAvg > 0.8 && libDotProd > 0.9 && ionsCount < 0.2 && isoForward > 0.8 && isoBack < 0.05;
+        if (condition1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean ionsDisturb() {
+        if (!base()) {
+            return false;
+        }
+        double shapeAvg = (this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) + this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes())) / 2;
+        double libDotProd = this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
+        double libCorr = this.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
+        double ionsCount = this.get(ScoreType.IonsCountDeltaScore, ScoreType.usedScoreTypes());
+        double coelutionWeight = this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes());
+        double isoForward = this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes());
+        double isoBack = this.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
+
+        //Shape分和DotProd分数都十分优秀的进入筛选轮
+        boolean condition1 = shapeAvg > 0.9 && libDotProd > 0.9 && ionsCount < 0.2 && isoForward > 0.8 && isoBack < 0.05;
+        if (condition1) {
             return true;
         }
 
@@ -97,10 +159,10 @@ public class PeakGroupScore extends BaseScores {
     public double getTotal() {
         return this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) +
                 this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes()) +
-                this.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes()) +
+//                this.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes()) +
                 this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes()) -
                 this.get(ScoreType.IonsCountDeltaScore, ScoreType.usedScoreTypes()) -
-                this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes()) -
+//                this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes()) -
                 this.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes())
                 ;
     }

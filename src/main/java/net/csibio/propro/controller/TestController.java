@@ -1,5 +1,6 @@
 package net.csibio.propro.controller;
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.learner.SemiSupervise;
 import net.csibio.propro.algorithm.learner.Statistics;
@@ -15,7 +16,9 @@ import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
+import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
+import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.PeptideDO;
@@ -30,10 +33,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -206,6 +209,51 @@ public class TestController {
             });
             log.info("库" + library.getName() + "处理完毕");
         });
+        return Result.OK();
+    }
+
+    @GetMapping(value = "/lms4")
+    Result lms4() {
+        String projectId = "6166a5fd6113c157a6431ab9";
+        List<IdName> idNameList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), IdName.class);
+        idNameList = idNameList.subList(0, 1);
+        for (IdName idName : idNameList) {
+            String overviewId = idName.id();
+            OverviewDO overview = overviewService.getById(overviewId);
+
+            log.info("读取数据库信息中");
+            Map<String, PeptideScore> peptideMap = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()).setDecoy(false), PeptideScore.class, overview.getProjectId()).stream().collect(Collectors.toMap(PeptideScore::getId, Function.identity()));
+            Map<String, DataSumDO> sumMap = dataSumService.getAll(new DataSumQuery().setOverviewId(overviewId).setDecoy(false), DataSumDO.class, overview.getProjectId()).stream().collect(Collectors.toMap(DataSumDO::getPeptideRef, Function.identity()));
+            AtomicLong stat = new AtomicLong(0);
+            List<String> findItList = new ArrayList<>();
+            List<Double> initList = new ArrayList<>();
+//            sumMap.values().forEach(sum -> {
+//                PeakGroupScore score = peptideMap.get(sum.getId()).getScoreList().stream().filter(peak -> peak.getRt().equals(sum.getRealRt())).findFirst().get();
+//                double libPearson = score.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
+//                double libDotprod = score.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
+//                double isoOverlap = score.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
+//                if (libDotprod < 0.9) {
+//                    stat.getAndIncrement();
+//                    findItList.add(sum.getPeptideRef());
+//                }
+//            });
+            peptideMap.values().forEach(data -> {
+                DataSumDO sum = sumMap.get(data.getPeptideRef());
+                if (sum != null && !sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())) {
+                    PeakGroupScore score = data.getScoreList().stream().filter(peak -> peak.getRt().equals(sum.getRealRt())).findFirst().get();
+                    double libPearson = score.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
+                    double libDotprod = score.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
+                    double isoOverlap = score.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
+                    if (score.excellent()) {
+                        stat.getAndIncrement();
+                        findItList.add(sum.getPeptideRef());
+                    }
+                }
+            });
+            log.info(overview.getExpName() + "-符合要求的Peptide有:" + stat.get() + "个");
+            log.info(JSON.toJSONString(findItList));
+        }
+
         return Result.OK();
     }
 

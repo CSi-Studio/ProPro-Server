@@ -140,7 +140,6 @@ public class Extractor {
             double targetRt = exp.getIrt().getSi().realRt(rt);
             coord.setRtRange(targetRt - 300, targetRt + 300);
         }
-
         Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(exp, coord);
         if (rtMapResult.isFailed()) {
             return Result.Error(rtMapResult.getErrorCode());
@@ -300,13 +299,14 @@ public class Extractor {
         int[] ions300 = new int[dataDO.getRtArray().length];
         for (int i = 0; i < dataDO.getRtArray().length; i++) {
             MzIntensityPairs pairs = rtMap.get(dataDO.getRtArray()[i]);
-            float[] intensities = dataDO.getIntMap().get(maxIon); //获取该spectrum中maxIon的强度列表
+            float[] maxIntensities = dataDO.getIntMap().get(maxIon); //获取该spectrum中maxIon的强度列表
             float maxIonIntensityInThisSpectrum = 0;
-            if (intensities == null || intensities.length == 0) {
+            if (maxIntensities == null || maxIntensities.length == 0) {
                 maxIonIntensityInThisSpectrum = Float.MAX_VALUE;
             } else {
-                maxIonIntensityInThisSpectrum = intensities[i];
+                maxIonIntensityInThisSpectrum = maxIntensities[i];
             }
+
             IntegerPair pair = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 50f, 300f, maxIonIntensityInThisSpectrum);
             ions50[i] = pair.left();
             ions300[i] = pair.right();
