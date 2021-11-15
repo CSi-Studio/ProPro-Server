@@ -642,7 +642,7 @@ public class CoreFunc {
         if (peakGroupList != null && peakGroupList.size() > 0) {
             List<PeakGroup> candidateList = peakGroupList.stream().filter(PeakGroup::fine).collect(Collectors.toList());
             if (candidateList.size() > 0) {
-                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroup::getInit).reversed()).collect(Collectors.toList()).get(0);
+                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroup::getTotal).reversed()).collect(Collectors.toList()).get(0);
             }
         }
 

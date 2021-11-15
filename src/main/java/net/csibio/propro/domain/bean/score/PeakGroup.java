@@ -34,10 +34,6 @@ public class PeakGroup extends BaseScores {
     //最大强度碎片的强度
     Double maxIonIntensity;
 
-    Double init;
-
-    Boolean fine;
-
     //中间计算变量,不需要存入数据库
     @Transient
     double tic;  //所有离子在所有RT上的Intensity总和
@@ -130,7 +126,7 @@ public class PeakGroup extends BaseScores {
         double isoBack = this.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
 
         //Shape分和DotProd分数都十分优秀的进入筛选轮
-        boolean condition1 = shapeAvg > 0.8 && libDotProd > 0.9 && ionsCount < 0.2 && isoForward > 0.8 && isoBack < 0.05;
+        boolean condition1 = shapeAvg > 0.85 && libDotProd > 0.9 && ionsCount < 0.2 && isoForward > 0.8 && isoBack < 0.05;
         if (condition1) {
             return true;
         }

@@ -226,17 +226,6 @@ public class TestController {
             Map<String, DataSumDO> sumMap = dataSumService.getAll(new DataSumQuery().setOverviewId(overviewId).setDecoy(false), DataSumDO.class, overview.getProjectId()).stream().collect(Collectors.toMap(DataSumDO::getPeptideRef, Function.identity()));
             AtomicLong stat = new AtomicLong(0);
             List<String> findItList = new ArrayList<>();
-            List<Double> initList = new ArrayList<>();
-//            sumMap.values().forEach(sum -> {
-//                PeakGroupScore score = peptideMap.get(sum.getId()).getScoreList().stream().filter(peak -> peak.getRt().equals(sum.getRealRt())).findFirst().get();
-//                double libPearson = score.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
-//                double libDotprod = score.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
-//                double isoOverlap = score.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
-//                if (libDotprod < 0.9) {
-//                    stat.getAndIncrement();
-//                    findItList.add(sum.getPeptideRef());
-//                }
-//            });
             peptideMap.values().forEach(data -> {
                 DataSumDO sum = sumMap.get(data.getPeptideRef());
                 if (sum != null && !sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())) {

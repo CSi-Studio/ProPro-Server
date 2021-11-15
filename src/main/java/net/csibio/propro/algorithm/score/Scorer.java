@@ -142,33 +142,21 @@ public class Scorer {
         //开始对所有的PeakGroup进行打分
         for (PeakGroup peakGroup : peakGroupList) {
             peakGroup.initScore(scoreTypes.size());
-            xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
             //根据RT时间和前体m/z获取最近的一个原始谱图
             MzIntensityPairs mzIntensityPairs = peakSpecMap.get(peakGroup.getApexRt());
-
             float[] spectrumMzArray = mzIntensityPairs.getMzArray();
             float[] spectrumIntArray = mzIntensityPairs.getIntensityArray();
+
+            xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
             diaScorer.calculateIsotopeScores(peakGroup, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, scoreTypes);
             diaScorer.calculateDiaMassDiffScore(productMzMap, spectrumMzArray, spectrumIntArray, normedLibIntMap, peakGroup, scoreTypes);
-
             xicScorer.calculateLogSnScore(peakGroup, scoreTypes);
             libraryScorer.calculateIntensityScore(peakGroup, params.getMethod().getScore().getScoreTypes());
             libraryScorer.calculateNormRtScore(peakGroup, exp.getIrt().getSi(), dataDO.getLibRt(), scoreTypes);
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scoreTypes);
             peakGroup.put(ScoreType.IonsCountDeltaScore, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
-
-            peakGroup.setInit(peakGroup.getTotal());
-            peakGroup.put(ScoreType.InitScore, peakGroup.getInit(), scoreTypes);
-
-            peakGroup.setApexRt(peakGroup.getApexRt());
-            peakGroup.setIntensitySum(peakGroup.getIntensitySum());
-            peakGroup.setMaxIon(peakGroup.getMaxIon());
-            peakGroup.setMaxIonIntensity(peakGroup.getMaxIonIntensity());
-            peakGroup.setIonsLow(peakGroup.getIonsLow());
-            peakGroup.setSelectedRt(peakGroup.getSelectedRt());
-            peakGroup.setFine(peakGroup.fine());
+            peakGroup.put(ScoreType.InitScore, peakGroup.getTotal(), scoreTypes);
         }
-
 
         dataDO.setStatus(IdentifyStatus.WAIT.getCode());
         dataDO.setPeakGroupList(peakGroupList);
@@ -373,11 +361,11 @@ public class Scorer {
         int selectPeakGroupIndex = bestIndex;
         if (candidateIndexList.size() > 0 && bestIndex != -1) {
             //BY离子分与isotope分均高的才切换
-            double bestTotal = peakGroupScoreList.get(bestIndex).getInit() + peakGroupScoreList.get(bestIndex).getTotalScore();
+            double bestTotal = peakGroupScoreList.get(bestIndex).get(ScoreType.InitScore, scoreTypes) + peakGroupScoreList.get(bestIndex).getTotalScore();
             for (Integer index : candidateIndexList) {
                 //按照total分数进行排序
-                if (peakGroupScoreList.get(index).getInit() + peakGroupScoreList.get(index).getTotalScore() > bestTotal) {
-                    bestTotal = peakGroupScoreList.get(index).getInit() + peakGroupScoreList.get(index).getTotalScore();
+                if (peakGroupScoreList.get(index).get(ScoreType.InitScore, scoreTypes) + peakGroupScoreList.get(index).getTotalScore() > bestTotal) {
+                    bestTotal = peakGroupScoreList.get(index).get(ScoreType.InitScore, scoreTypes) + peakGroupScoreList.get(index).getTotalScore();
                     selectPeakGroupIndex = index;
                 }
             }
