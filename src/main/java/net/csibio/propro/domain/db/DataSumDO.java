@@ -2,7 +2,7 @@ package net.csibio.propro.domain.db;
 
 import lombok.Data;
 import net.csibio.propro.domain.BaseDO;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
@@ -35,30 +35,27 @@ public class DataSumDO extends BaseDO {
     Double qValue;
 
     //最终鉴定的时间
-    Double realRt;
+    Double apexRt;
 
     //距离realRt最近的光谱图的rt
-    Double nearestRt;
+    Double selectedRt;
 
     //对应的最终的主峰的打分
     Double totalScore;
 
     //Intensity Sum
-    Double sum;
+    Double intensitySum;
 
-    Integer ions50;
+    Integer ionsLow;
 
-    //最终的定量值
-    String fragIntFeature;
-
-    public static DataSumDO buildByPeakGroupScore(List<String> proteins, String peptideRef, PeakGroupScore selectPeakGroup) {
+    public static DataSumDO buildByPeakGroupScore(List<String> proteins, String peptideRef, PeakGroup selectPeakGroup) {
         DataSumDO dataSum = new DataSumDO();
         dataSum.setPeptideRef(peptideRef);
         dataSum.setProteins(proteins);
-        dataSum.setIons50(selectPeakGroup.getIons50());
-        dataSum.setSum(selectPeakGroup.getIntensitySum());
-        dataSum.setRealRt(selectPeakGroup.getRt());
-        dataSum.setNearestRt(selectPeakGroup.getNearestRt());
+        dataSum.setIonsLow(selectPeakGroup.getIonsLow());
+        dataSum.setIntensitySum(selectPeakGroup.getIntensitySum());
+        dataSum.setApexRt(selectPeakGroup.getApexRt());
+        dataSum.setSelectedRt(selectPeakGroup.getSelectedRt());
         dataSum.setTotalScore(selectPeakGroup.getTotalScore());
         return dataSum;
     }

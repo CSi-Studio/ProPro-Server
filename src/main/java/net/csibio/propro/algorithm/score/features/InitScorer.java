@@ -1,7 +1,7 @@
 package net.csibio.propro.algorithm.score.features;
 
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
 @Component("initScorer")
 public class InitScorer {
 
-    public void calcInitScore(PeakGroupScore scores, List<String> scoreTypes) {
+    public void calcInitScore(PeakGroup scores, List<String> scoreTypes) {
 
 //        Double libraryCorr = scores.get(ScoreType.LibraryCorr.getName(), scoreTypes);
 //        libraryCorr = (libraryCorr == null ? 0 : libraryCorr);
@@ -65,7 +65,7 @@ public class InitScorer {
 
     }
 
-    public void calculateSwathLdaPrescore1(PeakGroupScore scores, Double temp, List<String> scoreTypes) {
+    public void calculateSwathLdaPrescore1(PeakGroup scores, Double temp, List<String> scoreTypes) {
 
 //        Double libraryCorr = scores.get(ScoreType.LibraryCorr.getName(), scoreTypes);
 //        libraryCorr = (libraryCorr == null ? 0 : libraryCorr);

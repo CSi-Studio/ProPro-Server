@@ -16,7 +16,7 @@ import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.LibraryDO;
@@ -240,7 +240,7 @@ public class TestController {
             peptideMap.values().forEach(data -> {
                 DataSumDO sum = sumMap.get(data.getPeptideRef());
                 if (sum != null && !sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())) {
-                    PeakGroupScore score = data.getScoreList().stream().filter(peak -> peak.getRt().equals(sum.getRealRt())).findFirst().get();
+                    PeakGroup score = data.getPeakGroupList().stream().filter(peak -> peak.getApexRt().equals(sum.getApexRt())).findFirst().get();
                     double libPearson = score.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
                     double libDotprod = score.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
                     double isoOverlap = score.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());

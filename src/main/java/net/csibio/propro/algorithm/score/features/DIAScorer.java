@@ -9,7 +9,6 @@ import net.csibio.propro.domain.bean.common.IntegerPair;
 import net.csibio.propro.domain.bean.score.BYSeries;
 import net.csibio.propro.domain.bean.score.IntegrateWindowMzIntensity;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.loader.AminoAcidLoader;
 import net.csibio.propro.loader.ElementsLoader;
 import net.csibio.propro.loader.UnimodLoader;
@@ -59,7 +58,7 @@ public class DIAScorer {
      * @param normedLibIntMap  unNormalized library intensity(in peptidepeptide)
      * @param scores           scoreForAll
      */
-    public void calculateDiaMassDiffScore(HashMap<String, Float> productMzArray, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Double> normedLibIntMap, PeakGroupScore scores, List<String> scoreTypes) {
+    public void calculateDiaMassDiffScore(HashMap<String, Float> productMzArray, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Double> normedLibIntMap, PeakGroup scores, List<String> scoreTypes) {
 
         double ppmScore = 0.0d;
         double ppmScoreWeighted = 0.0d;
@@ -103,14 +102,14 @@ public class DIAScorer {
      * @param productChargeMap charge in peptide
      * @param scores           scoreForAll for JProphet
      */
-    public void calculateIsotopeScores(PeakGroup peakGroup, HashMap<String, Float> productMzMap, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Integer> productChargeMap, PeakGroupScore scores, List<String> scoreTypes) {
+    public void calculateIsotopeScores(PeakGroup peakGroup, HashMap<String, Float> productMzMap, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Integer> productChargeMap, List<String> scoreTypes) {
         double isotopeCorr = 0d;
         double isotopeOverlap = 0d;
         int maxIsotope = Constants.DIA_NR_ISOTOPES + 1;
 
         //getFirstIsotopeRelativeIntensities
         double relIntensity;//离子强度占peak group总强度的比例
-        double intensitySum = peakGroup.getPeakGroupInt();
+        double intensitySum = peakGroup.getIntensitySum();
 
         for (String cutInfo : peakGroup.getIonIntensity().keySet()) {
             float monoPeakMz = productMzMap.get(cutInfo);
@@ -207,8 +206,8 @@ public class DIAScorer {
             }
             isotopeOverlap += largePeaksBeforeFirstIsotope * relIntensity;//带离子强度权重的largePeaksBeforeFirstIsotope数量统计
         }
-        scores.put(ScoreType.IsotopeCorrelationScore.getName(), isotopeCorr, scoreTypes);
-        scores.put(ScoreType.IsotopeOverlapScore.getName(), isotopeOverlap, scoreTypes);
+        peakGroup.put(ScoreType.IsotopeCorrelationScore.getName(), isotopeCorr, scoreTypes);
+        peakGroup.put(ScoreType.IsotopeOverlapScore.getName(), isotopeOverlap, scoreTypes);
     }
 
     /**
@@ -218,7 +217,7 @@ public class DIAScorer {
      * @param sequence
      * @param scores
      */
-    public void calculateIonsScore(int ionsCount, String sequence, PeakGroupScore scores, List<String> scoreTypes) {
+    public void calculateIonsScore(int ionsCount, String sequence, PeakGroup scores, List<String> scoreTypes) {
 //        scores.put(ScoreType.IonsCountWeightScore.getName(), ionsCount * 1.0 / sequence.length(), scoreTypes);
     }
 

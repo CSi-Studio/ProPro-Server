@@ -8,7 +8,7 @@ import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.ScoreData;
 import net.csibio.propro.domain.bean.learner.TrainAndTest;
 import net.csibio.propro.domain.bean.learner.TrainData;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 
 import java.util.*;
@@ -436,7 +436,7 @@ public class ProProUtil {
 
         //每一轮开始前将上一轮的加权总分去掉
         for (PeptideScore ss : scores) {
-            for (PeakGroupScore sft : ss.getScoreList()) {
+            for (PeakGroup sft : ss.getPeakGroupList()) {
                 sft.remove(ScoreType.WeightedTotalScore.getName(), scoreTypes);
             }
         }

@@ -8,7 +8,7 @@ import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.learner.TrainData;
 import net.csibio.propro.domain.bean.learner.TrainPeaks;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.utils.ProProUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,10 +44,10 @@ public abstract class Classifier {
     public void score(List<PeptideScore> scores, HashMap<String, Double> weightsMap, List<String> scoreTypes) {
         Set<Map.Entry<String, Double>> entries = weightsMap.entrySet();
         for (PeptideScore score : scores) {
-            if (score.getScoreList() == null) {
+            if (score.getPeakGroupList() == null) {
                 continue;
             }
-            for (PeakGroupScore peakGroupScore : score.getScoreList()) {
+            for (PeakGroup peakGroupScore : score.getPeakGroupList()) {
                 double addedScore = 0;
                 for (Map.Entry<String, Double> entry : entries) {
                     addedScore += peakGroupScore.get(entry.getKey(), scoreTypes) * entry.getValue();
@@ -57,12 +57,12 @@ public abstract class Classifier {
         }
     }
 
-    public void scoreForPeakGroups(List<PeakGroupScore> scoreList, HashMap<String, Double> weightsMap, List<String> scoreTypes) {
+    public void scoreForPeakGroups(List<PeakGroup> scoreList, HashMap<String, Double> weightsMap, List<String> scoreTypes) {
         Set<Map.Entry<String, Double>> entries = weightsMap.entrySet();
         if (scoreList == null || scoreList.size() == 0) {
             return;
         }
-        for (PeakGroupScore peakGroupScore : scoreList) {
+        for (PeakGroup peakGroupScore : scoreList) {
             double addedScore = 0;
             for (Map.Entry<String, Double> entry : entries) {
                 addedScore += peakGroupScore.get(entry.getKey(), scoreTypes) * entry.getValue();

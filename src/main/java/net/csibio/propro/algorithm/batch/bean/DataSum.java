@@ -9,5 +9,5 @@ public class DataSum {
 
     List<String> proteins;
     String peptideRef;
-    Double sum;
+    Double intensitySum;
 }

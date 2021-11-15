@@ -2,7 +2,7 @@ package net.csibio.propro.domain.vo;
 
 import lombok.Data;
 import net.csibio.propro.domain.bean.data.BaseData;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.utils.DataUtil;
@@ -31,7 +31,7 @@ public class ExpDataVO {
 
     String peptideRef;
 
-    List<PeakGroupScore> scoreList;
+    List<PeakGroup> peakGroupList;
 
     int selectIndex;
 
@@ -51,18 +51,15 @@ public class ExpDataVO {
     Double irt;
 
     //最终鉴定的时间
-    Double realRt;
+    Double apexRt;
 
     //距离realRt最近的光谱图rt
-    Double nearestRt;
+    Double selectedRt;
 
     //Intensity Sum
-    Double sum;
+    Double intensitySum;
 
-    Integer ions50;
-
-    //最终的定量值
-    String fragIntFeature;
+    Integer ionsLow;
 
     //所在overview的最低分数阈值
     Double minTotalScore;
@@ -88,8 +85,8 @@ public class ExpDataVO {
         }
         if (dataSum != null) {
             BeanUtils.copyProperties(dataSum, this);
-            if (data != null && data.getScoreList() != null && dataSum.getRealRt() != null) {
-                this.selectIndex = scoreList.stream().map(PeakGroupScore::getRt).toList().indexOf(dataSum.getRealRt());
+            if (data != null && data.getPeakGroupList() != null && dataSum.getApexRt() != null) {
+                this.selectIndex = peakGroupList.stream().map(PeakGroup::getApexRt).toList().indexOf(dataSum.getApexRt());
 //                data.getScoreList().get(selectIndex).put(ScoreType.WeightedTotalScore, dataSum.getTotalScore(), ScoreType.getAllTypesName());
             }
         }
@@ -102,8 +99,8 @@ public class ExpDataVO {
         }
         if (dataSum != null) {
             BeanUtils.copyProperties(dataSum, this);
-            if (data != null && data.getScoreList() != null && dataSum.getRealRt() != null) {
-                this.selectIndex = scoreList.stream().map(PeakGroupScore::getRt).toList().indexOf(dataSum.getRealRt());
+            if (data != null && data.getPeakGroupList() != null && dataSum.getApexRt() != null) {
+                this.selectIndex = peakGroupList.stream().map(PeakGroup::getApexRt).toList().indexOf(dataSum.getApexRt());
 //                data.getScoreList().get(selectIndex).put(ScoreType.WeightedTotalScore, dataSum.getTotalScore(), ScoreType.getAllTypesName());
             }
         }

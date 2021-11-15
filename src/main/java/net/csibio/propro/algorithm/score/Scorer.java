@@ -14,7 +14,6 @@ import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.PeakGroupListWrapper;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.DataSumDO;
@@ -24,7 +23,6 @@ import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.service.*;
 import net.csibio.propro.utils.ArrayUtil;
-import net.csibio.propro.utils.FeatureUtil;
 import net.csibio.propro.utils.PeptideUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -110,8 +108,12 @@ public class Scorer {
 
         //开始为每一个PeakGroup打分
         //Step1.准备相关的打分需要使用的前验数据
-        List<PeakGroupScore> peakGroupScoreList = new ArrayList<>();
         List<PeakGroup> peakGroupList = peakGroupListWrapper.getList();
+        if (peakGroupList.size() == 0) {
+            dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
+            return dataDO;
+        }
+
         HashMap<String, Double> normedLibIntMap = peakGroupListWrapper.getNormedIntMap(); //归一化的库强度值
         HashMap<String, Float> productMzMap = new HashMap<>(); //碎片mz map
         HashMap<String, Integer> productChargeMap = new HashMap<>(); //碎片带电量map
@@ -121,63 +123,55 @@ public class Scorer {
             productMzMap.put(key, value);
         });
         HashMap<Double, MzIntensityPairs> peakSpecMap = new HashMap<>();
-        int maxIonsCount = Arrays.stream(dataDO.getIons50()).max().getAsInt();
+        int maxIonsCount = Arrays.stream(dataDO.getIonsLow()).max().getAsInt();
 
 //        calcNearestRtAndTotalIons(dataDO, coord, coord.getFragments().get(0).getCutInfo(), peakGroupList, rtMap);
 
         for (PeakGroup peakGroup : peakGroupList) {
-            peakSpecMap.put(peakGroup.getApexRt(), rtMap.get(peakGroup.getNearestRt()));
+            peakSpecMap.put(peakGroup.getApexRt(), rtMap.get(peakGroup.getSelectedRt().floatValue()));
         }
 
         //如果数组长度超过20,则筛选ions数目最大的20个碎片
-        peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getIons50).reversed()).toList();
+        peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getIonsLow).reversed()).toList();
         if (peakGroupList.size() > 20) {
-            log.info("PeakGroup数组过多,仅保留Ions50前20的峰组");
+            log.info("PeakGroup数组过多,仅保留IonsLow前20的峰组:" + dataDO.getPeptideRef());
             peakGroupList = peakGroupList.subList(0, 20);
         }
         peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getApexRt)).collect(Collectors.toList());
 
         //开始对所有的PeakGroup进行打分
         for (PeakGroup peakGroup : peakGroupList) {
-            PeakGroupScore peakGroupScore = new PeakGroupScore(scoreTypes.size());
-            xicScorer.calcXICScores(peakGroup, normedLibIntMap, peakGroupScore, scoreTypes);
+            peakGroup.initScore(scoreTypes.size());
+            xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
             //根据RT时间和前体m/z获取最近的一个原始谱图
             MzIntensityPairs mzIntensityPairs = peakSpecMap.get(peakGroup.getApexRt());
 
             float[] spectrumMzArray = mzIntensityPairs.getMzArray();
             float[] spectrumIntArray = mzIntensityPairs.getIntensityArray();
-            diaScorer.calculateIsotopeScores(peakGroup, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, peakGroupScore, scoreTypes);
-            diaScorer.calculateDiaMassDiffScore(productMzMap, spectrumMzArray, spectrumIntArray, normedLibIntMap, peakGroupScore, scoreTypes);
+            diaScorer.calculateIsotopeScores(peakGroup, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, scoreTypes);
+            diaScorer.calculateDiaMassDiffScore(productMzMap, spectrumMzArray, spectrumIntArray, normedLibIntMap, peakGroup, scoreTypes);
 
-            xicScorer.calculateLogSnScore(peakGroup, peakGroupScore, scoreTypes);
-            libraryScorer.calculateIntensityScore(peakGroup, peakGroupScore, params.getMethod().getScore().getScoreTypes());
-            libraryScorer.calculateNormRtScore(peakGroup, exp.getIrt().getSi(), dataDO.getLibRt(), peakGroupScore, scoreTypes);
-            libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, peakGroupScore, scoreTypes);
-            peakGroupScore.put(ScoreType.IonsCountDeltaScore, (maxIonsCount - peakGroup.getIons50()) * 1d / maxIonsCount, scoreTypes);
+            xicScorer.calculateLogSnScore(peakGroup, scoreTypes);
+            libraryScorer.calculateIntensityScore(peakGroup, params.getMethod().getScore().getScoreTypes());
+            libraryScorer.calculateNormRtScore(peakGroup, exp.getIrt().getSi(), dataDO.getLibRt(), scoreTypes);
+            libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scoreTypes);
+            peakGroup.put(ScoreType.IonsCountDeltaScore, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
 
-            peakGroupScore.setInit(peakGroupScore.getTotal());
-            peakGroupScore.put(ScoreType.InitScore, peakGroupScore.getInit(), scoreTypes);
+            peakGroup.setInit(peakGroup.getTotal());
+            peakGroup.put(ScoreType.InitScore, peakGroup.getInit(), scoreTypes);
 
-            peakGroupScore.setRt(peakGroup.getApexRt());
-            peakGroupScore.setRtRangeFeature(FeatureUtil.toString(peakGroup.getBestLeftRt(), peakGroup.getBestRightRt()));
-            peakGroupScore.setIntensitySum(peakGroup.getPeakGroupInt());
-            peakGroupScore.setFragIntFeature(FeatureUtil.toString(peakGroup.getIonIntensity()));
-            peakGroupScore.setMaxIon(peakGroup.getMaxIon());
-            peakGroupScore.setMaxIonIntensity(peakGroup.getMaxIonIntensity());
-            peakGroupScore.setIonIntensity(peakGroup.getIonIntensity());
-            peakGroupScore.setIons50(peakGroup.getIons50());
-            peakGroupScore.setNearestRt(peakGroup.getNearestRt());
-            peakGroupScore.setFine(peakGroupScore.fine());
-            peakGroupScoreList.add(peakGroupScore);
+            peakGroup.setApexRt(peakGroup.getApexRt());
+            peakGroup.setIntensitySum(peakGroup.getIntensitySum());
+            peakGroup.setMaxIon(peakGroup.getMaxIon());
+            peakGroup.setMaxIonIntensity(peakGroup.getMaxIonIntensity());
+            peakGroup.setIonsLow(peakGroup.getIonsLow());
+            peakGroup.setSelectedRt(peakGroup.getSelectedRt());
+            peakGroup.setFine(peakGroup.fine());
         }
 
-        if (peakGroupScoreList.size() == 0) {
-            dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
-            return dataDO;
-        }
 
         dataDO.setStatus(IdentifyStatus.WAIT.getCode());
-        dataDO.setScoreList(peakGroupScoreList);
+        dataDO.setPeakGroupList(peakGroupList);
         return dataDO;
     }
 
@@ -193,29 +187,28 @@ public class Scorer {
             return;
         }
 
-        List<PeakGroupScore> peakGroupScoreList = new ArrayList<>();
         List<PeakGroup> peakGroupList = peakGroupListWrapper.getList();
 //        calcNearestRtAndTotalIons(dataDO, coord, maxLibIon, peakGroupList, rtMap);
 
         HashMap<String, Double> normedLibIntMap = peakGroupListWrapper.getNormedIntMap();
-        for (PeakGroup peakGroupFeature : peakGroupList) {
-            PeakGroupScore peakGroupScore = new PeakGroupScore(2);
+        for (PeakGroup peakGroup : peakGroupList) {
+            peakGroup.initScore(2);
             List<String> scoreTypes = new ArrayList<>();
             scoreTypes.add(ScoreType.XcorrShape.getName());
             scoreTypes.add(ScoreType.XcorrShapeWeighted.getName());
-            xicScorer.calcXICScores(peakGroupFeature, normedLibIntMap, peakGroupScore, scoreTypes);
-            if (peakGroupScore.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes) < shapeScoreThreshold || peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
+            xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
+            if (peakGroup.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes) < shapeScoreThreshold || peakGroup.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
                 continue;
             }
-            peakGroupScore.setRt(peakGroupFeature.getApexRt());
-            peakGroupScoreList.add(peakGroupScore);
+            peakGroup.setApexRt(peakGroup.getApexRt());
+            peakGroupList.add(peakGroup);
         }
 
-        if (peakGroupScoreList.size() == 0) {
+        if (peakGroupList.size() == 0) {
             return;
         }
 
-        dataDO.setScoreList(peakGroupScoreList);
+        dataDO.setPeakGroupList(peakGroupList);
     }
 
     /**
@@ -227,15 +220,15 @@ public class Scorer {
      * @return
      */
     public DataSumDO calcBestTotalScore(DataDO data, OverviewDO overview, String libMaxIon) {
-        if (data.getScoreList() == null) {
+        if (data.getPeakGroupList() == null) {
             return null;
         }
 
         PeptideScore ps = new PeptideScore(data);
         List<String> scoreTypes = overview.getParams().getMethod().getScore().getScoreTypes();
-        lda.scoreForPeakGroups(ps.getScoreList(), overview.getWeights(), scoreTypes);
+        lda.scoreForPeakGroups(ps.getPeakGroupList(), overview.getWeights(), scoreTypes);
 
-        PeakGroupScore selectPeakGroup = getBestPeakGroup(data.getScoreList(), overview.getMinTotalScore(), scoreTypes, libMaxIon);
+        PeakGroup selectPeakGroup = getBestPeakGroup(data.getPeakGroupList(), overview.getMinTotalScore(), scoreTypes, libMaxIon);
         if (selectPeakGroup == null) {
             return null;
         }
@@ -250,12 +243,12 @@ public class Scorer {
     }
 
     public double calcBestIonsCount(DataDO data) {
-        if (data.getScoreList() == null) {
+        if (data.getPeakGroupList() == null) {
             return -1;
         }
         double maxIonsCount = -1;
-        for (PeakGroupScore peakGroupScore : data.getScoreList()) {
-            double currentIonsCount = peakGroupScore.getIons50();
+        for (PeakGroup peakGroupScore : data.getPeakGroupList()) {
+            double currentIonsCount = peakGroupScore.getIonsLow();
             if (currentIonsCount > maxIonsCount) {
                 maxIonsCount = currentIonsCount;
             }
@@ -274,16 +267,13 @@ public class Scorer {
     public List<SelectedPeakGroupScore> findBestPeakGroupByTargetScoreType(List<PeptideScore> peptideScoreList, String targetScoreType, List<String> scoreTypes, boolean strict) {
         List<SelectedPeakGroupScore> bestFeatureScoresList = new ArrayList<>();
         for (PeptideScore peptideScore : peptideScoreList) {
-            if (peptideScore.getScoreList() == null || peptideScore.getScoreList().size() == 0) {
+            if (peptideScore.getPeakGroupList() == null || peptideScore.getPeakGroupList().size() == 0) {
                 continue;
             }
             SelectedPeakGroupScore bestFeatureScores = new SelectedPeakGroupScore(peptideScore.getId(), peptideScore.getProteins(), peptideScore.getPeptideRef(), peptideScore.getDecoy());
             double maxScore = -Double.MAX_VALUE;
-            PeakGroupScore topFeatureScore = null;
-            for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
-                if (strict && peakGroupScore.getThresholdPassed() != null && !peakGroupScore.getThresholdPassed()) {
-                    continue;
-                }
+            PeakGroup topFeatureScore = null;
+            for (PeakGroup peakGroupScore : peptideScore.getPeakGroupList()) {
                 Double targetScore = peakGroupScore.get(targetScoreType, scoreTypes);
                 if (targetScore != null && targetScore > maxScore) {
                     maxScore = targetScore;
@@ -294,10 +284,10 @@ public class Scorer {
             if (topFeatureScore != null) {
                 bestFeatureScores.setMainScore(topFeatureScore.get(targetScoreType, scoreTypes));
                 bestFeatureScores.setScores(topFeatureScore.getScores());
-                bestFeatureScores.setRt(topFeatureScore.getRt());
-                bestFeatureScores.setNearestRt(topFeatureScore.getNearestRt());
+                bestFeatureScores.setApexRt(topFeatureScore.getApexRt());
+                bestFeatureScores.setSelectedRt(topFeatureScore.getSelectedRt());
                 bestFeatureScores.setIntensitySum(topFeatureScore.getIntensitySum());
-                bestFeatureScores.setFragIntFeature(topFeatureScore.getFragIntFeature());
+//                bestFeatureScores.setFragIntFeature(topFeatureScore.getFragIntFeature());
                 bestFeatureScoresList.add(bestFeatureScores);
             }
         }
@@ -309,13 +299,13 @@ public class Scorer {
         List<String> markedPeptideRefList = new ArrayList<>();
         List<String> changedPeptideRefList = new ArrayList<>();
         for (PeptideScore peptideScore : peptideScoreList) {
-            if (peptideScore.getScoreList() == null || peptideScore.getScoreList().size() == 0) {
+            if (peptideScore.getPeakGroupList() == null || peptideScore.getPeakGroupList().size() == 0) {
                 continue;
             }
             SelectedPeakGroupScore bestFeatureScores = new SelectedPeakGroupScore(peptideScore.getId(), peptideScore.getProteins(), peptideScore.getPeptideRef(), peptideScore.getDecoy());
 
             //核心代码
-            PeakGroupScore topFeatureScore = scorer.getBestPeakGroup(peptideScore.getScoreList(), minTotalScore, scoreTypes, null);
+            PeakGroup topFeatureScore = scorer.getBestPeakGroup(peptideScore.getPeakGroupList(), minTotalScore, scoreTypes, null);
             if (topFeatureScore != null) {
                 if (topFeatureScore.getMark() && !peptideScore.getDecoy() && topFeatureScore.get(targetScoreType, scoreTypes) > minTotalScore) {
                     markedPeptideRefList.add(peptideScore.getPeptideRef());
@@ -323,13 +313,12 @@ public class Scorer {
                 if (topFeatureScore.getChanged() && !peptideScore.getDecoy()) {
                     changedPeptideRefList.add(peptideScore.getPeptideRef());
                 }
-                bestFeatureScores.setIons50(topFeatureScore.getIons50());
+                bestFeatureScores.setIonsLow(topFeatureScore.getIonsLow());
                 bestFeatureScores.setMainScore(topFeatureScore.get(targetScoreType, scoreTypes));
                 bestFeatureScores.setScores(topFeatureScore.getScores());
-                bestFeatureScores.setRt(topFeatureScore.getRt());
-                bestFeatureScores.setNearestRt(topFeatureScore.getNearestRt());
+                bestFeatureScores.setApexRt(topFeatureScore.getApexRt());
+                bestFeatureScores.setSelectedRt(topFeatureScore.getSelectedRt());
                 bestFeatureScores.setIntensitySum(topFeatureScore.getIntensitySum());
-                bestFeatureScores.setFragIntFeature(topFeatureScore.getFragIntFeature());
                 bestFeatureScoresList.add(bestFeatureScores);
             }
         }
@@ -349,7 +338,7 @@ public class Scorer {
      * @param maxLibIonLimit
      * @return
      */
-    public PeakGroupScore getBestPeakGroup(List<PeakGroupScore> peakGroupScoreList, double minTotalScore, List<String> scoreTypes, String maxLibIonLimit) {
+    public PeakGroup getBestPeakGroup(List<PeakGroup> peakGroupScoreList, double minTotalScore, List<String> scoreTypes, String maxLibIonLimit) {
         if (peakGroupScoreList == null || peakGroupScoreList.size() == 0) {
             return null;
         }
@@ -358,7 +347,7 @@ public class Scorer {
 
         List<Integer> candidateIndexList = new ArrayList<>();
         for (int i = 0; i < peakGroupScoreList.size(); i++) {
-            PeakGroupScore peakGroup = peakGroupScoreList.get(i);
+            PeakGroup peakGroup = peakGroupScoreList.get(i);
             if (maxLibIonLimit != null) {
                 //增加限制条件1. 如果库中最大强度碎片不存在,那么直接跳过
                 if (peakGroup.getIonIntensity().get(maxLibIonLimit) == null) {
@@ -409,9 +398,9 @@ public class Scorer {
             return null;
         }
 
-        PeakGroupScore pgs = peakGroupScoreList.get(selectPeakGroupIndex);
-        List<Integer> sorted = peakGroupScoreList.stream().map(PeakGroupScore::getIons50).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
-        int index = sorted.indexOf(pgs.getIons50());
+        PeakGroup pgs = peakGroupScoreList.get(selectPeakGroupIndex);
+        List<Integer> sorted = peakGroupScoreList.stream().map(PeakGroup::getIonsLow).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+        int index = sorted.indexOf(pgs.getIonsLow());
 
         //排名连前五都没有混到
         if (index > 5 && pgs.getTotalScore() >= minTotalScore) {
@@ -437,8 +426,8 @@ public class Scorer {
             int right = diaScorer.calcTotalIons(rtMap.get(nearestRtPair.getRight()).getMzArray(), rtMap.get(nearestRtPair.getRight()).getIntensityArray(), unimodHashMap, sequence, coord.getCharge(), 50, 300, maxIntensityRight).left();
             float bestRt = right > left ? nearestRtPair.getRight() : nearestRtPair.getLeft();
             int ionCount = Math.max(right, left);
-            peakGroup.setIons50(ionCount);
-            peakGroup.setNearestRt(bestRt);
+            peakGroup.setIonsLow(ionCount);
+            peakGroup.setSelectedRt((double) bestRt);
         }
     }
 
@@ -447,7 +436,6 @@ public class Scorer {
         for (PeakGroup peakGroup : peakGroupListWrapper.getList()) {
             peakGroup.getIonIntensity().remove(cutInfo);
             peakGroup.getIonHullInt().remove(cutInfo);
-            peakGroup.setIonCount(peakGroup.getIonCount() - 1);
         }
     }
 }

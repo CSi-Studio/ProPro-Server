@@ -4,7 +4,7 @@ import lombok.Data;
 import net.csibio.propro.domain.BaseDO;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -46,12 +46,12 @@ public class DataDO extends BaseDO {
 
     String cutInfosFeature; //由cutInfoMap转换所得
 
-    List<PeakGroupScore> scoreList;
+    List<PeakGroup> peakGroupList;
 
-    byte[] ions300Bytes;
+    byte[] ionsHighBytes;
 
-    byte[] ions50Bytes;
-    
+    byte[] ionsLowBytes;
+
     //压缩后的rt列表,对应rtArray
     byte[] rtBytes;
     //压缩后的intensityMap,对应intensityMap
@@ -65,9 +65,9 @@ public class DataDO extends BaseDO {
     @Transient
     Map<String, Float> cutInfoMap; //冗余的peptide切片信息,key为cutInfo,value为mz
     @Transient
-    int[] ions300; //用于存储每一张Spectrum的碎片强度值大于300的碎片数目
+    int[] ionsHigh; //用于存储每一张Spectrum的碎片强度值大于300的碎片数目
     @Transient
-    int[] ions50; //用于存储每一张Spectrum的碎片强度值大于0的碎片数目
+    int[] ionsLow; //用于存储每一张Spectrum的碎片强度值大于0的碎片数目
 
     public DataDO() {
     }

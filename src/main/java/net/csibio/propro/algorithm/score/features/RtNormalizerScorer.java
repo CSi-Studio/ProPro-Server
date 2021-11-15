@@ -2,7 +2,6 @@ package net.csibio.propro.algorithm.score.features;
 
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.domain.bean.score.ScoreRtPair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -48,15 +47,15 @@ public class RtNormalizerScorer {
         List<String> scoreTypes4Irt = ScoreType.scoreTypes4Irt();
 
         for (PeakGroup peakGroup : peakGroupList) {
-            if (peakGroup.getBestRightRt() - peakGroup.getBestLeftRt() < 15d) {
+            if (peakGroup.getRightRt() - peakGroup.getLeftRt() < 15d) {
                 continue;
             }
-            PeakGroupScore scores = new PeakGroupScore(scoreTypes4Irt.size());
-            xicScorer.calcXICScores(peakGroup, normedLibIntMap, scores, scoreTypes4Irt);
+            PeakGroup scores = new PeakGroup(scoreTypes4Irt.size());
+            xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes4Irt);
 //            xicScorer.calculateLogSnScore(peakGroup, scores, defaultScoreTypes);
-            libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scores, scoreTypes4Irt);
-            scores.put(ScoreType.IonsCountDeltaScore.getName(), (maxIonsCount - peakGroup.getIons50()) * 1d / maxIonsCount, scoreTypes4Irt);
-            double deltaWeight = (maxIonsCount - peakGroup.getIons50()) * 1d / maxIonsCount;
+            libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scoreTypes4Irt);
+            scores.put(ScoreType.IonsCountDeltaScore.getName(), (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes4Irt);
+            double deltaWeight = (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount;
             scores.put(ScoreType.IonsCountDeltaScore, deltaWeight, scoreTypes4Irt);
 
             double ldaScore = calculateLdaPrescore(scores, scoreTypes4Irt);
@@ -77,7 +76,7 @@ public class RtNormalizerScorer {
      * @param scores pre-calculated
      * @return final scoreForAll
      */
-    private double calculateLdaPrescore(PeakGroupScore scores, List<String> scoreTypes) {
+    private double calculateLdaPrescore(PeakGroup scores, List<String> scoreTypes) {
 //        return scores.get(ScoreType.LibraryCorr.getName(), scoreTypes) * -0.34664267d +
 //                scores.get(ScoreType.LibraryRsmd.getName(), scoreTypes) * 2.98700722d +
 //             scores.get(ScoreType.LogSnScore.getName(), scoreTypes) * -0.72989582 +

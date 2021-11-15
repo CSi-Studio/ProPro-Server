@@ -95,7 +95,7 @@ public abstract class Irt {
         double maxGroupRt = -Double.MAX_VALUE;
         dataList = dataList.stream().sorted(Comparator.comparing(DataDO::getLibRt)).toList();
         for (DataDO data : dataList) {
-            int maxIonsCount = Arrays.stream(data.getIons50()).max().getAsInt();
+            int maxIonsCount = Arrays.stream(data.getIonsLow()).max().getAsInt();
             PeptideCoord coord = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
             PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchPeakGroups(data, coord, params.getMethod().getIrt().getSs());
             if (!peakGroupListWrapper.isFeatureFound()) {

@@ -189,7 +189,7 @@ public class ClinicController {
                     data.setStatus(IdentifyStatus.FAILED.getCode());
                 }
                 data.setMinTotalScore(overview.getMinTotalScore());
-                lda.scoreForPeakGroups(data.getScoreList(), overview.getWeights(), overview.getParams().getMethod().getScore().getScoreTypes());
+                lda.scoreForPeakGroups(data.getPeakGroupList(), overview.getWeights(), overview.getParams().getMethod().getScore().getScoreTypes());
                 dataList.add(data);
             }
         }
@@ -274,12 +274,12 @@ public class ClinicController {
             String[] peptideRefs = new String[realRtList.size()];
             double[] x = new double[realRtList.size()];
             double[] y = new double[realRtList.size()];
-            realRtList = realRtList.stream().sorted(Comparator.comparingDouble(PeptideRt::realRt)).collect(Collectors.toList());
+            realRtList = realRtList.stream().sorted(Comparator.comparingDouble(PeptideRt::apexRt)).collect(Collectors.toList());
             for (int j = 0; j < realRtList.size(); j++) {
                 peptideRefs[j] = realRtList.get(j).peptideRef();
 //                x[j] = libRtMap.get(peptideRefs[j]);
-                x[j] = realRtList.get(j).realRt();
-                y[j] = realRtList.get(j).realRt() - exp.getIrt().getSi().realRt(libRtMap.get(peptideRefs[j]));
+                x[j] = realRtList.get(j).apexRt();
+                y[j] = realRtList.get(j).apexRt() - exp.getIrt().getSi().realRt(libRtMap.get(peptideRefs[j]));
             }
             map.put(expId, new PeptideRtPairs(peptideRefs, x, y));
         }

@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.*;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.utils.ProProUtil;
 import org.apache.commons.math3.linear.*;
@@ -109,9 +109,9 @@ public class Lda extends Classifier {
         List<SelectedPeakGroupScore> decoyPeaks = new ArrayList<>();
         List<String> scoreTypes = learningParams.getScoreTypes();
         for (PeptideScore peptideScore : trainData.getDecoys()) {
-            PeakGroupScore topDecoy = null;
+            PeakGroup topDecoy = null;
             double maxMainScore = -Double.MAX_VALUE;
-            for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
+            for (PeakGroup peakGroupScore : peptideScore.getPeakGroupList()) {
                 double mainScore = peakGroupScore.get(ScoreType.InitScore.getName(), scoreTypes);
                 if (mainScore > maxMainScore) {
                     maxMainScore = mainScore;

@@ -89,7 +89,7 @@ public class LfqBench {
         statForA.getDataMap().forEach((key, a) -> {
             if (statForB.getDataMap().containsKey(key)) {
                 DataSum b = statForB.getDataMap().get(key);
-                PeptideRatio peptideRatio = new PeptideRatio(key, Math.log(b.getSum()) / Math.log(2), Math.log(a.getSum() / b.getSum()) / Math.log(2));
+                PeptideRatio peptideRatio = new PeptideRatio(key, Math.log(b.getIntensitySum()) / Math.log(2), Math.log(a.getIntensitySum() / b.getIntensitySum()) / Math.log(2));
                 if (a.getProteins().get(0).endsWith(HUMAN)) {
                     humanPoints.add(peptideRatio);
                 } else if (a.getProteins().get(0).endsWith(YEAS8)) {

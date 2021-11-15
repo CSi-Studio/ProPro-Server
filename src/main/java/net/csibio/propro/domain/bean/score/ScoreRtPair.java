@@ -11,5 +11,5 @@ public class ScoreRtPair {
     double libRt;
     double score;
     double realRt;
-    PeakGroupScore scores;
+    PeakGroup scores;
 }

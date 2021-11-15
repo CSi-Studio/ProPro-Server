@@ -12,27 +12,27 @@ public class DataUtil {
         data.setRtArray(null);
         data.setIntMap(null);
         data.setCutInfoMap(null);
-        data.setIons50(null);
-        data.setIons300(null);
+        data.setIonsLow(null);
+        data.setIonsHigh(null);
     }
 
     public static void clearCompressed(DataDO data) {
         data.setRtBytes(null);
         data.setIntMapBytes(null);
         data.setCutInfosFeature(null);
-        data.setIons50Bytes(null);
-        data.setIons300Bytes(null);
+        data.setIonsLowBytes(null);
+        data.setIonsHighBytes(null);
     }
 
     public static void compress(DataDO data) {
         if (data.getRtArray() != null) {
             data.setRtBytes(CompressUtil.compressedToBytes(data.getRtArray()));
         }
-        if (data.getIons50() != null) {
-            data.setIons50Bytes(CompressUtil.compressedToBytes(data.getIons50()));
+        if (data.getIonsLow() != null) {
+            data.setIonsLowBytes(CompressUtil.compressedToBytes(data.getIonsLow()));
         }
-        if (data.getIons300() != null) {
-            data.setIons300Bytes(CompressUtil.compressedToBytes(data.getIons300()));
+        if (data.getIonsHigh() != null) {
+            data.setIonsHighBytes(CompressUtil.compressedToBytes(data.getIonsHigh()));
         }
         if (data.getIntMap() != null && data.getIntMap().size() > 0) {
             HashMap<String, byte[]> intMap = new HashMap<>();
@@ -53,11 +53,11 @@ public class DataUtil {
         if (data.getRtBytes() != null) {
             data.setRtArray(CompressUtil.transToFloat(data.getRtBytes()));
         }
-        if (data.getIons50Bytes() != null) {
-            data.setIons50(CompressUtil.transToInt(data.getIons50Bytes()));
+        if (data.getIonsLowBytes() != null) {
+            data.setIonsLow(CompressUtil.transToInt(data.getIonsLowBytes()));
         }
-        if (data.getIons300Bytes() != null) {
-            data.setIons300(CompressUtil.transToInt(data.getIons300Bytes()));
+        if (data.getIonsHighBytes() != null) {
+            data.setIonsHigh(CompressUtil.transToInt(data.getIonsHighBytes()));
         }
         if (data.getIntMapBytes() != null && data.getIntMapBytes().size() > 0) {
             HashMap<String, float[]> intensityMap = new HashMap<>();

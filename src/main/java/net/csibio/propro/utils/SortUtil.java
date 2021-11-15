@@ -3,7 +3,7 @@ package net.csibio.propro.utils;
 import com.google.common.collect.Ordering;
 import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.domain.bean.data.PeptideScore;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.PeptideDO;
@@ -81,10 +81,10 @@ public class SortUtil {
         return ordering.sortedCopy(scores);
     }
 
-    public static List<PeakGroupScore> sortBySelectedScore(List<PeakGroupScore> scores, String scoreName, boolean isDesc, List<String> scoreTypes) {
-        Ordering<PeakGroupScore> ordering = Ordering.from(new Comparator<PeakGroupScore>() {
+    public static List<PeakGroup> sortBySelectedScore(List<PeakGroup> scores, String scoreName, boolean isDesc, List<String> scoreTypes) {
+        Ordering<PeakGroup> ordering = Ordering.from(new Comparator<PeakGroup>() {
             @Override
-            public int compare(PeakGroupScore o1, PeakGroupScore o2) {
+            public int compare(PeakGroup o1, PeakGroup o2) {
                 if (isDesc) {
                     return o2.get(scoreName, scoreTypes).compareTo(o1.get(scoreName, scoreTypes));
                 } else {

@@ -4,7 +4,6 @@ import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.domain.bean.data.RtIntensityPairsDouble;
 import net.csibio.propro.domain.bean.score.EmgModelParams;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.utils.MathUtil;
 import net.finmath.optimizer.SolverException;
 import org.slf4j.Logger;
@@ -34,7 +33,7 @@ public class ElutionScorer {
      * @param scoreTypes
      */
     @Deprecated
-    public void calculateElutionModelScore(PeakGroup peakGroupFeature, PeakGroupScore scores, List<String> scoreTypes) {
+    public void calculateElutionModelScore(PeakGroup peakGroupFeature, PeakGroup scores, List<String> scoreTypes) {
         double elutionModelFitScore = 0.0d;
         for (String cutInfo : peakGroupFeature.getIonHullInt().keySet()) {
             RtIntensityPairsDouble preparedHullPoints = prepareElutionFit(peakGroupFeature.getIonHullRt(), peakGroupFeature.getIonHullInt().get(cutInfo));

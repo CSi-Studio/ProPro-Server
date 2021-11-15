@@ -20,9 +20,9 @@ public class SelectedPeakGroupScore extends BaseScores {
     Boolean decoy;
 
     //本峰值对应的最佳RT时间
-    Double rt;
+    Double apexRt;
 
-    Double nearestRt;
+    Double selectedRt;
 
     //定量结果
     Double intensitySum;
@@ -34,7 +34,7 @@ public class SelectedPeakGroupScore extends BaseScores {
 
     Double qValue;
 
-    Integer ions50;
+    Integer ionsLow;
 
     Double fdr;
 

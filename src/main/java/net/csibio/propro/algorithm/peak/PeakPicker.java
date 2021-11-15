@@ -93,14 +93,14 @@ public class PeakPicker {
 
         UnSearchPeakGroup unSearchPeakGroup = new UnSearchPeakGroup();
         //计算IonCount对应的值
-        Double[] ions300 = ArrayUtil.intToDouble(data.getIons300());
-        float[] ions50Float = ArrayUtil.intTofloat(data.getIons50());
-        float[] ions300Float = ArrayUtil.intTofloat(data.getIons300());
+        Double[] ions300 = ArrayUtil.intToDouble(data.getIonsHigh());
+        float[] ions50Float = ArrayUtil.intTofloat(data.getIonsLow());
+        float[] ions300Float = ArrayUtil.intTofloat(data.getIonsHigh());
         Double[] ions300Smooth = gaussFilter.filter(rtArray, ions300, ss); //使用ions300进行平滑选峰
 
-        unSearchPeakGroup.setIons50(data.getIons50());
-        unSearchPeakGroup.setIons300(data.getIons300());
-        unSearchPeakGroup.setIons300Smooth(ions300Smooth);
+        unSearchPeakGroup.setIonsLow(data.getIonsLow());
+        unSearchPeakGroup.setIonsHigh(data.getIonsHigh());
+        unSearchPeakGroup.setIonsHighSmooth(ions300Smooth);
 
         RtIntensityPairsDouble maxPeaksForIons300 = peakPicker.pickMaxPeak(rtArray, ions300Smooth);
         if (maxPeaksForIons300 == null || maxPeaksForIons300.getRtArray() == null) { //如果IonsCount没有找到任何峰,则直接认为没有鉴定成功
@@ -123,7 +123,7 @@ public class PeakPicker {
         if (pairs.size() == 0) {
             return new PeakGroupListWrapper(false);
         }
-        unSearchPeakGroup.setMaxPeaksForIons300(pairs);
+        unSearchPeakGroup.setMaxPeaksForIonsHigh(pairs);
 
         //对每一个片段离子选峰
         double libIntSum = MathUtil.sum(libIntMap.values());
@@ -176,7 +176,7 @@ public class PeakPicker {
     public PeakGroupListWrapper searchPeakGroupsV2(DataDO data, PeptideCoord coord, SigmaSpacing ss) {
 
         Map<String, Float> libIntMap = coord.buildIntensityMap();
-        PeakGroupListWrapper featureResult = new PeakGroupListWrapper(true);
+        PeakGroupListWrapper peakGroupListWrapper = new PeakGroupListWrapper(true);
         if (data.getIntMap().isEmpty()) {
             return new PeakGroupListWrapper(false);
         }
@@ -207,14 +207,14 @@ public class PeakPicker {
 
         UnSearchPeakGroup unSearchPeakGroup = new UnSearchPeakGroup();
         //计算IonCount对应的值
-        Double[] ions300 = ArrayUtil.intToDouble(data.getIons300());
-        float[] ions50Float = ArrayUtil.intTofloat(data.getIons50());
-        float[] ions300Float = ArrayUtil.intTofloat(data.getIons300());
+        Double[] ions300 = ArrayUtil.intToDouble(data.getIonsHigh());
+        float[] ions50Float = ArrayUtil.intTofloat(data.getIonsLow());
+        float[] ions300Float = ArrayUtil.intTofloat(data.getIonsHigh());
         Double[] ions300Smooth = gaussFilter.filter(rtArray, ions300, ss); //使用ions300进行平滑选峰
 
-        unSearchPeakGroup.setIons50(data.getIons50());
-        unSearchPeakGroup.setIons300(data.getIons300());
-        unSearchPeakGroup.setIons300Smooth(ions300Smooth);
+        unSearchPeakGroup.setIonsLow(data.getIonsLow());
+        unSearchPeakGroup.setIonsHigh(data.getIonsHigh());
+        unSearchPeakGroup.setIonsHighSmooth(ions300Smooth);
 
         RtIntensityPairsDouble maxPeaksForIons300 = peakPicker.pickMaxPeak(rtArray, ions300Smooth);
         if (maxPeaksForIons300 == null || maxPeaksForIons300.getRtArray() == null) { //如果IonsCount没有找到任何峰,则直接认为没有鉴定成功
@@ -237,7 +237,7 @@ public class PeakPicker {
         if (pairs.size() == 0) {
             return new PeakGroupListWrapper(false);
         }
-        unSearchPeakGroup.setMaxPeaksForIons300(pairs);
+        unSearchPeakGroup.setMaxPeaksForIonsHigh(pairs);
 
         //对每一个片段离子选峰
         double libIntSum = MathUtil.sum(libIntMap.values());
@@ -260,10 +260,10 @@ public class PeakPicker {
 //            log.error("居然没有匹配到,蛋疼:" + data.getPeptideRef());
         }
 
-        featureResult.setList(peakGroups);
-        featureResult.setNormedIntMap(normedLibIntMap);
+        peakGroupListWrapper.setList(peakGroups);
+        peakGroupListWrapper.setNormedIntMap(normedLibIntMap);
 
-        return featureResult;
+        return peakGroupListWrapper;
     }
 
     /**

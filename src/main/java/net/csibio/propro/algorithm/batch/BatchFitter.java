@@ -71,14 +71,14 @@ public class BatchFitter {
                     if (mergedDataSum == null) { //如果之前没有相关的信息,则加入到Map中
                         dataMap.put(dataSum.getPeptideRef(), new MergedDataSum(dataSum, 1));
                     } else {
-                        mergedDataSum.getData().setSum(mergedDataSum.getData().getSum() + dataSum.getSum());
+                        mergedDataSum.getData().setIntensitySum(mergedDataSum.getData().getIntensitySum() + dataSum.getIntensitySum());
                         mergedDataSum.setEffectNum(mergedDataSum.getEffectNum() + 1); //记录有效实验的数目,用于计算平均值
                     }
                 }
             }
         }
         dataMap.forEach((key, value) -> {
-            value.getData().setSum(value.getData().getSum() / value.getEffectNum());
+            value.getData().setIntensitySum(value.getData().getIntensitySum() / value.getEffectNum());
             dataResultMap.put(value.getData().getProteins().get(0) + "-->" + key, value.getData());
         });
         GroupStat stat = new GroupStat();

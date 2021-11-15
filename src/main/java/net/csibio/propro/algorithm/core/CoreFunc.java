@@ -16,7 +16,7 @@ import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.bean.common.IntegerPair;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.ExperimentDO;
@@ -186,7 +186,7 @@ public class CoreFunc {
             ions50[iter.get()] = pair.left();
             iter.getAndIncrement();
         });
-        data.setIons50(ions50);
+        data.setIonsLow(ions50);
         double bestScore = -99999d;
         AnyPair<DataDO, DataSumDO> bestPair = null;
         AnyPair<DataDO, DataSumDO> bestIonsPair = null;
@@ -207,7 +207,7 @@ public class CoreFunc {
                 if (data == null) {
                     continue;
                 }
-                data.setIons50(ions50);
+                data.setIonsLow(ions50);
             }
 
             try {
@@ -217,19 +217,19 @@ public class CoreFunc {
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
             }
 
-            if (data.getScoreList() != null) {
+            if (data.getPeakGroupList() != null) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(data, overview, null);
                 double currentBYCount = scorer.calcBestIonsCount(data);
 //                if (currentBYCount > maxBYCount) {
 //                    maxBYCount = currentBYCount;
 //                }
                 if (dataSum != null) {
-                    if (!hitPairMap.containsKey(dataSum.getNearestRt())) {
+                    if (!hitPairMap.containsKey(dataSum.getSelectedRt())) {
                         List<AnyPair<DataDO, DataSumDO>> pairs = new ArrayList<>();
                         pairs.add(new AnyPair<DataDO, DataSumDO>(data, dataSum));
-                        hitPairMap.put(dataSum.getNearestRt(), pairs);
+                        hitPairMap.put(dataSum.getSelectedRt(), pairs);
                     } else {
-                        List<AnyPair<DataDO, DataSumDO>> currentPairs = hitPairMap.get(dataSum.getNearestRt());
+                        List<AnyPair<DataDO, DataSumDO>> currentPairs = hitPairMap.get(dataSum.getSelectedRt());
                         currentPairs.add(new AnyPair<DataDO, DataSumDO>(data, dataSum));
                     }
                 }
@@ -267,7 +267,7 @@ public class CoreFunc {
             ionsFloatArray[i] = ions50[i];
         }
         bestPair.getLeft().getIntMap().put(CutInfoConst.ION_COUNT, ionsFloatArray);
-        if (maxHitRt.get() != bestPair.getRight().getNearestRt()) {
+        if (maxHitRt.get() != bestPair.getRight().getSelectedRt()) {
             log.info("有问题:" + exp.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
         } else {
             log.info("RT吻合:" + exp.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
@@ -373,7 +373,7 @@ public class CoreFunc {
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
             }
 
-            if (buildData.getScoreList() != null) {
+            if (buildData.getPeakGroupList() != null) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(buildData, overview, maxLibIon);
                 double currentBYCount = scorer.calcBestIonsCount(buildData);
                 if (currentBYCount > maxBYCount) {
@@ -440,7 +440,7 @@ public class CoreFunc {
             DataUtil.compress(dataDO);
 
             //如果没有打分数据,那么对应的decoy也不再计算,以保持target与decoy 1:1的混合比例,这里需要注意的是,即便是scoreList是空,也需要将DataDO存储到数据库中,以便后续的重新统计和分析
-            if (dataDO.getScoreList() == null) {
+            if (dataDO.getPeakGroupList() == null) {
                 return;
             }
 
@@ -485,7 +485,7 @@ public class CoreFunc {
             }
             //Step2. 常规选峰及打分,未满足条件的直接忽略
             dataDO = scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
-            lda.scoreForPeakGroups(dataDO.getScoreList(), params.getBaseOverview().getWeights(), params.getBaseOverview().getParams().getMethod().getScore().getScoreTypes());
+            lda.scoreForPeakGroups(dataDO.getPeakGroupList(), params.getBaseOverview().getWeights(), params.getBaseOverview().getParams().getMethod().getScore().getScoreTypes());
             DataSumDO tempSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview(), null);
             if (tempSum == null || tempSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview(), null);
@@ -503,7 +503,7 @@ public class CoreFunc {
             DataUtil.compress(dataDO);
 
             //如果没有打分数据,那么对应的decoy也不再计算,以保持target与decoy 1:1的混合比例,这里需要注意的是,即便是scoreList是空,也需要将DataDO存储到数据库中,以便后续的重新统计和分析
-            if (dataDO.getScoreList() == null) {
+            if (dataDO.getPeakGroupList() == null) {
                 return;
             }
 
@@ -552,7 +552,7 @@ public class CoreFunc {
             DataUtil.compress(dataDO);
 
             //如果没有打分数据,那么对应的decoy也不再计算,以保持target与decoy 1:1的混合比例,这里需要注意的是,即便是scoreList是空,也需要将DataDO存储到数据库中,以便后续的重新统计和分析
-            if (dataDO.getScoreList() == null) {
+            if (dataDO.getPeakGroupList() == null) {
                 return;
             }
 
@@ -637,20 +637,20 @@ public class CoreFunc {
     private DataSumDO judge(DataDO dataDO) {
 
         DataSumDO sum = new DataSumDO(dataDO);
-        PeakGroupScore finalPgs = null;
-        List<PeakGroupScore> peakGroupList = dataDO.getScoreList();
+        PeakGroup finalPgs = null;
+        List<PeakGroup> peakGroupList = dataDO.getPeakGroupList();
         if (peakGroupList != null && peakGroupList.size() > 0) {
-            List<PeakGroupScore> candidateList = peakGroupList.stream().filter(PeakGroupScore::fine).collect(Collectors.toList());
+            List<PeakGroup> candidateList = peakGroupList.stream().filter(PeakGroup::fine).collect(Collectors.toList());
             if (candidateList.size() > 0) {
-                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroupScore::getInit).reversed()).collect(Collectors.toList()).get(0);
+                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroup::getInit).reversed()).collect(Collectors.toList()).get(0);
             }
         }
 
         if (finalPgs != null) {
-            sum.setRealRt(finalPgs.getRt());
-            sum.setNearestRt(finalPgs.getNearestRt());
-            sum.setSum(finalPgs.getIntensitySum());
-            sum.setIons50(finalPgs.getIons50());
+            sum.setApexRt(finalPgs.getApexRt());
+            sum.setSelectedRt(finalPgs.getSelectedRt());
+            sum.setIntensitySum(finalPgs.getIntensitySum());
+            sum.setIonsLow(finalPgs.getIonsLow());
             dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
             sum.setStatus(IdentifyStatus.SUCCESS.getCode());
         } else {

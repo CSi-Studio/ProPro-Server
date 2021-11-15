@@ -10,7 +10,7 @@ import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.learner.TrainData;
 import net.csibio.propro.domain.bean.learner.TrainPeaks;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.utils.ProProUtil;
 import org.slf4j.Logger;
@@ -126,7 +126,7 @@ public class Xgboost extends Classifier {
         }
 //        List<Float> testData = new ArrayList<>();
         for (PeptideScore peptideScore : scores) {
-            for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
+            for (PeakGroup peakGroupScore : peptideScore.getPeakGroupList()) {
                 if (!peptideScore.getDecoy() && !checkRationality(peakGroupScore, scoreTypes)) {
                     peakGroupScore.put(ScoreType.WeightedTotalScore.getName(), 0d, scoreTypes);
                     continue;
@@ -188,7 +188,7 @@ public class Xgboost extends Classifier {
         return trainMat;
     }
 
-    private boolean checkRationality(PeakGroupScore peakGroupScore, List<String> scoreTypes) {
+    private boolean checkRationality(PeakGroup peakGroupScore, List<String> scoreTypes) {
 //        if (peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < 0.5) {
 //            return false;
 //        } else {

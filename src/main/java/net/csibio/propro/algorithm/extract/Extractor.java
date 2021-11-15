@@ -193,9 +193,9 @@ public class Extractor {
             }
             scorer.strictScoreForOne(dataDO, coordinates.get(i), rtMap, params.getMethod().getQuickFilter().getMinShapeScore());
 
-            if (dataDO.getScoreList() != null) {
+            if (dataDO.getPeakGroupList() != null) {
                 finalList.add(dataDO);
-                log.info("第" + i + "次搜索找到了:" + dataDO.getPeptideRef() + ",BestRT:" + dataDO.getScoreList().get(0).getRt() + "耗时:" + (System.currentTimeMillis() - start));
+                log.info("第" + i + "次搜索找到了:" + dataDO.getPeptideRef() + ",BestRT:" + dataDO.getPeakGroupList().get(0).getApexRt() + "耗时:" + (System.currentTimeMillis() - start));
                 count++;
             }
         }
@@ -237,8 +237,8 @@ public class Extractor {
                 List<DataDO> dataList = doExtract(parser, exp, index, analyzeParams);
                 if (dataList != null) {
                     for (DataDO dataDO : dataList) {
-                        if (dataDO.getScoreList() != null) {
-                            peakCount += dataDO.getScoreList().size();
+                        if (dataDO.getPeakGroupList() != null) {
+                            peakCount += dataDO.getPeakGroupList().size();
                         }
                     }
                     dataCount += dataList.size();
@@ -312,8 +312,8 @@ public class Extractor {
             ions300[i] = pair.right();
         }
 
-        dataDO.setIons50(ions50);
-        dataDO.setIons300(ions300);
+        dataDO.setIonsLow(ions50);
+        dataDO.setIonsHigh(ions300);
     }
 
     /**

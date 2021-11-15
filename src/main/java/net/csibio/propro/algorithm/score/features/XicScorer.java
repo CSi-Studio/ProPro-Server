@@ -5,7 +5,6 @@ import com.google.common.collect.Table;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.PeakGroupScore;
 import net.csibio.propro.utils.MathUtil;
 import org.apache.commons.math3.util.FastMath;
 import org.springframework.stereotype.Component;
@@ -34,7 +33,7 @@ public class XicScorer {
      *
      * @param peakGroup list of features in selected mrmfeature
      */
-    public void calcXICScores(PeakGroup peakGroup, HashMap<String, Double> normedLibIntMap, PeakGroupScore scores, List<String> scoreTypes) {
+    public void calcXICScores(PeakGroup peakGroup, HashMap<String, Double> normedLibIntMap, List<String> scoreTypes) {
         Table<Integer, Integer, Double[]> xcorrMatrix = initializeXCorrMatrix(peakGroup);
 
         List<Double> normedLibIntList = new ArrayList<>(normedLibIntMap.values());
@@ -85,28 +84,28 @@ public class XicScorer {
             stdDelta = Math.sqrt(sumDelta / (deltas.size() - 1));
         }
         if (scoreTypes.contains(ScoreType.XcorrCoelution.getName())) {
-            scores.put(ScoreType.XcorrCoelution.getName(), meanDelta + stdDelta, scoreTypes); //时间偏差
+            peakGroup.put(ScoreType.XcorrCoelution.getName(), meanDelta + stdDelta, scoreTypes); //时间偏差
         }
         if (scoreTypes.contains(ScoreType.XcorrCoelutionWeighted.getName())) {
-            scores.put(ScoreType.XcorrCoelutionWeighted.getName(), sumDeltaWeighted, scoreTypes);
+            peakGroup.put(ScoreType.XcorrCoelutionWeighted.getName(), sumDeltaWeighted, scoreTypes);
         }
         if (scoreTypes.contains(ScoreType.XcorrShape.getName())) {
-            scores.put(ScoreType.XcorrShape.getName(), meanIntensity, scoreTypes); // 平均的吻合程度--> 新的吻合系数
+            peakGroup.put(ScoreType.XcorrShape.getName(), meanIntensity, scoreTypes); // 平均的吻合程度--> 新的吻合系数
         }
         if (scoreTypes.contains(ScoreType.XcorrShapeWeighted.getName())) {
-            scores.put(ScoreType.XcorrShapeWeighted.getName(), sumIntensityWeighted, scoreTypes);
+            peakGroup.put(ScoreType.XcorrShapeWeighted.getName(), sumIntensityWeighted, scoreTypes);
         }
     }
 
-    public void calculateLogSnScore(PeakGroup peakGroup, PeakGroupScore scores, List<String> scoreTypes) {
+    public void calculateLogSnScore(PeakGroup peakGroup, List<String> scoreTypes) {
         //logSnScore
         // log(mean of Apex sn s)
         double snScore = peakGroup.getSignalToNoiseSum();
-        snScore /= peakGroup.getIonCount();
+        snScore /= peakGroup.getIonIntensity().size();
         if (snScore < 1) {
-            scores.put(ScoreType.LogSnScore.getName(), 0d, scoreTypes);
+            peakGroup.put(ScoreType.LogSnScore.getName(), 0d, scoreTypes);
         } else {
-            scores.put(ScoreType.LogSnScore.getName(), FastMath.log(snScore), scoreTypes);
+            peakGroup.put(ScoreType.LogSnScore.getName(), FastMath.log(snScore), scoreTypes);
         }
     }
 

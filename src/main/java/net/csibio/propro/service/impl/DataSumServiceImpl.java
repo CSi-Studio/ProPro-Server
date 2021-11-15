@@ -56,13 +56,12 @@ public class DataSumServiceImpl implements DataSumService {
             sum.setDecoy(selectedPeakGroup.getDecoy());
             sum.setFdr(selectedPeakGroup.getFdr());
             sum.setQValue(selectedPeakGroup.getQValue());
-            sum.setFragIntFeature(selectedPeakGroup.getFragIntFeature());
-            sum.setRealRt(selectedPeakGroup.getRt());
-            sum.setNearestRt(selectedPeakGroup.getNearestRt());
+            sum.setApexRt(selectedPeakGroup.getApexRt());
+            sum.setSelectedRt(selectedPeakGroup.getSelectedRt());
             sum.setPeptideRef(selectedPeakGroup.getPeptideRef());
-            sum.setSum(selectedPeakGroup.getIntensitySum());
+            sum.setIntensitySum(selectedPeakGroup.getIntensitySum());
             sum.setTotalScore(selectedPeakGroup.getMainScore());
-            sum.setIons50(selectedPeakGroup.getIons50());
+            sum.setIonsLow(selectedPeakGroup.getIonsLow());
             if (selectedPeakGroup.getFdr() != null && selectedPeakGroup.getFdr() <= fdr) {
                 sum.setStatus(IdentifyStatus.SUCCESS.getCode());
             } else {
