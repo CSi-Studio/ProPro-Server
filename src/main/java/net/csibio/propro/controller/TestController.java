@@ -2,6 +2,7 @@ package net.csibio.propro.controller;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
+import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.algorithm.learner.SemiSupervise;
 import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
@@ -18,10 +19,7 @@ import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
-import net.csibio.propro.domain.db.DataSumDO;
-import net.csibio.propro.domain.db.LibraryDO;
-import net.csibio.propro.domain.db.OverviewDO;
-import net.csibio.propro.domain.db.PeptideDO;
+import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.query.*;
 import net.csibio.propro.service.*;
 import net.csibio.propro.utils.ProProUtil;
@@ -250,14 +248,31 @@ public class TestController {
             String overviewId = idName.id();
 
             OverviewDO overview = overviewService.getById(overviewId);
-
             log.info("读取数据库信息中");
             Map<String, PeptideScore> peptideMap = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()).setDecoy(false), PeptideScore.class, overview.getProjectId()).stream().collect(Collectors.toMap(PeptideScore::getId, Function.identity()));
             Map<String, DataSumDO> sumMap = dataSumService.getAll(new DataSumQuery().setOverviewId(overviewId).setDecoy(false), DataSumDO.class, overview.getProjectId()).stream().collect(Collectors.toMap(DataSumDO::getPeptideRef, Function.identity()));
+            RunDO run = runService.getById(overview.getRunId());
+            List<WindowRange> ranges = run.getWindowRanges();
+            HashMap<Double, TreeMap<Double, List<DataSumDO>>> rangeMap = new HashMap<>();
+            for (WindowRange range : ranges) {
+                TreeMap<Double, List<DataSumDO>> rtMap = new TreeMap<>();
+                List<PeptideDO> peptideList = peptideService.getAll(new PeptideQuery(overview.getAnaLibId()).setMzStart(range.getStart()).setMzEnd(range.getEnd()));
+                for (PeptideDO peptide : peptideList) {
+                    DataSumDO sum = sumMap.get(peptide.getPeptideRef());
+                    if (sum != null && sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())) {
+                        if (rtMap.get(sum.getApexRt()) != null) {
+                            rtMap.get(sum.getApexRt()).add(sum);
+                        } else {
+                            ArrayList<DataSumDO> sumList = new ArrayList<DataSumDO>();
+                            sumList.add(sum);
+                            rtMap.put(sum.getApexRt(), sumList);
+                        }
+                    }
+                }
+                rangeMap.put(range.getStart(), rtMap);
+            }
 
-
-            AtomicLong stat = new AtomicLong(0);
-            List<String> findItList = new ArrayList<>();
+            log.info(rangeMap.size() + "");
         }
 
         return Result.OK();
