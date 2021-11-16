@@ -85,7 +85,6 @@ public class Extractor {
         try {
             parser = new DIAParser(run.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
             rtMap = parser.getSpectrumsByRtRange(index.getStartPtr(), index.getRts(), index.getMzs(), index.getInts(), (float) coord.getRtStart(), (float) coord.getRtEnd());
-//            rtMap = parser.getSpectrums(index.getStartPtr(), index.getEndPtr(), index.getRts(), index.getMzs(), index.getInts());
         } catch (Exception e) {
             log.error(e.getMessage());
             return Result.Error(ResultCode.PARSE_ERROR);
@@ -256,7 +255,6 @@ public class Extractor {
             overviewDO.getStatistic().put(StatConst.TOTAL_PEPTIDE_COUNT, dataCount);
             overviewDO.getStatistic().put(StatConst.TOTAL_PEAK_COUNT, peakCount);
             overviewService.update(overviewDO);
-
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

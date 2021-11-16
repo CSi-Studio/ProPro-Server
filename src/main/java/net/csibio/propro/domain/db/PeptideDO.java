@@ -5,16 +5,15 @@ import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.domain.BaseDO;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
+import net.csibio.propro.utils.CompressUtil;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Data
 @Document(collection = "peptide")
@@ -106,6 +105,14 @@ public class PeptideDO extends BaseDO {
      */
     String features;
 
+    byte[] fingerPrintsByte;
+
+    //b:y
+    String fingerFeature;
+
+    @Transient
+    Set<Float> fingerPrints; //肽段指纹
+
     public void clearDecoy() {
         this.decoyFragments = null;
         this.decoyUnimodMap = null;
@@ -152,5 +159,14 @@ public class PeptideDO extends BaseDO {
         peptide.setPeptideRef(fullName + SymbolConst.UNDERLINE + newCharge);
         peptide.setMz(mz * charge / newCharge);
         return peptide;
+    }
+    
+    public Set<Float> getFingerPrints() {
+        if (fingerPrints == null && fingerPrintsByte != null) {
+            HashSet<Float> set = new HashSet<>();
+            Collections.addAll(set, CompressUtil.transToFloat(fingerPrintsByte));
+            fingerPrints = set;
+        }
+        return fingerPrints;
     }
 }

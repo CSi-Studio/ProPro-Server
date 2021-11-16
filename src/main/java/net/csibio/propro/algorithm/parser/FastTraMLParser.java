@@ -1,6 +1,7 @@
 package net.csibio.propro.algorithm.parser;
 
 import net.csibio.propro.algorithm.decoy.generator.ShuffleGenerator;
+import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.peptide.Annotation;
@@ -33,6 +34,8 @@ public class FastTraMLParser extends BaseLibraryParser {
     ShuffleGenerator shuffleGenerator;
     @Autowired
     LibraryService libraryService;
+    @Autowired
+    FragmentFactory fragmentFactory;
 
     private static String PeptideListBeginMarker = "<CompoundList>";
     private static String TransitionListBeginMarker = "<TransitionList>";
@@ -84,6 +87,7 @@ public class FastTraMLParser extends BaseLibraryParser {
             List<PeptideDO> peptideList = new ArrayList<>(peptideMap.values());
             for (PeptideDO peptideDO : peptideList) {
                 peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+                fragmentFactory.calcFingerPrints(peptideDO);
             }
             peptideService.insert(peptideList);
 
@@ -138,6 +142,7 @@ public class FastTraMLParser extends BaseLibraryParser {
             List<PeptideDO> peptideList = new ArrayList<>(peptideMap.values());
             for (PeptideDO peptideDO : peptideList) {
                 peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+                fragmentFactory.calcFingerPrints(peptideDO);
             }
             peptideService.insert(peptideList);
             taskDO.addLog(peptideMap.size() + "条肽段数据插入成功");

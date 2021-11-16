@@ -1,6 +1,7 @@
 package net.csibio.propro.algorithm.formula;
 
 import com.google.common.collect.Lists;
+import net.csibio.aird.util.CompressUtil;
 import net.csibio.propro.algorithm.parser.LibraryTsvParser;
 import net.csibio.propro.algorithm.parser.model.chemistry.AminoAcid;
 import net.csibio.propro.algorithm.parser.model.chemistry.Unimod;
@@ -300,5 +301,21 @@ public class FragmentFactory {
             aminoAcids.add(aa);
         }
         return aminoAcids;
+    }
+
+    public PeptideDO calcFingerPrints(PeptideDO peptide) {
+        BYSeries by = getBYSeries(peptide.getUnimodMap(), peptide.getSequence(), 1);
+        HashSet<Double> fingerPrints = new HashSet<>();
+        fingerPrints.addAll(by.getBSeries());
+        fingerPrints.addAll(by.getYSeries());
+        float[] floats = new float[fingerPrints.size()];
+        int i = 0;
+        for (Double fingerPrint : fingerPrints) {
+            floats[i] = fingerPrint.floatValue();
+            i++;
+        }
+        peptide.setFingerPrintsByte(CompressUtil.transToByte(floats));
+
+        return peptide;
     }
 }

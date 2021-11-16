@@ -1,6 +1,7 @@
 package net.csibio.propro.algorithm.parser;
 
 import net.csibio.propro.algorithm.decoy.generator.ShuffleGenerator;
+import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.parser.model.traml.*;
 import net.csibio.propro.algorithm.parser.xml.AirXStream;
 import net.csibio.propro.constants.enums.ResultCode;
@@ -32,6 +33,8 @@ public class TraMLParser extends BaseLibraryParser {
     ShuffleGenerator shuffleGenerator;
     @Autowired
     LibraryService libraryService;
+    @Autowired
+    FragmentFactory fragmentFactory;
 
     public Class<?>[] classes = new Class[]{
             Compound.class, CompoundList.class, Configuration.class, Contact.class, Cv.class, CvParam.class,
@@ -203,6 +206,7 @@ public class TraMLParser extends BaseLibraryParser {
             List<PeptideDO> peptideList = new ArrayList<>(map.values());
             for (PeptideDO peptideDO : peptideList) {
                 peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+                fragmentFactory.calcFingerPrints(peptideDO);
             }
             peptideService.insert(peptideList);
             Set<String> proteins = new HashSet<>();
@@ -265,6 +269,7 @@ public class TraMLParser extends BaseLibraryParser {
             ArrayList<PeptideDO> peptides = new ArrayList<PeptideDO>(map.values());
             for (PeptideDO peptideDO : peptides) {
                 peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+                fragmentFactory.calcFingerPrints(peptideDO);
             }
             peptideService.insert(peptides);
             tranResult.setData(peptides);

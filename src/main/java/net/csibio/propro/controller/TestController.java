@@ -3,6 +3,7 @@ package net.csibio.propro.controller;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.WindowRange;
+import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.learner.SemiSupervise;
 import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
@@ -16,7 +17,6 @@ import net.csibio.propro.domain.bean.data.PeptideScore;
 import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
-import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.domain.db.*;
@@ -70,6 +70,8 @@ public class TestController {
     Scorer scorer;
     @Autowired
     InitScorer initScorer;
+    @Autowired
+    FragmentFactory fragmentFactory;
 
     @GetMapping(value = "/lms")
     Result lms() {
@@ -196,8 +198,7 @@ public class TestController {
             count.getAndIncrement();
             List<PeptideDO> peptideList = peptideService.getAll(new PeptideQuery(library.getId()));
             peptideList.forEach(peptide -> {
-                peptide.setFragments(peptide.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
-                peptide.setDecoyFragments(peptide.getDecoyFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+                fragmentFactory.calcFingerPrints(peptide);
                 peptideService.update(peptide);
             });
             log.info("库" + library.getName() + "处理完毕");

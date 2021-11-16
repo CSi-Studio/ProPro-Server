@@ -9,6 +9,7 @@ import org.apache.commons.codec.binary.Base64;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
@@ -142,7 +143,16 @@ public class CompressUtil {
         return compressedArray;
     }
 
-    public static float[] transToFloat(byte[] value) {
+    public static byte[] compressedToBytes(double[] target) {
+        DoubleBuffer fbTarget = DoubleBuffer.wrap(target);
+        ByteBuffer bbTarget = ByteBuffer.allocate(fbTarget.capacity() * 8);
+        bbTarget.asDoubleBuffer().put(fbTarget);
+        byte[] targetArray = bbTarget.array();
+        byte[] compressedArray = CompressUtil.zlibCompress(targetArray);
+        return compressedArray;
+    }
+
+    public static float[] transTofloat(byte[] value) {
         ByteBuffer byteBuffer = ByteBuffer.wrap(value);
         byteBuffer = ByteBuffer.wrap(CompressUtil.zlibDecompress(byteBuffer.array()));
 
@@ -154,6 +164,48 @@ public class CompressUtil {
 
         byteBuffer.clear();
         return floatValues;
+    }
+
+    public static Float[] transToFloat(byte[] value) {
+        ByteBuffer byteBuffer = ByteBuffer.wrap(value);
+        byteBuffer = ByteBuffer.wrap(CompressUtil.zlibDecompress(byteBuffer.array()));
+
+        FloatBuffer floats = byteBuffer.asFloatBuffer();
+        Float[] floatValues = new Float[floats.capacity()];
+        for (int i = 0; i < floats.capacity(); i++) {
+            floatValues[i] = floats.get(i);
+        }
+
+        byteBuffer.clear();
+        return floatValues;
+    }
+
+    public static double[] transTodouble(byte[] value) {
+        ByteBuffer byteBuffer = ByteBuffer.wrap(value);
+        byteBuffer = ByteBuffer.wrap(CompressUtil.zlibDecompress(byteBuffer.array()));
+
+        DoubleBuffer doubles = byteBuffer.asDoubleBuffer();
+        double[] doubleValues = new double[doubles.capacity()];
+        for (int i = 0; i < doubles.capacity(); i++) {
+            doubleValues[i] = doubles.get(i);
+        }
+
+        byteBuffer.clear();
+        return doubleValues;
+    }
+
+    public static Double[] transToDouble(byte[] value) {
+        ByteBuffer byteBuffer = ByteBuffer.wrap(value);
+        byteBuffer = ByteBuffer.wrap(CompressUtil.zlibDecompress(byteBuffer.array()));
+
+        DoubleBuffer doubles = byteBuffer.asDoubleBuffer();
+        Double[] doubleValues = new Double[doubles.capacity()];
+        for (int i = 0; i < doubles.capacity(); i++) {
+            doubleValues[i] = doubles.get(i);
+        }
+
+        byteBuffer.clear();
+        return doubleValues;
     }
 
     public static int[] transToInt(byte[] value) {

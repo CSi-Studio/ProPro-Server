@@ -51,7 +51,7 @@ public class DataUtil {
 
     public static void decompress(DataDO data) {
         if (data.getRtBytes() != null) {
-            data.setRtArray(CompressUtil.transToFloat(data.getRtBytes()));
+            data.setRtArray(CompressUtil.transTofloat(data.getRtBytes()));
         }
         if (data.getIonsLowBytes() != null) {
             data.setIonsLow(CompressUtil.transToInt(data.getIonsLowBytes()));
@@ -63,7 +63,7 @@ public class DataUtil {
             HashMap<String, float[]> intensityMap = new HashMap<>();
             data.getIntMapBytes().forEach((key, value) -> {
                 if (value != null) {
-                    intensityMap.put(key, CompressUtil.transToFloat(value));
+                    intensityMap.put(key, CompressUtil.transTofloat(value));
                 } else {
                     intensityMap.put(key, null);
                 }

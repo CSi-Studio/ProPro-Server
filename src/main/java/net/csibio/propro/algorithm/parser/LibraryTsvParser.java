@@ -2,6 +2,7 @@ package net.csibio.propro.algorithm.parser;
 
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.decoy.generator.ShuffleGenerator;
+import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.peptide.Annotation;
@@ -37,6 +38,8 @@ public class LibraryTsvParser extends BaseLibraryParser {
     ShuffleGenerator shuffleGenerator;
     @Autowired
     LibraryService libraryService;
+    @Autowired
+    FragmentFactory fragmentFactory;
 
     private static String PrecursorMz = "precursormz";
     private static String ProductMz = "productmz";
@@ -93,6 +96,7 @@ public class LibraryTsvParser extends BaseLibraryParser {
             List<PeptideDO> peptideDOList = new ArrayList<>(map.values());
             for (PeptideDO peptideDO : peptideDOList) {
                 peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+                fragmentFactory.calcFingerPrints(peptideDO);
             }
             //在导入Peptide的同时生成伪肽段
             shuffleGenerator.generate(peptideDOList);
@@ -171,6 +175,7 @@ public class LibraryTsvParser extends BaseLibraryParser {
             List<PeptideDO> peptideList = new ArrayList<>(map.values());
             for (PeptideDO peptideDO : peptideList) {
                 peptideDO.setFragments(peptideDO.getFragments().stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList()));
+                fragmentFactory.calcFingerPrints(peptideDO);
             }
             peptideService.insert(peptideList);
             taskDO.addLog(map.size() + "条肽段数据插入成功");

@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,6 +57,22 @@ public class PeptideUtil {
             return sequence;
         } else {
             return fullName;
+        }
+    }
+
+    public static boolean similar(PeptideDO a, PeptideDO b) {
+        Set<Float> fingerPrintsA = a.getFingerPrints();
+        Set<Float> fingerPrintsB = b.getFingerPrints();
+        AtomicInteger count = new AtomicInteger(0);
+        fingerPrintsA.forEach(fingerPrint -> {
+            if (fingerPrintsB.contains(fingerPrint)) {
+                count.getAndIncrement();
+            }
+        });
+        if (count.get() >= 6) {
+            return true;
+        } else {
+            return false;
         }
     }
 
