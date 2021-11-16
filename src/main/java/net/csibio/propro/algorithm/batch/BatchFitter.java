@@ -7,11 +7,11 @@ import net.csibio.propro.algorithm.batch.bean.MergedDataSum;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.experiment.BaseExp;
+import net.csibio.propro.domain.bean.run.BaseRun;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.ProjectDO;
 import net.csibio.propro.domain.query.DataSumQuery;
-import net.csibio.propro.domain.query.ExperimentQuery;
+import net.csibio.propro.domain.query.RunQuery;
 import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class BatchFitter {
 
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     ProjectService projectService;
     @Autowired
@@ -44,21 +44,21 @@ public class BatchFitter {
      * @return
      */
     public Result<GroupStat> merge(ProjectDO project, String groupLabel) {
-        List<BaseExp> expList = experimentService.getAll(new ExperimentQuery().setProjectId(project.getId()).setLabel(groupLabel), BaseExp.class);
-        Map<String, OverviewDO> overviewMap = overviewService.getDefaultOverviews(expList.stream().map(BaseExp::getId).collect(Collectors.toList()));
-        if (overviewMap.size() != expList.size()) {
-            return Result.Error(ResultCode.SOME_EXPERIMENT_HAVE_NO_DEFAULT_OVERVIEW);
+        List<BaseRun> runList = runService.getAll(new RunQuery().setProjectId(project.getId()).setLabel(groupLabel), BaseRun.class);
+        Map<String, OverviewDO> overviewMap = overviewService.getDefaultOverviews(runList.stream().map(BaseRun::getId).collect(Collectors.toList()));
+        if (overviewMap.size() != runList.size()) {
+            return Result.Error(ResultCode.SOME_RUN_HAVE_NO_DEFAULT_OVERVIEW);
         }
-        GroupStat stat = merge(project, expList, overviewMap);
+        GroupStat stat = merge(project, runList, overviewMap);
         return Result.OK(stat);
     }
 
-    public GroupStat merge(ProjectDO project, List<BaseExp> expList, Map<String, OverviewDO> overviewMap) {
+    public GroupStat merge(ProjectDO project, List<BaseRun> runList, Map<String, OverviewDO> overviewMap) {
         Map<String, MergedDataSum> dataMap = new HashMap<>();
         Map<String, DataSum> dataResultMap = new HashMap<>();
-        for (BaseExp exp : expList) {
+        for (BaseRun run : runList) {
             List<DataSum> dataList = dataSumService.getAll(
-                            new DataSumQuery().setOverviewId(overviewMap.get(exp.getId()).getId())
+                            new DataSumQuery().setOverviewId(overviewMap.get(run.getId()).getId())
                                     .setDecoy(false)
                                     .setIsUnique(true)
                                     .setStatus(IdentifyStatus.SUCCESS.getCode()), DataSum.class, project.getId())
@@ -86,7 +86,7 @@ public class BatchFitter {
         int validNum = dataMap.values().stream().mapToInt(MergedDataSum::getEffectNum).sum();
 
         int proteins = dataMap.values().stream().map(data -> data.getData().getProteins().get(0)).collect(Collectors.toSet()).size();
-        stat.setMissingRatio(1 - validNum * 1.0 / (expList.size() * dataResultMap.size()));
+        stat.setMissingRatio(1 - validNum * 1.0 / (runList.size() * dataResultMap.size()));
         stat.setHit1((int) dataMap.values().stream().filter(data -> data.getEffectNum() == 1).count());
         stat.setHit2((int) dataMap.values().stream().filter(data -> data.getEffectNum() == 2).count());
         stat.setHit3((int) dataMap.values().stream().filter(data -> data.getEffectNum() == 3).count());

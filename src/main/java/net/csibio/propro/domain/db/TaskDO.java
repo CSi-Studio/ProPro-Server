@@ -25,7 +25,7 @@ public class TaskDO extends BaseDO {
     String id;
 
     @Indexed
-    List<String> expIds;
+    List<String> runIds;
 
     @Indexed
     String status;
@@ -53,11 +53,11 @@ public class TaskDO extends BaseDO {
         this.name = taskTemplate.getName() + "-" + taskSuffixName;
     }
 
-    public void addBindingExp(String expId) {
-        if (expIds == null) {
-            expIds = new ArrayList<>();
+    public void addBindingRun(String runId) {
+        if (runIds == null) {
+            runIds = new ArrayList<>();
         }
-        expIds.add(expId);
+        runIds.add(runId);
     }
 
     public TaskDO addLog(String content) {

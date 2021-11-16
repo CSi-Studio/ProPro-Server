@@ -25,9 +25,9 @@ public class OverviewQuery extends PageQuery {
 
     String methodId;
 
-    String expId;
+    String runId;
 
-    List<String> expIds;
+    List<String> runIds;
 
     public OverviewQuery() {
     }
@@ -36,9 +36,9 @@ public class OverviewQuery extends PageQuery {
         this.projectId = projectId;
     }
 
-    public OverviewQuery(String projectId, String expId) {
+    public OverviewQuery(String projectId, String runId) {
         this.projectId = projectId;
-        this.expId = expId;
+        this.runId = runId;
     }
 
 }

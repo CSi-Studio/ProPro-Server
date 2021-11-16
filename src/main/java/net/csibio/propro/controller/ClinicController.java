@@ -21,7 +21,7 @@ import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.domain.query.*;
 import net.csibio.propro.domain.vo.ClinicPrepareDataVO;
-import net.csibio.propro.domain.vo.ExpDataVO;
+import net.csibio.propro.domain.vo.RunDataVO;
 import net.csibio.propro.service.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +45,7 @@ public class ClinicController {
     @Autowired
     MethodService methodService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     OverviewService overviewService;
     @Autowired
@@ -90,24 +90,24 @@ public class ClinicController {
         }
         //TODO 王嘉伟 当overviewIds不为空的时候,检测他们的projectId, methodId, insId, anaId是否一致
 
-        List<IdNameAlias> expList = null;
+        List<IdNameAlias> runList = null;
         List<Overview4Clinic> totalOverviewList = null;
         if (overviewIds == null || overviewIds.size() == 0) {
             //如果overviewIds不为空,则按照overviewIds获取,否则获取该项目下所有的defaultOne=true的overview
-            expList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId), IdNameAlias.class);
+            runList = runService.getAll(new RunQuery().setProjectId(projectId), IdNameAlias.class);
             totalOverviewList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), Overview4Clinic.class);
         } else {
             totalOverviewList = overviewService.getAll(new OverviewQuery(projectId).setIds(overviewIds), Overview4Clinic.class);
-            List<String> expIds = totalOverviewList.stream().map(Overview4Clinic::getExpId).collect(Collectors.toList());
-            expList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId).setIds(expIds), IdNameAlias.class);
+            List<String> runIds = totalOverviewList.stream().map(Overview4Clinic::getRunId).collect(Collectors.toList());
+            runList = runService.getAll(new RunQuery().setProjectId(projectId).setIds(runIds), IdNameAlias.class);
         }
-        Map<String, List<Overview4Clinic>> overviewMap = totalOverviewList.stream().collect(Collectors.groupingBy(Overview4Clinic::getExpId));
+        Map<String, List<Overview4Clinic>> overviewMap = totalOverviewList.stream().collect(Collectors.groupingBy(Overview4Clinic::getRunId));
         ClinicPrepareDataVO data = new ClinicPrepareDataVO();
         data.setProject(project);
-        if (expList.stream().filter(idNameAlias -> idNameAlias.alias() != null).count() == expList.size()) {
-            data.setExpList(expList.stream().sorted(Comparator.comparing(IdNameAlias::alias)).collect(Collectors.toList()));
+        if (runList.stream().filter(idNameAlias -> idNameAlias.alias() != null).count() == runList.size()) {
+            data.setRunList(runList.stream().sorted(Comparator.comparing(IdNameAlias::alias)).collect(Collectors.toList()));
         } else {
-            data.setExpList(expList.stream().sorted(Comparator.comparing(IdNameAlias::name)).collect(Collectors.toList()));
+            data.setRunList(runList.stream().sorted(Comparator.comparing(IdNameAlias::name)).collect(Collectors.toList()));
         }
         data.setInsLib(new IdName(insLib.getId(), insLib.getName()));
         data.setAnaLib(new IdName(anaLib.getId(), anaLib.getName()));
@@ -138,8 +138,8 @@ public class ClinicController {
      * @param overviewIds
      * @return
      */
-    @PostMapping(value = "/getExpData")
-    Result<List<ExpDataVO>> getExpData(@RequestParam("projectId") String projectId,
+    @PostMapping(value = "/getRunData")
+    Result<List<RunDataVO>> getRunData(@RequestParam("projectId") String projectId,
                                        @RequestParam(value = "libraryId", required = false) String libraryId,
                                        @RequestParam("peptideRef") String peptideRef,
                                        @RequestParam("predict") Boolean predict,
@@ -148,7 +148,7 @@ public class ClinicController {
                                        @RequestParam(value = "denoise", required = false) Boolean denoise,
                                        @RequestParam("overviewIds") List<String> overviewIds) {
         log.info("开始获取新预测数据-------------------------------------------------------------------------------");
-        List<ExpDataVO> dataList = new ArrayList<>();
+        List<RunDataVO> dataList = new ArrayList<>();
         PeptideDO peptide = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(peptideRef), PeptideDO.class);
 
 
@@ -158,31 +158,31 @@ public class ClinicController {
             if (overview == null) {
                 continue;
             }
-            ExpDataVO data = null;
+            RunDataVO data = null;
             //如果使用预测方法,则进行实时EIC获取
             if (predict) {
-                ExperimentDO exp = experimentService.getById(overview.getExpId());
+                RunDO run = runService.getById(overview.getRunId());
                 DataSumDO existed = dataSumService.getOne(new DataSumQuery().setOverviewId(overview.getId()).setPeptideRef(peptideRef).setDecoy(false), DataSumDO.class, projectId);
 //                if (existed.getStatus() == IdentifyStatus.SUCCESS.getCode()) {
 //                    DataDO existedData = dataService.getById(existed.getId(), projectId);
 //                    DataSumDO dataSum = scorer.calcBestTotalScore(existedData, overview, null);
 //                    data = new ExpDataVO().merge(existedData, dataSum);
-//                    data.setGroup(exp.getGroup());
-//                    data.setAlias(exp.getAlias());
-//                    data.setExpId(exp.getId());
+//                    data.setGroup(run.getGroup());
+//                    data.setAlias(run.getAlias());
+//                    data.setExpId(run.getId());
 //                } else {
                 peptide.setFragments(peptide.getFragments().stream().filter(f -> !f.getCutInfo().equals("y14^2")).toList());
-                Result<ExpDataVO> res = dataService.predictDataFromFile(exp, peptide, changeCharge, overview.getId());
+                Result<RunDataVO> res = dataService.predictDataFromFile(run, peptide, changeCharge, overview.getId());
                 if (res.isSuccess()) {
                     data = res.getData();
-                    data.setGroup(exp.getGroup());
-                    data.setAlias(exp.getAlias());
-                    data.setExpId(exp.getId());
+                    data.setGroup(run.getGroup());
+                    data.setAlias(run.getAlias());
+                    data.setRunId(run.getId());
                     data.setOverviewId(overviewId);
                 }
 //                }
             } else {
-                data = dataService.getDataFromDB(projectId, overview.getExpId(), overview.getId(), peptideRef);
+                data = dataService.getDataFromDB(projectId, overview.getRunId(), overview.getId(), peptideRef);
             }
             if (data != null) {
                 if (data.getStatus() == null) {
@@ -222,7 +222,7 @@ public class ClinicController {
             });
         }
 
-        Result<List<ExpDataVO>> result = new Result<List<ExpDataVO>>(true);
+        Result<List<RunDataVO>> result = new Result<List<RunDataVO>>(true);
         result.setData(dataList);
         Map<String, Double> intensityMap = peptide.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, FragmentInfo::getIntensity));
         result.getFeatureMap().put("intensityMap", intensityMap);
@@ -230,24 +230,24 @@ public class ClinicController {
     }
 
     @PostMapping(value = "/getSpectra")
-    Result<FloatPairs> getSpectra(@RequestParam(value = "expId", required = false) String expId,
+    Result<FloatPairs> getSpectra(@RequestParam(value = "runId", required = false) String runId,
                                   @RequestParam(value = "mz", required = false) Double mz,
                                   @RequestParam(value = "rt", required = false) Float rt) {
-        ExperimentDO exp = experimentService.getById(expId);
-        FloatPairs pairs = experimentService.getSpectrum(exp, mz, rt);
+        RunDO run = runService.getById(runId);
+        FloatPairs pairs = runService.getSpectrum(run, mz, rt);
         return Result.OK(pairs);
     }
 
     @PostMapping(value = "/getRtPairs")
     Result<HashMap<String, PeptideRtPairs>> getRtPairs(@RequestParam("projectId") String projectId,
                                                        @RequestParam("onlyDefault") Boolean onlyDefault,
-                                                       @RequestParam("expIds") List<String> expIds) {
+                                                       @RequestParam("runIds") List<String> runIds) {
         HashMap<String, PeptideRtPairs> map = new HashMap<>();
         long start = System.currentTimeMillis();
-        for (int i = 0; i < expIds.size(); i++) {
-            String expId = expIds.get(i);
-            ExperimentDO exp = experimentService.getById(expId);
-            OverviewQuery query = new OverviewQuery(projectId).setExpId(expId);
+        for (int i = 0; i < runIds.size(); i++) {
+            String runId = runIds.get(i);
+            RunDO run = runService.getById(runId);
+            OverviewQuery query = new OverviewQuery(projectId).setRunId(runId);
             if (onlyDefault) {
                 query.setDefaultOne(true);
             }
@@ -279,9 +279,9 @@ public class ClinicController {
                 peptideRefs[j] = realRtList.get(j).peptideRef();
 //                x[j] = libRtMap.get(peptideRefs[j]);
                 x[j] = realRtList.get(j).apexRt();
-                y[j] = realRtList.get(j).apexRt() - exp.getIrt().getSi().realRt(libRtMap.get(peptideRefs[j]));
+                y[j] = realRtList.get(j).apexRt() - run.getIrt().getSi().realRt(libRtMap.get(peptideRefs[j]));
             }
-            map.put(expId, new PeptideRtPairs(peptideRefs, x, y));
+            map.put(runId, new PeptideRtPairs(peptideRefs, x, y));
         }
         log.info("rt坐标已渲染,耗时:" + (System.currentTimeMillis() - start));
         return Result.OK(map);

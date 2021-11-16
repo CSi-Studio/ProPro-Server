@@ -21,6 +21,6 @@ public class ClinicPrepareDataVO {
     Long proteinCount;
     MethodDO method;
     Set<String> proteins;
-    List<IdNameAlias> expList;
-    Map<String, List<Overview4Clinic>> overviewMap; //key为expId
+    List<IdNameAlias> runList;
+    Map<String, List<Overview4Clinic>> overviewMap; //key为runId
 }

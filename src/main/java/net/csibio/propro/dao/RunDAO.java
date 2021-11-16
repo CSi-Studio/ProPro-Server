@@ -1,7 +1,7 @@
 package net.csibio.propro.dao;
 
-import net.csibio.propro.domain.db.ExperimentDO;
-import net.csibio.propro.domain.query.ExperimentQuery;
+import net.csibio.propro.domain.db.RunDO;
+import net.csibio.propro.domain.query.RunQuery;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 @Service
-public class ExperimentDAO extends BaseDAO<ExperimentDO, ExperimentQuery> {
+public class RunDAO extends BaseDAO<RunDO, RunQuery> {
 
-    public static String CollectionName = "experiment";
+    public static String CollectionName = "run";
 
     @Override
     protected String getCollectionName() {
@@ -19,8 +19,8 @@ public class ExperimentDAO extends BaseDAO<ExperimentDO, ExperimentQuery> {
     }
 
     @Override
-    protected Class<ExperimentDO> getDomainClass() {
-        return ExperimentDO.class;
+    protected Class<RunDO> getDomainClass() {
+        return RunDO.class;
     }
 
     @Override
@@ -29,7 +29,7 @@ public class ExperimentDAO extends BaseDAO<ExperimentDO, ExperimentQuery> {
     }
 
     @Override
-    protected Query buildQueryWithoutPage(ExperimentQuery query) {
+    protected Query buildQueryWithoutPage(RunQuery query) {
         Query dbQuery = new Query();
         if (StringUtils.isNotEmpty(query.getId())) {
             dbQuery.addCriteria(where("id").is(query.getId()));

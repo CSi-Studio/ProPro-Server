@@ -10,13 +10,13 @@ import java.util.TreeMap;
 
 public interface BlockIndexService extends BaseService<BlockIndexDO, BlockIndexQuery> {
 
-    List<BlockIndexDO> getAllByExpId(String expId);
+    List<BlockIndexDO> getAllByRunId(String runId);
 
-    List<BlockIndexDO> getAllMS2ByExpId(String expId);
+    List<BlockIndexDO> getAllMS2ByRunId(String runId);
 
     AnyPair<Float, Float> getNearestSpectrumByRt(TreeMap<Float, MzIntensityPairs> rtMap, Double rt);
 
-    BlockIndexDO getOne(String expId, Double mz);
+    BlockIndexDO getOne(String runId, Double mz);
 
-    List<BlockIndexDO> getLinkedBlockIndex(String expId, Double mz, Double deltaMz, Integer collectedNumber);
+    List<BlockIndexDO> getLinkedBlockIndex(String runId, Double mz, Double deltaMz, Integer collectedNumber);
 }

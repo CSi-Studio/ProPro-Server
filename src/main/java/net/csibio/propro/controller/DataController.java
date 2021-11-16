@@ -8,7 +8,7 @@ import net.csibio.propro.domain.bean.data.BaseData;
 import net.csibio.propro.domain.db.DataSumDO;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.query.DataSumQuery;
-import net.csibio.propro.domain.vo.ExpDataVO;
+import net.csibio.propro.domain.vo.RunDataVO;
 import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -32,7 +32,7 @@ public class DataController {
     @Autowired
     MethodService methodService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     OverviewService overviewService;
     @Autowired
@@ -41,7 +41,7 @@ public class DataController {
     DataService dataService;
     @Autowired
     DataSumService dataSumService;
-    
+
     @GetMapping(value = "/list")
     Result list(DataSumQuery dataQuery) {
         if (dataQuery.getOverviewId() == null) {
@@ -56,14 +56,14 @@ public class DataController {
 
         List<DataSumDO> dataSumList = res.getData();
 
-        List<ExpDataVO> dataList = new ArrayList<>();
+        List<RunDataVO> dataList = new ArrayList<>();
         dataSumList.forEach(dataSum -> {
             BaseData baseData = dataService.getById(dataSum.getId(), BaseData.class, overview.getProjectId());
-            ExpDataVO dataVO = new ExpDataVO(overview.getExpId());
+            RunDataVO dataVO = new RunDataVO(overview.getRunId());
             dataVO.merge(baseData, dataSum);
             dataList.add(dataVO);
         });
-        Result<List<ExpDataVO>> result = new Result<>(true);
+        Result<List<RunDataVO>> result = new Result<>(true);
         result.setPagination(res.getPagination());
         result.setData(dataList);
         return result;

@@ -15,9 +15,9 @@ public enum TaskTemplate {
     DEFAULT("DEFAULT"),
 
     /**
-     * upload experiment file
+     * upload runs
      */
-    SCAN_AND_UPDATE_EXPERIMENTS("SCAN_AND_UPDATE_EXPERIMENTS"),
+    SCAN_AND_UPDATE_RUNS("SCAN_AND_UPDATE_RUNS"),
 
     /**
      * upload library file(including standard library and irt library)

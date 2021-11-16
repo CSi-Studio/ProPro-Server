@@ -12,9 +12,9 @@ public class PeptideRow {
 
     String peptide;
 
-    //每一个exp-overview对应的定量
+    //每一个run-overview对应的定量
     List<Double> sumList = new ArrayList<>();
 
-    //每一个exp-overveiw对应的鉴定状态
+    //每一个run-overveiw对应的鉴定状态
     List<Integer> statusList = new ArrayList<>();
 }

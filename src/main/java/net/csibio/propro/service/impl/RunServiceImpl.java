@@ -9,19 +9,19 @@ import net.csibio.aird.parser.DIAParser;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.constants.enums.TaskStatus;
 import net.csibio.propro.dao.BaseDAO;
-import net.csibio.propro.dao.ExperimentDAO;
+import net.csibio.propro.dao.RunDAO;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.FloatPairs;
 import net.csibio.propro.domain.bean.common.IdName;
-import net.csibio.propro.domain.bean.experiment.ExpIrt;
+import net.csibio.propro.domain.bean.run.RunIrt;
 import net.csibio.propro.domain.db.BlockIndexDO;
-import net.csibio.propro.domain.db.ExperimentDO;
+import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.db.TaskDO;
 import net.csibio.propro.domain.query.BlockIndexQuery;
-import net.csibio.propro.domain.query.ExperimentQuery;
+import net.csibio.propro.domain.query.RunQuery;
 import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.BlockIndexService;
-import net.csibio.propro.service.ExperimentService;
+import net.csibio.propro.service.RunService;
 import net.csibio.propro.service.TaskService;
 import net.csibio.propro.utils.FileUtil;
 import org.springframework.beans.BeanUtils;
@@ -34,76 +34,76 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-@Service("experimentService")
-public class ExperimentServiceImpl implements ExperimentService {
+@Service("runService")
+public class RunServiceImpl implements RunService {
 
     @Autowired
-    ExperimentDAO experimentDAO;
+    RunDAO runDAO;
     @Autowired
     TaskService taskService;
     @Autowired
     BlockIndexService blockIndexService;
 
     @Override
-    public BaseDAO<ExperimentDO, ExperimentQuery> getBaseDAO() {
-        return experimentDAO;
+    public BaseDAO<RunDO, RunQuery> getBaseDAO() {
+        return runDAO;
     }
 
     @Override
-    public void beforeInsert(ExperimentDO experimentDO) throws XException {
-        if (experimentDO.getName() == null) {
-            throw new XException(ResultCode.EXPERIMENT_NAME_CANNOT_BE_EMPTY);
+    public void beforeInsert(RunDO runDO) throws XException {
+        if (runDO.getName() == null) {
+            throw new XException(ResultCode.RUN_NAME_CANNOT_BE_EMPTY);
         }
-        if (experimentDO.getType() == null) {
-            throw new XException(ResultCode.EXPERIMENT_TYPE_MUST_DEFINE);
+        if (runDO.getType() == null) {
+            throw new XException(ResultCode.RUN_TYPE_MUST_DEFINE);
         }
-        if (experimentDO.getProjectId() == null) {
+        if (runDO.getProjectId() == null) {
             throw new XException(ResultCode.PROJECT_ID_CANNOT_BE_EMPTY);
         }
-        experimentDO.setCreateDate(new Date());
-        experimentDO.setLastModifiedDate(new Date());
+        runDO.setCreateDate(new Date());
+        runDO.setLastModifiedDate(new Date());
     }
 
     @Override
-    public void beforeUpdate(ExperimentDO experimentDO) throws XException {
-        if (experimentDO.getId() == null) {
+    public void beforeUpdate(RunDO runDO) throws XException {
+        if (runDO.getId() == null) {
             throw new XException(ResultCode.ID_CANNOT_BE_NULL_OR_ZERO);
         }
-        if (experimentDO.getName() == null) {
-            throw new XException(ResultCode.EXPERIMENT_NAME_CANNOT_BE_EMPTY);
+        if (runDO.getName() == null) {
+            throw new XException(ResultCode.RUN_NAME_CANNOT_BE_EMPTY);
         }
-        if (experimentDO.getType() == null) {
-            throw new XException(ResultCode.EXPERIMENT_TYPE_MUST_DEFINE);
+        if (runDO.getType() == null) {
+            throw new XException(ResultCode.RUN_TYPE_MUST_DEFINE);
         }
-        if (experimentDO.getProjectId() == null) {
+        if (runDO.getProjectId() == null) {
             throw new XException(ResultCode.PROJECT_ID_CANNOT_BE_EMPTY);
         }
-        experimentDO.setLastModifiedDate(new Date());
+        runDO.setLastModifiedDate(new Date());
     }
 
     @Override
     public void beforeRemove(String id) throws XException {
         //删除实验前首先删除所有关联的索引
-        blockIndexService.remove(new BlockIndexQuery().setExpId(id));
+        blockIndexService.remove(new BlockIndexQuery().setRunId(id));
     }
 
     @Override
-    public List<ExperimentDO> getAllByProjectId(String projectId) {
-        return experimentDAO.getAll(new ExperimentQuery().setProjectId(projectId));
+    public List<RunDO> getAllByProjectId(String projectId) {
+        return runDAO.getAll(new RunQuery().setProjectId(projectId));
     }
 
     @Override
-    public List<ExpIrt> getAllIrtByProjectId(String projectId) {
-        return experimentDAO.getAll(new ExperimentQuery().setProjectId(projectId), ExpIrt.class);
+    public List<RunIrt> getAllIrtByProjectId(String projectId) {
+        return runDAO.getAll(new RunQuery().setProjectId(projectId), RunIrt.class);
     }
 
     @Override
-    public void uploadAirdFile(ExperimentDO experimentDO, TaskDO taskDO) {
-        taskDO.addLog("Start Parsing Aird File:" + experimentDO.getName());
+    public void uploadAirdFile(RunDO runDO, TaskDO taskDO) {
+        taskDO.addLog("Start Parsing Aird File:" + runDO.getName());
         taskService.update(taskDO);
         try {
-            File indexFile = new File(experimentDO.getAirdIndexPath());
-            File airdFile = new File(experimentDO.getAirdPath());
+            File indexFile = new File(runDO.getAirdIndexPath());
+            File airdFile = new File(runDO.getAirdPath());
             String airdInfoJson = FileUtil.readFile(indexFile);
             AirdInfo airdInfo = null;
             try {
@@ -114,21 +114,21 @@ public class ExperimentServiceImpl implements ExperimentService {
                 taskService.update(taskDO);
                 return;
             }
-            experimentDO.setAirdSize(airdFile.length());
-            experimentDO.setAirdIndexSize(indexFile.length());
-            experimentDO.setWindowRanges(airdInfo.getRangeList());
-            experimentDO.setFeatures(airdInfo.getFeatures());
-            experimentDO.setInstruments(airdInfo.getInstruments());
-            experimentDO.setCompressors(airdInfo.getCompressors());
-            experimentDO.setParentFiles(airdInfo.getParentFiles());
-            experimentDO.setSoftwares(airdInfo.getSoftwares());
-            experimentDO.setVendorFileSize(airdInfo.getFileSize());
+            runDO.setAirdSize(airdFile.length());
+            runDO.setAirdIndexSize(indexFile.length());
+            runDO.setWindowRanges(airdInfo.getRangeList());
+            runDO.setFeatures(airdInfo.getFeatures());
+            runDO.setInstruments(airdInfo.getInstruments());
+            runDO.setCompressors(airdInfo.getCompressors());
+            runDO.setParentFiles(airdInfo.getParentFiles());
+            runDO.setSoftwares(airdInfo.getSoftwares());
+            runDO.setVendorFileSize(airdInfo.getFileSize());
 
             List<BlockIndexDO> blockIndexList = new ArrayList<>();
             for (BlockIndex blockIndex : airdInfo.getIndexList()) {
                 BlockIndexDO blockIndexDO = new BlockIndexDO();
                 BeanUtils.copyProperties(blockIndex, blockIndexDO);
-                blockIndexDO.setExpId(experimentDO.getId());
+                blockIndexDO.setRunId(runDO.getId());
                 blockIndexDO.setRange(blockIndex.getWindowRange());
                 blockIndexList.add(blockIndexDO);
             }
@@ -145,33 +145,33 @@ public class ExperimentServiceImpl implements ExperimentService {
     }
 
     @Override
-    public FloatPairs getSpectrum(ExperimentDO exp, Double mz, Float rt) {
-        BlockIndexDO blockIndex = blockIndexService.getOne(exp.getId(), mz);
+    public FloatPairs getSpectrum(RunDO run, Double mz, Float rt) {
+        BlockIndexDO blockIndex = blockIndexService.getOne(run.getId(), mz);
         if (blockIndex == null) {
             return null;
         }
 
-        return getSpectrum(exp, blockIndex, rt);
+        return getSpectrum(run, blockIndex, rt);
 
     }
 
     @Override
-    public FloatPairs getSpectrum(ExperimentDO exp, BlockIndexDO blockIndex, Float rt) {
-        Compressor mzCompressor = exp.fetchCompressor(Compressor.TARGET_MZ);
-        DIAParser parser = new DIAParser(exp.getAirdPath(), mzCompressor, exp.fetchCompressor(Compressor.TARGET_INTENSITY), mzCompressor.getPrecision());
+    public FloatPairs getSpectrum(RunDO run, BlockIndexDO blockIndex, Float rt) {
+        Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
+        DIAParser parser = new DIAParser(run.getAirdPath(), mzCompressor, run.fetchCompressor(Compressor.TARGET_INTENSITY), mzCompressor.getPrecision());
         MzIntensityPairs pairs = parser.getSpectrumByRt(blockIndex.getStartPtr(), blockIndex.getRts(), blockIndex.getMzs(), blockIndex.getInts(), rt);
         parser.close();
         return new FloatPairs(pairs.getMzArray(), pairs.getIntensityArray());
     }
 
     @Override
-    public Result remove(ExperimentQuery query) {
-        List<IdName> expList = getAll(query, IdName.class);
+    public Result remove(RunQuery query) {
+        List<IdName> runList = getAll(query, IdName.class);
         List<String> errorList = new ArrayList<>();
-        expList.forEach(idName -> {
+        runList.forEach(idName -> {
             Result res = removeById(idName.id());
             if (res.isFailed()) {
-                errorList.add("Remove Experiment Failed:" + res.getErrorMessage());
+                errorList.add("Remove Run Failed:" + res.getErrorMessage());
             }
         });
         if (errorList.size() > 0) {

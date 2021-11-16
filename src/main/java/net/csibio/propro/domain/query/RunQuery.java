@@ -7,14 +7,14 @@ import java.util.List;
 
 @Data
 @Accessors(chain = true)
-public class ExperimentQuery extends PageQuery {
+public class RunQuery extends PageQuery {
 
     String id;
 
     List<String> ids;
 
     String name;
-    
+
     String label;
 
     String projectName;

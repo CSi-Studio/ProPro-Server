@@ -31,8 +31,8 @@ public class BlockIndexDAO extends BaseDAO<BlockIndexDO, BlockIndexQuery> {
     @Override
     protected Query buildQueryWithoutPage(BlockIndexQuery query) {
         Query dbQuery = new Query();
-        if (StringUtils.isNotEmpty(query.getExpId())) {
-            dbQuery.addCriteria(where("expId").is(query.getExpId()));
+        if (StringUtils.isNotEmpty(query.getRunId())) {
+            dbQuery.addCriteria(where("runId").is(query.getRunId()));
         }
         if (StringUtils.isNotEmpty(query.getId())) {
             dbQuery.addCriteria(where("id").is(query.getId()));

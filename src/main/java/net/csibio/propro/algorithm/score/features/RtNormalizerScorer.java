@@ -44,26 +44,26 @@ public class RtNormalizerScorer {
     public List<ScoreRtPair> score4Irt(List<PeakGroup> peakGroupList, HashMap<String, Double> normedLibIntMap, double groupRt, int maxIonsCount) {
 
         List<ScoreRtPair> finalScores = new ArrayList<>();
-        List<String> scoreTypes4Irt = ScoreType.scoreTypes4Irt();
+        List<String> scoreTypes4Irt = ScoreType.usedScoreTypes();
 
         for (PeakGroup peakGroup : peakGroupList) {
             if (peakGroup.getRightRt() - peakGroup.getLeftRt() < 15d) {
                 continue;
             }
-            PeakGroup scores = new PeakGroup(scoreTypes4Irt.size());
+            peakGroup.initScore(scoreTypes4Irt.size());
             xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes4Irt);
 //            xicScorer.calculateLogSnScore(peakGroup, scores, defaultScoreTypes);
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scoreTypes4Irt);
-            scores.put(ScoreType.IonsCountDeltaScore.getName(), (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes4Irt);
+            peakGroup.put(ScoreType.IonsCountDeltaScore.getName(), (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes4Irt);
             double deltaWeight = (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount;
-            scores.put(ScoreType.IonsCountDeltaScore, deltaWeight, scoreTypes4Irt);
+            peakGroup.put(ScoreType.IonsCountDeltaScore, deltaWeight, scoreTypes4Irt);
 
-            double ldaScore = calculateLdaPrescore(scores, scoreTypes4Irt);
+            double ldaScore = calculateLdaPrescore(peakGroup, scoreTypes4Irt);
             ScoreRtPair scoreRtPair = new ScoreRtPair();
             scoreRtPair.setLibRt(groupRt);
-            scoreRtPair.setRealRt(peakGroup.getApexRt());
+            scoreRtPair.setApexRt(peakGroup.getApexRt());
             scoreRtPair.setScore(ldaScore);
-            scoreRtPair.setScores(scores);
+            scoreRtPair.setScores(peakGroup);
             finalScores.add(scoreRtPair);
         }
 

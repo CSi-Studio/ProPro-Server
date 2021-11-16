@@ -8,7 +8,7 @@ public class BlockIndexVO {
 
     String id;
 
-    String expId;
+    String runId;
 
     /**
      * 1: ms1 swath block, 2: ms2 swath block

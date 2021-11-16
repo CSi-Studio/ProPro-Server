@@ -17,7 +17,7 @@ public class BlockIndexDO {
     String id;
 
     @Indexed
-    String expId;
+    String runId;
 
     /**
      * 1: ms1 swath block, 2: ms2 swath block

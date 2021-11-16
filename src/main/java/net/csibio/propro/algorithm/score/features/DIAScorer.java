@@ -115,7 +115,7 @@ public class DIAScorer {
             float monoPeakMz = productMzMap.get(cutInfo);
             int putativeFragmentCharge = productChargeMap.get(cutInfo);
             relIntensity = peakGroup.getIonIntensity().get(cutInfo) / intensitySum;
-            Double[] expDistribution = new Double[maxIsotope];
+            Double[] runDistribution = new Double[maxIsotope];
             double maxIntensity = 0.0d; //记录强度最大的一个同位素对应的强度值
             for (int iso = 0; iso < maxIsotope; iso++) {
                 float left = monoPeakMz + iso * Constants.C13C12_MASSDIFF_U / putativeFragmentCharge;
@@ -128,7 +128,7 @@ public class DIAScorer {
                 if (mzIntensity.getIntensity() > maxIntensity) {
                     maxIntensity = mzIntensity.getIntensity();
                 }
-                expDistribution[iso] = mzIntensity.getIntensity();
+                runDistribution[iso] = mzIntensity.getIntensity();
             }
 
             //get scores.isotope_correlation
@@ -166,10 +166,10 @@ public class DIAScorer {
 //            }
             double corr = 0.0d, m1 = 0.0d, m2 = 0.0d, s1 = 0.0d, s2 = 0.0d;
             for (int j = 0; j < maxIsotope; j++) {
-                corr += expDistribution[j] * theroyDistribution[j];
-                m1 += expDistribution[j];
+                corr += runDistribution[j] * theroyDistribution[j];
+                m1 += runDistribution[j];
                 m2 += theroyDistribution[j];
-                s1 += expDistribution[j] * expDistribution[j];
+                s1 += runDistribution[j] * runDistribution[j];
                 s2 += theroyDistribution[j] * theroyDistribution[j];
             }
             s1 -= m1 * m1 / maxIsotope;
@@ -183,7 +183,7 @@ public class DIAScorer {
             //get scores.isotope_overlap
             int largePeaksBeforeFirstIsotope = 0;
             double ratio;
-            double monoPeakIntensity = expDistribution[0];
+            double monoPeakIntensity = runDistribution[0];
             for (int charge = 1; charge < maxIsotope; charge++) {
                 double center = monoPeakMz - Constants.C13C12_MASSDIFF_U / charge;
                 Double left = center - Constants.DIA_EXTRACT_WINDOW;

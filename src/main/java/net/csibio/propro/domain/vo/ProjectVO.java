@@ -20,7 +20,7 @@ public class ProjectVO {
      * 分组信息
      */
     String group;
-    
+
     /**
      * 项目别名
      */
@@ -76,7 +76,7 @@ public class ProjectVO {
     /**
      * 项目包含的实验数目
      */
-    Long expCount;
+    Long runCount;
 
     /**
      * 项目包含的鉴定数目

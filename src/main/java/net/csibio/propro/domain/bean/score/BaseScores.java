@@ -27,8 +27,8 @@ public class BaseScores {
      * <p>
      * scores.var_intensity_score 同一个peptideRef下, 所有HullPoints的intensity之和 除以 所有intensity之和
      * <p>
-     * scores.library_corr //对experiment和library intensity算Pearson相关系数
-     * scores.library_norm_manhattan //对experiment intensity 算平均占比差距
+     * scores.library_corr //对run和library intensity算Pearson相关系数
+     * scores.library_norm_manhattan //对run intensity 算平均占比差距
      * <p>
      * scores.massdev_score 按spectrum intensity加权的mz与product mz的偏差ppm百分比之和
      * scores.weighted_massdev_score 按spectrum intensity加权的mz与product mz的偏差ppm百分比按libraryIntensity加权之和

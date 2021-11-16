@@ -7,18 +7,18 @@ import net.csibio.propro.dao.BaseDAO;
 import net.csibio.propro.dao.ProjectDAO;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
-import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.ProjectDO;
+import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.db.TaskDO;
-import net.csibio.propro.domain.query.ExperimentQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.domain.query.ProjectQuery;
+import net.csibio.propro.domain.query.RunQuery;
 import net.csibio.propro.exceptions.XException;
-import net.csibio.propro.service.ExperimentService;
 import net.csibio.propro.service.OverviewService;
 import net.csibio.propro.service.ProjectService;
+import net.csibio.propro.service.RunService;
 import net.csibio.propro.service.TaskService;
-import net.csibio.propro.task.ExperimentTask;
+import net.csibio.propro.task.RunTask;
 import net.csibio.propro.utils.RepositoryUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,11 +34,11 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     ProjectDAO projectDAO;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     TaskService taskService;
     @Autowired
-    ExperimentTask experimentTask;
+    RunTask runTask;
     @Autowired
     OverviewService overviewService;
 
@@ -73,7 +73,7 @@ public class ProjectServiceImpl implements ProjectService {
         //Step1. 删除项目下所有的鉴定结果
         Result result1 = overviewService.remove(new OverviewQuery().setProjectId(id));
         //其次删除所有的实验信息,这里使用依次删除每一个实验的方法,是需要保证在删除每一个实验的时候,每一个实验首先将其下的索引数据删除完毕
-        Result result2 = experimentService.remove(new ExperimentQuery().setProjectId(id));
+        Result result2 = runService.remove(new RunQuery().setProjectId(id));
         if (result1.isFailed() || result2.isFailed()) {
             result1.getErrorList().addAll(result2.getErrorList());
             throw new XException(ResultCode.DELETE_ERROR, result1.getErrorList());
@@ -105,7 +105,7 @@ public class ProjectServiceImpl implements ProjectService {
         return unloadsNames;
     }
 
-    public List<File> scanExpFilesByProjectName(String projectName) {
+    public List<File> scanRunFilesByProjectName(String projectName) {
         File directory = new File(RepositoryUtil.getProjectRepo(projectName));
         List<File> newFileList = new ArrayList<>();
         File[] fileArray = directory.listFiles();
@@ -121,43 +121,43 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public Result<TaskDO> scan(ProjectDO project) {
-        List<File> fileList = scanExpFilesByProjectName(project.getName());
+        List<File> fileList = scanRunFilesByProjectName(project.getName());
         List<File> newFileList = new ArrayList<>();
-        List<ExperimentDO> exps = experimentService.getAllByProjectId(project.getId());
-        List<String> existedExpNames = new ArrayList<>();
-        for (ExperimentDO exp : exps) {
-            existedExpNames.add(exp.getName());
+        List<RunDO> runs = runService.getAllByProjectId(project.getId());
+        List<String> existedRunNames = new ArrayList<>();
+        for (RunDO run : runs) {
+            existedRunNames.add(run.getName());
         }
         //过滤文件
         for (File file : fileList) {
-            if (file.isFile() && file.getName().toLowerCase().endsWith(SuffixConst.JSON) && !existedExpNames.contains(FilenameUtils.getBaseName(file.getName()))) {
+            if (file.isFile() && file.getName().toLowerCase().endsWith(SuffixConst.JSON) && !existedRunNames.contains(FilenameUtils.getBaseName(file.getName()))) {
                 newFileList.add(file);
             }
         }
         if (newFileList.isEmpty()) {
-            return Result.Error(ResultCode.NO_NEW_EXPERIMENTS.getMessage());
+            return Result.Error(ResultCode.NO_NEW_RUNS.getMessage());
         }
 
-        TaskDO taskDO = new TaskDO(TaskTemplate.SCAN_AND_UPDATE_EXPERIMENTS, project.getName());
+        TaskDO taskDO = new TaskDO(TaskTemplate.SCAN_AND_UPDATE_RUNS, project.getName());
         taskDO.addLog(newFileList.size() + " total");
         taskService.insert(taskDO);
-        List<ExperimentDO> expsToUpdate = new ArrayList<>();
+        List<RunDO> runsToUpdate = new ArrayList<>();
         for (File file : newFileList) {
-            ExperimentDO exp = new ExperimentDO();
-            exp.setName(FilenameUtils.getBaseName(file.getName()));
-            exp.setProjectId(project.getId());
-            exp.setProjectName(project.getName());
-            exp.setType(project.getType());
-            Result result = experimentService.insert(exp);
+            RunDO run = new RunDO();
+            run.setName(FilenameUtils.getBaseName(file.getName()));
+            run.setProjectId(project.getId());
+            run.setProjectName(project.getName());
+            run.setType(project.getType());
+            Result result = runService.insert(run);
             if (result.isFailed()) {
-                taskDO.addLog("ERROR-" + exp.getId() + "-" + exp.getName());
+                taskDO.addLog("ERROR-" + run.getId() + "-" + run.getName());
                 taskDO.addLog(result.getErrorMessage());
                 taskService.update(taskDO);
             }
-            expsToUpdate.add(exp);
+            runsToUpdate.add(run);
         }
 
-        experimentTask.uploadAird(expsToUpdate, taskDO);
+        runTask.uploadAird(runsToUpdate, taskDO);
         return Result.OK(taskDO);
     }
 

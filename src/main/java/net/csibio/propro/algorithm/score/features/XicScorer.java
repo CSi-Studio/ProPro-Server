@@ -111,7 +111,7 @@ public class XicScorer {
 
 
     /**
-     * Get the XCorrMatrix with experiment Features
+     * Get the XCorrMatrix with run Features
      * 对于一个 mrmFeature，算其中 chromatogramFeature 的 xcorrMatrix
      *
      * @param peakGroup features in mrmFeature

@@ -8,10 +8,10 @@ import net.csibio.propro.algorithm.lfqbench.bean.BenchStat;
 import net.csibio.propro.algorithm.lfqbench.bean.PeptideRatio;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.experiment.BaseExp;
+import net.csibio.propro.domain.bean.run.BaseRun;
 import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.ProjectDO;
-import net.csibio.propro.domain.query.ExperimentQuery;
+import net.csibio.propro.domain.query.RunQuery;
 import net.csibio.propro.service.*;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ public class LfqBench {
     @Autowired
     ProjectService projectService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     DataSumService dataSumService;
     @Autowired
@@ -47,15 +47,15 @@ public class LfqBench {
     BatchFitter batchFitter;
 
     public Result<BenchStat<PeptideRatio>> buildPeptideRatio(ProjectDO project) {
-        List<BaseExp> expList = experimentService.getAll(new ExperimentQuery().setProjectId(project.getId()), BaseExp.class);
-        List<BaseExp> expAList = expList.stream().filter(exp -> exp.getGroup().equals(LABEL_A)).collect(Collectors.toList());
-        List<BaseExp> expBList = expList.stream().filter(exp -> exp.getGroup().equals(LABEL_B)).collect(Collectors.toList());
-        Map<String, OverviewDO> overviewMap = overviewService.getDefaultOverviews(expList.stream().map(BaseExp::getId).collect(Collectors.toList()));
-        if (overviewMap.size() != expList.size()) {
-            return Result.Error(ResultCode.SOME_EXPERIMENT_HAVE_NO_DEFAULT_OVERVIEW);
+        List<BaseRun> runList = runService.getAll(new RunQuery().setProjectId(project.getId()), BaseRun.class);
+        List<BaseRun> runAList = runList.stream().filter(run -> run.getGroup().equals(LABEL_A)).collect(Collectors.toList());
+        List<BaseRun> runBList = runList.stream().filter(run -> run.getGroup().equals(LABEL_B)).collect(Collectors.toList());
+        Map<String, OverviewDO> overviewMap = overviewService.getDefaultOverviews(runList.stream().map(BaseRun::getId).collect(Collectors.toList()));
+        if (overviewMap.size() != runList.size()) {
+            return Result.Error(ResultCode.SOME_RUN_HAVE_NO_DEFAULT_OVERVIEW);
         }
-        GroupStat statForA = batchFitter.merge(project, expAList, overviewMap);
-        GroupStat statForB = batchFitter.merge(project, expBList, overviewMap);
+        GroupStat statForA = batchFitter.merge(project, runAList, overviewMap);
+        GroupStat statForB = batchFitter.merge(project, runBList, overviewMap);
         List<PeptideRatio> humanPoints = new ArrayList<>();
         List<PeptideRatio> yeastPoints = new ArrayList<>();
         List<PeptideRatio> ecoliPoints = new ArrayList<>();

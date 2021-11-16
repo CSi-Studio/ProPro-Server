@@ -14,8 +14,8 @@ import net.csibio.propro.domain.bean.irt.IrtResult;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
-import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.OverviewDO;
+import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.db.TaskDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.service.*;
@@ -31,11 +31,11 @@ import java.util.List;
  * Time: 2018-08-17 10:40
  */
 @Slf4j
-@Component("experimentTask")
-public class ExperimentTask extends BaseTask {
+@Component("runTask")
+public class RunTask extends BaseTask {
 
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     DataService dataService;
     @Autowired
@@ -58,13 +58,13 @@ public class ExperimentTask extends BaseTask {
     Extractor extractor;
 
     @Async(value = "uploadFileExecutor")
-    public void uploadAird(List<ExperimentDO> exps, TaskDO taskDO) {
+    public void uploadAird(List<RunDO> runs, TaskDO taskDO) {
         try {
             taskDO.start().setStatus(TaskStatus.RUNNING.getName());
             taskService.update(taskDO);
-            for (ExperimentDO exp : exps) {
-                experimentService.uploadAirdFile(exp, taskDO);
-                experimentService.update(exp);
+            for (RunDO run : runs) {
+                runService.uploadAirdFile(run, taskDO);
+                runService.update(run);
             }
             taskDO.finish(TaskStatus.SUCCESS.getName());
             taskService.update(taskDO);
@@ -78,7 +78,7 @@ public class ExperimentTask extends BaseTask {
 
     /**
      * WorkflowParams 包含
-     * experimentDO
+     * runDO
      * libraryId
      * slopeIntercept
      * ownerName
@@ -93,11 +93,11 @@ public class ExperimentTask extends BaseTask {
      * @return
      */
     @Async(value = "eicExecutor")
-    public void doProPro(TaskDO taskDO, ExperimentDO exp, AnalyzeParams params) {
+    public void doProPro(TaskDO taskDO, RunDO run, AnalyzeParams params) {
         long start = System.currentTimeMillis();
         //Step1. 如果还没有计算irt,先执行计算irt的步骤.
-        if (exp.getIrt() == null || (params.getForceIrt() && params.getIrtLibraryId() != null)) {
-            boolean exeResult = doIrt(taskDO, exp, params);
+        if (run.getIrt() == null || (params.getForceIrt() && params.getIrtLibraryId() != null)) {
+            boolean exeResult = doIrt(taskDO, run, params);
             if (!exeResult) {
                 return;
             }
@@ -105,7 +105,7 @@ public class ExperimentTask extends BaseTask {
         }
 
         //Step2,3,4,5 EIC,选峰,选峰组,打分四个关键步骤
-        boolean eppsResult = doEpps(taskDO, exp, params);
+        boolean eppsResult = doEpps(taskDO, run, params);
         if (!eppsResult) {
             taskDO.finish(TaskStatus.FAILED.getName());
             taskService.update(taskDO);
@@ -113,7 +113,7 @@ public class ExperimentTask extends BaseTask {
         }
 
         //Step6. 机器学习,LDA分类
-        logger.info(exp.getAlias() + "开始执行机器学习部分");
+        logger.info(run.getAlias() + "开始执行机器学习部分");
         LearningParams ap = new LearningParams();
         ap.setScoreTypes(params.getMethod().getScore().getScoreTypes());
         ap.setFdr(params.getMethod().getClassifier().getFdr());
@@ -130,11 +130,11 @@ public class ExperimentTask extends BaseTask {
     }
 
     @Async(value = "csiExecutor")
-    public void doCSi(TaskDO taskDO, ExperimentDO exp, AnalyzeParams params) {
+    public void doCSi(TaskDO taskDO, RunDO run, AnalyzeParams params) {
         long start = System.currentTimeMillis();
         //Step1. 如果还没有计算irt,先执行计算irt的步骤.
-        if (exp.getIrt() == null || (params.getForceIrt() && params.getIrtLibraryId() != null)) {
-            boolean exeResult = doIrt(taskDO, exp, params);
+        if (run.getIrt() == null || (params.getForceIrt() && params.getIrtLibraryId() != null)) {
+            boolean exeResult = doIrt(taskDO, run, params);
             if (!exeResult) {
                 return;
             }
@@ -142,7 +142,7 @@ public class ExperimentTask extends BaseTask {
         }
 
         //Step2 全新套路
-        boolean csiResult = doEpps(taskDO, exp, params);
+        boolean csiResult = doEpps(taskDO, run, params);
         if (!csiResult) {
             taskDO.finish(TaskStatus.FAILED.getName());
             taskService.update(taskDO);
@@ -150,7 +150,7 @@ public class ExperimentTask extends BaseTask {
         }
 
         //Step6. 机器学习,LDA分类
-        logger.info(exp.getAlias() + "开始执行机器学习部分");
+        logger.info(run.getAlias() + "开始执行机器学习部分");
         LearningParams ap = new LearningParams();
         ap.setScoreTypes(params.getMethod().getScore().getScoreTypes());
         ap.setFdr(params.getMethod().getClassifier().getFdr());
@@ -160,28 +160,28 @@ public class ExperimentTask extends BaseTask {
         if (finalResult.getMatchedUniqueProteinCount() != null && finalResult.getMatchedUniqueProteinCount() != 0) {
             taskDO.addLog("Peptide/Protein Rate:" + finalResult.getMatchedPeptideCount() / finalResult.getMatchedUniqueProteinCount());
         }
-        
+
         //Step7. Reselect ions
         taskDO.finish(TaskStatus.SUCCESS.getName());
         taskService.update(taskDO);
     }
 
     @Async(value = "eicExecutor")
-    public void irt(TaskDO taskDO, List<ExperimentDO> exps, AnalyzeParams params) {
+    public void irt(TaskDO taskDO, List<RunDO> runs, AnalyzeParams params) {
         long start = System.currentTimeMillis();
-        doIrt(taskDO, exps, params);
+        doIrt(taskDO, runs, params);
         taskDO.finish(TaskStatus.SUCCESS.getName());
         taskService.update(taskDO);
         log.info("所有实验IRT计算完毕,耗时:" + (System.currentTimeMillis() - start));
     }
 
-    public void doIrt(TaskDO taskDO, List<ExperimentDO> exps, AnalyzeParams params) {
+    public void doIrt(TaskDO taskDO, List<RunDO> runs, AnalyzeParams params) {
         Irt irt = params.getMethod().getIrt().isUseAnaLibForIrt() ? irtByAnaLib : irtByInsLib;
-        for (ExperimentDO exp : exps) {
-            taskDO.addLog("Start Analyzing for iRT: " + exp.getName());
-            taskDO.addBindingExp(exp.getId());
+        for (RunDO run : runs) {
+            taskDO.addLog("Start Analyzing for iRT: " + run.getName());
+            taskDO.addBindingRun(run.getId());
             taskService.update(taskDO);
-            Result<IrtResult> result = irt.align(exp, params);
+            Result<IrtResult> result = irt.align(run, params);
 
             if (result.isFailed()) {
                 taskDO.addLog("iRT计算失败:" + result.getErrorMessage());
@@ -193,12 +193,12 @@ public class ExperimentTask extends BaseTask {
         }
     }
 
-    public boolean doIrt(TaskDO taskDO, ExperimentDO exp, AnalyzeParams params) {
+    public boolean doIrt(TaskDO taskDO, RunDO run, AnalyzeParams params) {
         Irt irt = params.getMethod().getIrt().isUseAnaLibForIrt() ? irtByAnaLib : irtByInsLib;
-        taskDO.addLog("Start Analyzing for iRT: " + exp.getName());
-        taskDO.addBindingExp(exp.getId());
+        taskDO.addLog("Start Analyzing for iRT: " + run.getName());
+        taskDO.addBindingRun(run.getId());
         taskService.update(taskDO);
-        Result<IrtResult> result = irt.align(exp, params);
+        Result<IrtResult> result = irt.align(run, params);
         if (result.isFailed()) {
             taskDO.finish(TaskStatus.FAILED.getName(), "iRT计算失败:" + result.getErrorMessage());
             taskService.update(taskDO);
@@ -209,12 +209,12 @@ public class ExperimentTask extends BaseTask {
         return true;
     }
 
-    public boolean doEpps(TaskDO taskDO, ExperimentDO exp, AnalyzeParams params) {
+    public boolean doEpps(TaskDO taskDO, RunDO run, AnalyzeParams params) {
         long start = System.currentTimeMillis();
-        taskDO.addLog("Irt Result:" + exp.getIrt().getSi().getFormula()).addLog("入参准备完毕,开始提取数据(打分)");
+        taskDO.addLog("Irt Result:" + run.getIrt().getSi().getFormula()).addLog("入参准备完毕,开始提取数据(打分)");
         taskService.update(taskDO);
         params.setTaskDO(taskDO);
-        Result<OverviewDO> result = extractor.extract(exp, params);
+        Result<OverviewDO> result = extractor.extract(run, params);
         taskService.update(taskDO);
         if (result.isFailed()) {
             taskDO.finish(TaskStatus.FAILED.getName(), "任务执行失败:" + result.getErrorMessage());

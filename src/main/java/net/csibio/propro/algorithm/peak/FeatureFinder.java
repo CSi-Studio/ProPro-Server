@@ -44,7 +44,7 @@ public class FeatureFinder {
      * @param ionPeakParams     left right borders
      *                          totalXic : intensity sum of all chromatogram of peptideRef(not rastered and all interval)
      *                          HullPoints : rt intensity pairs of rastered chromatogram between rtLeft, rtRight;
-     *                          ExperimentFeature::intensity: intensity sum of hullPoints' intensity
+     *                          RunFeature::intensity: intensity sum of hullPoints' intensity
      * @return list of mrmFeature (mrmFeature is list of chromatogram feature)
      */
     public List<PeakGroup> findFeatures(UnSearchPeakGroup unSearchPeakGroup, HashMap<String, RtIntensityPairsDouble> ionPeaks, HashMap<String, List<IonPeak>> ionPeakParams, HashMap<String, double[]> noise1000Map) {

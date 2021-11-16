@@ -10,6 +10,6 @@ import lombok.Data;
 public class ScoreRtPair {
     double libRt;
     double score;
-    double realRt;
+    double apexRt;
     PeakGroup scores;
 }

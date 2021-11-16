@@ -25,16 +25,16 @@ public class BlockIndexServiceImpl implements BlockIndexService {
     BlockIndexDAO blockIndexDAO;
 
     @Override
-    public List<BlockIndexDO> getAllByExpId(String expId) {
+    public List<BlockIndexDO> getAllByRunId(String runId) {
         BlockIndexQuery query = new BlockIndexQuery();
-        query.setExpId(expId);
+        query.setRunId(runId);
         return blockIndexDAO.getAll(query);
     }
 
     @Override
-    public List<BlockIndexDO> getAllMS2ByExpId(String expId) {
+    public List<BlockIndexDO> getAllMS2ByRunId(String runId) {
         BlockIndexQuery query = new BlockIndexQuery();
-        query.setExpId(expId);
+        query.setRunId(runId);
         query.setLevel(2);
         List<BlockIndexDO> indexList = blockIndexDAO.getAll(query);
         indexList = indexList.stream().filter(b -> b.getRange() != null).toList();
@@ -58,8 +58,8 @@ public class BlockIndexServiceImpl implements BlockIndexService {
     }
 
     @Override
-    public BlockIndexDO getOne(String expId, Double mz) {
-        BlockIndexQuery query = new BlockIndexQuery(expId, 2);
+    public BlockIndexDO getOne(String runId, Double mz) {
+        BlockIndexQuery query = new BlockIndexQuery(runId, 2);
         query.setMz(mz);
         return blockIndexDAO.getOne(query);
     }
@@ -68,23 +68,23 @@ public class BlockIndexServiceImpl implements BlockIndexService {
      * 本函数用于ScanningSwath的数据解析,deltaMz是ScanningSwath的窗口宽度,CollectedNumber是需要获取的相邻的Swath窗口的数目
      * 例如CollectedNumber=3,则意味着需要获取向上向下各3个窗口的数据,总计额外获取6个窗口的数据
      *
-     * @param expId
+     * @param runId
      * @param mz
      * @param deltaMz
      * @param collectedNumber
      * @return
      */
     @Override
-    public List<BlockIndexDO> getLinkedBlockIndex(String expId, Double mz, Double deltaMz, Integer collectedNumber) {
+    public List<BlockIndexDO> getLinkedBlockIndex(String runId, Double mz, Double deltaMz, Integer collectedNumber) {
         List<BlockIndexDO> indexList = new ArrayList<>();
-        BlockIndexDO index0 = getOne(expId, mz);
+        BlockIndexDO index0 = getOne(runId, mz);
         indexList.add(index0);
         for (int i = 1; i <= collectedNumber; i++) {
-            BlockIndexDO index1 = getOne(expId, mz - deltaMz * i);
+            BlockIndexDO index1 = getOne(runId, mz - deltaMz * i);
             if (index1 != null) {
                 indexList.add(index1);
             }
-            BlockIndexDO index2 = getOne(expId, mz + deltaMz * i);
+            BlockIndexDO index2 = getOne(runId, mz + deltaMz * i);
             if (index2 != null) {
                 indexList.add(index2);
             }
@@ -100,8 +100,8 @@ public class BlockIndexServiceImpl implements BlockIndexService {
 
     @Override
     public void beforeInsert(BlockIndexDO blockIndexDO) throws XException {
-        if (blockIndexDO.getExpId() == null) {
-            throw new XException(ResultCode.EXPERIMENT_ID_CANNOT_BE_EMPTY);
+        if (blockIndexDO.getRunId() == null) {
+            throw new XException(ResultCode.RUN_ID_CANNOT_BE_EMPTY);
         }
     }
 
@@ -110,8 +110,8 @@ public class BlockIndexServiceImpl implements BlockIndexService {
         if (blockIndexDO.getId() == null) {
             throw new XException(ResultCode.ID_CANNOT_BE_NULL_OR_ZERO);
         }
-        if (blockIndexDO.getExpId() == null) {
-            throw new XException(ResultCode.EXPERIMENT_ID_CANNOT_BE_EMPTY);
+        if (blockIndexDO.getRunId() == null) {
+            throw new XException(ResultCode.RUN_ID_CANNOT_BE_EMPTY);
         }
     }
 

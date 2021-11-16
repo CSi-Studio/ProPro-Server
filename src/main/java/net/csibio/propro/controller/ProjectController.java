@@ -7,10 +7,10 @@ import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.common.IdNameType;
-import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.MethodDO;
 import net.csibio.propro.domain.db.ProjectDO;
+import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.query.*;
 import net.csibio.propro.domain.vo.ProjectBeforeAddVO;
 import net.csibio.propro.domain.vo.ProjectUpdateVO;
@@ -33,7 +33,7 @@ public class ProjectController {
     @Autowired
     ProjectService projectService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     LibraryService libraryService;
     @Autowired
@@ -70,7 +70,7 @@ public class ProjectController {
                     }
                 }
 
-                projectVO.setExpCount(experimentService.count(new ExperimentQuery().setProjectId(projectVO.getId())));
+                projectVO.setRunCount(runService.count(new RunQuery().setProjectId(projectVO.getId())));
                 projectVO.setOverviewCount(overviewService.count(new OverviewQuery().setProjectId(projectVO.getId())));
             });
         }
@@ -136,13 +136,13 @@ public class ProjectController {
      */
     @GetMapping(value = "/removeIrt")
     Result removeIrt(@RequestParam("projectId") String projectId) {
-        List<ExperimentDO> expList = experimentService.getAllByProjectId(projectId);
-        if (expList == null) {
-            return Result.Error(ResultCode.NO_EXPERIMENT_UNDER_PROJECT);
+        List<RunDO> runList = runService.getAllByProjectId(projectId);
+        if (runList == null) {
+            return Result.Error(ResultCode.NO_RUN_UNDER_PROJECT);
         }
-        for (ExperimentDO experimentDO : expList) {
-            experimentDO.setIrt(null);
-            experimentService.update(experimentDO);
+        for (RunDO runDO : runList) {
+            runDO.setIrt(null);
+            runService.update(runDO);
         }
         return Result.OK();
     }

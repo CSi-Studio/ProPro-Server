@@ -34,8 +34,8 @@ public class TaskDAO extends BaseDAO<TaskDO, TaskQuery> {
         if (StringUtils.isNotEmpty(targetQuery.getId())) {
             query.addCriteria(where("id").is(targetQuery.getId()));
         }
-        if (StringUtils.isNotEmpty(targetQuery.getExpId())) {
-            query.addCriteria(where("expId").is(targetQuery.getExpId()));
+        if (StringUtils.isNotEmpty(targetQuery.getRunId())) {
+            query.addCriteria(where("runId").is(targetQuery.getRunId()));
         }
         if (StringUtils.isNotEmpty(targetQuery.getName())) {
             query.addCriteria(where("name").is(targetQuery.getName()));

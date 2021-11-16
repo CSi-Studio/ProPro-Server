@@ -23,7 +23,7 @@ public interface ProjectService extends BaseService<ProjectDO, ProjectQuery> {
      * @param projectName
      * @return
      */
-    List<File> scanExpFilesByProjectName(String projectName);
+    List<File> scanRunFilesByProjectName(String projectName);
 
     /**
      * 扫描某一个指定项目下的所有Aird文件入库

@@ -57,7 +57,7 @@ public class TestController {
     @Autowired
     DataSumService dataSumService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     MethodService methodService;
     @Autowired
@@ -234,7 +234,7 @@ public class TestController {
                     }
                 }
             });
-            log.info(overview.getExpName() + "-符合要求的Peptide有:" + stat.get() + "个");
+            log.info(overview.getRunName() + "-符合要求的Peptide有:" + stat.get() + "个");
             log.info(JSON.toJSONString(findItList));
         }
 

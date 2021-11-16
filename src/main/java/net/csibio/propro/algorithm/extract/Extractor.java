@@ -19,7 +19,7 @@ import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.BlockIndexQuery;
 import net.csibio.propro.domain.query.OverviewQuery;
-import net.csibio.propro.domain.vo.ExpDataVO;
+import net.csibio.propro.domain.vo.RunDataVO;
 import net.csibio.propro.service.*;
 import net.csibio.propro.utils.ConvolutionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ public class Extractor {
     @Autowired
     BlockIndexService blockIndexService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     DataService dataService;
     @Autowired
@@ -59,31 +59,31 @@ public class Extractor {
     DIAScorer diaScorer;
 
     /**
-     * 根据coord肽段坐标读取exp对应的aird文件中涉及的相关光谱图
+     * 根据coord肽段坐标读取run对应的aird文件中涉及的相关光谱图
      *
-     * @param exp
+     * @param run
      * @param coord
      * @return
      */
-    public Result<TreeMap<Float, MzIntensityPairs>> getRtMap(ExperimentDO exp, PeptideCoord coord) {
-        Result checkResult = ConvolutionUtil.checkExperiment(exp);
+    public Result<TreeMap<Float, MzIntensityPairs>> getRtMap(RunDO run, PeptideCoord coord) {
+        Result checkResult = ConvolutionUtil.checkRun(run);
         if (checkResult.isFailed()) {
             log.error("条件检查失败:" + checkResult.getErrorMessage());
             return checkResult;
         }
 
-        Compressor mzCompressor = exp.fetchCompressor(Compressor.TARGET_MZ);
-        Compressor intCompressor = exp.fetchCompressor(Compressor.TARGET_INTENSITY);
+        Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
+        Compressor intCompressor = run.fetchCompressor(Compressor.TARGET_INTENSITY);
 
         //Step1.获取窗口信息
         TreeMap<Float, MzIntensityPairs> rtMap;
-        BlockIndexDO index = blockIndexService.getOne(exp.getId(), coord.getMz());
+        BlockIndexDO index = blockIndexService.getOne(run.getId(), coord.getMz());
         if (index == null) {
             return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
         }
         DIAParser parser = null;
         try {
-            parser = new DIAParser(exp.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
+            parser = new DIAParser(run.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
             rtMap = parser.getSpectrumsByRtRange(index.getStartPtr(), index.getRts(), index.getMzs(), index.getInts(), (float) coord.getRtStart(), (float) coord.getRtEnd());
 //            rtMap = parser.getSpectrums(index.getStartPtr(), index.getEndPtr(), index.getRts(), index.getMzs(), index.getInts());
         } catch (Exception e) {
@@ -102,21 +102,21 @@ public class Extractor {
      * 目前只支持MS2的XIC提取
      *
      * @param params 将XIC提取,选峰及打分合并在一个步骤中执行,可以完整的省去一次IO读取及解析,提升分析速度,
-     *               需要experimentDO,libraryId,rtExtractionWindow,mzExtractionWindow,SlopeIntercept
+     *               需要runDO,libraryId,rtExtractionWindow,mzExtractionWindow,SlopeIntercept
      */
-    public Result<OverviewDO> extract(ExperimentDO exp, AnalyzeParams params) {
+    public Result<OverviewDO> extract(RunDO run, AnalyzeParams params) {
         Result<OverviewDO> resultDO = new Result(true);
         TaskDO task = params.getTaskDO();
         task.addLog("基本条件检查开始");
-        Result checkResult = ConvolutionUtil.checkExperiment(exp);
+        Result checkResult = ConvolutionUtil.checkRun(run);
         if (checkResult.isFailed()) {
-            return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
+            return Result.Error(ResultCode.RUN_NOT_EXISTED);
         }
 
-        OverviewDO overview = createOverview(exp, params);
+        OverviewDO overview = createOverview(run, params);
 
         //核心函数在这里
-        extract(overview, exp, params);
+        extract(overview, run, params);
         overviewService.update(overview);
         resultDO.setData(overview);
         return resultDO;
@@ -124,38 +124,38 @@ public class Extractor {
 
     /**
      * 实时提取某一个PeptideRef的XIC图谱
-     * 其中Exp如果没有包含irt结果,则会进行全rt进行搜索
+     * 其中Run如果没有包含irt结果,则会进行全rt进行搜索
      * 不适合用于大批量处理
      *
-     * @param exp
+     * @param run
      * @param coord
      * @return
      */
-    public Result<ExpDataVO> predictOne(ExperimentDO exp, OverviewDO overview, PeptideCoord coord, AnalyzeParams params) {
+    public Result<RunDataVO> predictOne(RunDO run, OverviewDO overview, PeptideCoord coord, AnalyzeParams params) {
         params.setPredict(true);
         Double rt = coord.getRt();
         if (params.getMethod().getEic().getRtWindow() == -1) {
             coord.setRtRange(-1, 99999);
         } else {
-            double targetRt = exp.getIrt().getSi().realRt(rt);
+            double targetRt = run.getIrt().getSi().realRt(rt);
             coord.setRtRange(targetRt - 300, targetRt + 300);
         }
-        Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(exp, coord);
+        Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(run, coord);
         if (rtMapResult.isFailed()) {
             return Result.Error(rtMapResult.getErrorCode());
         }
 
-        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneNiubi(coord, rtMapResult.getData(), exp, params);
-//        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneReplace(coord, rtMapResult.getData(), exp, overview, params);
+        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneNiubi(coord, rtMapResult.getData(), run, params);
+//        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneReplace(coord, rtMapResult.getData(), run, overview, params);
         if (dataPair == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }
-        ExpDataVO expDataVO = new ExpDataVO().merge(dataPair.getLeft(), dataPair.getRight());
-        if (expDataVO == null) {
+        RunDataVO runDataVO = new RunDataVO().merge(dataPair.getLeft(), dataPair.getRight());
+        if (runDataVO == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }
 
-        return Result.OK(expDataVO);
+        return Result.OK(runDataVO);
     }
 
     /**
@@ -210,14 +210,14 @@ public class Extractor {
      * 提取MS2 XIC图谱并且输出最终结果,不返回最终的XIC结果以减少内存的使用
      *
      * @param overviewDO
-     * @param exp
+     * @param run
      * @param analyzeParams
      */
-    private void extract(OverviewDO overviewDO, ExperimentDO exp, AnalyzeParams analyzeParams) {
+    private void extract(OverviewDO overviewDO, RunDO run, AnalyzeParams analyzeParams) {
         TaskDO task = analyzeParams.getTaskDO();
         //Step1.获取窗口信息
-        List<WindowRange> ranges = exp.getWindowRanges();
-        BlockIndexQuery query = new BlockIndexQuery(exp.getId(), 2);
+        List<WindowRange> ranges = run.getWindowRanges();
+        BlockIndexQuery query = new BlockIndexQuery(run.getId(), 2);
 
         //获取所有MS2的窗口
         List<BlockIndexDO> blockIndexList = blockIndexService.getAll(query);
@@ -228,13 +228,13 @@ public class Extractor {
         int count = 1;
         DIAParser parser = null;
         try {
-            parser = new DIAParser(exp.getAirdIndexPath());
+            parser = new DIAParser(run.getAirdIndexPath());
             long peakCount = 0L;
             int dataCount = 0;
             for (BlockIndexDO index : blockIndexList) {
                 long start = System.currentTimeMillis();
                 task.addLog("开始处理窗口:" + index.getRange().getStart() + "-" + index.getRange().getEnd() + ",当前轮数" + count + "/" + blockIndexList.size());
-                List<DataDO> dataList = doExtract(parser, exp, index, analyzeParams);
+                List<DataDO> dataList = doExtract(parser, run, index, analyzeParams);
                 if (dataList != null) {
                     for (DataDO dataDO : dataList) {
                         if (dataDO.getPeakGroupList() != null) {
@@ -274,11 +274,11 @@ public class Extractor {
      * @param params
      * @return
      */
-    private List<DataDO> doExtract(DIAParser parser, ExperimentDO exp, BlockIndexDO swathIndex, AnalyzeParams params) {
+    private List<DataDO> doExtract(DIAParser parser, RunDO run, BlockIndexDO swathIndex, AnalyzeParams params) {
         List<PeptideCoord> coords;
         TreeMap<Float, MzIntensityPairs> rtMap;
         //Step2.获取标准库的目标肽段片段的坐标
-        coords = peptideService.buildCoord(params.getAnaLibId(), swathIndex.getRange(), params.getMethod().getEic().getRtWindow(), exp.getIrt().getSi());
+        coords = peptideService.buildCoord(params.getAnaLibId(), swathIndex.getRange(), params.getMethod().getEic().getRtWindow(), run.getIrt().getSi());
         if (coords.isEmpty()) {
             log.warn("No Coordinates Found,Rang:" + swathIndex.getRange().getStart() + ":" + swathIndex.getRange().getEnd());
             return null;
@@ -286,10 +286,10 @@ public class Extractor {
         //Step3.提取指定原始谱图
         rtMap = parser.getSpectrums(swathIndex.getStartPtr(), swathIndex.getEndPtr(), swathIndex.getRts(), swathIndex.getMzs(), swathIndex.getInts());
         if (params.getReselect()) {
-            return coreFunc.reselect(exp, coords, rtMap, params);
+            return coreFunc.reselect(run, coords, rtMap, params);
         } else {
-//            return coreFunc.epps(exp, coords, rtMap, params);
-            return coreFunc.csi(exp, coords, rtMap, params);
+//            return coreFunc.epps(run, coords, rtMap, params);
+            return coreFunc.csi(run, coords, rtMap, params);
         }
     }
 
@@ -322,21 +322,21 @@ public class Extractor {
      * @param params
      * @return
      */
-    public OverviewDO createOverview(ExperimentDO exp, AnalyzeParams params) {
+    public OverviewDO createOverview(RunDO run, AnalyzeParams params) {
         OverviewDO overview = new OverviewDO();
-        overview.setProjectId(exp.getProjectId());
-        overview.setExpId(exp.getId());
-        overview.setExpName(exp.getName());
+        overview.setProjectId(run.getProjectId());
+        overview.setRunId(run.getId());
+        overview.setRunName(run.getName());
         overview.setParams(params);
-        overview.setType(exp.getType());
+        overview.setType(run.getType());
         overview.setAnaLibId(params.getAnaLibId());
         overview.setInsLibId(params.getInsLibId());
-        overview.setName(exp.getName() + "-" + params.getInsLibName() + "-" + params.getAnaLibName() + "-" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
+        overview.setName(run.getName() + "-" + params.getInsLibName() + "-" + params.getAnaLibName() + "-" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
         overview.setNote(params.getNote());
         overview.setReselect(params.getReselect());
 
         //是否是已存在的overview
-        boolean exist = overviewService.exist(new OverviewQuery().setProjectId(exp.getProjectId()).setExpId(exp.getId()));
+        boolean exist = overviewService.exist(new OverviewQuery().setProjectId(run.getProjectId()).setRunId(run.getId()));
         if (!exist) {
             overview.setDefaultOne(true);
         }

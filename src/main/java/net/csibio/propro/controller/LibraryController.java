@@ -8,9 +8,9 @@ import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.constants.enums.TaskTemplate;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.ProjectDO;
+import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.db.TaskDO;
 import net.csibio.propro.domain.query.LibraryQuery;
 import net.csibio.propro.domain.vo.LibraryUpdateVO;
@@ -47,7 +47,7 @@ public class LibraryController extends XController<LibraryDO, LibraryQuery, Libr
     @Autowired
     ProjectService projectService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
 
     @GetMapping(value = "/list")
     Result list(LibraryQuery query) {
@@ -202,8 +202,8 @@ public class LibraryController extends XController<LibraryDO, LibraryQuery, Libr
                       @RequestParam(value = "proteinName") String proteinName,
                       @RequestParam(value = "range") double range) {
         ProjectDO project = projectService.getById(projectId);
-        List<ExperimentDO> experiments = experimentService.getAllByProjectId(projectId);
-        List<WindowRange> windowRanges = experiments.get(0).getWindowRanges();
+        List<RunDO> runs = runService.getAllByProjectId(projectId);
+        List<WindowRange> windowRanges = runs.get(0).getWindowRanges();
         Result<Map<String, List<Object>>> peptideLink = peptideService.getPeptideLink(project.getAnaLibId(), proteinName, range, windowRanges);
         peptideLink.setSuccess(true);
         return peptideLink;

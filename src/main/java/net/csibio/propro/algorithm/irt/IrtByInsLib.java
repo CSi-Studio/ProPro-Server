@@ -8,7 +8,7 @@ import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.DataDO;
-import net.csibio.propro.domain.db.ExperimentDO;
+import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.utils.ConvolutionUtil;
 import org.springframework.stereotype.Component;
@@ -26,26 +26,26 @@ public class IrtByInsLib extends Irt {
     /**
      * XIC iRT内标库的数据
      *
-     * @param exp
+     * @param run
      * @param params
      * @return
      */
     @Override
-    public List<DataDO> extract(ExperimentDO exp, AnalyzeParams params) {
-        Result checkResult = ConvolutionUtil.checkExperiment(exp);
+    public List<DataDO> extract(RunDO run, AnalyzeParams params) {
+        Result checkResult = ConvolutionUtil.checkRun(run);
         if (checkResult.isFailed()) {
             log.error(checkResult.getErrorMessage());
             return null;
         }
 
         List<DataDO> finalDataList = new ArrayList<>();
-        List<BlockIndexDO> blockList = blockIndexService.getAllMS2ByExpId(exp.getId());
+        List<BlockIndexDO> blockList = blockIndexService.getAllMS2ByRunId(run.getId());
         blockList = blockList.stream().sorted(Comparator.comparing(a -> a.getRange().getStart())).collect(Collectors.toList());
-        Compressor mzCompressor = exp.fetchCompressor(Compressor.TARGET_MZ);
-        Compressor intCompressor = exp.fetchCompressor(Compressor.TARGET_INTENSITY);
+        Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
+        Compressor intCompressor = run.fetchCompressor(Compressor.TARGET_INTENSITY);
         DIAParser parser = null;
         try {
-            parser = new DIAParser(exp.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
+            parser = new DIAParser(run.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
             for (int i = 0; i < blockList.size(); i++) {
                 log.info("第" + (i + 1) + "轮搜索开始");
                 //Step1.按照步长获取SwathList的点位库

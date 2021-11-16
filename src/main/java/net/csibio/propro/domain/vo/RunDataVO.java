@@ -13,11 +13,11 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class ExpDataVO {
+public class RunDataVO {
 
     String id;
 
-    String expId;
+    String runId;
 
     String group;
 
@@ -65,20 +65,20 @@ public class ExpDataVO {
     Double minTotalScore;
 
 
-    public ExpDataVO() {
+    public RunDataVO() {
     }
 
-    public ExpDataVO(String expId) {
-        this.expId = expId;
+    public RunDataVO(String runId) {
+        this.runId = runId;
     }
 
-    public ExpDataVO(String expId, String overviewId, String peptideRef) {
-        this.expId = expId;
+    public RunDataVO(String runId, String overviewId, String peptideRef) {
+        this.runId = runId;
         this.peptideRef = peptideRef;
         this.overviewId = overviewId;
     }
 
-    public ExpDataVO merge(DataDO data, DataSumDO dataSum) {
+    public RunDataVO merge(DataDO data, DataSumDO dataSum) {
         if (data != null) {
             DataUtil.decompress(data);
             BeanUtils.copyProperties(data, this);
@@ -92,7 +92,7 @@ public class ExpDataVO {
         return this;
     }
 
-    public ExpDataVO merge(BaseData data, DataSumDO dataSum) {
+    public RunDataVO merge(BaseData data, DataSumDO dataSum) {
         if (data != null) {
             BeanUtils.copyProperties(data, this);
         }

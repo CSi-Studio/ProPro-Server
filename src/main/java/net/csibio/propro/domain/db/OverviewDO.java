@@ -29,7 +29,7 @@ public class OverviewDO extends BaseDO {
      * 分析的实验对象
      */
     @Indexed
-    String expId;
+    String runId;
 
     /**
      * 重选峰overview
@@ -47,7 +47,7 @@ public class OverviewDO extends BaseDO {
     /**
      * 分析的实验对象名称
      */
-    String expName;
+    String runName;
 
     /**
      * 项目标签

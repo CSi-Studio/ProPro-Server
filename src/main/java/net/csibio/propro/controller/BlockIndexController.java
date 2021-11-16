@@ -12,10 +12,10 @@ import net.csibio.propro.domain.bean.blockindex.BlockIndexVO;
 import net.csibio.propro.domain.bean.common.DoubleTreble;
 import net.csibio.propro.domain.bean.common.FloatPairs;
 import net.csibio.propro.domain.db.BlockIndexDO;
-import net.csibio.propro.domain.db.ExperimentDO;
+import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.query.BlockIndexQuery;
 import net.csibio.propro.service.BlockIndexService;
-import net.csibio.propro.service.ExperimentService;
+import net.csibio.propro.service.RunService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,12 +35,12 @@ public class BlockIndexController {
     @Autowired
     BlockIndexService blockIndexService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
 
     @GetMapping(value = "/list")
     Result list(BlockIndexQuery query) {
-        if (StringUtils.isEmpty(query.getExpId())) {
-            return Result.Error(ResultCode.EXPERIMENT_ID_CANNOT_BE_EMPTY);
+        if (StringUtils.isEmpty(query.getRunId())) {
+            return Result.Error(ResultCode.RUN_ID_CANNOT_BE_EMPTY);
         }
 
         long startX = System.currentTimeMillis();
@@ -67,12 +67,12 @@ public class BlockIndexController {
             return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
         }
 
-        ExperimentDO exp = experimentService.getById(blockIndex.getExpId());
-        if (exp == null) {
-            return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
+        RunDO run = runService.getById(blockIndex.getRunId());
+        if (run == null) {
+            return Result.Error(ResultCode.RUN_NOT_EXISTED);
         }
 
-        FloatPairs pairs = experimentService.getSpectrum(exp, blockIndex, rt);
+        FloatPairs pairs = runService.getSpectrum(run, blockIndex, rt);
         return Result.OK(pairs);
     }
 
@@ -84,13 +84,13 @@ public class BlockIndexController {
             return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
         }
 
-        ExperimentDO experiment = experimentService.getById(blockIndex.getExpId());
-        if (experiment == null) {
-            return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
+        RunDO run = runService.getById(blockIndex.getRunId());
+        if (run == null) {
+            return Result.Error(ResultCode.RUN_NOT_EXISTED);
         }
 
-        Compressor mzCompressor = experiment.fetchCompressor(Compressor.TARGET_MZ);
-        DIAParser parser = new DIAParser(experiment.getAirdPath(), mzCompressor, experiment.fetchCompressor(Compressor.TARGET_INTENSITY), mzCompressor.getPrecision());
+        Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
+        DIAParser parser = new DIAParser(run.getAirdPath(), mzCompressor, run.fetchCompressor(Compressor.TARGET_INTENSITY), mzCompressor.getPrecision());
         List<FloatPairs> pairsList = new ArrayList<>();
         try {
             for (float rt : rtList) {
@@ -114,13 +114,13 @@ public class BlockIndexController {
             return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
         }
 
-        ExperimentDO experiment = experimentService.getById(blockIndex.getExpId());
-        if (experiment == null) {
-            return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
+        RunDO run = runService.getById(blockIndex.getRunId());
+        if (run == null) {
+            return Result.Error(ResultCode.RUN_NOT_EXISTED);
         }
 
-        Compressor mzCompressor = experiment.fetchCompressor(Compressor.TARGET_MZ);
-        DIAParser parser = new DIAParser(experiment.getAirdPath(), mzCompressor, experiment.fetchCompressor(Compressor.TARGET_INTENSITY), mzCompressor.getPrecision());
+        Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
+        DIAParser parser = new DIAParser(run.getAirdPath(), mzCompressor, run.fetchCompressor(Compressor.TARGET_INTENSITY), mzCompressor.getPrecision());
         MzIntensityPairs pairs = parser.getSpectrumByRt(blockIndex.getStartPtr(), blockIndex.getRts(), blockIndex.getMzs(), blockIndex.getInts(), rt);
         parser.close();
         //对光谱进行高斯平滑

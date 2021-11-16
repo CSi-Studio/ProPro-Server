@@ -57,7 +57,7 @@ public class OverviewController {
         }
         //如果将默认设置为true,那么会清理改exp下的所有overview状态为false
         if (defaultOne) {
-            overviewService.resetDefaultOne(overview.getExpId());
+            overviewService.resetDefaultOne(overview.getRunId());
         }
 
         overview.setDefaultOne(defaultOne);
@@ -81,7 +81,7 @@ public class OverviewController {
 
             //如果将默认设置为true,那么会清理改exp下的所有overview状态为false
             if (defaultOne != null && defaultOne) {
-                overviewService.resetDefaultOne(overview.getExpId());
+                overviewService.resetDefaultOne(overview.getRunId());
                 overview.setDefaultOne(defaultOne);
             }
 
@@ -91,7 +91,7 @@ public class OverviewController {
             if (tags != null) {
                 overview.setTags(tags);
             }
-            
+
 
             overviewService.update(overview);
         }

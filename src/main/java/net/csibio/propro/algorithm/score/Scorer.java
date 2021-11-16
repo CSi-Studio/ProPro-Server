@@ -17,8 +17,8 @@ import net.csibio.propro.domain.bean.score.PeakGroupListWrapper;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.DataSumDO;
-import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.OverviewDO;
+import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.service.*;
@@ -53,7 +53,7 @@ public class Scorer {
     @Autowired
     TaskService taskService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     XicScorer xicScorer;
     @Autowired
@@ -75,7 +75,7 @@ public class Scorer {
     @Autowired
     CoreFunc coreFunc;
 
-    public DataDO scoreForOne(ExperimentDO exp, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public DataDO scoreForOne(RunDO run, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
 
         if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
             dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
@@ -152,7 +152,7 @@ public class Scorer {
             diaScorer.calculateDiaMassDiffScore(productMzMap, spectrumMzArray, spectrumIntArray, normedLibIntMap, peakGroup, scoreTypes);
             xicScorer.calculateLogSnScore(peakGroup, scoreTypes);
             libraryScorer.calculateIntensityScore(peakGroup, params.getMethod().getScore().getScoreTypes());
-            libraryScorer.calculateNormRtScore(peakGroup, exp.getIrt().getSi(), dataDO.getLibRt(), scoreTypes);
+            libraryScorer.calculateNormRtScore(peakGroup, run.getIrt().getSi(), dataDO.getLibRt(), scoreTypes);
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scoreTypes);
             peakGroup.put(ScoreType.IonsCountDeltaScore, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
             peakGroup.put(ScoreType.InitScore, peakGroup.getTotal(), scoreTypes);

@@ -3,8 +3,8 @@ package net.csibio.propro.utils;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.experiment.BaseExp;
-import net.csibio.propro.domain.db.ExperimentDO;
+import net.csibio.propro.domain.bean.run.BaseRun;
+import net.csibio.propro.domain.db.RunDO;
 
 import java.io.File;
 
@@ -92,11 +92,11 @@ public class ConvolutionUtil {
         return result;
     }
 
-    public static Result<File> checkExperiment(ExperimentDO experimentDO) {
-        if (experimentDO == null) {
-            return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
+    public static Result<File> checkRun(RunDO runDO) {
+        if (runDO == null) {
+            return Result.Error(ResultCode.RUN_NOT_EXISTED);
         }
-        File file = new File(experimentDO.getAirdPath());
+        File file = new File(runDO.getAirdPath());
         if (!file.exists()) {
             return Result.Error(ResultCode.FILE_NOT_EXISTED);
         }
@@ -104,11 +104,11 @@ public class ConvolutionUtil {
         return Result.OK(file);
     }
 
-    public static Result<File> checkExperiment(BaseExp baseExp) {
-        if (baseExp == null) {
-            return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
+    public static Result<File> checkRun(BaseRun baseRun) {
+        if (baseRun == null) {
+            return Result.Error(ResultCode.RUN_NOT_EXISTED);
         }
-        File file = new File(baseExp.getAirdPath());
+        File file = new File(baseRun.getAirdPath());
         if (!file.exists()) {
             return Result.Error(ResultCode.FILE_NOT_EXISTED);
         }

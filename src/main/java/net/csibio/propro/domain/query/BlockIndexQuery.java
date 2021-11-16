@@ -11,7 +11,7 @@ public class BlockIndexQuery extends PageQuery {
 
     String id;
 
-    String expId;
+    String runId;
 
     Integer level;
 
@@ -28,8 +28,8 @@ public class BlockIndexQuery extends PageQuery {
 
     }
 
-    public BlockIndexQuery(String expId, Integer msLevel) {
-        this.expId = expId;
+    public BlockIndexQuery(String runId, Integer msLevel) {
+        this.runId = runId;
         this.level = msLevel;
     }
 }

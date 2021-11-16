@@ -1,4 +1,4 @@
-package net.csibio.propro.domain.bean.experiment;
+package net.csibio.propro.domain.bean.run;
 
 import lombok.Data;
 import net.csibio.aird.bean.Compressor;
@@ -11,7 +11,7 @@ import org.apache.commons.io.FilenameUtils;
 import java.util.List;
 
 @Data
-public class BaseExp {
+public class BaseRun {
 
     /**
      * 实验的ID
@@ -32,7 +32,7 @@ public class BaseExp {
      * 碎裂模式
      */
     String fragMode;
-    
+
     /**
      * 标注,用于数据分类学习
      */

@@ -6,12 +6,12 @@ import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.db.ProjectDO;
-import net.csibio.propro.domain.query.ExperimentQuery;
+import net.csibio.propro.domain.query.RunQuery;
 import net.csibio.propro.excel.peptide.PeptideExcelBuilder;
 import net.csibio.propro.excel.peptide.PeptideRow;
-import net.csibio.propro.service.ExperimentService;
 import net.csibio.propro.service.OverviewService;
 import net.csibio.propro.service.ProjectService;
+import net.csibio.propro.service.RunService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,7 +32,7 @@ public class ExcelController {
     @Autowired
     ProjectService projectService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
 
     @PostMapping(value = "report")
     Result report(@RequestParam("projectId") String projectId) {
@@ -41,15 +41,15 @@ public class ExcelController {
             return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
         }
 
-        List<IdName> expIdNameList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId), IdName.class);
-        List<String> expIds = expIdNameList.stream().map(IdName::id).collect(Collectors.toList());
-        List<String> expNames = expIdNameList.stream().map(IdName::name).collect(Collectors.toList());
-        Result<List<PeptideRow>> result = overviewService.report(expIds);
+        List<IdName> runIdNameList = runService.getAll(new RunQuery().setProjectId(projectId), IdName.class);
+        List<String> runIds = runIdNameList.stream().map(IdName::id).collect(Collectors.toList());
+        List<String> runNames = runIdNameList.stream().map(IdName::name).collect(Collectors.toList());
+        Result<List<PeptideRow>> result = overviewService.report(runIds);
         if (result.isFailed()) {
             return result;
         }
 
-        PeptideExcelBuilder builder = new PeptideExcelBuilder(project.getName(), expNames, result.getData());
+        PeptideExcelBuilder builder = new PeptideExcelBuilder(project.getName(), runNames, result.getData());
         builder.export();
         log.info("导出成功");
         return Result.OK();

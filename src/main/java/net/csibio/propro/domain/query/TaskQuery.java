@@ -18,8 +18,8 @@ public class TaskQuery extends PageQuery {
 
     String name;
 
-    String expId;
-    
+    String runId;
+
     String taskTemplate;
 
     List<String> statusList;

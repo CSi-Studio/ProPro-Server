@@ -17,12 +17,12 @@ import net.csibio.propro.domain.bean.score.PeakGroupListWrapper;
 import net.csibio.propro.domain.bean.score.ScoreRtPair;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
 import net.csibio.propro.domain.db.DataDO;
-import net.csibio.propro.domain.db.ExperimentDO;
+import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.service.BlockIndexService;
-import net.csibio.propro.service.ExperimentService;
 import net.csibio.propro.service.PeptideService;
+import net.csibio.propro.service.RunService;
 import net.csibio.propro.utils.MathUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -49,20 +49,20 @@ public abstract class Irt {
     @Autowired
     LinearFitter linearFitter;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
 
-    public abstract List<DataDO> extract(ExperimentDO exp, AnalyzeParams params);
+    public abstract List<DataDO> extract(RunDO run, AnalyzeParams params);
 
     /**
      * XIC并且求出iRT
      *
-     * @param exp
+     * @param run
      * @param params
      * @return
      */
-    public Result<IrtResult> align(ExperimentDO exp, AnalyzeParams params) {
+    public Result<IrtResult> align(RunDO run, AnalyzeParams params) {
         try {
-            List<DataDO> dataList = extract(exp, params);
+            List<DataDO> dataList = extract(run, params);
             if (dataList == null || dataList.isEmpty()) {
                 return Result.Error(ResultCode.DATA_IS_EMPTY);
             }
@@ -71,9 +71,9 @@ public abstract class Irt {
             if (result.isFailed()) {
                 return result;
             }
-            log.info("实验" + exp.getName() + "IRT结束:" + result.getData().getSi().getFormula());
-            exp.setIrt(result.getData());
-            experimentService.update(exp);
+            log.info("实验" + run.getName() + "IRT结束:" + result.getData().getSi().getFormula());
+            run.setIrt(result.getData());
+            runService.update(run);
             return result;
         } catch (Exception e) {
             e.printStackTrace();
@@ -97,7 +97,7 @@ public abstract class Irt {
         for (DataDO data : dataList) {
             int maxIonsCount = Arrays.stream(data.getIonsLow()).max().getAsInt();
             PeptideCoord coord = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
-            PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchPeakGroups(data, coord, params.getMethod().getIrt().getSs());
+            PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchPeakGroupsV2(data, coord, params.getMethod().getIrt().getSs());
             if (!peakGroupListWrapper.isFeatureFound()) {
                 continue;
             }
@@ -162,17 +162,17 @@ public abstract class Irt {
             List<ScoreRtPair> scores = scoresList.get(i);
             double max = Double.MIN_VALUE;
             //find max scoreForAll's rt
-            double expRt = 0d;
+            double runRt = 0d;
             for (int j = 0; j < scores.size(); j++) {
                 if (scores.get(j).getScore() > max) {
                     max = scores.get(j).getScore();
-                    expRt = scores.get(j).getRealRt();
+                    runRt = scores.get(j).getApexRt();
                 }
             }
             if (Constants.ESTIMATE_BEST_PEPTIDES && max < Constants.OVERALL_QUALITY_CUTOFF) {
                 continue;
             }
-            pairs.add(new Pair(rt.get(i), expRt));
+            pairs.add(new Pair(rt.get(i), runRt));
         }
         return pairs;
     }

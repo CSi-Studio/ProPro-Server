@@ -30,7 +30,7 @@ public class MathUtil {
         double x, y;
         int n = pairs.size();
         for (int i = 0; i < n; i++) {
-            x = pairs.get(i).right();//ExpRt
+            x = pairs.get(i).right();//RunRt
             y = pairs.get(i).left();//TheoryRt
             sigmaX += x;
             sigmaY += y;

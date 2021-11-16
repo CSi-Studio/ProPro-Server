@@ -20,7 +20,7 @@ public class Overview4Clinic {
 
     String id;
     String name;
-    String expId;
+    String runId;
     Boolean defaultOne;
     HashMap<String, Double> weights;
     Double minTotalScore;

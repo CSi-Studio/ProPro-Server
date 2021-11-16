@@ -15,8 +15,8 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-@Document(collection = "experiment")
-public class ExperimentDO extends BaseDO {
+@Document(collection = "run")
+public class RunDO extends BaseDO {
 
     private static final long serialVersionUID = -3258829839160856625L;
 
@@ -41,7 +41,7 @@ public class ExperimentDO extends BaseDO {
     //别名,默认为空
     String alias;
 
-    //DIA_SWATH, PRM, SCANNING_SWATH @see ExpType
+    //DIA_SWATH, PRM, SCANNING_SWATH @see RunType
     String type;
 
     //CID, HCD, ETD,详情见FragMode类

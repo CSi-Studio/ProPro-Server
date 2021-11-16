@@ -19,8 +19,8 @@ import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.DataSumDO;
-import net.csibio.propro.domain.db.ExperimentDO;
 import net.csibio.propro.domain.db.OverviewDO;
+import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.service.DataService;
 import net.csibio.propro.service.DataSumService;
@@ -163,7 +163,7 @@ public class CoreFunc {
      * @param params
      * @return
      */
-    public AnyPair<DataDO, DataSumDO> predictOneDelete(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
+    public AnyPair<DataDO, DataSumDO> predictOneDelete(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, RunDO run, OverviewDO overview, AnalyzeParams params) {
 
         List<FragmentInfo> libFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
         int size = coord.getFragments().size();
@@ -211,7 +211,7 @@ public class CoreFunc {
             }
 
             try {
-                data = scorer.scoreForOne(exp, data, coord, rtMap, params);
+                data = scorer.scoreForOne(run, data, coord, rtMap, params);
             } catch (Exception e) {
                 e.printStackTrace();
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
@@ -257,7 +257,7 @@ public class CoreFunc {
         }
 
         if (bestPair == null) {
-            log.info("没有产生数据:" + exp.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
+            log.info("没有产生数据:" + run.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
             return null;
         }
 
@@ -268,9 +268,9 @@ public class CoreFunc {
         }
         bestPair.getLeft().getIntMap().put(CutInfoConst.ION_COUNT, ionsFloatArray);
         if (maxHitRt.get() != bestPair.getRight().getSelectedRt()) {
-            log.info("有问题:" + exp.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
+            log.info("有问题:" + run.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
         } else {
-            log.info("RT吻合:" + exp.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
+            log.info("RT吻合:" + run.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
         }
 
 //        double finalIonsCount = scorer.calcBestIonsCount(bestData);
@@ -285,7 +285,7 @@ public class CoreFunc {
         return bestPair;
     }
 
-    public AnyPair<DataDO, DataSumDO> predictOneNiubi(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, AnalyzeParams params) {
+    public AnyPair<DataDO, DataSumDO> predictOneNiubi(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, RunDO run, AnalyzeParams params) {
 //        coord.setFragments(coord.getFragments().stream().filter(f -> !f.getCutInfo().equals("y7")).collect(Collectors.toSet()));
         DataDO dataDO = extractOne(coord, rtMap, params);
         //EIC结果如果为空则没有继续的必要了
@@ -299,7 +299,7 @@ public class CoreFunc {
             return null;
         }
 
-        dataDO = scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+        dataDO = scorer.scoreForOne(run, dataDO, coord, rtMap, params);
         DataSumDO sum = judge(dataDO);
         return new AnyPair<>(dataDO, sum);
     }
@@ -315,7 +315,7 @@ public class CoreFunc {
      * @param params
      * @return
      */
-    public AnyPair<DataDO, DataSumDO> predictOneReplace(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, ExperimentDO exp, OverviewDO overview, AnalyzeParams params) {
+    public AnyPair<DataDO, DataSumDO> predictOneReplace(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, RunDO run, OverviewDO overview, AnalyzeParams params) {
         //Step1.对库中的碎片进行排序,按照强度从大到小排列
         Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
         List<FragmentInfo> sortedLibFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
@@ -368,7 +368,7 @@ public class CoreFunc {
             }
             coord.setFragments(selectFragments);
             try {
-                buildData = scorer.scoreForOne(exp, buildData, coord, rtMap, params);
+                buildData = scorer.scoreForOne(run, buildData, coord, rtMap, params);
             } catch (Exception e) {
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
             }
@@ -401,7 +401,7 @@ public class CoreFunc {
 
         log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount);
         coord.setFragments(bestIonGroup); //这里必须要将coord置为最佳峰组
-//        log.info(exp.getAlias() + "碎片组:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList() + "; Score:" + bestScore + " RT:" + bestRt);
+//        log.info(run.getAlias() + "碎片组:" + bestIonGroup.stream().map(FragmentInfo::getCutInfo).toList() + "; Score:" + bestScore + " RT:" + bestRt);
         return new AnyPair<DataDO, DataSumDO>(bestData, bestDataSum);
     }
 
@@ -414,7 +414,7 @@ public class CoreFunc {
      * @param params
      * @return
      */
-    public List<DataDO> epps(ExperimentDO exp, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public List<DataDO> epps(RunDO run, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
         long start = System.currentTimeMillis();
         if (coordinates == null || coordinates.size() == 0) {
@@ -433,7 +433,7 @@ public class CoreFunc {
             }
 
             //Step2. 常规选峰及打分,未满足条件的直接忽略
-            dataDO = scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+            dataDO = scorer.scoreForOne(run, dataDO, coord, rtMap, params);
             dataList.add(dataDO);
 
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
@@ -452,7 +452,7 @@ public class CoreFunc {
             }
 
             //Step5. 对Decoy进行打分
-            decoyData = scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
+            decoyData = scorer.scoreForOne(run, decoyData, coord, rtMap, params);
             dataList.add(decoyData);
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
@@ -467,7 +467,7 @@ public class CoreFunc {
         return dataList;
     }
 
-    public List<DataDO> reselect(ExperimentDO exp, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public List<DataDO> reselect(RunDO run, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
         long start = System.currentTimeMillis();
         if (coordinates == null || coordinates.size() == 0) {
@@ -484,13 +484,13 @@ public class CoreFunc {
                 return;
             }
             //Step2. 常规选峰及打分,未满足条件的直接忽略
-            dataDO = scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+            dataDO = scorer.scoreForOne(run, dataDO, coord, rtMap, params);
             lda.scoreForPeakGroups(dataDO.getPeakGroupList(), params.getBaseOverview().getWeights(), params.getBaseOverview().getParams().getMethod().getScore().getScoreTypes());
             DataSumDO tempSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview(), null);
             if (tempSum == null || tempSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview(), null);
                 if (dataSum == null || dataSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
-                    AnyPair<DataDO, DataSumDO> pair = predictOneDelete(coord, rtMap, exp, params.getBaseOverview(), params);
+                    AnyPair<DataDO, DataSumDO> pair = predictOneDelete(coord, rtMap, run, params.getBaseOverview(), params);
                     if (pair != null && pair.getLeft() != null) {
                         newIonsGroup.getAndIncrement();
                         dataDO = pair.getLeft();
@@ -515,7 +515,7 @@ public class CoreFunc {
             }
 
             //Step5. 对Decoy进行打分
-            decoyData = scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
+            decoyData = scorer.scoreForOne(run, decoyData, coord, rtMap, params);
             dataList.add(decoyData);
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
@@ -531,7 +531,7 @@ public class CoreFunc {
         return dataList;
     }
 
-    public List<DataDO> csi(ExperimentDO exp, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public List<DataDO> csi(RunDO run, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
 //        List<DataSumDO> sumList = Collections.synchronizedList(new ArrayList<>());
         if (coordinates == null || coordinates.size() == 0) {
@@ -545,7 +545,7 @@ public class CoreFunc {
                 return;
             }
 
-            dataDO = scorer.scoreForOne(exp, dataDO, coord, rtMap, params);
+            dataDO = scorer.scoreForOne(run, dataDO, coord, rtMap, params);
 //            sumList.add(judge(dataDO));
             dataList.add(dataDO);
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
@@ -563,7 +563,7 @@ public class CoreFunc {
             }
 
             //Step5. 对Decoy进行打分
-            decoyData = scorer.scoreForOne(exp, decoyData, coord, rtMap, params);
+            decoyData = scorer.scoreForOne(run, decoyData, coord, rtMap, params);
             dataList.add(decoyData);
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
@@ -576,7 +576,7 @@ public class CoreFunc {
 //        if (dataList.stream().filter(data -> data.getStatus() == null).toList().size() > 0) {
 //            log.info("居然有问题");
 //        }
-//        Result<List<DataSumDO>> result = dataSumService.insert(sumList, exp.getProjectId());
+//        Result<List<DataSumDO>> result = dataSumService.insert(sumList, run.getProjectId());
 //        if (result.isFailed()) {
 //            log.error(result.getErrorMessage());
 //        }

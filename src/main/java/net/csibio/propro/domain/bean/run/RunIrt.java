@@ -1,10 +1,10 @@
-package net.csibio.propro.domain.bean.experiment;
+package net.csibio.propro.domain.bean.run;
 
 import lombok.Data;
 import net.csibio.propro.domain.bean.irt.IrtResult;
 
 @Data
-public class ExpIrt {
+public class RunIrt {
 
     /**
      * 实验的ID

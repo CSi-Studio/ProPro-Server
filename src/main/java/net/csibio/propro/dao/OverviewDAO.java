@@ -54,10 +54,10 @@ public class OverviewDAO extends BaseDAO<OverviewDO, OverviewQuery> {
         if (query.getDefaultOne() != null) {
             dbQuery.addCriteria(where("defaultOne").is(query.getDefaultOne()));
         }
-        if (StringUtils.isNotEmpty(query.getExpId())) {
-            dbQuery.addCriteria(where("expId").is(query.getExpId()));
-        } else if (query.getExpIds() != null && query.getExpIds().size() > 0) {
-            dbQuery.addCriteria(where("expId").in(query.getExpIds()));
+        if (StringUtils.isNotEmpty(query.getRunId())) {
+            dbQuery.addCriteria(where("runId").is(query.getRunId()));
+        } else if (query.getRunIds() != null && query.getRunIds().size() > 0) {
+            dbQuery.addCriteria(where("runId").in(query.getRunIds()));
         }
         return dbQuery;
     }

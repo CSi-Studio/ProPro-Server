@@ -13,18 +13,18 @@ public interface OverviewService extends BaseService<OverviewDO, OverviewQuery> 
     /**
      * 获取实验的默认overview
      *
-     * @param expIds
+     * @param runIds
      * @return
      */
-    Map<String, OverviewDO> getDefaultOverviews(List<String> expIds);
+    Map<String, OverviewDO> getDefaultOverviews(List<String> runIds);
 
     /**
      * 将某一个实验下的所有overview的defaultOne设置为false
      *
-     * @param expId
+     * @param runId
      * @return
      */
-    Result resetDefaultOne(String expId);
+    Result resetDefaultOne(String runId);
 
     /**
      * 对overview进行鉴定统计
@@ -45,8 +45,8 @@ public interface OverviewService extends BaseService<OverviewDO, OverviewQuery> 
     /**
      * 统计若干个实验的结果矩阵
      *
-     * @param expIds
+     * @param runIds
      * @return
      */
-    Result<List<PeptideRow>> report(List<String> expIds);
+    Result<List<PeptideRow>> report(List<String> runIds);
 }

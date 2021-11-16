@@ -70,19 +70,19 @@ public class MsmsParser extends BaseLibraryParser {
 
             //以sequence为单位进行批处理
             String lastSequence = "";
-            List<String[]> sequenceInExps = new ArrayList<>();
+            List<String[]> sequenceInRuns = new ArrayList<>();
             HashMap<String, PeptideDO> libPepMap = new HashMap<>();
             while ((line = reader.readLine()) != null) {
                 String[] row = line.split("\t");
                 String sequence = row[columnMap.get("sequence")];
                 if (sequence.equals(lastSequence)) {
-                    sequenceInExps.add(row);
+                    sequenceInRuns.add(row);
                 } else {
-                    HashMap<String, PeptideDO> peptideDOMap = parseSequence(sequenceInExps, columnMap, library);
+                    HashMap<String, PeptideDO> peptideDOMap = parseSequence(sequenceInRuns, columnMap, library);
                     libPepMap.putAll(peptideDOMap);
                     //deal with same sequence
-                    sequenceInExps.clear();
-                    sequenceInExps.add(row);
+                    sequenceInRuns.clear();
+                    sequenceInRuns.add(row);
                     lastSequence = sequence;
                 }
             }
@@ -182,10 +182,10 @@ public class MsmsParser extends BaseLibraryParser {
         return tranResult;
     }
 
-    private HashMap<String, PeptideDO> parseSequence(List<String[]> sequenceInExps, HashMap<String, Integer> columnMap, LibraryDO library) {
+    private HashMap<String, PeptideDO> parseSequence(List<String[]> sequenceInRuns, HashMap<String, Integer> columnMap, LibraryDO library) {
         HashMap<String, Float> scoreMap = new HashMap<>();
         HashMap<String, String[]> peptideRefMap = new HashMap<>();
-        for (String[] row : sequenceInExps) {
+        for (String[] row : sequenceInRuns) {
             String modifiedSequence = row[columnMap.get("modifiedsequence")].replace("_", "");
             if (modifiedSequence.contains("(")) {
                 modifiedSequence = replaceModification(modifiedSequence);

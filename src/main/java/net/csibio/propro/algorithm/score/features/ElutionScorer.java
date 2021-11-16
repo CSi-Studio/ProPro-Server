@@ -178,12 +178,12 @@ public class ElutionScorer {
         for (int i = 0; position < max; i++) {
             position = min + i * step;
             tmp = position - retention;
-            double expUpper = part2 - (tmp / symmetry);
-            double expUnder = termSq2 * ((tmp / width) - part3);
-            if (expUpper > 100 && expUnder > 100) {
-                data[i] = part1 * sqrt2Pi * Math.exp(expUpper - expUnder);
+            double runUpper = part2 - (tmp / symmetry);
+            double runUnder = termSq2 * ((tmp / width) - part3);
+            if (runUpper > 100 && runUnder > 100) {
+                data[i] = part1 * sqrt2Pi * Math.exp(runUpper - runUnder);
             } else {
-                data[i] = part1 * sqrt2Pi * Math.exp(expUpper) / (1 + Math.exp(expUnder));
+                data[i] = part1 * sqrt2Pi * Math.exp(runUpper) / (1 + Math.exp(runUnder));
             }
         }
         return data;
@@ -272,13 +272,13 @@ public class ElutionScorer {
         double z = xInit[3];
         for (int i = 0; i < derivatives[0].length; i++) {
             double t = preparedPairs.getRtArray()[i];
-            double exp1 = Math.exp(((w * w) / (2 * s * s)) - ((t - z) / s));
-            double exp2 = (1 + Math.exp((-Constants.EMG_CONST / sqrt2) * (((t - z) / w) - w / s)));
-            double exp3 = Math.exp((-Constants.EMG_CONST / sqrt2) * (((t - z) / w) - w / s));
-            derivatives[0][i] = w / s * sqrt2Pi * exp1 / exp2;
-            derivatives[1][i] = h / s * sqrt2Pi * exp1 / exp2 + (h * w * w) / (s * s * s) * sqrt2Pi * exp1 / exp2 + (Constants.EMG_CONST * h * w) / s * sqrt2Pi * exp1 * (-(t - z) / (w * w) - 1 / s) * exp3 / ((exp2 * exp2) * sqrt2);
-            derivatives[2][i] = -h * w / (s * s) * sqrt2Pi * exp1 / exp2 + h * w / s * sqrt2Pi * (-(w * w) / (s * s * s) + (t - z) / (s * s)) * exp1 / exp2 + (Constants.EMG_CONST * h * w * w) / (s * s * s) * sqrt2Pi * exp1 * exp3 / ((exp2 * exp2) * sqrt2);
-            derivatives[3][i] = h * w / (s * s) * sqrt2Pi * exp1 / exp2 - (Constants.EMG_CONST * h) / s * sqrt2Pi * exp1 * exp3 / ((exp2 * exp2) * sqrt2);
+            double run1 = Math.exp(((w * w) / (2 * s * s)) - ((t - z) / s));
+            double run2 = (1 + Math.exp((-Constants.EMG_CONST / sqrt2) * (((t - z) / w) - w / s)));
+            double run3 = Math.exp((-Constants.EMG_CONST / sqrt2) * (((t - z) / w) - w / s));
+            derivatives[0][i] = w / s * sqrt2Pi * run1 / run2;
+            derivatives[1][i] = h / s * sqrt2Pi * run1 / run2 + (h * w * w) / (s * s * s) * sqrt2Pi * run1 / run2 + (Constants.EMG_CONST * h * w) / s * sqrt2Pi * run1 * (-(t - z) / (w * w) - 1 / s) * run3 / ((run2 * run2) * sqrt2);
+            derivatives[2][i] = -h * w / (s * s) * sqrt2Pi * run1 / run2 + h * w / s * sqrt2Pi * (-(w * w) / (s * s * s) + (t - z) / (s * s)) * run1 / run2 + (Constants.EMG_CONST * h * w * w) / (s * s * s) * sqrt2Pi * run1 * run3 / ((run2 * run2) * sqrt2);
+            derivatives[3][i] = h * w / (s * s) * sqrt2Pi * run1 / run2 - (Constants.EMG_CONST * h) / s * sqrt2Pi * run1 * run3 / ((run2 * run2) * sqrt2);
         }
         optimizer.setDerivativeCurrent(derivatives);
         optimizer.setInitialParameters(xInit);

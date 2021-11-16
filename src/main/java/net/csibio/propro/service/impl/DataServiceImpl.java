@@ -11,7 +11,7 @@ import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.DataQuery;
-import net.csibio.propro.domain.vo.ExpDataVO;
+import net.csibio.propro.domain.vo.RunDataVO;
 import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,7 @@ public class DataServiceImpl implements DataService {
     @Autowired
     SimulateService simulateService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     OverviewService overviewService;
 
@@ -59,8 +59,8 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public ExpDataVO getDataFromDB(String projectId, String expId, String overviewId, String peptideRef) {
-        ExpDataVO dataVO = new ExpDataVO(expId, overviewId, peptideRef);
+    public RunDataVO getDataFromDB(String projectId, String runId, String overviewId, String peptideRef) {
+        RunDataVO dataVO = new RunDataVO(runId, overviewId, peptideRef);
         DataDO data = getOne(new DataQuery(overviewId).setPeptideRef(peptideRef).setDecoy(false), DataDO.class, projectId);
         if (data == null) {
             return null;
@@ -71,7 +71,7 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public Result<ExpDataVO> predictDataFromFile(ExperimentDO exp, PeptideDO peptide, Boolean changeCharge, String overviewId) {
+    public Result<RunDataVO> predictDataFromFile(RunDO run, PeptideDO peptide, Boolean changeCharge, String overviewId) {
         if (peptide == null) {
             return Result.Error(ResultCode.PEPTIDE_NOT_EXIST);
         }
@@ -97,7 +97,7 @@ public class DataServiceImpl implements DataService {
             }
         }
 
-        Result<ExpDataVO> result = extractor.predictOne(exp, overview, coord, params);
+        Result<RunDataVO> result = extractor.predictOne(run, overview, coord, params);
         if (result.isFailed() && result.getErrorMessage().equals(ResultCode.BLOCK_INDEX_NOT_EXISTED.getCode())) {
             if (changeCharge) {
                 if (peptide.getCharge() == 2) {
@@ -110,7 +110,7 @@ public class DataServiceImpl implements DataService {
                     coord.setPeptideRef(coord.getPeptideRef().replace("3", "4"));
                 }
             }
-            result = extractor.predictOne(exp, overview, coord, params);
+            result = extractor.predictOne(run, overview, coord, params);
         }
 
         return result;

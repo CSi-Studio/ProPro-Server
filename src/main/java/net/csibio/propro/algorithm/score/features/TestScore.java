@@ -15,30 +15,30 @@ public class TestScore {
     private double slopeStep = 0.2d;
     private double slopeThreshold = 0.001d;
 
-    public double getIntensityScore(List<Double> libIntList, List<Double> expIntList) {
-        double slope = getSlope(libIntList, expIntList);
+    public double getIntensityScore(List<Double> libIntList, List<Double> runIntList) {
+        double slope = getSlope(libIntList, runIntList);
         double score = 0;
         for (int i = 0; i < libIntList.size(); i++) {
-            score += (1d - shiftedSigmoid(Math.abs(expIntList.get(i) - libIntList.get(i) * slope) / (libIntList.get(i) * slope)));
+            score += (1d - shiftedSigmoid(Math.abs(runIntList.get(i) - libIntList.get(i) * slope) / (libIntList.get(i) * slope)));
         }
         score = score / libIntList.size();
         return score;
     }
 
-    public double getSlope(List<Double> libIntList, List<Double> expIntList) {
-        double slope = MathUtil.sum(expIntList) / MathUtil.sum(libIntList);
+    public double getSlope(List<Double> libIntList, List<Double> runIntList) {
+        double slope = MathUtil.sum(runIntList) / MathUtil.sum(libIntList);
         double lastSlope = Double.MAX_VALUE;
         while (Math.abs(slope - lastSlope) >= slopeThreshold) {
             lastSlope = slope;
-            slope = updateSlope(libIntList, expIntList, slope);
+            slope = updateSlope(libIntList, runIntList, slope);
         }
         return slope;
     }
 
-    private double getLoss(List<Double> libIntList, List<Double> expIntList, double slope) {
+    private double getLoss(List<Double> libIntList, List<Double> runIntList, double slope) {
         List<Double> normalizedDiffs = new ArrayList<>();
         for (int index = 0; index < libIntList.size(); index++) {
-            double diff = libIntList.get(index) * slope - expIntList.get(index);
+            double diff = libIntList.get(index) * slope - runIntList.get(index);
             double normalizedDiff = Math.abs(diff) / (libIntList.get(index) * slope);
             normalizedDiffs.add(normalizedDiff);
         }
@@ -70,14 +70,14 @@ public class TestScore {
         return 2d / (1 + Math.exp(-2d * value)) - 1;
     }
 
-    private double getGradient(List<Double> libIntList, List<Double> expIntList, double slope) {
-        double loss = getLoss(libIntList, expIntList, slope - deltaSlope);
-        double deltaLoss = getLoss(libIntList, expIntList, slope + deltaSlope) - loss;
+    private double getGradient(List<Double> libIntList, List<Double> runIntList, double slope) {
+        double loss = getLoss(libIntList, runIntList, slope - deltaSlope);
+        double deltaLoss = getLoss(libIntList, runIntList, slope + deltaSlope) - loss;
         return deltaLoss / deltaSlope / 2d;
     }
 
-    private double updateSlope(List<Double> libIntList, List<Double> expIntList, double slope) {
-        double gradient = getGradient(libIntList, expIntList, slope);
+    private double updateSlope(List<Double> libIntList, List<Double> runIntList, double slope) {
+        double gradient = getGradient(libIntList, runIntList, slope);
 //        slope -= gradient * slopeStep;
         slope -= Math.random() * gradient * slopeStep;
         return slope;

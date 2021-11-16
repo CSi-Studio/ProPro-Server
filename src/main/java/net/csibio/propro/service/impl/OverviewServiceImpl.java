@@ -37,7 +37,7 @@ public class OverviewServiceImpl implements OverviewService {
     @Autowired
     PeptideService peptideService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
 
     @Override
     public BaseDAO<OverviewDO, OverviewQuery> getBaseDAO() {
@@ -102,12 +102,12 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public Map<String, OverviewDO> getDefaultOverviews(List<String> expIds) {
+    public Map<String, OverviewDO> getDefaultOverviews(List<String> runIds) {
         Map<String, OverviewDO> overviewMap = new HashMap<>();
-        if (expIds != null && expIds.size() > 0) {
-            expIds.forEach(expId -> {
-                OverviewDO overview = getOne(new OverviewQuery().setExpId(expId).setDefaultOne(true), OverviewDO.class);
-                overviewMap.put(expId, overview);
+        if (runIds != null && runIds.size() > 0) {
+            runIds.forEach(runId -> {
+                OverviewDO overview = getOne(new OverviewQuery().setRunId(runId).setDefaultOne(true), OverviewDO.class);
+                overviewMap.put(runId, overview);
             });
         }
 
@@ -115,9 +115,9 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-    public Result resetDefaultOne(String expId) {
+    public Result resetDefaultOne(String runId) {
         HashMap<String, Object> query = new HashMap<>();
-        query.put("expId", expId);
+        query.put("runId", runId);
         HashMap<String, Object> field = new HashMap<>();
         field.put("defaultOne", false);
         return updateAll(query, field);
@@ -143,18 +143,18 @@ public class OverviewServiceImpl implements OverviewService {
 
     @Override
     public Result<List<PeptideRow>> report(String projectId) {
-        List<IdName> idNameList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId), IdName.class);
+        List<IdName> idNameList = runService.getAll(new RunQuery().setProjectId(projectId), IdName.class);
         return report(idNameList.stream().map(IdName::id).toList());
     }
 
     @Override
-    public Result<List<PeptideRow>> report(List<String> expIds) {
-        if (expIds.size() == 0) {
-            return Result.Error(ResultCode.EXPERIMENT_ID_CANNOT_BE_EMPTY);
+    public Result<List<PeptideRow>> report(List<String> runIds) {
+        if (runIds.size() == 0) {
+            return Result.Error(ResultCode.RUN_ID_CANNOT_BE_EMPTY);
         }
-        Map<String, OverviewDO> overviewMap = getDefaultOverviews(expIds);
-        if (overviewMap.size() != expIds.size()) {
-            return Result.Error(ResultCode.SOME_EXPERIMENT_HAVE_NO_DEFAULT_OVERVIEW);
+        Map<String, OverviewDO> overviewMap = getDefaultOverviews(runIds);
+        if (overviewMap.size() != runIds.size()) {
+            return Result.Error(ResultCode.SOME_RUN_HAVE_NO_DEFAULT_OVERVIEW);
         }
         if (overviewMap.values().stream().map(OverviewDO::getInsLibId).collect(Collectors.toSet()).size() > 1) {
             return Result.Error(ResultCode.OVERVIEWS_MUST_USE_THE_SAME_INS_LIBRARY);

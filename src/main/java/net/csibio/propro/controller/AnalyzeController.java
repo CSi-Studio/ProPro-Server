@@ -10,12 +10,12 @@ import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
-import net.csibio.propro.domain.query.ExperimentQuery;
 import net.csibio.propro.domain.query.LibraryQuery;
 import net.csibio.propro.domain.query.MethodQuery;
+import net.csibio.propro.domain.query.RunQuery;
 import net.csibio.propro.domain.vo.PrepareAnalyzeVO;
 import net.csibio.propro.service.*;
-import net.csibio.propro.task.ExperimentTask;
+import net.csibio.propro.task.RunTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,11 +34,11 @@ public class AnalyzeController {
     @Autowired
     MethodService methodService;
     @Autowired
-    ExperimentService experimentService;
+    RunService runService;
     @Autowired
     TaskService taskService;
     @Autowired
-    ExperimentTask experimentTask;
+    RunTask runTask;
     @Autowired
     OverviewService overviewService;
 
@@ -71,7 +71,7 @@ public class AnalyzeController {
     @PostMapping(value = "/analyze")
     Result analyze(@RequestParam(value = "projectId") String projectId,
                    @RequestParam(value = "onlyIrt", defaultValue = "false") Boolean onlyIrt,
-                   @RequestParam("expIdList") List<String> expIdList,
+                   @RequestParam("runIdList") List<String> runIdList,
                    @RequestParam("methodId") String methodId,
                    @RequestParam("anaLibId") String anaLibId,
                    @RequestParam(value = "note", required = false) String note,
@@ -98,7 +98,7 @@ public class AnalyzeController {
         } else {
             insLib = anaLib;
         }
-        List<ExperimentDO> experimentList = experimentService.getAll(new ExperimentQuery().setProjectId(projectId).setIds(expIdList));
+        List<RunDO> runList = runService.getAll(new RunQuery().setProjectId(projectId).setIds(runIdList));
         LibraryDO finalInsLib = insLib;
 
         if (onlyIrt) {
@@ -109,9 +109,9 @@ public class AnalyzeController {
             params.setAnaLibName(anaLib.getName());
             params.setInsLibId(finalInsLib.getId());
             params.setInsLibName(finalInsLib.getName());
-            experimentTask.doIrt(task, experimentList, params);
+            runTask.doIrt(task, runList, params);
         } else {
-            for (ExperimentDO exp : experimentList) {
+            for (RunDO run : runList) {
                 TaskDO task = new TaskDO(TaskTemplate.EXTRACT_PEAKPICK_SCORE, "Analyze-EPPS-" + project.getName());
                 taskService.insert(task);
                 AnalyzeParams params = new AnalyzeParams(method);
@@ -120,7 +120,7 @@ public class AnalyzeController {
                 params.setInsLibId(finalInsLib.getId());
                 params.setInsLibName(finalInsLib.getName());
                 params.setNote(note);
-                experimentTask.doCSi(task, exp, params);
+                runTask.doCSi(task, run, params);
             }
         }
         return Result.OK();
@@ -137,9 +137,9 @@ public class AnalyzeController {
             if (project == null) {
                 return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
             }
-            ExperimentDO exp = experimentService.getById(baseOverview.getExpId());
-            if (exp == null) {
-                return Result.Error(ResultCode.EXPERIMENT_NOT_EXISTED);
+            RunDO run = runService.getById(baseOverview.getRunId());
+            if (run == null) {
+                return Result.Error(ResultCode.RUN_NOT_EXISTED);
             }
             MethodDO method = methodService.getById(baseOverview.getParams().getMethod().getId());
             if (method == null) {
@@ -171,7 +171,7 @@ public class AnalyzeController {
             params.setAnaLibName(anaLib.getName());
             params.setInsLibId(insLib.getId());
             params.setInsLibName(insLib.getName());
-            experimentTask.doProPro(task, exp, params);
+            runTask.doProPro(task, run, params);
         }
 
         return Result.OK();
