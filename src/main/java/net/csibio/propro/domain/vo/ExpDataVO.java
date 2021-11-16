@@ -87,7 +87,6 @@ public class ExpDataVO {
             BeanUtils.copyProperties(dataSum, this);
             if (data != null && data.getPeakGroupList() != null && dataSum.getApexRt() != null) {
                 this.selectIndex = peakGroupList.stream().map(PeakGroup::getApexRt).toList().indexOf(dataSum.getApexRt());
-//                data.getScoreList().get(selectIndex).put(ScoreType.WeightedTotalScore, dataSum.getTotalScore(), ScoreType.getAllTypesName());
             }
         }
         return this;
@@ -101,7 +100,6 @@ public class ExpDataVO {
             BeanUtils.copyProperties(dataSum, this);
             if (data != null && data.getPeakGroupList() != null && dataSum.getApexRt() != null) {
                 this.selectIndex = peakGroupList.stream().map(PeakGroup::getApexRt).toList().indexOf(dataSum.getApexRt());
-//                data.getScoreList().get(selectIndex).put(ScoreType.WeightedTotalScore, dataSum.getTotalScore(), ScoreType.getAllTypesName());
             }
         }
         return this;

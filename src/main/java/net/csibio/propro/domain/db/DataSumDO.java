@@ -34,19 +34,15 @@ public class DataSumDO extends BaseDO {
 
     Double qValue;
 
-    //最终鉴定的时间
-    Double apexRt;
+    Double apexRt;  //最终鉴定的时间
 
-    //距离realRt最近的光谱图的rt
-    Double selectedRt;
+    Double selectedRt; //距离realRt最近的光谱图的rt
 
-    //对应的最终的主峰的打分
-    Double totalScore;
+    Double totalScore; //对应的最终的主峰的打分
 
-    //Intensity Sum
-    Double intensitySum;
+    Double intensitySum;  //Intensity Sum
 
-    Integer ionsLow;
+    Integer ionsLow; //最低信号量要求下的离子碎片总数
 
     public static DataSumDO buildByPeakGroupScore(List<String> proteins, String peptideRef, PeakGroup selectPeakGroup) {
         DataSumDO dataSum = new DataSumDO();

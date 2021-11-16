@@ -640,7 +640,7 @@ public class CoreFunc {
         PeakGroup finalPgs = null;
         List<PeakGroup> peakGroupList = dataDO.getPeakGroupList();
         if (peakGroupList != null && peakGroupList.size() > 0) {
-            List<PeakGroup> candidateList = peakGroupList.stream().filter(PeakGroup::fine).collect(Collectors.toList());
+            List<PeakGroup> candidateList = peakGroupList.stream().filter(PeakGroup::getFine).collect(Collectors.toList());
             if (candidateList.size() > 0) {
                 finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroup::getTotal).reversed()).collect(Collectors.toList()).get(0);
             }

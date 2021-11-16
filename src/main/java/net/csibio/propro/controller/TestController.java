@@ -127,11 +127,6 @@ public class TestController {
                 }
                 log.info("总计有待鉴定态肽段" + peptideList.size() + "个");
 
-//                for (PeptideScore peptideScore : peptideList) {
-//                    for (PeakGroupScore peakGroupScore : peptideScore.getScoreList()) {
-//                        initScorer.calculateSwathLdaPrescore1(peakGroupScore, n, overview.fetchScoreTypes());
-//                    }
-//                }
                 log.info("重新计算初始分完毕");
                 //Step3. 开始训练数据集
                 HashMap<String, Double> weightsMap = lda.classifier(peptideList, params, overview.fetchScoreTypes());
@@ -229,11 +224,11 @@ public class TestController {
             peptideMap.values().forEach(data -> {
                 DataSumDO sum = sumMap.get(data.getPeptideRef());
                 if (sum != null && !sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())) {
-                    PeakGroup score = data.getPeakGroupList().stream().filter(peak -> peak.getApexRt().equals(sum.getApexRt())).findFirst().get();
-                    double libPearson = score.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
-                    double libDotprod = score.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
-                    double isoOverlap = score.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
-                    if (score.excellent()) {
+                    PeakGroup peakGroup = data.getPeakGroupList().stream().filter(peak -> peak.getApexRt().equals(sum.getApexRt())).findFirst().get();
+                    double libPearson = peakGroup.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
+                    double libDotprod = peakGroup.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
+                    double isoOverlap = peakGroup.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
+                    if (libDotprod > 0.99) {
                         stat.getAndIncrement();
                         findItList.add(sum.getPeptideRef());
                     }
@@ -241,6 +236,28 @@ public class TestController {
             });
             log.info(overview.getExpName() + "-符合要求的Peptide有:" + stat.get() + "个");
             log.info(JSON.toJSONString(findItList));
+        }
+
+        return Result.OK();
+    }
+
+    @GetMapping(value = "/lms5")
+    Result lms5() {
+        String projectId = "6166a5fd6113c157a6431ab9";
+        List<IdName> idNameList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), IdName.class);
+        idNameList = idNameList.subList(0, 1);
+        for (IdName idName : idNameList) {
+            String overviewId = idName.id();
+
+            OverviewDO overview = overviewService.getById(overviewId);
+
+            log.info("读取数据库信息中");
+            Map<String, PeptideScore> peptideMap = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()).setDecoy(false), PeptideScore.class, overview.getProjectId()).stream().collect(Collectors.toMap(PeptideScore::getId, Function.identity()));
+            Map<String, DataSumDO> sumMap = dataSumService.getAll(new DataSumQuery().setOverviewId(overviewId).setDecoy(false), DataSumDO.class, overview.getProjectId()).stream().collect(Collectors.toMap(DataSumDO::getPeptideRef, Function.identity()));
+
+
+            AtomicLong stat = new AtomicLong(0);
+            List<String> findItList = new ArrayList<>();
         }
 
         return Result.OK();

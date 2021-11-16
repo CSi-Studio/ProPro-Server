@@ -51,7 +51,6 @@ public class PeakGroup extends BaseScores {
     Boolean changed = false;
 
     public PeakGroup() {
-
     }
 
     public PeakGroup(int scoreSize) {
@@ -82,38 +81,7 @@ public class PeakGroup extends BaseScores {
         return true;
     }
 
-    public boolean fine() {
-
-        if (!base()) {
-            return false;
-        }
-
-        //Shape均分,但是在强度很低的时候Shape均分也不一定高
-        double shapeAvg = (this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) + this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes())) / 2;
-        double libDotProd = this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
-        double libCorr = this.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
-        double ionsCount = this.get(ScoreType.IonsCountDeltaScore, ScoreType.usedScoreTypes());
-        double coelutionWeight = this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes());
-        double isoForward = this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes());
-        double isoBack = this.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
-
-        //Shape分和DotProd分数都十分优秀的进入筛选轮
-        boolean condition1 = shapeAvg > 0.85 && libDotProd > 0.9 && ionsCount < 0.2 && isoForward > 0.9 && isoBack < 0.05;
-        if (condition1) {
-            return true;
-        }
-
-//        boolean baseCondition = shapeAvg >= 0.7 && libCorr >= 0.7 && ionsCount <= 0.4 && isoBack <= 0.1 && coelutionWeight <= 1;
-//        //DotProd分数超优秀, IonsCount分超优秀, CoelutionAvg超优秀 可以适当放宽形状条件,这个在低信号的时候很有用
-//        boolean condition2 = ((libCorr + libDotProd) / 2 >= 0.95 || coelutionWeight <= 0.05 || isoBack <= 0.01) && baseCondition;
-//        if (condition2) {
-//            return true;
-//        }
-
-        return false;
-    }
-
-    public boolean excellent() {
+    public boolean getFine() {
         if (!base()) {
             return false;
         }
