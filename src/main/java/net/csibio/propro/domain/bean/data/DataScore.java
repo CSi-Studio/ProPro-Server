@@ -17,8 +17,10 @@ public class DataScore {
     //对应的DataDO的id
     String id;
 
+    Double libRt;
+
     Double irt; //该肽段的理论rt值,从标准库中冗余所得,并且经过了irt校准
-    
+
     List<String> proteins;
 
     //肽段名称_带电量,例如:SLMLSYN(UniMod:7)AITHLPAGIFR_3

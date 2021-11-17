@@ -2,6 +2,7 @@ package net.csibio.propro.controller;
 
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.GaussFilter;
 import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
@@ -241,12 +242,25 @@ public class ClinicController {
     @PostMapping(value = "/getRtPairs")
     Result<HashMap<String, PeptideRtPairs>> getRtPairs(@RequestParam("projectId") String projectId,
                                                        @RequestParam("onlyDefault") Boolean onlyDefault,
-                                                       @RequestParam("runIds") List<String> runIds) {
+                                                       @RequestParam("runIds") List<String> runIds,
+                                                       @RequestParam(value = "mz", required = false) Double mz
+    ) {
         HashMap<String, PeptideRtPairs> map = new HashMap<>();
         long start = System.currentTimeMillis();
         for (int i = 0; i < runIds.size(); i++) {
             String runId = runIds.get(i);
             RunDO run = runService.getById(runId);
+            Set<Float> limitRts = new HashSet<Float>();
+            if (mz != null) {
+                List<WindowRange> ranges = run.getWindowRanges();
+                for (WindowRange range : ranges) {
+                    if (range.getStart() <= mz && range.getEnd() > mz) {
+                        BlockIndexDO index = blockIndexService.getOne(runId, range.getMz());
+                        limitRts = new HashSet<>(index.getRts());
+                    }
+                }
+            }
+
             OverviewQuery query = new OverviewQuery(projectId).setRunId(runId);
             if (onlyDefault) {
                 query.setDefaultOne(true);
@@ -257,6 +271,12 @@ public class ClinicController {
             }
 
             List<PeptideRt> realRtList = dataSumService.getAll(new DataSumQuery(overview.getId()).setDecoy(false).setStatus(IdentifyStatus.SUCCESS.getCode()).setIsUnique(true), PeptideRt.class, projectId);
+
+
+            if (limitRts.size() != 0) {
+                Set<Float> finalLimitRts = limitRts;
+                realRtList = realRtList.stream().filter(p -> finalLimitRts.contains(p.apexRt().floatValue())).toList();
+            }
             List<String> ids = realRtList.stream().map(PeptideRt::id).collect(Collectors.toList());
             if (ids.size() == 0) {
                 log.error("没有找到任何鉴定到的数据");
@@ -274,14 +294,16 @@ public class ClinicController {
             String[] peptideRefs = new String[realRtList.size()];
             double[] x = new double[realRtList.size()];
             double[] y = new double[realRtList.size()];
+            double[] libRts = new double[realRtList.size()];
             realRtList = realRtList.stream().sorted(Comparator.comparingDouble(PeptideRt::apexRt)).collect(Collectors.toList());
             for (int j = 0; j < realRtList.size(); j++) {
                 peptideRefs[j] = realRtList.get(j).peptideRef();
 //                x[j] = libRtMap.get(peptideRefs[j]);
                 x[j] = realRtList.get(j).apexRt();
                 y[j] = realRtList.get(j).apexRt() - run.getIrt().getSi().realRt(libRtMap.get(peptideRefs[j]));
+                libRts[j] = realRtList.get(j).libRt();
             }
-            map.put(runId, new PeptideRtPairs(peptideRefs, x, y));
+            map.put(runId, new PeptideRtPairs(peptideRefs, x, y, libRts));
         }
         log.info("rt坐标已渲染,耗时:" + (System.currentTimeMillis() - start));
         return Result.OK(map);

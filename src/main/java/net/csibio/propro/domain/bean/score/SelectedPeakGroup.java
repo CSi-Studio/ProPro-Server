@@ -1,6 +1,7 @@
 package net.csibio.propro.domain.bean.score;
 
 import lombok.Data;
+import net.csibio.propro.domain.bean.data.DataScore;
 
 import java.util.List;
 
@@ -18,6 +19,8 @@ public class SelectedPeakGroup extends BaseScores {
     String peptideRef;
 
     Boolean decoy;
+
+    Double libRt;
 
     Double irt;
 
@@ -47,11 +50,12 @@ public class SelectedPeakGroup extends BaseScores {
         this.scores = new Double[scoreTypesSize];
     }
 
-    public SelectedPeakGroup(String id, List<String> proteins, String peptideRef, Double irt, Boolean decoy) {
-        this.id = id;
-        this.irt = irt;
-        this.proteins = proteins;
-        this.peptideRef = peptideRef;
-        this.decoy = decoy;
+    public SelectedPeakGroup(DataScore dataScore) {
+        this.id = dataScore.getId();
+        this.irt = dataScore.getIrt();
+        this.libRt = dataScore.getLibRt();
+        this.proteins = dataScore.getProteins();
+        this.peptideRef = dataScore.getPeptideRef();
+        this.decoy = dataScore.getDecoy();
     }
 }

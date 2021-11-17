@@ -56,6 +56,7 @@ public class DataSumServiceImpl implements DataSumService {
             sum.setDecoy(selectedPeakGroup.getDecoy());
             sum.setFdr(selectedPeakGroup.getFdr());
             sum.setQValue(selectedPeakGroup.getQValue());
+            sum.setLibRt(selectedPeakGroup.getLibRt());
             sum.setApexRt(selectedPeakGroup.getApexRt());
             sum.setSelectedRt(selectedPeakGroup.getSelectedRt());
             sum.setPeptideRef(selectedPeakGroup.getPeptideRef());

@@ -259,7 +259,7 @@ public class Scorer {
             if (dataScore.getPeakGroupList() == null || dataScore.getPeakGroupList().size() == 0) {
                 continue;
             }
-            SelectedPeakGroup bestPeakGroup = new SelectedPeakGroup(dataScore.getId(), dataScore.getProteins(), dataScore.getPeptideRef(), dataScore.getIrt(), dataScore.getDecoy());
+            SelectedPeakGroup bestPeakGroup = new SelectedPeakGroup(dataScore);
             double maxScore = -Double.MAX_VALUE;
             PeakGroup topPeakGroup = null;
             for (PeakGroup peakGroup : dataScore.getPeakGroupList()) {
@@ -290,7 +290,7 @@ public class Scorer {
             if (dataScore.getPeakGroupList() == null || dataScore.getPeakGroupList().size() == 0) {
                 continue;
             }
-            SelectedPeakGroup selectedPeakGroup = new SelectedPeakGroup(dataScore.getId(), dataScore.getProteins(), dataScore.getPeptideRef(), dataScore.getIrt(), dataScore.getDecoy());
+            SelectedPeakGroup selectedPeakGroup = new SelectedPeakGroup(dataScore);
 
             //核心代码
             PeakGroup topPeakGroup = scorer.getBestPeakGroup(dataScore.getPeakGroupList(), minTotalScore, scoreTypes, null);
