@@ -254,17 +254,21 @@ public class Scorer {
     public List<SelectedPeakGroup> findBestPeakGroupByTargetScoreType(List<DataScore> dataScoreList, String targetScoreType, List<String> scoreTypes) {
         List<SelectedPeakGroup> bestFeatureScoresList = new ArrayList<>();
         for (DataScore dataScore : dataScoreList) {
+
             if (dataScore.getPeakGroupList() == null || dataScore.getPeakGroupList().size() == 0) {
                 continue;
             }
             SelectedPeakGroup bestPeakGroup = new SelectedPeakGroup(dataScore.getId(), dataScore.getProteins(), dataScore.getPeptideRef(), dataScore.getIrt(), dataScore.getDecoy());
             double maxScore = -Double.MAX_VALUE;
             PeakGroup topPeakGroup = null;
-            for (PeakGroup peakGroupScore : dataScore.getPeakGroupList()) {
-                Double targetScore = peakGroupScore.get(targetScoreType, scoreTypes);
+            for (PeakGroup peakGroup : dataScore.getPeakGroupList()) {
+                if (peakGroup.getNotMine()) {
+                    continue;
+                }
+                Double targetScore = peakGroup.get(targetScoreType, scoreTypes);
                 if (targetScore != null && targetScore > maxScore) {
                     maxScore = targetScore;
-                    topPeakGroup = peakGroupScore;
+                    topPeakGroup = peakGroup;
                 }
             }
             if (topPeakGroup != null) {

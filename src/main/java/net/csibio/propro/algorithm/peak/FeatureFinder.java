@@ -508,18 +508,17 @@ public class FeatureFinder {
                 if (binarySearchIndex == 0) {
                     apexRtIndex = 0;
                 } else {
-//                    double left = ions300[binarySearchIndex - 1];
-//                    double right = ions300[binarySearchIndex];
-
-                    double left = apexRt - rtArray[binarySearchIndex - 1];
-                    double right = rtArray[binarySearchIndex] - apexRt;
-                    apexRtIndex = left < right ? (binarySearchIndex - 1) : binarySearchIndex;
+                    apexRtIndex = binarySearchIndex;
                 }
+//                else {
+//                    double left = apexRt - rtArray[binarySearchIndex - 1];
+//                    double right = rtArray[binarySearchIndex] - apexRt;
+//                    apexRtIndex = left < right ? (binarySearchIndex - 1) : binarySearchIndex;
+//                }
             } else {
                 apexRtIndex = binarySearchIndex;
             }
-
-//            int apexRtIndex = rtList.indexOf(apexRt);
+            
             //向左搜索
             if (apexRtIndex == 0 || apexRtIndex == maxIndex) {
                 continue;

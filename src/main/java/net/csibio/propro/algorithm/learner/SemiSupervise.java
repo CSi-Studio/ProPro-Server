@@ -108,11 +108,8 @@ public class SemiSupervise {
         RunDO run = runService.getById(overview.getRunId());
         List<WindowRange> ranges = run.getWindowRanges();
 
-        peakIdentifier.identify(overview.getRunId(), dataList, selectedDataMap, ranges, overview.getAnaLibId(), minTotalScore);
-        List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreTypeAndMinTotalScore(dataList,
-                ScoreType.TotalScore.getName(),
-                overview.getParams().getMethod().getScore().getScoreTypes(),
-                minTotalScore);
+        peakIdentifier.identify(overview.getRunId(), dataList, selectedDataMap, ranges, overview.getAnaLibId(), minTotalScore); //后置优化算法1->选择了相同rt的近似肽段做一个区分
+        List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreType(dataList, ScoreType.TotalScore.getName(), overview.fetchScoreTypes());
         //重新统计
         ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupListV2, params);
         giveDecoyFdr(selectedPeakGroupListV2);

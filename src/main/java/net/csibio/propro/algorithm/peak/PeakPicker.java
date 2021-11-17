@@ -225,12 +225,12 @@ public class PeakPicker {
         for (int i = 0; i < ions300Smooth.length; i++) {
             ionCountFloat[i] = ions300Smooth[i].floatValue();
         }
-        data.getIntMap().put("I300S", ionCountFloat);
-        data.getIntMap().put("I300", ions300Float);
-        data.getIntMap().put("I50", ions50Float);
-        data.getCutInfoMap().put("I300S", 0f);
-        data.getCutInfoMap().put("I300", 0f);
-        data.getCutInfoMap().put("I50", 0f);
+        data.getIntMap().put("HS", ionCountFloat);
+        data.getIntMap().put("H", ions300Float);
+        data.getIntMap().put("L", ions50Float);
+        data.getCutInfoMap().put("HS", 0f);
+        data.getCutInfoMap().put("H", 0f);
+        data.getCutInfoMap().put("L", 0f);
 
         List<DoublePair> pairs = maxPeaksForIons300.toPairs();
 
