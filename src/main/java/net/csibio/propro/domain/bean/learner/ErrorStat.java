@@ -1,7 +1,7 @@
 package net.csibio.propro.domain.bean.learner;
 
 import lombok.Data;
-import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 public class ErrorStat {
 
-    List<SelectedPeakGroupScore> bestFeatureScoresList;
+    List<SelectedPeakGroup> bestFeatureScoresList;
 
     StatMetrics statMetrics;
 

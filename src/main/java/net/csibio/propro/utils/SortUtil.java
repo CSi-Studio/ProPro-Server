@@ -2,9 +2,9 @@ package net.csibio.propro.utils;
 
 import com.google.common.collect.Ordering;
 import net.csibio.aird.bean.WindowRange;
-import net.csibio.propro.domain.bean.data.PeptideScore;
+import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.PeptideDO;
 
@@ -13,10 +13,10 @@ import java.util.List;
 
 public class SortUtil {
 
-    public static List<PeptideScore> sortByPeptideRef(List<PeptideScore> scores) {
-        Ordering<PeptideScore> ordering = Ordering.from(new Comparator<PeptideScore>() {
+    public static List<DataScore> sortByPeptideRef(List<DataScore> scores) {
+        Ordering<DataScore> ordering = Ordering.from(new Comparator<DataScore>() {
             @Override
-            public int compare(PeptideScore o1, PeptideScore o2) {
+            public int compare(DataScore o1, DataScore o2) {
                 return o1.getPeptideRef().compareTo(o2.getPeptideRef());
             }
         });
@@ -35,10 +35,10 @@ public class SortUtil {
         return ordering.sortedCopy(swathList);
     }
 
-    public static List<SelectedPeakGroupScore> sortByMainScore(List<SelectedPeakGroupScore> scores, boolean isDesc) {
-        Ordering<SelectedPeakGroupScore> ordering = Ordering.from(new Comparator<SelectedPeakGroupScore>() {
+    public static List<SelectedPeakGroup> sortByMainScore(List<SelectedPeakGroup> scores, boolean isDesc) {
+        Ordering<SelectedPeakGroup> ordering = Ordering.from(new Comparator<SelectedPeakGroup>() {
             @Override
-            public int compare(SelectedPeakGroupScore o1, SelectedPeakGroupScore o2) {
+            public int compare(SelectedPeakGroup o1, SelectedPeakGroup o2) {
                 try {
                     if (isDesc) {
                         return o2.getMainScore().compareTo(o1.getMainScore());
@@ -55,10 +55,10 @@ public class SortUtil {
         return ordering.sortedCopy(scores);
     }
 
-    public static List<SelectedPeakGroupScore> sortByFdr(List<SelectedPeakGroupScore> scores, boolean isDesc) {
-        Ordering<SelectedPeakGroupScore> ordering = Ordering.from(new Comparator<SelectedPeakGroupScore>() {
+    public static List<SelectedPeakGroup> sortByFdr(List<SelectedPeakGroup> scores, boolean isDesc) {
+        Ordering<SelectedPeakGroup> ordering = Ordering.from(new Comparator<SelectedPeakGroup>() {
             @Override
-            public int compare(SelectedPeakGroupScore o1, SelectedPeakGroupScore o2) {
+            public int compare(SelectedPeakGroup o1, SelectedPeakGroup o2) {
                 try {
                     if (o1.getFdr() == null) {
                         return 1;
@@ -106,10 +106,10 @@ public class SortUtil {
      * @param isDesc 是否降序排序
      * @return
      */
-    public static List<SelectedPeakGroupScore> sortByPValue(List<SelectedPeakGroupScore> scores, boolean isDesc) {
-        Ordering<SelectedPeakGroupScore> ordering = Ordering.from(new Comparator<SelectedPeakGroupScore>() {
+    public static List<SelectedPeakGroup> sortByPValue(List<SelectedPeakGroup> scores, boolean isDesc) {
+        Ordering<SelectedPeakGroup> ordering = Ordering.from(new Comparator<SelectedPeakGroup>() {
             @Override
-            public int compare(SelectedPeakGroupScore o1, SelectedPeakGroupScore o2) {
+            public int compare(SelectedPeakGroup o1, SelectedPeakGroup o2) {
                 if (isDesc) {
                     return o2.getPValue().compareTo(o1.getPValue());
                 } else {

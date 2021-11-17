@@ -6,7 +6,7 @@ import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.learner.Pi0Est;
 import net.csibio.propro.domain.bean.learner.StatMetrics;
-import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 import net.csibio.propro.utils.ArrayUtil;
 import net.csibio.propro.utils.MathUtil;
 import net.csibio.propro.utils.ProProUtil;
@@ -28,19 +28,19 @@ public class Statistics {
 
     public static final Logger logger = LoggerFactory.getLogger(Statistics.class);
 
-    public void pNormalizer(List<SelectedPeakGroupScore> targetScores, List<SelectedPeakGroupScore> decoyScores) {
+    public void pNormalizer(List<SelectedPeakGroup> targetScores, List<SelectedPeakGroup> decoyScores) {
         Double[] decoyScoresArray = ProProUtil.buildMainScoreArray(decoyScores, false);
         double mean = MathUtil.mean(decoyScoresArray);
         double std = MathUtil.std(decoyScoresArray, mean);
         double args;
-        for (SelectedPeakGroupScore sfs : targetScores) {
+        for (SelectedPeakGroup sfs : targetScores) {
             args = (sfs.getMainScore() - mean) / std;
             sfs.setPValue(1 - (0.5 * (1.0 + MathUtil.erf(args / Math.sqrt(2.0)))));
         }
     }
 
-    public void pEmpirical(List<SelectedPeakGroupScore> targetScores, List<SelectedPeakGroupScore> decoyScores) {
-        List<SelectedPeakGroupScore> totalScores = new ArrayList<>();
+    public void pEmpirical(List<SelectedPeakGroup> targetScores, List<SelectedPeakGroup> decoyScores) {
+        List<SelectedPeakGroup> totalScores = new ArrayList<>();
         totalScores.addAll(targetScores);
         totalScores.addAll(decoyScores);
 
@@ -48,7 +48,7 @@ public class Statistics {
         int decoyCount = 0;
         int decoyTotal = decoyScores.size();
         double fix = 1.0 / decoyTotal;
-        for (SelectedPeakGroupScore sfs : totalScores) {
+        for (SelectedPeakGroup sfs : totalScores) {
             if (sfs.getDecoy()) {
                 decoyCount++;
             } else {
@@ -66,7 +66,7 @@ public class Statistics {
      * Calculate qvalues.
      * targets的qvalue需要从大到小排序
      */
-    public void qvalue(List<SelectedPeakGroupScore> targets, double pi0, boolean pfdr) {
+    public void qvalue(List<SelectedPeakGroup> targets, double pi0, boolean pfdr) {
         Double[] pValues = ProProUtil.buildPValueArray(targets, false);
         int pValueLength = targets.size();
         double[] v = ArrayUtil.rank(pValues);
@@ -88,11 +88,11 @@ public class Statistics {
      * Estimate final results.
      * TODO 没有实现 pep(lfdr);
      */
-    public ErrorStat errorStatistics(List<SelectedPeakGroupScore> scores, LearningParams learningParams) {
+    public ErrorStat errorStatistics(List<SelectedPeakGroup> scores, LearningParams learningParams) {
 
-        List<SelectedPeakGroupScore> targets = new ArrayList<>();
-        List<SelectedPeakGroupScore> decoys = new ArrayList<>();
-        for (SelectedPeakGroupScore featureScores : scores) {
+        List<SelectedPeakGroup> targets = new ArrayList<>();
+        List<SelectedPeakGroup> decoys = new ArrayList<>();
+        for (SelectedPeakGroup featureScores : scores) {
             if (featureScores.getDecoy()) {
                 decoys.add(featureScores);
             } else {
@@ -107,11 +107,11 @@ public class Statistics {
      * Estimate final results.
      * TODO 没有实现 pep(lfdr);
      */
-    public ErrorStat errorStatistics(List<SelectedPeakGroupScore> targets, List<SelectedPeakGroupScore> decoys, LearningParams learningParams) {
+    public ErrorStat errorStatistics(List<SelectedPeakGroup> targets, List<SelectedPeakGroup> decoys, LearningParams learningParams) {
 
         ErrorStat errorStat = new ErrorStat();
-        List<SelectedPeakGroupScore> sortedTargets = SortUtil.sortByMainScore(targets, false);
-        List<SelectedPeakGroupScore> sortedDecoys = SortUtil.sortByMainScore(decoys, false);
+        List<SelectedPeakGroup> sortedTargets = SortUtil.sortByMainScore(targets, false);
+        List<SelectedPeakGroup> sortedDecoys = SortUtil.sortByMainScore(decoys, false);
 
         //compute p-values using decoy scores;
         if (learningParams.isParametric()) {
@@ -145,10 +145,10 @@ public class Statistics {
     /**
      * Finds cut-off target scoreForAll for specified false discovery rate(fdr).
      */
-    public Double findCutoff(List<SelectedPeakGroupScore> topTargets, List<SelectedPeakGroupScore> topDecoys, LearningParams learningParams, Double cutoff) {
+    public Double findCutoff(List<SelectedPeakGroup> topTargets, List<SelectedPeakGroup> topDecoys, LearningParams learningParams, Double cutoff) {
         ErrorStat errorStat = errorStatistics(topTargets, topDecoys, learningParams);
 
-        List<SelectedPeakGroupScore> bestScores = errorStat.getBestFeatureScoresList();
+        List<SelectedPeakGroup> bestScores = errorStat.getBestFeatureScoresList();
         double[] qvalue_CutoffAbs = new double[bestScores.size()];
         for (int i = 0; i < bestScores.size(); i++) {
             qvalue_CutoffAbs[i] = Math.abs(bestScores.get(i).getQValue() - cutoff);
@@ -160,7 +160,7 @@ public class Statistics {
     /**
      * Calculate P relative scores.
      */
-    private Pi0Est pi0Est(List<SelectedPeakGroupScore> targets, Double[] lambda, String pi0Method, boolean smoothLogPi0) {
+    private Pi0Est pi0Est(List<SelectedPeakGroup> targets, Double[] lambda, String pi0Method, boolean smoothLogPi0) {
 
         Pi0Est pi0EstResults = new Pi0Est();
         int numOfPvalue = targets.size();
@@ -240,7 +240,7 @@ public class Statistics {
         return pi0EstResults;
     }
 
-    private StatMetrics statMetrics(List<SelectedPeakGroupScore> scores, Double pi0, boolean pfdr) {
+    private StatMetrics statMetrics(List<SelectedPeakGroup> scores, Double pi0, boolean pfdr) {
         StatMetrics results = new StatMetrics();
         int numOfPvalue = scores.size();
         int[] numPositives = ProProUtil.countPValueNumPositives(scores);

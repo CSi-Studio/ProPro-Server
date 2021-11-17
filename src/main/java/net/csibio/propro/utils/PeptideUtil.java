@@ -61,6 +61,10 @@ public class PeptideUtil {
     }
 
     public static boolean similar(PeptideDO a, PeptideDO b) {
+        return similar(a, b, 6);
+    }
+
+    public static boolean similar(PeptideDO a, PeptideDO b, int similarity) {
         Set<Float> fingerPrintsA = a.getFingerPrints();
         Set<Float> fingerPrintsB = b.getFingerPrints();
         AtomicInteger count = new AtomicInteger(0);
@@ -69,7 +73,7 @@ public class PeptideUtil {
                 count.getAndIncrement();
             }
         });
-        if (count.get() >= 6) {
+        if (count.get() >= similarity) {
             return true;
         } else {
             return false;

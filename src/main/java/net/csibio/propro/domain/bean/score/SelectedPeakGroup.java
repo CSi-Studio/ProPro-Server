@@ -9,7 +9,7 @@ import java.util.List;
  * Time: 2018-08-05 22:42
  */
 @Data
-public class SelectedPeakGroupScore extends BaseScores {
+public class SelectedPeakGroup extends BaseScores {
 
     String id;
 
@@ -38,16 +38,14 @@ public class SelectedPeakGroupScore extends BaseScores {
 
     Double fdr;
 
-    String fragIntFeature;
-
-    public SelectedPeakGroupScore() {
+    public SelectedPeakGroup() {
     }
 
-    public SelectedPeakGroupScore(int scoreTypesSize) {
+    public SelectedPeakGroup(int scoreTypesSize) {
         this.scores = new Double[scoreTypesSize];
     }
 
-    public SelectedPeakGroupScore(String id, List<String> proteins, String peptideRef, Boolean decoy) {
+    public SelectedPeakGroup(String id, List<String> proteins, String peptideRef, Boolean decoy) {
         this.id = id;
         this.proteins = proteins;
         this.peptideRef = peptideRef;

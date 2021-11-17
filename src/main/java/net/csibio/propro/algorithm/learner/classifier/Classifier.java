@@ -4,12 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.Scorer;
-import net.csibio.propro.domain.bean.data.PeptideScore;
+import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.learner.TrainData;
 import net.csibio.propro.domain.bean.learner.TrainPeaks;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 import net.csibio.propro.utils.ProProUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,9 +41,9 @@ public abstract class Classifier {
         score(data.getDecoys(), weightsMap, scoreTypes);
     }
 
-    public void score(List<PeptideScore> scores, HashMap<String, Double> weightsMap, List<String> scoreTypes) {
+    public void score(List<DataScore> scores, HashMap<String, Double> weightsMap, List<String> scoreTypes) {
         Set<Map.Entry<String, Double>> entries = weightsMap.entrySet();
-        for (PeptideScore score : scores) {
+        for (DataScore score : scores) {
             if (score.getPeakGroupList() == null) {
                 continue;
             }
@@ -73,18 +73,18 @@ public abstract class Classifier {
 
     public TrainPeaks selectTrainPeaks(TrainData trainData, String usedScoreType, LearningParams learningParams, Double cutoff) {
 
-        List<SelectedPeakGroupScore> topTargetPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getTargets(), usedScoreType, learningParams.getScoreTypes(), true);
-        List<SelectedPeakGroupScore> topDecoyPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getDecoys(), usedScoreType, learningParams.getScoreTypes(), false);
+        List<SelectedPeakGroup> topTargetPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getTargets(), usedScoreType, learningParams.getScoreTypes(), true);
+        List<SelectedPeakGroup> topDecoyPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getDecoys(), usedScoreType, learningParams.getScoreTypes(), false);
 
         Double cutoffNew;
         if (topTargetPeaks.size() < 100) {
             Double decoyMax = Double.MIN_VALUE, targetMax = Double.MIN_VALUE;
-            for (SelectedPeakGroupScore scores : topDecoyPeaks) {
+            for (SelectedPeakGroup scores : topDecoyPeaks) {
                 if (scores.getMainScore() > decoyMax) {
                     decoyMax = scores.getMainScore();
                 }
             }
-            for (SelectedPeakGroupScore scores : topTargetPeaks) {
+            for (SelectedPeakGroup scores : topTargetPeaks) {
                 if (scores.getMainScore() > targetMax) {
                     targetMax = scores.getMainScore();
                 }
@@ -94,7 +94,7 @@ public abstract class Classifier {
             // find cutoff fdr from scores and only use best target peaks:
             cutoffNew = statistics.findCutoff(topTargetPeaks, topDecoyPeaks, learningParams, cutoff);
         }
-        List<SelectedPeakGroupScore> bestTargetPeaks = ProProUtil.peaksFilter(topTargetPeaks, cutoffNew);
+        List<SelectedPeakGroup> bestTargetPeaks = ProProUtil.peaksFilter(topTargetPeaks, cutoffNew);
 
         TrainPeaks trainPeaks = new TrainPeaks();
         trainPeaks.setBestTargets(bestTargetPeaks);

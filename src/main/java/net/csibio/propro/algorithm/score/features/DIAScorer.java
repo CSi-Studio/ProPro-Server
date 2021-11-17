@@ -210,21 +210,6 @@ public class DIAScorer {
         peakGroup.put(ScoreType.IsotopeOverlapScore.getName(), isotopeOverlap, scoreTypes);
     }
 
-    /**
-     * scores.bseries_score peptideRt对应的spectrumArray中，检测到的b离子的数量
-     * scores.yseries_score peptideRt对应的spectrumArray中，检测到的y离子的数量
-     *
-     * @param sequence
-     * @param scores
-     */
-    public void calculateIonsScore(int ionsCount, String sequence, PeakGroup scores, List<String> scoreTypes) {
-//        scores.put(ScoreType.IonsCountWeightScore.getName(), ionsCount * 1.0 / sequence.length(), scoreTypes);
-    }
-
-    public IntegerPair calcTotalIons(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge) {
-        return calcTotalIons(spectrumMzArray, spectrumIntArray, unimodHashMap, sequence, charge, 0f, 300f, Float.MAX_VALUE);
-    }
-
     public IntegerPair calcTotalIons(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge, float minIntensity, float minIntensity2, float maxIntensity) {
         //计算理论值
         int totalCount1 = 0;

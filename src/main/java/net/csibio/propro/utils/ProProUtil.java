@@ -3,13 +3,13 @@ package net.csibio.propro.utils;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.constants.constant.FdrConst;
-import net.csibio.propro.domain.bean.data.PeptideScore;
+import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.ScoreData;
 import net.csibio.propro.domain.bean.learner.TrainAndTest;
 import net.csibio.propro.domain.bean.learner.TrainData;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 
 import java.util.*;
 
@@ -320,7 +320,7 @@ public class ProProUtil {
         }
     }
 
-    public static Double[] buildMainScoreArray(List<SelectedPeakGroupScore> scores, Boolean needToSort) {
+    public static Double[] buildMainScoreArray(List<SelectedPeakGroup> scores, Boolean needToSort) {
         Double[] result = new Double[scores.size()];
         for (int i = 0; i < scores.size(); i++) {
             result[i] = scores.get(i).getMainScore();
@@ -331,7 +331,7 @@ public class ProProUtil {
         return result;
     }
 
-    public static Double[] buildPValueArray(List<SelectedPeakGroupScore> scores, Boolean needToSort) {
+    public static Double[] buildPValueArray(List<SelectedPeakGroup> scores, Boolean needToSort) {
         Double[] result = new Double[scores.size()];
         for (int i = 0; i < scores.size(); i++) {
             result[i] = scores.get(i).getPValue();
@@ -358,9 +358,9 @@ public class ProProUtil {
         }
     }
 
-    public static List<SelectedPeakGroupScore> peaksFilter(List<SelectedPeakGroupScore> trainTargets, double cutOff) {
-        List<SelectedPeakGroupScore> peakScores = new ArrayList<>();
-        for (SelectedPeakGroupScore i : trainTargets) {
+    public static List<SelectedPeakGroup> peaksFilter(List<SelectedPeakGroup> trainTargets, double cutOff) {
+        List<SelectedPeakGroup> peakScores = new ArrayList<>();
+        for (SelectedPeakGroup i : trainTargets) {
             if (i.getMainScore() >= cutOff) {
                 peakScores.add(i);
             }
@@ -432,19 +432,19 @@ public class ProProUtil {
      * @param isDebug  是否取测试集
      * @return
      */
-    public static TrainData split(List<PeptideScore> scores, double fraction, boolean isDebug, List<String> scoreTypes) {
+    public static TrainData split(List<DataScore> scores, double fraction, boolean isDebug, List<String> scoreTypes) {
 
         //每一轮开始前将上一轮的加权总分去掉
-        for (PeptideScore ss : scores) {
+        for (DataScore ss : scores) {
             for (PeakGroup sft : ss.getPeakGroupList()) {
                 sft.remove(ScoreType.WeightedTotalScore.getName(), scoreTypes);
             }
         }
 
-        List<PeptideScore> targets = new ArrayList<>();
-        List<PeptideScore> decoys = new ArrayList<>();
+        List<DataScore> targets = new ArrayList<>();
+        List<DataScore> decoys = new ArrayList<>();
         //按照是否是伪肽段分为两个数组
-        for (PeptideScore score : scores) {
+        for (DataScore score : scores) {
             if (score.getDecoy()) {
                 decoys.add(score);
             } else {
@@ -565,9 +565,9 @@ public class ProProUtil {
     /**
      * Count number of values bigger than threshold in array.
      */
-    public static int countOverThreshold(List<SelectedPeakGroupScore> scores, double threshold) {
+    public static int countOverThreshold(List<SelectedPeakGroup> scores, double threshold) {
         int n = 0;
-        for (SelectedPeakGroupScore i : scores) {
+        for (SelectedPeakGroup i : scores) {
             if (i.getPValue() >= threshold) {
                 n++;
             }
@@ -580,7 +580,7 @@ public class ProProUtil {
      * 例如数组3,2,1,1. 经过本函数后得到的结果是4,3,2,2
      * 入参array必须是降序排序后的数组
      */
-    public static int[] countPValueNumPositives(List<SelectedPeakGroupScore> array) {
+    public static int[] countPValueNumPositives(List<SelectedPeakGroup> array) {
         int step = 0;
         int n = array.size();
         int[] result = new int[n];

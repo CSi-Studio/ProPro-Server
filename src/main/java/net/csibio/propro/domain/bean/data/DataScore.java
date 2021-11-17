@@ -12,7 +12,7 @@ import java.util.List;
  * @see DataDO
  */
 @Data
-public class PeptideScore {
+public class DataScore {
 
     //对应的DataDO的id
     String id;
@@ -28,10 +28,10 @@ public class PeptideScore {
     //所有峰组的打分情况
     List<PeakGroup> peakGroupList;
 
-    public PeptideScore() {
+    public DataScore() {
     }
 
-    public PeptideScore(DataDO data) {
+    public DataScore(DataDO data) {
         this.id = data.getId();
         this.proteins = data.getProteins();
         this.peptideRef = data.getPeptideRef();

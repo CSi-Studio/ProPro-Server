@@ -13,15 +13,16 @@ import net.csibio.propro.algorithm.score.features.InitScorer;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
-import net.csibio.propro.domain.bean.data.PeptideScore;
+import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.query.*;
 import net.csibio.propro.service.*;
+import net.csibio.propro.utils.PeptideUtil;
 import net.csibio.propro.utils.ProProUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -72,6 +73,8 @@ public class TestController {
     InitScorer initScorer;
     @Autowired
     FragmentFactory fragmentFactory;
+    @Autowired
+    BlockIndexService blockIndexService;
 
     @GetMapping(value = "/lms")
     Result lms() {
@@ -120,7 +123,7 @@ public class TestController {
                 params.setType(overview.getType());
                 //Step2. 从数据库读取全部含打分结果的数据
                 log.info("开始获取打分数据");
-                List<PeptideScore> peptideList = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), PeptideScore.class, overview.getProjectId());
+                List<DataScore> peptideList = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), DataScore.class, overview.getProjectId());
                 if (peptideList == null || peptideList.size() == 0) {
                     log.info("没有合适的数据");
                     return null;
@@ -135,15 +138,15 @@ public class TestController {
 
                 //进行第一轮严格意义的初筛
                 log.info("开始第一轮严格意义上的初筛");
-                List<SelectedPeakGroupScore> selectedPeakGroupListV1 = null;
+                List<SelectedPeakGroup> selectedPeakGroupListV1 = null;
                 try {
                     selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), overview.fetchScoreTypes(), true);
                     statistics.errorStatistics(selectedPeakGroupListV1, params);
                     semiSupervise.giveDecoyFdr(selectedPeakGroupListV1);
                     //获取第一轮严格意义上的最小总分阈值
-                    double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroupScore::getFdr)).get().getTotalScore();
+                    double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
                     log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
-                    List<SelectedPeakGroupScore> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreTypeAndMinTotalScore(peptideList,
+                    List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreTypeAndMinTotalScore(peptideList,
                             ScoreType.WeightedTotalScore.getName(),
                             overview.getParams().getMethod().getScore().getScoreTypes(),
                             minTotalScore);
@@ -154,7 +157,7 @@ public class TestController {
                     long start = System.currentTimeMillis();
                     //Step4. 对于最终的打分结果和选峰结果保存到数据库中, 插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
                     log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + selectedPeakGroupListV2.size() + "条数据,开始统计相关数据,FDR:" + params.getFdr());
-                    minTotalScore = selectedPeakGroupListV2.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroupScore::getFdr)).get().getTotalScore();
+                    minTotalScore = selectedPeakGroupListV2.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
 
                     log.info("最小阈值总分为:" + minTotalScore);
                     dataSumService.buildDataSumList(selectedPeakGroupListV2, params.getFdr(), overview, overview.getProjectId());
@@ -216,7 +219,7 @@ public class TestController {
             OverviewDO overview = overviewService.getById(overviewId);
 
             log.info("读取数据库信息中");
-            Map<String, PeptideScore> peptideMap = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()).setDecoy(false), PeptideScore.class, overview.getProjectId()).stream().collect(Collectors.toMap(PeptideScore::getId, Function.identity()));
+            Map<String, DataScore> peptideMap = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()).setDecoy(false), DataScore.class, overview.getProjectId()).stream().collect(Collectors.toMap(DataScore::getId, Function.identity()));
             Map<String, DataSumDO> sumMap = dataSumService.getAll(new DataSumQuery().setOverviewId(overviewId).setDecoy(false), DataSumDO.class, overview.getProjectId()).stream().collect(Collectors.toMap(DataSumDO::getPeptideRef, Function.identity()));
             AtomicLong stat = new AtomicLong(0);
             List<String> findItList = new ArrayList<>();
@@ -250,30 +253,52 @@ public class TestController {
 
             OverviewDO overview = overviewService.getById(overviewId);
             log.info("读取数据库信息中");
-            Map<String, PeptideScore> peptideMap = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()).setDecoy(false), PeptideScore.class, overview.getProjectId()).stream().collect(Collectors.toMap(PeptideScore::getId, Function.identity()));
+//            Map<String, PeptideScore> dataMap = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()).setDecoy(false), PeptideScore.class, overview.getProjectId()).stream().collect(Collectors.toMap(PeptideScore::getId, Function.identity()));
             Map<String, DataSumDO> sumMap = dataSumService.getAll(new DataSumQuery().setOverviewId(overviewId).setDecoy(false), DataSumDO.class, overview.getProjectId()).stream().collect(Collectors.toMap(DataSumDO::getPeptideRef, Function.identity()));
             RunDO run = runService.getById(overview.getRunId());
+            log.info("当前分析实验:" + run.getAlias());
             List<WindowRange> ranges = run.getWindowRanges();
-            HashMap<Double, TreeMap<Double, List<DataSumDO>>> rangeMap = new HashMap<>();
+            Set<String> similarPeptides = new HashSet<>();
+            log.info("开始计算相似度");
             for (WindowRange range : ranges) {
                 TreeMap<Double, List<DataSumDO>> rtMap = new TreeMap<>();
-                List<PeptideDO> peptideList = peptideService.getAll(new PeptideQuery(overview.getAnaLibId()).setMzStart(range.getStart()).setMzEnd(range.getEnd()));
-                for (PeptideDO peptide : peptideList) {
+                Map<String, PeptideDO> peptideMap = peptideService.getAll(new PeptideQuery(overview.getAnaLibId()).setMzStart(range.getStart()).setMzEnd(range.getEnd())).stream().collect(Collectors.toMap(PeptideDO::getPeptideRef, Function.identity()));
+                BlockIndexDO index = blockIndexService.getOne(run.getId(), range.getMz());
+                for (Float rt : index.getRts()) {
+                    rtMap.put((double) rt, new ArrayList<>());
+                }
+                for (PeptideDO peptide : peptideMap.values()) {
                     DataSumDO sum = sumMap.get(peptide.getPeptideRef());
                     if (sum != null && sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())) {
-                        if (rtMap.get(sum.getApexRt()) != null) {
-                            rtMap.get(sum.getApexRt()).add(sum);
-                        } else {
-                            ArrayList<DataSumDO> sumList = new ArrayList<DataSumDO>();
-                            sumList.add(sum);
-                            rtMap.put(sum.getApexRt(), sumList);
+                        rtMap.get(sum.getSelectedRt()).add(sum);
+                    }
+                }
+
+                List<List<DataSumDO>> sumListList = new ArrayList<>(rtMap.values());
+                for (int i = 0; i < sumListList.size() - 2; i++) {
+                    List<DataSumDO> sumList = new ArrayList<>();
+                    sumList.addAll(sumListList.get(i));
+                    sumList.addAll(sumListList.get(i + 1));
+                    sumList.addAll(sumListList.get(i + 2));
+                    if (sumList.size() <= 1) {
+                        continue;
+                    }
+                    for (int k = 0; k < sumList.size(); k++) {
+                        for (int j = k + 1; j < sumList.size(); j++) {
+                            int sequenceLengthA = peptideMap.get(sumList.get(k).getPeptideRef()).getSequence().length();
+                            int sequenceLengthB = peptideMap.get(sumList.get(j).getPeptideRef()).getSequence().length();
+                            int finalLength = Math.min(sequenceLengthA, sequenceLengthB);
+                            if (PeptideUtil.similar(peptideMap.get(sumList.get(k).getPeptideRef()), peptideMap.get(sumList.get(j).getPeptideRef()), finalLength <= 8 ? 5 : 6)) {
+                                similarPeptides.add(sumList.get(k).getPeptideRef() + ":" + sumList.get(j).getPeptideRef());
+                            }
                         }
                     }
                 }
-                rangeMap.put(range.getStart(), rtMap);
             }
 
-            log.info(rangeMap.size() + "");
+            log.info("相似组总计有:" + similarPeptides.size() + "组");
+            similarPeptides.forEach(System.out::println);
+
         }
 
         return Result.OK();

@@ -533,7 +533,6 @@ public class CoreFunc {
 
     public List<DataDO> csi(RunDO run, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
-//        List<DataSumDO> sumList = Collections.synchronizedList(new ArrayList<>());
         if (coordinates == null || coordinates.size() == 0) {
             log.error("肽段坐标为空");
             return null;

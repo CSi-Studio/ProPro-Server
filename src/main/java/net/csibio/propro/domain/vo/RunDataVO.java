@@ -1,6 +1,7 @@
 package net.csibio.propro.domain.vo;
 
 import lombok.Data;
+import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.bean.data.BaseData;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.db.DataDO;
@@ -88,6 +89,10 @@ public class RunDataVO {
             if (data != null && data.getPeakGroupList() != null && dataSum.getApexRt() != null) {
                 this.selectIndex = peakGroupList.stream().map(PeakGroup::getApexRt).toList().indexOf(dataSum.getApexRt());
             }
+        } else {
+            if (status.equals(IdentifyStatus.WAIT.getCode())) {
+                status = IdentifyStatus.NO_PEAK_GROUP_FIND.getCode();
+            }
         }
         return this;
     }
@@ -100,6 +105,10 @@ public class RunDataVO {
             BeanUtils.copyProperties(dataSum, this);
             if (data != null && data.getPeakGroupList() != null && dataSum.getApexRt() != null) {
                 this.selectIndex = peakGroupList.stream().map(PeakGroup::getApexRt).toList().indexOf(dataSum.getApexRt());
+            }
+        } else {
+            if (status.equals(IdentifyStatus.WAIT.getCode())) {
+                status = IdentifyStatus.NO_PEAK_GROUP_FIND.getCode();
             }
         }
         return this;

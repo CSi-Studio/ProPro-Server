@@ -1,7 +1,7 @@
 package net.csibio.propro.domain.bean.learner;
 
 import lombok.Data;
-import net.csibio.propro.domain.bean.data.PeptideScore;
+import net.csibio.propro.domain.bean.data.DataScore;
 
 import java.util.List;
 
@@ -18,15 +18,15 @@ public class TrainAndTest {
     Integer[] testId;
     Boolean[] testIsDecoy;
 
-    List<PeptideScore> trainTargets;
-    List<PeptideScore> trainDecoys;
-    List<PeptideScore> testTargets;
-    List<PeptideScore> testDecoys;
+    List<DataScore> trainTargets;
+    List<DataScore> trainDecoys;
+    List<DataScore> testTargets;
+    List<DataScore> testDecoys;
 
     public TrainAndTest() {
     }
 
-    public TrainAndTest(List<PeptideScore> trainTargets, List<PeptideScore> trainDecoys, List<PeptideScore> testTargets, List<PeptideScore> testDecoys) {
+    public TrainAndTest(List<DataScore> trainTargets, List<DataScore> trainDecoys, List<DataScore> testTargets, List<DataScore> testDecoys) {
         this.trainTargets = trainTargets;
         this.trainDecoys = trainDecoys;
         this.testTargets = testTargets;

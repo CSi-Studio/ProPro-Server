@@ -4,10 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.domain.bean.data.PeptideScore;
+import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.learner.*;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 import net.csibio.propro.utils.ProProUtil;
 import org.apache.commons.math3.linear.*;
 import org.springframework.stereotype.Component;
@@ -25,7 +25,7 @@ public class Lda extends Classifier {
      * @param learningParams
      * @return
      */
-    public HashMap<String, Double> classifier(List<PeptideScore> peptideList, LearningParams learningParams, List<String> scoreTypes) {
+    public HashMap<String, Double> classifier(List<DataScore> peptideList, LearningParams learningParams, List<String> scoreTypes) {
         log.info("开始训练学习数据权重");
         if (peptideList.size() < 500) {
             learningParams.setXevalNumIter(10);
@@ -42,7 +42,7 @@ public class Lda extends Classifier {
                 continue;
             }
             score(peptideList, ldaLearnData.getWeightsMap(), scoreTypes);
-            List<SelectedPeakGroupScore> featureScoresList = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
+            List<SelectedPeakGroup> featureScoresList = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
             int count = 0;
             ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
             count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
@@ -58,7 +58,7 @@ public class Lda extends Classifier {
         return ProProUtil.averagedWeights(weightsMapList);
     }
 
-    public LDALearnData learnRandomized(List<PeptideScore> scores, LearningParams learningParams) {
+    public LDALearnData learnRandomized(List<DataScore> scores, LearningParams learningParams) {
         LDALearnData ldaLearnData = new LDALearnData();
         try {
             TrainData trainData = ProProUtil.split(scores, learningParams.getTrainTestRatio(), learningParams.isDebug(), learningParams.getScoreTypes());
@@ -106,12 +106,12 @@ public class Lda extends Classifier {
      * @return
      */
     private TrainPeaks selectFirstTrainPeaks(TrainData trainData, LearningParams learningParams) {
-        List<SelectedPeakGroupScore> decoyPeaks = new ArrayList<>();
+        List<SelectedPeakGroup> decoyPeaks = new ArrayList<>();
         List<String> scoreTypes = learningParams.getScoreTypes();
-        for (PeptideScore peptideScore : trainData.getDecoys()) {
+        for (DataScore dataScore : trainData.getDecoys()) {
             PeakGroup topDecoy = null;
             double maxMainScore = -Double.MAX_VALUE;
-            for (PeakGroup peakGroupScore : peptideScore.getPeakGroupList()) {
+            for (PeakGroup peakGroupScore : dataScore.getPeakGroupList()) {
                 double mainScore = peakGroupScore.get(ScoreType.InitScore.getName(), scoreTypes);
                 if (mainScore > maxMainScore) {
                     maxMainScore = mainScore;
@@ -119,20 +119,20 @@ public class Lda extends Classifier {
                 }
             }
 
-            SelectedPeakGroupScore selectedPeakGroupScore = new SelectedPeakGroupScore();
+            SelectedPeakGroup selectedPeakGroup = new SelectedPeakGroup();
             if (topDecoy == null || topDecoy.getScores() == null) {
                 log.error("Scores为空");
                 continue;
             } else {
-                selectedPeakGroupScore.setScores(topDecoy.getScores());
-                decoyPeaks.add(selectedPeakGroupScore);
+                selectedPeakGroup.setScores(topDecoy.getScores());
+                decoyPeaks.add(selectedPeakGroup);
             }
 
         }
         TrainPeaks trainPeaks = new TrainPeaks();
         trainPeaks.setTopDecoys(decoyPeaks);
 
-        SelectedPeakGroupScore bestTargetScore = new SelectedPeakGroupScore(learningParams.getScoreTypes().size());
+        SelectedPeakGroup bestTargetScore = new SelectedPeakGroup(learningParams.getScoreTypes().size());
         bestTargetScore.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.XcorrShapeWeighted.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.XcorrCoelution.getName(), 0d, scoreTypes);
@@ -151,7 +151,7 @@ public class Lda extends Classifier {
 //        bestTargetScore.put(ScoreType.MassdevScoreWeighted.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.IonsCountDeltaScore.getName(), 0d, scoreTypes);
 
-        List<SelectedPeakGroupScore> bestTargets = new ArrayList<>();
+        List<SelectedPeakGroup> bestTargets = new ArrayList<>();
         bestTargets.add(bestTargetScore);
         trainPeaks.setBestTargets(bestTargets);
         return trainPeaks;
@@ -181,7 +181,7 @@ public class Lda extends Classifier {
         RealMatrix scoresMatrix = new Array2DRowRealMatrix(totalLength, scoreTypesCount);
         RealVector labelVector = new ArrayRealVector(totalLength);
         int k = 0;
-        for (SelectedPeakGroupScore sfs : trainPeaks.getBestTargets()) {
+        for (SelectedPeakGroup sfs : trainPeaks.getBestTargets()) {
             int i = 0;
             for (String scoreType : scoreTypes) {
                 if (scoreType.equals(skipScoreType)) {
@@ -193,7 +193,7 @@ public class Lda extends Classifier {
             labelVector.setEntry(k, 1);
             k++;
         }
-        for (SelectedPeakGroupScore sfs : trainPeaks.getTopDecoys()) {
+        for (SelectedPeakGroup sfs : trainPeaks.getTopDecoys()) {
             int i = 0;
             for (String scoreType : scoreTypes) {
                 if (scoreType.equals(skipScoreType)) {

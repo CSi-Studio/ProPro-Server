@@ -59,6 +59,13 @@ public class DataSumDO extends BaseDO {
     public DataSumDO() {
     }
 
+    public DataSumDO(String dataId, List<String> proteins, String peptideRef, Boolean decoy) {
+        this.id = dataId;
+        this.proteins = proteins;
+        this.peptideRef = peptideRef;
+        this.decoy = decoy;
+    }
+
     public DataSumDO(DataDO data) {
         overviewId = data.getOverviewId();
         id = data.getId();

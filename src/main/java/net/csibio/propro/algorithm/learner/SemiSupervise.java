@@ -1,33 +1,36 @@
 package net.csibio.propro.algorithm.learner;
 
 import lombok.extern.slf4j.Slf4j;
+import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.learner.classifier.Xgboost;
+import net.csibio.propro.algorithm.peak.PeakIdentifier;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.data.PeptideScore;
+import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.learner.ErrorStat;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
-import net.csibio.propro.domain.bean.score.SelectedPeakGroupScore;
+import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 import net.csibio.propro.domain.db.OverviewDO;
+import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.service.DataService;
 import net.csibio.propro.service.DataSumService;
 import net.csibio.propro.service.OverviewService;
+import net.csibio.propro.service.RunService;
 import net.csibio.propro.utils.ProProUtil;
 import net.csibio.propro.utils.SortUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by Nico Wang Ruimin
@@ -51,6 +54,10 @@ public class SemiSupervise {
     DataSumService dataSumService;
     @Autowired
     OverviewService overviewService;
+    @Autowired
+    RunService runService;
+    @Autowired
+    PeakIdentifier peakIdentifier;
 
     public FinalResult doSemiSupervise(String overviewId, LearningParams params) {
         FinalResult finalResult = new FinalResult();
@@ -66,35 +73,43 @@ public class SemiSupervise {
         //Step2. 从数据库读取全部含打分结果的数据
         log.info("开始获取打分数据");
         long temp = System.currentTimeMillis();
-        List<PeptideScore> peptideList = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), PeptideScore.class, overview.getProjectId());
+        List<DataScore> dataList = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), DataScore.class, overview.getProjectId());
         log.info("获取打分数据耗时:" + (System.currentTimeMillis() - temp));
-        if (peptideList == null || peptideList.size() == 0) {
+        if (dataList == null || dataList.size() == 0) {
             log.info("没有合适的数据");
             return finalResult;
         }
-        log.info("总计有待鉴定态肽段" + peptideList.size() + "个");
+        log.info("总计有待鉴定态肽段" + dataList.size() + "个");
         //Step3. 开始训练数据集
         HashMap<String, Double> weightsMap = new HashMap<>();
         switch (params.getClassifier()) {
             case lda -> {
-                weightsMap = lda.classifier(peptideList, params, overview.fetchScoreTypes());
-                lda.score(peptideList, weightsMap, params.getScoreTypes());
+                weightsMap = lda.classifier(dataList, params, overview.fetchScoreTypes());
+                lda.score(dataList, weightsMap, params.getScoreTypes());
                 finalResult.setWeightsMap(weightsMap);
             }
-            case xgboost -> xgboost.classifier(peptideList, overview.fetchScoreTypes(), params);
+            case xgboost -> xgboost.classifier(dataList, overview.fetchScoreTypes(), params);
             default -> {
             }
         }
 
         //进行第一轮严格意义的初筛
         log.info("开始第一轮严格意义上的初筛");
-        List<SelectedPeakGroupScore> selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), overview.fetchScoreTypes(), true);
+        List<SelectedPeakGroup> selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(dataList, ScoreType.WeightedTotalScore.getName(), overview.fetchScoreTypes(), true);
         statistics.errorStatistics(selectedPeakGroupListV1, params);
         giveDecoyFdr(selectedPeakGroupListV1);
+
         //获取第一轮严格意义上的最小总分阈值
-        double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroupScore::getFdr)).get().getTotalScore();
+        double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
         log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
-        List<SelectedPeakGroupScore> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreTypeAndMinTotalScore(peptideList,
+
+        //将PeptideList转换为Map
+        Map<String, SelectedPeakGroup> selectedDataMap = selectedPeakGroupListV1.stream().filter(peakGroup -> !peakGroup.getDecoy()).collect(Collectors.toMap(SelectedPeakGroup::getPeptideRef, Function.identity()));
+        RunDO run = runService.getById(overview.getRunId());
+        List<WindowRange> ranges = run.getWindowRanges();
+
+        peakIdentifier.identify(overview.getRunId(), dataList, selectedDataMap, ranges, overview.getAnaLibId(), minTotalScore);
+        List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreTypeAndMinTotalScore(dataList,
                 ScoreType.WeightedTotalScore.getName(),
                 overview.getParams().getMethod().getScore().getScoreTypes(),
                 minTotalScore);
@@ -105,7 +120,7 @@ public class SemiSupervise {
         long start = System.currentTimeMillis();
         //Step4. 对于最终的打分结果和选峰结果保存到数据库中, 插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
         log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + selectedPeakGroupListV2.size() + "条数据,开始统计相关数据,FDR:" + params.getFdr());
-        minTotalScore = selectedPeakGroupListV2.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroupScore::getFdr)).get().getTotalScore();
+        minTotalScore = selectedPeakGroupListV2.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
 
         log.info("最小阈值总分为:" + minTotalScore);
         dataSumService.buildDataSumList(selectedPeakGroupListV2, params.getFdr(), overview, overview.getProjectId());
@@ -122,10 +137,10 @@ public class SemiSupervise {
         return finalResult;
     }
 
-    private Result check(List<PeptideScore> scores) {
+    private Result check(List<DataScore> scores) {
         boolean isAllDecoy = true;
         boolean isAllReal = true;
-        for (PeptideScore score : scores) {
+        for (DataScore score : scores) {
             if (score.getDecoy()) {
                 isAllReal = false;
             } else {
@@ -142,18 +157,18 @@ public class SemiSupervise {
     }
 
     //给分布在target中的decoy赋以Fdr值, 最末尾部分的decoy忽略, fdr为null
-    public void giveDecoyFdr(List<SelectedPeakGroupScore> featureScoresList) {
-        List<SelectedPeakGroupScore> sortedAll = SortUtil.sortByMainScore(featureScoresList, false);
-        SelectedPeakGroupScore leftFeatureScore = null;
-        SelectedPeakGroupScore rightFeatureScore;
-        List<SelectedPeakGroupScore> decoyPartList = new ArrayList<>();
-        for (SelectedPeakGroupScore selectedPeakGroupScore : sortedAll) {
-            if (selectedPeakGroupScore.getDecoy()) {
-                decoyPartList.add(selectedPeakGroupScore);
+    public void giveDecoyFdr(List<SelectedPeakGroup> featureScoresList) {
+        List<SelectedPeakGroup> sortedAll = SortUtil.sortByMainScore(featureScoresList, false);
+        SelectedPeakGroup leftFeatureScore = null;
+        SelectedPeakGroup rightFeatureScore;
+        List<SelectedPeakGroup> decoyPartList = new ArrayList<>();
+        for (SelectedPeakGroup selectedPeakGroup : sortedAll) {
+            if (selectedPeakGroup.getDecoy()) {
+                decoyPartList.add(selectedPeakGroup);
             } else {
-                rightFeatureScore = selectedPeakGroupScore;
+                rightFeatureScore = selectedPeakGroup;
                 if (leftFeatureScore != null && !decoyPartList.isEmpty()) {
-                    for (SelectedPeakGroupScore decoy : decoyPartList) {
+                    for (SelectedPeakGroup decoy : decoyPartList) {
                         if (decoy.getMainScore() - leftFeatureScore.getMainScore() < rightFeatureScore.getMainScore() - decoy.getMainScore()) {
                             decoy.setFdr(leftFeatureScore.getFdr());
                             decoy.setQValue(leftFeatureScore.getQValue());
@@ -168,7 +183,7 @@ public class SemiSupervise {
             }
         }
         if (leftFeatureScore != null && !decoyPartList.isEmpty()) {
-            for (SelectedPeakGroupScore decoy : decoyPartList) {
+            for (SelectedPeakGroup decoy : decoyPartList) {
                 decoy.setFdr(leftFeatureScore.getFdr());
                 decoy.setQValue(leftFeatureScore.getQValue());
             }
@@ -182,10 +197,10 @@ public class SemiSupervise {
      * @param featureScoresList
      * @param overviewDO
      */
-    public void targetDecoyDistribution(List<SelectedPeakGroupScore> featureScoresList, OverviewDO overviewDO) {
+    public void targetDecoyDistribution(List<SelectedPeakGroup> featureScoresList, OverviewDO overviewDO) {
         HashMap<String, Integer> targetDistributions = ProProUtil.buildDistributionMap();
         HashMap<String, Integer> decoyDistributions = ProProUtil.buildDistributionMap();
-        for (SelectedPeakGroupScore sfs : featureScoresList) {
+        for (SelectedPeakGroup sfs : featureScoresList) {
             if (sfs.getFdr() != null) {
                 if (sfs.getDecoy()) {
                     ProProUtil.addOneForFdrDistributionMap(sfs.getFdr(), decoyDistributions);
