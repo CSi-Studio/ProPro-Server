@@ -100,7 +100,7 @@ public class DIAScorer {
      * @param spectrumMzArray  mz array of selected Rt
      * @param spectrumIntArray intensity array of selected Rt
      * @param productChargeMap charge in peptide
-     * @param scores           scoreForAll for JProphet
+     * @param scoreTypes       scoreForAll for JProphet
      */
     public void calculateIsotopeScores(PeakGroup peakGroup, HashMap<String, Float> productMzMap, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Integer> productChargeMap, List<String> scoreTypes) {
         double isotopeCorr = 0d;
@@ -206,8 +206,8 @@ public class DIAScorer {
             }
             isotopeOverlap += largePeaksBeforeFirstIsotope * relIntensity;//带离子强度权重的largePeaksBeforeFirstIsotope数量统计
         }
-        peakGroup.put(ScoreType.IsotopeCorrelationScore.getName(), isotopeCorr, scoreTypes);
-        peakGroup.put(ScoreType.IsotopeOverlapScore.getName(), isotopeOverlap, scoreTypes);
+        peakGroup.put(ScoreType.IsoCorr.getName(), isotopeCorr, scoreTypes);
+        peakGroup.put(ScoreType.IsoOverlap.getName(), isotopeOverlap, scoreTypes);
     }
 
     public IntegerPair calcTotalIons(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge, float minIntensity, float minIntensity2, float maxIntensity) {

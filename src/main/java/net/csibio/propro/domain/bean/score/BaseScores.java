@@ -89,6 +89,6 @@ public class BaseScores {
     }
 
     public Double getTotalScore(List<String> scoreTypes) {
-        return get(ScoreType.WeightedTotalScore, scoreTypes);
+        return get(ScoreType.TotalScore, scoreTypes);
     }
 }

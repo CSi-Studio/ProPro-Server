@@ -52,7 +52,7 @@ public abstract class Classifier {
                 for (Map.Entry<String, Double> entry : entries) {
                     addedScore += peakGroupScore.get(entry.getKey(), scoreTypes) * entry.getValue();
                 }
-                peakGroupScore.put(ScoreType.WeightedTotalScore.getName(), addedScore, scoreTypes);
+                peakGroupScore.put(ScoreType.TotalScore.getName(), addedScore, scoreTypes);
             }
         }
     }
@@ -67,14 +67,14 @@ public abstract class Classifier {
             for (Map.Entry<String, Double> entry : entries) {
                 addedScore += peakGroupScore.get(entry.getKey(), scoreTypes) * entry.getValue();
             }
-            peakGroupScore.put(ScoreType.WeightedTotalScore.getName(), addedScore, scoreTypes);
+            peakGroupScore.put(ScoreType.TotalScore.getName(), addedScore, scoreTypes);
         }
     }
 
     public TrainPeaks selectTrainPeaks(TrainData trainData, String usedScoreType, LearningParams learningParams, Double cutoff) {
 
-        List<SelectedPeakGroup> topTargetPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getTargets(), usedScoreType, learningParams.getScoreTypes(), true);
-        List<SelectedPeakGroup> topDecoyPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getDecoys(), usedScoreType, learningParams.getScoreTypes(), false);
+        List<SelectedPeakGroup> topTargetPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getTargets(), usedScoreType, learningParams.getScoreTypes());
+        List<SelectedPeakGroup> topDecoyPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getDecoys(), usedScoreType, learningParams.getScoreTypes());
 
         Double cutoffNew;
         if (topTargetPeaks.size() < 100) {

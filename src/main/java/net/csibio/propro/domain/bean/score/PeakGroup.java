@@ -86,10 +86,10 @@ public class PeakGroup extends BaseScores {
         double shapeAvg = (this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) + this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes())) / 2;
         double libDotProd = this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
         double libCorr = this.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
-        double ionsCount = this.get(ScoreType.IonsCountDeltaScore, ScoreType.usedScoreTypes());
+        double ionsCount = this.get(ScoreType.IonsDelta, ScoreType.usedScoreTypes());
         double coelutionWeight = this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes());
-        double isoForward = this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes());
-        double isoBack = this.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
+        double isoForward = this.get(ScoreType.IsoCorr, ScoreType.usedScoreTypes());
+        double isoBack = this.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes());
 
         //Shape分和DotProd分数都十分优秀的进入筛选轮
         boolean condition1 = shapeAvg > 0.85 && libDotProd > 0.9 && ionsCount < 0.2 && isoForward > 0.8 && isoBack < 0.05;
@@ -107,10 +107,10 @@ public class PeakGroup extends BaseScores {
         double shapeAvg = (this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) + this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes())) / 2;
         double libDotProd = this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
         double libCorr = this.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
-        double ionsCount = this.get(ScoreType.IonsCountDeltaScore, ScoreType.usedScoreTypes());
+        double ionsCount = this.get(ScoreType.IonsDelta, ScoreType.usedScoreTypes());
         double coelutionWeight = this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes());
-        double isoForward = this.get(ScoreType.IsotopeCorrelationScore, ScoreType.usedScoreTypes());
-        double isoBack = this.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
+        double isoForward = this.get(ScoreType.IsoCorr, ScoreType.usedScoreTypes());
+        double isoBack = this.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes());
 
         //Shape分和DotProd分数都十分优秀的进入筛选轮
         boolean condition1 = shapeAvg > 0.9 && libDotProd > 0.9 && ionsCount < 0.2 && isoForward > 0.8 && isoBack < 0.05;
@@ -126,9 +126,9 @@ public class PeakGroup extends BaseScores {
                 this.get(ScoreType.XcorrShapeWeighted, ScoreType.usedScoreTypes()) +
 //                this.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes()) +
                 this.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes()) -
-                this.get(ScoreType.IonsCountDeltaScore, ScoreType.usedScoreTypes()) -
+                this.get(ScoreType.IonsDelta, ScoreType.usedScoreTypes()) -
 //                this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes()) -
-                this.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes())
+                this.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes())
                 ;
     }
 }

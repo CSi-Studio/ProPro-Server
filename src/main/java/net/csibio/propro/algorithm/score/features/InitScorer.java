@@ -24,7 +24,7 @@ public class InitScorer {
 //        Double normRtScore = scores.get(ScoreType.NormRtScore.getName(), scoreTypes);
 //        normRtScore = (normRtScore == null ? 0 : normRtScore);
 
-        Double isotopeCorrelationScore = scores.get(ScoreType.IsotopeCorrelationScore.getName(), scoreTypes);
+        Double isotopeCorrelationScore = scores.get(ScoreType.IsoCorr.getName(), scoreTypes);
         isotopeCorrelationScore = (isotopeCorrelationScore == null ? 0 : isotopeCorrelationScore);
 
 //        Double isotopeOverlapScore = scores.get(ScoreType.IsotopeOverlapScore.getName(), scoreTypes);
@@ -42,7 +42,7 @@ public class InitScorer {
         Double xcorrShapeWeight = scores.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes);
         xcorrShapeWeight = (xcorrShapeWeight == null ? 0 : xcorrShapeWeight);
 
-        Double ionsCountDeltaScore = scores.get(ScoreType.IonsCountDeltaScore.getName(), scoreTypes);
+        Double ionsCountDeltaScore = scores.get(ScoreType.IonsDelta.getName(), scoreTypes);
         ionsCountDeltaScore = (ionsCountDeltaScore == null ? 0 : ionsCountDeltaScore);
 //
 //        Double logSnScore = scores.get(ScoreType.LogSnScore.getName(), scoreTypes);
@@ -76,7 +76,7 @@ public class InitScorer {
 //        Double normRtScore = scores.get(ScoreType.NormRtScore.getName(), scoreTypes);
 //        normRtScore = (normRtScore == null ? 0 : normRtScore);
 
-        Double isotopeCorrelationScore = scores.get(ScoreType.IsotopeCorrelationScore.getName(), scoreTypes);
+        Double isotopeCorrelationScore = scores.get(ScoreType.IsoCorr.getName(), scoreTypes);
         isotopeCorrelationScore = (isotopeCorrelationScore == null ? 0 : isotopeCorrelationScore);
 //
 //        Double isotopeOverlapScore = scores.get(ScoreType.IsotopeOverlapScore.getName(), scoreTypes);
@@ -94,7 +94,7 @@ public class InitScorer {
 //        Double ionsCountWeightScore = scores.get(ScoreType.IonsCountWeightScore.getName(), scoreTypes);
 //        ionsCountWeightScore = (ionsCountWeightScore == null ? 0 : ionsCountWeightScore);
 
-        Double ionsCountDeltaScore = scores.get(ScoreType.IonsCountDeltaScore.getName(), scoreTypes);
+        Double ionsCountDeltaScore = scores.get(ScoreType.IonsDelta.getName(), scoreTypes);
         ionsCountDeltaScore = (ionsCountDeltaScore == null ? 0 : ionsCountDeltaScore);
 
 //        Double logSnScore = scores.get(ScoreType.LogSnScore.getName(), scoreTypes);

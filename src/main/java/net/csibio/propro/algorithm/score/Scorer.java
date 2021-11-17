@@ -153,7 +153,7 @@ public class Scorer {
             libraryScorer.calculateIntensityScore(peakGroup, params.getMethod().getScore().getScoreTypes());
             libraryScorer.calculateNormRtScore(peakGroup, run.getIrt().getSi(), dataDO.getLibRt(), scoreTypes);
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scoreTypes);
-            peakGroup.put(ScoreType.IonsCountDeltaScore, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
+            peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
             peakGroup.put(ScoreType.InitScore, peakGroup.getTotal(), scoreTypes);
         }
 
@@ -251,31 +251,29 @@ public class Scorer {
      * @param scoreTypes      打分开始的时候所有参与打分的子分数快照列表
      * @return
      */
-    public List<SelectedPeakGroup> findBestPeakGroupByTargetScoreType(List<DataScore> dataScoreList, String targetScoreType, List<String> scoreTypes, boolean strict) {
+    public List<SelectedPeakGroup> findBestPeakGroupByTargetScoreType(List<DataScore> dataScoreList, String targetScoreType, List<String> scoreTypes) {
         List<SelectedPeakGroup> bestFeatureScoresList = new ArrayList<>();
         for (DataScore dataScore : dataScoreList) {
             if (dataScore.getPeakGroupList() == null || dataScore.getPeakGroupList().size() == 0) {
                 continue;
             }
-            SelectedPeakGroup bestFeatureScores = new SelectedPeakGroup(dataScore.getId(), dataScore.getProteins(), dataScore.getPeptideRef(), dataScore.getDecoy());
+            SelectedPeakGroup bestPeakGroup = new SelectedPeakGroup(dataScore.getId(), dataScore.getProteins(), dataScore.getPeptideRef(), dataScore.getIrt(), dataScore.getDecoy());
             double maxScore = -Double.MAX_VALUE;
-            PeakGroup topFeatureScore = null;
+            PeakGroup topPeakGroup = null;
             for (PeakGroup peakGroupScore : dataScore.getPeakGroupList()) {
                 Double targetScore = peakGroupScore.get(targetScoreType, scoreTypes);
                 if (targetScore != null && targetScore > maxScore) {
                     maxScore = targetScore;
-                    topFeatureScore = peakGroupScore;
+                    topPeakGroup = peakGroupScore;
                 }
             }
-
-            if (topFeatureScore != null) {
-                bestFeatureScores.setMainScore(topFeatureScore.get(targetScoreType, scoreTypes));
-                bestFeatureScores.setScores(topFeatureScore.getScores());
-                bestFeatureScores.setApexRt(topFeatureScore.getApexRt());
-                bestFeatureScores.setSelectedRt(topFeatureScore.getSelectedRt());
-                bestFeatureScores.setIntensitySum(topFeatureScore.getIntensitySum());
-//                bestFeatureScores.setFragIntFeature(topFeatureScore.getFragIntFeature());
-                bestFeatureScoresList.add(bestFeatureScores);
+            if (topPeakGroup != null) {
+                bestPeakGroup.setMainScore(topPeakGroup.get(targetScoreType, scoreTypes));
+                bestPeakGroup.setScores(topPeakGroup.getScores());
+                bestPeakGroup.setApexRt(topPeakGroup.getApexRt());
+                bestPeakGroup.setSelectedRt(topPeakGroup.getSelectedRt());
+                bestPeakGroup.setIntensitySum(topPeakGroup.getIntensitySum());
+                bestFeatureScoresList.add(bestPeakGroup);
             }
         }
         return bestFeatureScoresList;
@@ -287,7 +285,7 @@ public class Scorer {
             if (dataScore.getPeakGroupList() == null || dataScore.getPeakGroupList().size() == 0) {
                 continue;
             }
-            SelectedPeakGroup selectedPeakGroup = new SelectedPeakGroup(dataScore.getId(), dataScore.getProteins(), dataScore.getPeptideRef(), dataScore.getDecoy());
+            SelectedPeakGroup selectedPeakGroup = new SelectedPeakGroup(dataScore.getId(), dataScore.getProteins(), dataScore.getPeptideRef(), dataScore.getIrt(), dataScore.getDecoy());
 
             //核心代码
             PeakGroup topPeakGroup = scorer.getBestPeakGroup(dataScore.getPeakGroupList(), minTotalScore, scoreTypes, null);

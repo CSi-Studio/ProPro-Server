@@ -95,7 +95,7 @@ public class SemiSupervise {
 
         //进行第一轮严格意义的初筛
         log.info("开始第一轮严格意义上的初筛");
-        List<SelectedPeakGroup> selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(dataList, ScoreType.WeightedTotalScore.getName(), overview.fetchScoreTypes(), true);
+        List<SelectedPeakGroup> selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(dataList, ScoreType.TotalScore.getName(), overview.fetchScoreTypes());
         statistics.errorStatistics(selectedPeakGroupListV1, params);
         giveDecoyFdr(selectedPeakGroupListV1);
 
@@ -110,7 +110,7 @@ public class SemiSupervise {
 
         peakIdentifier.identify(overview.getRunId(), dataList, selectedDataMap, ranges, overview.getAnaLibId(), minTotalScore);
         List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreTypeAndMinTotalScore(dataList,
-                ScoreType.WeightedTotalScore.getName(),
+                ScoreType.TotalScore.getName(),
                 overview.getParams().getMethod().getScore().getScoreTypes(),
                 minTotalScore);
         //重新统计

@@ -7,7 +7,6 @@ import net.csibio.propro.domain.bean.score.SlopeIntercept;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
@@ -119,7 +118,7 @@ public class ScoreUtil {
     public static List<String> getScoreTypes(HttpServletRequest request) {
         List<String> scoreTypes = new ArrayList<>();
         scoreTypes.add(ScoreType.InitScore.getName());
-        scoreTypes.add(ScoreType.WeightedTotalScore.getName());
+        scoreTypes.add(ScoreType.TotalScore.getName());
         for (ScoreType type : ScoreType.values()) {
             String typeParam = request.getParameter(type.getName());
             if (typeParam != null && typeParam.equals("on")) {
@@ -127,15 +126,5 @@ public class ScoreUtil {
             }
         }
         return scoreTypes;
-    }
-
-    //test failed
-    public static void weightsMapFilter(HashMap<String, Double> weightsMap) {
-        for (String scoreTypeName : weightsMap.keySet()) {
-            Boolean biggerIsBetter = ScoreType.getBiggerIsBetter(scoreTypeName);
-            if (biggerIsBetter == null || (biggerIsBetter != weightsMap.get(scoreTypeName) > 0)) {
-                weightsMap.put(scoreTypeName, 0d);
-            }
-        }
     }
 }

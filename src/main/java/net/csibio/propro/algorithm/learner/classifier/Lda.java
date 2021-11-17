@@ -42,7 +42,7 @@ public class Lda extends Classifier {
                 continue;
             }
             score(peptideList, ldaLearnData.getWeightsMap(), scoreTypes);
-            List<SelectedPeakGroup> featureScoresList = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
+            List<SelectedPeakGroup> featureScoresList = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.TotalScore.getName(), scoreTypes);
             int count = 0;
             ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
             count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
@@ -73,9 +73,9 @@ public class Lda extends Classifier {
             weightsMap = new HashMap<>();
             HashMap<String, Double> lastWeightsMap = new HashMap<>();
             for (int times = 0; times < learningParams.getXevalNumIter(); times++) {
-                TrainPeaks trainPeaksTemp = selectTrainPeaks(trainData, ScoreType.WeightedTotalScore.getName(), learningParams, learningParams.getSsIterationFdr());
+                TrainPeaks trainPeaksTemp = selectTrainPeaks(trainData, ScoreType.TotalScore.getName(), learningParams, learningParams.getSsIterationFdr());
                 lastWeightsMap = weightsMap;
-                weightsMap = learn(trainPeaksTemp, ScoreType.WeightedTotalScore.getName(), learningParams.getScoreTypes());
+                weightsMap = learn(trainPeaksTemp, ScoreType.TotalScore.getName(), learningParams.getScoreTypes());
                 log.info("Train Weight:" + JSONArray.toJSONString(weightsMap));
                 for (Double value : weightsMap.values()) {
                     if (value == null || Double.isNaN(value)) {
@@ -145,11 +145,11 @@ public class Lda extends Classifier {
 //        bestTargetScore.put(ScoreType.LogSnScore.getName(), 5d, scoreTypes);
 //        bestTargetScore.put(ScoreType.NormRtScore.getName(), 0d, scoreTypes);
 //        bestTargetScore.put(ScoreType.IntensityScore.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.IsotopeCorrelationScore.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.IsotopeOverlapScore.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.IsoCorr.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.IsoOverlap.getName(), 0d, scoreTypes);
 //        bestTargetScore.put(ScoreType.MassdevScore.getName(), 0d, scoreTypes);
 //        bestTargetScore.put(ScoreType.MassdevScoreWeighted.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.IonsCountDeltaScore.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.IonsDelta.getName(), 0d, scoreTypes);
 
         List<SelectedPeakGroup> bestTargets = new ArrayList<>();
         bestTargets.add(bestTargetScore);

@@ -64,7 +64,7 @@ public class Xgboost extends Classifier {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        List<SelectedPeakGroup> featureScoresList = scorer.findBestPeakGroupByTargetScoreType(scores, ScoreType.WeightedTotalScore.getName(), scoreTypes, false);
+        List<SelectedPeakGroup> featureScoresList = scorer.findBestPeakGroupByTargetScoreType(scores, ScoreType.TotalScore.getName(), scoreTypes);
         ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
         int count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
         if (count > 0) {
@@ -84,13 +84,13 @@ public class Xgboost extends Classifier {
             predict(booster, trainData, learningParams.getMainScore(), learningParams.getScoreTypes());
             for (int times = 0; times < learningParams.getXevalNumIter(); times++) {
                 logger.info("开始第" + times + "轮训练");
-                TrainPeaks trainPeaksTemp = selectTrainPeaks(trainData, ScoreType.WeightedTotalScore.getName(), learningParams, learningParams.getXgbIterationFdr());
+                TrainPeaks trainPeaksTemp = selectTrainPeaks(trainData, ScoreType.TotalScore.getName(), learningParams, learningParams.getXgbIterationFdr());
                 logger.info("高可信Target个数：" + trainPeaksTemp.getBestTargets().size());
-                booster = train(trainPeaksTemp, ScoreType.WeightedTotalScore.getName(), learningParams.getScoreTypes());
-                predict(booster, trainData, ScoreType.WeightedTotalScore.getName(), learningParams.getScoreTypes());
+                booster = train(trainPeaksTemp, ScoreType.TotalScore.getName(), learningParams.getScoreTypes());
+                predict(booster, trainData, ScoreType.TotalScore.getName(), learningParams.getScoreTypes());
             }
             logger.info("总时间：" + (System.currentTimeMillis() - startTime));
-            List<SelectedPeakGroup> featureScoresList = scorer.findBestPeakGroupByTargetScoreType(scores, ScoreType.WeightedTotalScore.getName(), learningParams.getScoreTypes(), false);
+            List<SelectedPeakGroup> featureScoresList = scorer.findBestPeakGroupByTargetScoreType(scores, ScoreType.TotalScore.getName(), learningParams.getScoreTypes());
             ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
             int count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
             logger.info("Train count:" + count);
@@ -128,13 +128,13 @@ public class Xgboost extends Classifier {
         for (DataScore dataScore : scores) {
             for (PeakGroup peakGroupScore : dataScore.getPeakGroupList()) {
                 if (!dataScore.getDecoy() && !checkRationality(peakGroupScore, scoreTypes)) {
-                    peakGroupScore.put(ScoreType.WeightedTotalScore.getName(), 0d, scoreTypes);
+                    peakGroupScore.put(ScoreType.TotalScore.getName(), 0d, scoreTypes);
                     continue;
                 }
                 float[] testData = new float[scoreTypesCount];
                 int tempIndex = 0;
                 for (String scoreName : scoreTypes) {
-                    if (scoreName.equals(ScoreType.WeightedTotalScore.getName()) || scoreName.equals(ScoreType.InitScore.getName())) {
+                    if (scoreName.equals(ScoreType.TotalScore.getName()) || scoreName.equals(ScoreType.InitScore.getName())) {
                         continue;
                     }
                     testData[tempIndex] = peakGroupScore.get(scoreName, scoreTypes).floatValue();
@@ -143,7 +143,7 @@ public class Xgboost extends Classifier {
                 DMatrix dMatrix = new DMatrix(testData, 1, scoreTypesCount);
                 float[][] predicts = booster.predict(dMatrix);
                 double score = predicts[0][0];
-                peakGroupScore.put(ScoreType.WeightedTotalScore.getName(), score, scoreTypes);
+                peakGroupScore.put(ScoreType.TotalScore.getName(), score, scoreTypes);
             }
         }
     }

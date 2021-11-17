@@ -140,14 +140,14 @@ public class TestController {
                 log.info("开始第一轮严格意义上的初筛");
                 List<SelectedPeakGroup> selectedPeakGroupListV1 = null;
                 try {
-                    selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.WeightedTotalScore.getName(), overview.fetchScoreTypes(), true);
+                    selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.TotalScore.getName(), overview.fetchScoreTypes());
                     statistics.errorStatistics(selectedPeakGroupListV1, params);
                     semiSupervise.giveDecoyFdr(selectedPeakGroupListV1);
                     //获取第一轮严格意义上的最小总分阈值
                     double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
                     log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
                     List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreTypeAndMinTotalScore(peptideList,
-                            ScoreType.WeightedTotalScore.getName(),
+                            ScoreType.TotalScore.getName(),
                             overview.getParams().getMethod().getScore().getScoreTypes(),
                             minTotalScore);
                     //重新统计
@@ -229,7 +229,7 @@ public class TestController {
                     PeakGroup peakGroup = data.getPeakGroupList().stream().filter(peak -> peak.getApexRt().equals(sum.getApexRt())).findFirst().get();
                     double libPearson = peakGroup.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
                     double libDotprod = peakGroup.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
-                    double isoOverlap = peakGroup.get(ScoreType.IsotopeOverlapScore, ScoreType.usedScoreTypes());
+                    double isoOverlap = peakGroup.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes());
                     if (libDotprod > 0.99) {
                         stat.getAndIncrement();
                         findItList.add(sum.getPeptideRef());

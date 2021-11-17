@@ -19,6 +19,8 @@ public class SelectedPeakGroup extends BaseScores {
 
     Boolean decoy;
 
+    Double irt;
+
     //本峰值对应的最佳RT时间
     Double apexRt;
 
@@ -45,8 +47,9 @@ public class SelectedPeakGroup extends BaseScores {
         this.scores = new Double[scoreTypesSize];
     }
 
-    public SelectedPeakGroup(String id, List<String> proteins, String peptideRef, Boolean decoy) {
+    public SelectedPeakGroup(String id, List<String> proteins, String peptideRef, Double irt, Boolean decoy) {
         this.id = id;
+        this.irt = irt;
         this.proteins = proteins;
         this.peptideRef = peptideRef;
         this.decoy = decoy;

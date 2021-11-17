@@ -34,6 +34,8 @@ public class DataSumDO extends BaseDO {
 
     Double qValue;
 
+    Double irt; //经过线性校准的时间
+
     Double apexRt;  //最终鉴定的时间
 
     Double selectedRt; //距离realRt最近的光谱图的rt
@@ -57,13 +59,6 @@ public class DataSumDO extends BaseDO {
     }
 
     public DataSumDO() {
-    }
-
-    public DataSumDO(String dataId, List<String> proteins, String peptideRef, Boolean decoy) {
-        this.id = dataId;
-        this.proteins = proteins;
-        this.peptideRef = peptideRef;
-        this.decoy = decoy;
     }
 
     public DataSumDO(DataDO data) {
