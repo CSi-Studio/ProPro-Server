@@ -8,8 +8,8 @@ import net.csibio.propro.algorithm.learner.SemiSupervise;
 import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.score.features.InitScorer;
+import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
@@ -245,7 +245,7 @@ public class TestController {
 
     @GetMapping(value = "/lms5")
     Result lms5() {
-        String projectId = "6166a5fd6113c157a6431ab9";
+        String projectId = "613f5d8f62cbcf5bb43453fe";
         List<IdName> idNameList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), IdName.class);
         idNameList = idNameList.subList(0, 1);
         for (IdName idName : idNameList) {
@@ -275,11 +275,13 @@ public class TestController {
                 }
 
                 List<List<DataSumDO>> sumListList = new ArrayList<>(rtMap.values());
-                for (int i = 0; i < sumListList.size() - 2; i++) {
+                for (int i = 0; i < sumListList.size() - 4; i++) {
                     List<DataSumDO> sumList = new ArrayList<>();
                     sumList.addAll(sumListList.get(i));
                     sumList.addAll(sumListList.get(i + 1));
                     sumList.addAll(sumListList.get(i + 2));
+                    sumList.addAll(sumListList.get(i + 3));
+                    sumList.addAll(sumListList.get(i + 4));
                     if (sumList.size() <= 1) {
                         continue;
                     }

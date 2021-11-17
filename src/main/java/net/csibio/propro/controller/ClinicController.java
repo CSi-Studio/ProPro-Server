@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.GaussFilter;
 import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
-import net.csibio.propro.algorithm.score.Scorer;
+import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;

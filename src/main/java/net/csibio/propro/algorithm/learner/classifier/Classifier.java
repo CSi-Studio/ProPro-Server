@@ -3,7 +3,7 @@ package net.csibio.propro.algorithm.learner.classifier;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.algorithm.score.Scorer;
+import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.learner.LearningParams;
 import net.csibio.propro.domain.bean.learner.TrainData;

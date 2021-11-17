@@ -4,22 +4,20 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.extract.Extractor;
 import net.csibio.propro.algorithm.fitter.LinearFitter;
 import net.csibio.propro.algorithm.peak.PeakPicker;
-import net.csibio.propro.algorithm.score.Scorer;
-import net.csibio.propro.algorithm.score.features.RtNormalizerScorer;
+import net.csibio.propro.algorithm.score.scorer.IrtScorer;
+import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.ListPairs;
 import net.csibio.propro.domain.bean.common.Pair;
 import net.csibio.propro.domain.bean.irt.IrtResult;
-import net.csibio.propro.domain.bean.peptide.PeptideCoord;
-import net.csibio.propro.domain.bean.score.PeakGroupListWrapper;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.ScoreRtPair;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
-import net.csibio.propro.domain.query.PeptideQuery;
 import net.csibio.propro.service.BlockIndexService;
 import net.csibio.propro.service.PeptideService;
 import net.csibio.propro.service.RunService;
@@ -27,7 +25,6 @@ import net.csibio.propro.utils.MathUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -45,7 +42,7 @@ public abstract class Irt {
     @Autowired
     PeakPicker peakPicker;
     @Autowired
-    RtNormalizerScorer rtNormalizerScorer;
+    IrtScorer irtScorer;
     @Autowired
     LinearFitter linearFitter;
     @Autowired
@@ -95,12 +92,7 @@ public abstract class Irt {
         double maxGroupRt = -Double.MAX_VALUE;
         dataList = dataList.stream().sorted(Comparator.comparing(DataDO::getLibRt)).toList();
         for (DataDO data : dataList) {
-            int maxIonsCount = Arrays.stream(data.getIonsLow()).max().getAsInt();
-            PeptideCoord coord = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
-            PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchPeakGroupsV2(data, coord, params.getMethod().getIrt().getSs());
-            if (!peakGroupListWrapper.isFeatureFound()) {
-                continue;
-            }
+
             double groupRt = data.getLibRt();
             if (groupRt > maxGroupRt) {
                 maxGroupRt = groupRt;
@@ -109,16 +101,16 @@ public abstract class Irt {
                 minGroupRt = groupRt;
             }
 
-            List<ScoreRtPair> scoreRtPairs = rtNormalizerScorer.score4Irt(peakGroupListWrapper.getList(), peakGroupListWrapper.getNormedIntMap(), groupRt, maxIonsCount);
-            scoreRtPairs = scoreRtPairs.stream().sorted(Comparator.comparing(ScoreRtPair::getScore).reversed()).toList();
-            if (scoreRtPairs.size() == 0) {
+            data = irtScorer.score(data, params);
+//            scoreRtPairs = scoreRtPairs.stream().sorted(Comparator.comparing(ScoreRtPair::getScore).reversed()).toList();
+            if (data.getPeakGroupList() == null || data.getPeakGroupList().size() == 0) {
                 continue;
             }
-            scoreRtList.add(scoreRtPairs);
+//            scoreRtList.add(scoreRtPairs);
             compoundRt.add(groupRt);
         }
 
-        List<Pair> pairs = findBestFeature(scoreRtList, compoundRt);
+        List<Pair> pairs = findBestFeature(dataList, compoundRt);
         double delta = (maxGroupRt - minGroupRt) / 30d;
         List<Pair> pairsCorrected = selectPairs(pairs, delta);
 
@@ -150,23 +142,25 @@ public abstract class Irt {
     /**
      * get rt pairs for every peptideRef
      *
-     * @param scoresList peptideRef list of List<ScoreRtPair>
-     * @param rt         get from groupsResult.getModel()
+     * @param dataList peptideRef list of List<PeakGroup>
+     * @param rt       get from groupsResult.getModel()
      * @return rt pairs
      */
-    protected List<Pair> findBestFeature(List<List<ScoreRtPair>> scoresList, List<Double> rt) {
+    protected List<Pair> findBestFeature(List<DataDO> dataList, List<Double> rt) {
 
         List<Pair> pairs = new ArrayList<>();
 
-        for (int i = 0; i < scoresList.size(); i++) {
-            List<ScoreRtPair> scores = scoresList.get(i);
+        for (int i = 0; i < dataList.size(); i++) {
+            List<PeakGroup> peakGroupList = dataList.get(i).getPeakGroupList();
             double max = Double.MIN_VALUE;
-            //find max scoreForAll's rt
             double runRt = 0d;
-            for (int j = 0; j < scores.size(); j++) {
-                if (scores.get(j).getScore() > max) {
-                    max = scores.get(j).getScore();
-                    runRt = scores.get(j).getApexRt();
+            for (int j = 0; j < peakGroupList.size(); j++) {
+                if (peakGroupList.get(j).getScores() == null) {
+                    continue;
+                }
+                if (peakGroupList.get(j).getTotalScore() > max) {
+                    max = peakGroupList.get(j).getTotalScore();
+                    runRt = peakGroupList.get(j).getApexRt();
                 }
             }
             if (Constants.ESTIMATE_BEST_PEPTIDES && max < Constants.OVERALL_QUALITY_CUTOFF) {

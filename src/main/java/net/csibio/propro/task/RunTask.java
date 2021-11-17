@@ -7,7 +7,7 @@ import net.csibio.propro.algorithm.irt.Irt;
 import net.csibio.propro.algorithm.irt.IrtByAnaLib;
 import net.csibio.propro.algorithm.irt.IrtByInsLib;
 import net.csibio.propro.algorithm.learner.SemiSupervise;
-import net.csibio.propro.algorithm.score.Scorer;
+import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.constants.enums.TaskStatus;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.irt.IrtResult;

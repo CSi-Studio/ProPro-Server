@@ -7,8 +7,8 @@ import net.csibio.aird.bean.WindowRange;
 import net.csibio.aird.parser.DIAParser;
 import net.csibio.propro.algorithm.core.CoreFunc;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
-import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.score.features.DIAScorer;
+import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
@@ -305,7 +305,7 @@ public class Extractor {
                 maxIonIntensityInThisSpectrum = maxIntensities[i];
             }
 
-            IntegerPair pair = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 50f, 200f, maxIonIntensityInThisSpectrum);
+            IntegerPair pair = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 50f, 300f, maxIonIntensityInThisSpectrum);
             ions50[i] = pair.left();
             ions300[i] = pair.right();
         }

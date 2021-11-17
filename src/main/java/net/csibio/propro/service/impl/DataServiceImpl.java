@@ -2,7 +2,7 @@ package net.csibio.propro.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.extract.Extractor;
-import net.csibio.propro.algorithm.score.Scorer;
+import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.dao.BaseMultiDAO;
 import net.csibio.propro.dao.DataDAO;

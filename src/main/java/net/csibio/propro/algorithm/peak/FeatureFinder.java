@@ -508,17 +508,14 @@ public class FeatureFinder {
                 if (binarySearchIndex == 0) {
                     apexRtIndex = 0;
                 } else {
-                    apexRtIndex = binarySearchIndex;
+                    double left = apexRt - rtArray[binarySearchIndex - 1];
+                    double right = rtArray[binarySearchIndex] - apexRt;
+                    apexRtIndex = left < right ? (binarySearchIndex - 1) : binarySearchIndex;
                 }
-//                else {
-//                    double left = apexRt - rtArray[binarySearchIndex - 1];
-//                    double right = rtArray[binarySearchIndex] - apexRt;
-//                    apexRtIndex = left < right ? (binarySearchIndex - 1) : binarySearchIndex;
-//                }
             } else {
                 apexRtIndex = binarySearchIndex;
             }
-            
+
             //向左搜索
             if (apexRtIndex == 0 || apexRtIndex == maxIndex) {
                 continue;
@@ -577,22 +574,22 @@ public class FeatureFinder {
 
             peakGroup.setLeftRt(rtArray[leftIndex]);
             peakGroup.setRightRt(rtArray[rightIndex]);
-            int maxIons300 = -1;
-            int bestRtIndex = -1;
-            for (int i = leftIndex; i <= rightIndex; i++) {
-                if (ions300[i] > maxIons300) {
-                    maxIons300 = ions300[i];
-                    bestRtIndex = i;
-                } else if (ions300[i] == maxIons300) { //如果ions300的值相同,则比较ions50的值
-                    if (Math.abs(rtArray[bestRtIndex] - apexRt) > Math.abs(rtArray[i] - apexRt)) {
-                        maxIons300 = ions300[i];
-                        bestRtIndex = i;
-                    }
-                }
-            }
-            peakGroup.setApexRt(rtArray[bestRtIndex]);
-            peakGroup.setIonsLow(ions50[bestRtIndex]); //特别注意,最高点的碎片值使用的是Ions50而不是Ions300,Ions300仅用于选峰
-            peakGroup.setSelectedRt(unSearchPeakGroup.getRtArray()[bestRtIndex]);
+//            int maxIons300 = -1;
+//            int bestRtIndex = -1;
+//            for (int i = leftIndex; i <= rightIndex; i++) {
+//                if (ions300[i] > maxIons300) {
+//                    maxIons300 = ions300[i];
+//                    bestRtIndex = i;
+//                } else if (ions300[i] == maxIons300) { //如果ions300的值相同,则比较ions50的值
+//                    if (Math.abs(rtArray[bestRtIndex] - apexRt) > Math.abs(rtArray[i] - apexRt)) {
+//                        maxIons300 = ions300[i];
+//                        bestRtIndex = i;
+//                    }
+//                }
+//            }
+            peakGroup.setApexRt(rtArray[apexRtIndex]);
+            peakGroup.setIonsLow(ions50[apexRtIndex]); //特别注意,最高点的碎片值使用的是Ions50而不是Ions300,Ions300仅用于选峰
+            peakGroup.setSelectedRt(rtArray[apexRtIndex]);
 
             boolean hit = true;
             //totalXIC
@@ -617,13 +614,13 @@ public class FeatureFinder {
                 Double[] intArray = unSearchPeakGroup.getIntensitiesMap().get(cutInfo);
                 //库中排名前3的碎片离子在最高峰处的信号不能为0,否则直接忽略
                 if (allIons.contains(cutInfo)) {
-                    if (intArray[bestRtIndex] == 0d) {
+                    if (intArray[apexRtIndex] == 0d) {
 //                        log.info("精彩的判定:" + unSearchPeakGroup.getCoord().getPeptideRef());
                         hit = false;
                         break;
                     }
-                    if (intArray[bestRtIndex] > maxCutInfoIntensity) {
-                        maxCutInfoIntensity = intArray[bestRtIndex];
+                    if (intArray[apexRtIndex] > maxCutInfoIntensity) {
+                        maxCutInfoIntensity = intArray[apexRtIndex];
                         maxCutInfo = cutInfo;
                     }
                 }
@@ -637,7 +634,7 @@ public class FeatureFinder {
                 //离子峰强度
                 ionIntensity.put(cutInfo, ionIntTemp);
                 //信噪比
-                signalToNoiseSum += unSearchPeakGroup.getNoise1000Map().get(cutInfo)[bestRtIndex];
+                signalToNoiseSum += unSearchPeakGroup.getNoise1000Map().get(cutInfo)[apexRtIndex];
             }
 
             if (peakGroupInt == 0D || !hit) {

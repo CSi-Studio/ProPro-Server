@@ -6,7 +6,7 @@ import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.learner.classifier.Xgboost;
 import net.csibio.propro.algorithm.peak.PeakIdentifier;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.algorithm.score.Scorer;
+import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;

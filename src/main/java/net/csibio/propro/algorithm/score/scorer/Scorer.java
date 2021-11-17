@@ -1,4 +1,4 @@
-package net.csibio.propro.algorithm.score;
+package net.csibio.propro.algorithm.score.scorer;
 
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
@@ -6,6 +6,7 @@ import net.csibio.propro.algorithm.core.CoreFunc;
 import net.csibio.propro.algorithm.fitter.LinearFitter;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.*;
+import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.features.*;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.bean.common.AnyPair;
@@ -74,7 +75,7 @@ public class Scorer {
     @Autowired
     CoreFunc coreFunc;
 
-    public DataDO scoreForOne(RunDO run, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public DataDO score(RunDO run, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
 
         if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
             dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
@@ -93,7 +94,7 @@ public class Scorer {
                 dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
                 return dataDO;
             }
-            peakGroupListWrapper = peakPicker.searchPeakGroups(dataDO, coord, params.getMethod().getIrt().getSs());
+            peakGroupListWrapper = peakPicker.searchPeakGroupsV2(dataDO, coord, params.getMethod().getIrt().getSs());
             if (!peakGroupListWrapper.isFeatureFound()) {
                 dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
                 if (!dataDO.getDecoy()) {

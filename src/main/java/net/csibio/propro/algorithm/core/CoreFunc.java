@@ -8,8 +8,8 @@ import net.csibio.propro.algorithm.extract.IonStat;
 import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.GaussFilter;
-import net.csibio.propro.algorithm.score.Scorer;
 import net.csibio.propro.algorithm.score.features.DIAScorer;
+import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.constants.constant.CutInfoConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.bean.common.AnyPair;
@@ -211,7 +211,7 @@ public class CoreFunc {
             }
 
             try {
-                data = scorer.scoreForOne(run, data, coord, rtMap, params);
+                data = scorer.score(run, data, coord, rtMap, params);
             } catch (Exception e) {
                 e.printStackTrace();
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
@@ -299,7 +299,7 @@ public class CoreFunc {
             return null;
         }
 
-        dataDO = scorer.scoreForOne(run, dataDO, coord, rtMap, params);
+        dataDO = scorer.score(run, dataDO, coord, rtMap, params);
         DataSumDO sum = judge(dataDO);
         return new AnyPair<>(dataDO, sum);
     }
@@ -368,7 +368,7 @@ public class CoreFunc {
             }
             coord.setFragments(selectFragments);
             try {
-                buildData = scorer.scoreForOne(run, buildData, coord, rtMap, params);
+                buildData = scorer.score(run, buildData, coord, rtMap, params);
             } catch (Exception e) {
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
             }
@@ -433,7 +433,7 @@ public class CoreFunc {
             }
 
             //Step2. 常规选峰及打分,未满足条件的直接忽略
-            dataDO = scorer.scoreForOne(run, dataDO, coord, rtMap, params);
+            dataDO = scorer.score(run, dataDO, coord, rtMap, params);
             dataList.add(dataDO);
 
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
@@ -452,7 +452,7 @@ public class CoreFunc {
             }
 
             //Step5. 对Decoy进行打分
-            decoyData = scorer.scoreForOne(run, decoyData, coord, rtMap, params);
+            decoyData = scorer.score(run, decoyData, coord, rtMap, params);
             dataList.add(decoyData);
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
@@ -484,7 +484,7 @@ public class CoreFunc {
                 return;
             }
             //Step2. 常规选峰及打分,未满足条件的直接忽略
-            dataDO = scorer.scoreForOne(run, dataDO, coord, rtMap, params);
+            dataDO = scorer.score(run, dataDO, coord, rtMap, params);
             lda.scoreForPeakGroups(dataDO.getPeakGroupList(), params.getBaseOverview().getWeights(), params.getBaseOverview().getParams().getMethod().getScore().getScoreTypes());
             DataSumDO tempSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview(), null);
             if (tempSum == null || tempSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
@@ -515,7 +515,7 @@ public class CoreFunc {
             }
 
             //Step5. 对Decoy进行打分
-            decoyData = scorer.scoreForOne(run, decoyData, coord, rtMap, params);
+            decoyData = scorer.score(run, decoyData, coord, rtMap, params);
             dataList.add(decoyData);
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
@@ -544,7 +544,7 @@ public class CoreFunc {
                 return;
             }
 
-            dataDO = scorer.scoreForOne(run, dataDO, coord, rtMap, params);
+            dataDO = scorer.score(run, dataDO, coord, rtMap, params);
 //            sumList.add(judge(dataDO));
             dataList.add(dataDO);
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
@@ -562,7 +562,7 @@ public class CoreFunc {
             }
 
             //Step5. 对Decoy进行打分
-            decoyData = scorer.scoreForOne(run, decoyData, coord, rtMap, params);
+            decoyData = scorer.score(run, decoyData, coord, rtMap, params);
             dataList.add(decoyData);
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
