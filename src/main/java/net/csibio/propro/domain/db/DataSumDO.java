@@ -33,7 +33,7 @@ public class DataSumDO extends BaseDO {
     Integer status; //鉴定结果
 
     Double qValue;
-    
+
     Double libRt;
 
     Double irt; //经过线性校准的时间
@@ -57,6 +57,7 @@ public class DataSumDO extends BaseDO {
         dataSum.setApexRt(selectPeakGroup.getApexRt());
         dataSum.setSelectedRt(selectPeakGroup.getSelectedRt());
         dataSum.setTotalScore(selectPeakGroup.getTotalScore());
+
         return dataSum;
     }
 

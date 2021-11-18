@@ -49,12 +49,12 @@ public class IrtScorer {
 
         int maxIonsCount = Arrays.stream(data.getIonsLow()).max().getAsInt();
         PeptideCoord coord = peptideService.getOne(new PeptideQuery(params.getInsLibId(), data.getPeptideRef()), PeptideCoord.class);
-        PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchPeakGroupsV2(data, coord, params.getMethod().getIrt().getSs());
-        if (!peakGroupListWrapper.isFeatureFound()) {
+        PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchByIonsCount(data, coord, params.getMethod().getIrt().getSs());
+        if (!peakGroupListWrapper.isFound()) {
             return null;
         }
         List<PeakGroup> peakGroupList = peakGroupListWrapper.getList();
-        HashMap<String, Double> normedLibIntMap = peakGroupListWrapper.getNormedIntMap();
+        HashMap<String, Double> normedLibIntMap = peakGroupListWrapper.getNormIntMap();
 
         List<String> scoreTypes4Irt = ScoreType.usedScoreTypes();
 

@@ -34,6 +34,8 @@ public class PeakGroup extends BaseScores {
     //最大强度碎片的强度
     Double maxIonIntensity;
 
+    String other;
+
     //中间计算变量,不需要存入数据库
     @Transient
     double tic;  //所有离子在所有RT上的Intensity总和
@@ -50,6 +52,12 @@ public class PeakGroup extends BaseScores {
 
     public PeakGroup() {
     }
+
+    public PeakGroup(double leftRt, double rightRt) {
+        this.leftRt = leftRt;
+        this.rightRt = rightRt;
+    }
+
 
     public PeakGroup(int scoreSize) {
         this.scores = new Double[scoreSize];

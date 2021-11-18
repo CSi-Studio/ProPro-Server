@@ -10,10 +10,8 @@ import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.GaussFilter;
 import net.csibio.propro.algorithm.score.features.DIAScorer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
-import net.csibio.propro.constants.constant.CutInfoConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.bean.common.AnyPair;
-import net.csibio.propro.domain.bean.common.IntegerPair;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroup;
@@ -169,45 +167,23 @@ public class CoreFunc {
         int size = coord.getFragments().size();
 
         //初始化原始数据对象集
-        DataDO data = extractOne(coord, rtMap, params);
-        if (data == null) {
-            log.info("XIC没有检测到任何数据,小概率事件:" + coord.getPeptideRef());
-            return null;
-        }
-        String maxIons = libFrags.get(0).getCutInfo();
         HashMap<Double, List<AnyPair<DataDO, DataSumDO>>> hitPairMap = new HashMap<>();
-
-        int[] ions50 = new int[rtMap.size()];
-        AtomicInteger iter = new AtomicInteger(0);
-        DataDO finalData = data;
-        rtMap.forEach((key, value) -> {
-            float maxIntensity = finalData.getIntMap().get(maxIons)[iter.get()];
-            IntegerPair pair = diaScorer.calcTotalIons(value.getMzArray(), value.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 50, 300, maxIntensity);
-            ions50[iter.get()] = pair.left();
-            iter.getAndIncrement();
-        });
-        data.setIonsLow(ions50);
         double bestScore = -99999d;
         AnyPair<DataDO, DataSumDO> bestPair = null;
-        AnyPair<DataDO, DataSumDO> bestIonsPair = null;
-
-        String removeCutInfo = "null";
-
+        DataDO data = null;
         //当i=0的时候,不切换,也就是说跳过了强度比最高的碎片,强度比最高的碎片不进行离子替换
         for (int i = -1; i < size; i++) {
-            String currentRemoveCutInfo = "null";
             //i==-1的时候检测的就是自己本身
             if (i != -1) {
                 FragmentInfo temp = libFrags.get(i);
                 libFrags.remove(i);
-                currentRemoveCutInfo = temp.getCutInfo();
                 coord.setFragments(libFrags);
                 libFrags.add(i, temp);
-                data = extractOne(coord, rtMap, params);
-                if (data == null) {
-                    continue;
-                }
-                data.setIonsLow(ions50);
+            }
+
+            data = extractOne(coord, rtMap, params);
+            if (data == null) {
+                continue;
             }
 
             try {
@@ -218,11 +194,7 @@ public class CoreFunc {
             }
 
             if (data.getPeakGroupList() != null) {
-                DataSumDO dataSum = scorer.calcBestTotalScore(data, overview, null);
-                double currentBYCount = scorer.calcBestIonsCount(data);
-//                if (currentBYCount > maxBYCount) {
-//                    maxBYCount = currentBYCount;
-//                }
+                DataSumDO dataSum = scorer.calcBestTotalScore(data, overview);
                 if (dataSum != null) {
                     if (!hitPairMap.containsKey(dataSum.getSelectedRt())) {
                         List<AnyPair<DataDO, DataSumDO>> pairs = new ArrayList<>();
@@ -261,27 +233,12 @@ public class CoreFunc {
             return null;
         }
 
-        bestPair.getLeft().getCutInfoMap().put(CutInfoConst.ION_COUNT, 0f);
-        float[] ionsFloatArray = new float[ions50.length];
-        for (int i = 0; i < ions50.length; i++) {
-            ionsFloatArray[i] = ions50[i];
-        }
-        bestPair.getLeft().getIntMap().put(CutInfoConst.ION_COUNT, ionsFloatArray);
         if (maxHitRt.get() != bestPair.getRight().getSelectedRt()) {
             log.info("有问题:" + run.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
         } else {
             log.info("RT吻合:" + run.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
         }
 
-//        double finalIonsCount = scorer.calcBestIonsCount(bestData);
-        //Max BYCount Limit
-//        if (maxBYCount != finalIonsCount && finalIonsCount <= 5) {
-////            log.info("未预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount);
-//            return null;
-//        }
-
-//        log.info(JSON.toJSONString(libFrags.stream().map(FragmentInfo::getCutInfo).collect(Collectors.toList())));
-//        log.info("预测到严格意义下的新碎片组合:" + coord.getPeptideRef() + ",IonsCount:" + finalBYCount + ",Remove CutInfo=" + removeCutInfo);
         return bestPair;
     }
 
@@ -374,7 +331,7 @@ public class CoreFunc {
             }
 
             if (buildData.getPeakGroupList() != null) {
-                DataSumDO dataSum = scorer.calcBestTotalScore(buildData, overview, maxLibIon);
+                DataSumDO dataSum = scorer.calcBestTotalScore(buildData, overview);
                 double currentBYCount = scorer.calcBestIonsCount(buildData);
                 if (currentBYCount > maxBYCount) {
                     maxBYCount = currentBYCount;
@@ -486,9 +443,9 @@ public class CoreFunc {
             //Step2. 常规选峰及打分,未满足条件的直接忽略
             dataDO = scorer.score(run, dataDO, coord, rtMap, params);
             lda.scoreForPeakGroups(dataDO.getPeakGroupList(), params.getBaseOverview().getWeights(), params.getBaseOverview().getParams().getMethod().getScore().getScoreTypes());
-            DataSumDO tempSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview(), null);
+            DataSumDO tempSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview());
             if (tempSum == null || tempSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
-                DataSumDO dataSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview(), null);
+                DataSumDO dataSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview());
                 if (dataSum == null || dataSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
                     AnyPair<DataDO, DataSumDO> pair = predictOneDelete(coord, rtMap, run, params.getBaseOverview(), params);
                     if (pair != null && pair.getLeft() != null) {

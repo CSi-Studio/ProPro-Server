@@ -144,8 +144,8 @@ public class Extractor {
             return Result.Error(rtMapResult.getErrorCode());
         }
 
-        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneNiubi(coord, rtMapResult.getData(), run, params);
-//        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneReplace(coord, rtMapResult.getData(), run, overview, params);
+//        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneNiubi(coord, rtMapResult.getData(), run, params);
+        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneDelete(coord, rtMapResult.getData(), run, overview, params);
         if (dataPair == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }

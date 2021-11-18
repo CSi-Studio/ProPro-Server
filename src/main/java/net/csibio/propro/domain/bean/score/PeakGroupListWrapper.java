@@ -14,7 +14,7 @@ public class PeakGroupListWrapper {
     /**
      * 时候检测到了峰组
      */
-    boolean featureFound;
+    boolean found;
 
     /**
      * 已经检测到的峰组
@@ -24,12 +24,18 @@ public class PeakGroupListWrapper {
     /**
      * 归一化的库强度Map,key为cutInfo
      */
-    HashMap<String, Double> normedIntMap;
+    HashMap<String, Double> normIntMap;
 
     public PeakGroupListWrapper() {
     }
 
-    public PeakGroupListWrapper(boolean isFeatureFound) {
-        this.featureFound = isFeatureFound;
+    public PeakGroupListWrapper(boolean isFound) {
+        this.found = isFound;
+    }
+
+    public PeakGroupListWrapper(List<PeakGroup> list, HashMap<String, Double> normIntMap) {
+        this.found = true;
+        this.list = list;
+        this.normIntMap = normIntMap;
     }
 }

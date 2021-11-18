@@ -107,8 +107,7 @@ public class SemiSupervise {
         } else {
             log.info("什么情况");
         }
-
-
+        
         //将PeptideList转换为Map
         Map<String, SelectedPeakGroup> selectedDataMap = selectedPeakGroupListV1.stream().filter(peakGroup -> !peakGroup.getDecoy()).collect(Collectors.toMap(SelectedPeakGroup::getPeptideRef, Function.identity()));
         RunDO run = runService.getById(overview.getRunId());

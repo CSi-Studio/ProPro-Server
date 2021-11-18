@@ -77,14 +77,16 @@ public class PeakIdentifier {
                             //选择得分较小的一组
                             if (selectedPeakGroupA.getTotalScore() < selectedPeakGroupB.getTotalScore()) {
                                 for (PeakGroup peakGroup : dataA.getPeakGroupList()) {
-                                    if (peakGroup.getApexRt().equals(selectedPeakGroupA.getApexRt())) {
+                                    if (peakGroup.getSelectedRt().equals(selectedPeakGroupA.getSelectedRt())) {
                                         peakGroup.setNotMine(true);
+                                        peakGroup.setOther(dataB.getPeptideRef());
                                     }
                                 }
                             } else {
                                 for (PeakGroup peakGroup : dataB.getPeakGroupList()) {
-                                    if (peakGroup.getApexRt().equals(selectedPeakGroupB.getApexRt())) {
+                                    if (peakGroup.getSelectedRt().equals(selectedPeakGroupB.getSelectedRt())) {
                                         peakGroup.setNotMine(true);
+                                        peakGroup.setOther(dataA.getPeptideRef());
                                     }
                                 }
                             }

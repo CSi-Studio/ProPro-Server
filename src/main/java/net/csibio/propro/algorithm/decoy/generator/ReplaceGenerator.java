@@ -40,8 +40,7 @@ public class ReplaceGenerator extends BaseGenerator {
 
         b.setName(target.charAt(origin.indexOf(b.getName())) + "");
         y.setName(target.charAt(origin.indexOf(y.getName())) + "");
-
-
+        
         for (FragmentInfo targetFi : peptide.getFragments()) {
             FragmentInfo decoyFi = new FragmentInfo();
             decoyFi.setCutInfo(targetFi.getCutInfo());

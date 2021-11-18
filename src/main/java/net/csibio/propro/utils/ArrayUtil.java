@@ -20,6 +20,14 @@ public class ArrayUtil {
         return list;
     }
 
+    public static float[] doubleTofloat(Double[] array) {
+        float[] f = new float[array.length];
+        for (int i = 0; i < array.length; i++) {
+            f[i] = array[i].floatValue();
+        }
+        return f;
+    }
+
     public static Double[] floatToDouble(float[] array) {
         Double[] d = new Double[array.length];
         for (int i = 0; i < array.length; i++) {
@@ -614,5 +622,30 @@ public class ArrayUtil {
         }
 
         return dArray;
+    }
+
+    /**
+     * 在目标数组中搜索目标值,返回离目标值最接近的值的索引位置
+     *
+     * @param array  一个已经排序的数组
+     * @param target 目标值
+     * @return 离目标值最近的值的索引
+     */
+    public static int binaryNearSearch(Double[] array, double target) {
+        int binarySearchIndex = Arrays.binarySearch(array, target);
+        int targetIndex = -1;
+        if (binarySearchIndex < 0) {
+            binarySearchIndex = -binarySearchIndex - 1;
+            if (binarySearchIndex == 0) {
+                targetIndex = 0;
+            } else {
+                double left = target - array[binarySearchIndex - 1];
+                double right = array[binarySearchIndex] - target;
+                targetIndex = left < right ? (binarySearchIndex - 1) : binarySearchIndex;
+            }
+        } else {
+            targetIndex = binarySearchIndex;
+        }
+        return targetIndex;
     }
 }

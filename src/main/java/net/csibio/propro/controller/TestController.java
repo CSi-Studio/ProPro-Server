@@ -226,7 +226,7 @@ public class TestController {
             peptideMap.values().forEach(data -> {
                 DataSumDO sum = sumMap.get(data.getPeptideRef());
                 if (sum != null && !sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())) {
-                    PeakGroup peakGroup = data.getPeakGroupList().stream().filter(peak -> peak.getApexRt().equals(sum.getApexRt())).findFirst().get();
+                    PeakGroup peakGroup = data.getPeakGroupList().stream().filter(peak -> peak.getSelectedRt().equals(sum.getApexRt())).findFirst().get();
                     double libPearson = peakGroup.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
                     double libDotprod = peakGroup.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
                     double isoOverlap = peakGroup.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes());
@@ -323,12 +323,27 @@ public class TestController {
         idNameList = idNameList.subList(0, 1);
         for (IdName idName : idNameList) {
             String overviewId = idName.id();
-
+            List<String> targetPeptideList = new ArrayList<>();
             OverviewDO overview = overviewService.getById(overviewId);
-            log.info("读取数据库信息中");
+            log.info("读取数据库信息中--" + overview.getRunName());
             Map<String, DataSumDO> sumMap = dataSumService.getAll(new DataSumQuery().setOverviewId(overviewId).setDecoy(false), DataSumDO.class, overview.getProjectId()).stream().collect(Collectors.toMap(DataSumDO::getPeptideRef, Function.identity()));
-            
+            Map<String, DataScore> dataMap = dataService.getAll(new DataQuery().setOverviewId(overviewId).setDecoy(false), DataScore.class, overview.getProjectId()).stream().collect(Collectors.toMap(DataScore::getPeptideRef, Function.identity()));
+            List<DataSumDO> sumList = sumMap.values().stream().filter(sum -> sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())).toList();
+            for (DataSumDO sum : sumList) {
+                DataScore data = dataMap.get(sum.getPeptideRef());
+                lda.scoreForPeakGroups(data.getPeakGroupList(), overview.getWeights(), overview.getParams().getMethod().getScore().getScoreTypes());
+                List<PeakGroup> peakGroupList = data.getPeakGroupList().stream().filter(peak -> peak.getTotalScore() > overview.getMinTotalScore()).toList();
+                if (peakGroupList.size() >= 2) {
+                    peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getTotalScore).reversed()).toList();
+                    if (peakGroupList.get(0).getTotalScore() - peakGroupList.get(1).getTotalScore() < 0.1) {
+                        targetPeptideList.add(data.getPeptideRef());
+                    }
+                }
+            }
+            log.info("相似组内肽段有:" + targetPeptideList.size());
+            log.info(JSON.toJSONString(targetPeptideList));
         }
+
 
         return Result.OK();
     }

@@ -86,8 +86,8 @@ public class RunDataVO {
         }
         if (dataSum != null) {
             BeanUtils.copyProperties(dataSum, this);
-            if (data != null && data.getPeakGroupList() != null && dataSum.getApexRt() != null) {
-                this.selectIndex = peakGroupList.stream().map(PeakGroup::getApexRt).toList().indexOf(dataSum.getApexRt());
+            if (data != null && data.getPeakGroupList() != null && dataSum.getSelectedRt() != null) {
+                this.selectIndex = peakGroupList.stream().map(PeakGroup::getSelectedRt).toList().indexOf(dataSum.getSelectedRt());
             }
         } else {
             if (status.equals(IdentifyStatus.WAIT.getCode())) {
@@ -103,8 +103,8 @@ public class RunDataVO {
         }
         if (dataSum != null) {
             BeanUtils.copyProperties(dataSum, this);
-            if (data != null && data.getPeakGroupList() != null && dataSum.getApexRt() != null) {
-                this.selectIndex = peakGroupList.stream().map(PeakGroup::getApexRt).toList().indexOf(dataSum.getApexRt());
+            if (data != null && data.getPeakGroupList() != null && dataSum.getSelectedRt() != null) {
+                this.selectIndex = peakGroupList.stream().map(PeakGroup::getSelectedRt).toList().indexOf(dataSum.getSelectedRt());
             }
         } else {
             if (status.equals(IdentifyStatus.WAIT.getCode())) {
