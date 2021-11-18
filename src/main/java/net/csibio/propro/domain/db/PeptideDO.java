@@ -114,8 +114,8 @@ public class PeptideDO extends BaseDO {
     Set<Float> fingerPrints; //肽段指纹
 
     public void clearDecoy() {
-        this.decoyFragments = null;
-        this.decoyUnimodMap = null;
+        this.decoyFragments = new ArrayList<>();
+        this.decoyUnimodMap = new HashMap<>();
         this.decoySequence = null;
     }
 
@@ -160,7 +160,7 @@ public class PeptideDO extends BaseDO {
         peptide.setMz(mz * charge / newCharge);
         return peptide;
     }
-    
+
     public Set<Float> getFingerPrints() {
         if (fingerPrints == null && fingerPrintsByte != null) {
             HashSet<Float> set = new HashSet<>();

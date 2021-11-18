@@ -30,6 +30,7 @@ public abstract class BaseGenerator {
 
     public void generate(List<PeptideDO> list) {
         for (PeptideDO target : list) {
+            target.clearDecoy();
             generate(target);
         }
         logger.info("伪肽段生成完毕,总计:" + list.size() + "个");

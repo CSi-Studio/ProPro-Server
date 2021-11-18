@@ -12,6 +12,8 @@ public class DataSumQuery extends PageQuery {
 
     String id;
 
+    List<String> ids;
+    
     String proteins;
 
     String overviewId;
@@ -23,7 +25,7 @@ public class DataSumQuery extends PageQuery {
     Boolean decoy;
 
     Integer status;
-    
+
     List<Integer> statusList;
 
     Double fdrStart;

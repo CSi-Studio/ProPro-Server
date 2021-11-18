@@ -99,9 +99,15 @@ public class SemiSupervise {
         statistics.errorStatistics(selectedPeakGroupListV1, params);
         giveDecoyFdr(selectedPeakGroupListV1);
 
+        double minTotalScore = Double.MIN_VALUE;
         //获取第一轮严格意义上的最小总分阈值
-        double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
-        log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
+        if (selectedPeakGroupListV1.stream().anyMatch(s -> s.getFdr() != null && s.getFdr() < params.getFdr())) {
+            minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
+            log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
+        } else {
+            log.info("什么情况");
+        }
+
 
         //将PeptideList转换为Map
         Map<String, SelectedPeakGroup> selectedDataMap = selectedPeakGroupListV1.stream().filter(peakGroup -> !peakGroup.getDecoy()).collect(Collectors.toMap(SelectedPeakGroup::getPeptideRef, Function.identity()));

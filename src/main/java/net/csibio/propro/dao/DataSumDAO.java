@@ -37,7 +37,9 @@ public class DataSumDAO extends BaseMultiDAO<DataSumDO, DataSumQuery> {
     @Override
     protected Query buildQueryWithoutPage(DataSumQuery dataSumQuery) {
         Query query = new Query();
-        if (StringUtils.isNotEmpty(dataSumQuery.getId())) {
+        if (dataSumQuery.getIds() != null && dataSumQuery.getIds().size() > 0) {
+            query.addCriteria(where("id").in(dataSumQuery.getIds()));
+        } else if (StringUtils.isNotEmpty(dataSumQuery.getId())) {
             query.addCriteria(where("id").is(dataSumQuery.getId()));
         }
         if (StringUtils.isNotEmpty(dataSumQuery.getOverviewId())) {

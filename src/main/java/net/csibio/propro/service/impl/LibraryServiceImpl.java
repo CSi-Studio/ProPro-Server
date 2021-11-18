@@ -2,6 +2,7 @@ package net.csibio.propro.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.decoy.generator.NicoGenerator;
+import net.csibio.propro.algorithm.decoy.generator.ReplaceGenerator;
 import net.csibio.propro.algorithm.decoy.generator.ShuffleGenerator;
 import net.csibio.propro.algorithm.parser.*;
 import net.csibio.propro.algorithm.stat.LibraryStat;
@@ -61,6 +62,8 @@ public class LibraryServiceImpl implements LibraryService {
     NicoGenerator nicoGenerator;
     @Autowired
     ShuffleGenerator shuffleGenerator;
+    @Autowired
+    ReplaceGenerator replaceGenerator;
 
     @Override
     public BaseDAO<LibraryDO, LibraryQuery> getBaseDAO() {
@@ -216,6 +219,9 @@ public class LibraryServiceImpl implements LibraryService {
                 break;
             case ShuffleGenerator.NAME:
                 shuffleGenerator.generate(peptideList);
+                break;
+            case ReplaceGenerator.NAME:
+                replaceGenerator.generate(peptideList);
                 break;
             default:
                 generator = ShuffleGenerator.NAME;

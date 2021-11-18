@@ -243,6 +243,11 @@ public class TestController {
         return Result.OK();
     }
 
+    /**
+     * 测试相似肽段覆盖率的代码
+     *
+     * @return
+     */
     @GetMapping(value = "/lms5")
     Result lms5() {
         String projectId = "613f5d8262cbcf5bb4345270";
@@ -301,6 +306,28 @@ public class TestController {
             log.info("相似组总计有:" + similarPeptides.size() + "组");
             similarPeptides.forEach(System.out::println);
 
+        }
+
+        return Result.OK();
+    }
+
+    /**
+     * 测试相似肽段覆盖率的代码
+     *
+     * @return
+     */
+    @GetMapping(value = "/lms6")
+    Result lms6() {
+        String projectId = "613f5d8262cbcf5bb4345270";
+        List<IdName> idNameList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), IdName.class);
+        idNameList = idNameList.subList(0, 1);
+        for (IdName idName : idNameList) {
+            String overviewId = idName.id();
+
+            OverviewDO overview = overviewService.getById(overviewId);
+            log.info("读取数据库信息中");
+            Map<String, DataSumDO> sumMap = dataSumService.getAll(new DataSumQuery().setOverviewId(overviewId).setDecoy(false), DataSumDO.class, overview.getProjectId()).stream().collect(Collectors.toMap(DataSumDO::getPeptideRef, Function.identity()));
+            
         }
 
         return Result.OK();

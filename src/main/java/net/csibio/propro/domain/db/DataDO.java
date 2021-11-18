@@ -78,7 +78,12 @@ public class DataDO extends BaseDO {
         this.setDecoy(coord.isDecoy());
         this.setLibRt(coord.getRt());
         this.setIrt(coord.getIrt());
-        this.setCutInfoMap(coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getMz().floatValue())));
+        try {
+            this.setCutInfoMap(coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getMz().floatValue())));
+        } catch (Exception e) {
+            System.out.println(peptideRef);
+        }
+
     }
 
     public DataDO clone() {

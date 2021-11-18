@@ -31,10 +31,10 @@ public class NicoGenerator extends BaseGenerator {
     LibraryTsvParser libraryTsvParser;
 
     @Override
-    public void generate(PeptideDO peptideDO) {
+    public void generate(PeptideDO peptide) {
 
-        String sequence = peptideDO.getSequence();
-        HashMap<Integer, String> unimodMap = peptideDO.getUnimodMap();
+        String sequence = peptide.getSequence();
+        HashMap<Integer, String> unimodMap = peptide.getUnimodMap();
 
         //最后一位是K,R时保持最后一位氨基酸位置不变
         char lastAcidChar = sequence.toUpperCase().charAt(sequence.length() - 1);
@@ -88,7 +88,7 @@ public class NicoGenerator extends BaseGenerator {
         }
 
         List<FragmentInfo> decoyFiList = new ArrayList<>();
-        for (FragmentInfo targetFi : peptideDO.getFragments()) {
+        for (FragmentInfo targetFi : peptide.getFragments()) {
             FragmentInfo decoyFi = new FragmentInfo();
             decoyFi.setCutInfo(targetFi.getCutInfo());
             decoyFi.setIntensity(targetFi.getIntensity());
@@ -127,9 +127,9 @@ public class NicoGenerator extends BaseGenerator {
             decoyFiList.add(decoyFi);
 
         }
-        peptideDO.setDecoyFragments(decoyFiList);
-        peptideDO.setDecoySequence(convertedSequence);
-        peptideDO.setDecoyUnimodMap(newUnimodMap);
+        peptide.setDecoyFragments(decoyFiList);
+        peptide.setDecoySequence(convertedSequence);
+        peptide.setDecoyUnimodMap(newUnimodMap);
     }
 
     private String singleConvert(String rawSequence) {

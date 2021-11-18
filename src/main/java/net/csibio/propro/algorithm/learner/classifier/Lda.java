@@ -42,9 +42,9 @@ public class Lda extends Classifier {
                 continue;
             }
             score(peptideList, ldaLearnData.getWeightsMap(), scoreTypes);
-            List<SelectedPeakGroup> featureScoresList = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.TotalScore.getName(), scoreTypes);
+            List<SelectedPeakGroup> selectedPeakGroups = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.TotalScore.getName(), scoreTypes);
             int count = 0;
-            ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
+            ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroups, learningParams);
             count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
             if (count > 0) {
                 log.info("本轮尝试有效果:检测结果:" + count + "个");

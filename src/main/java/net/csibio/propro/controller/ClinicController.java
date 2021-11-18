@@ -271,8 +271,7 @@ public class ClinicController {
             }
 
             List<PeptideRt> realRtList = dataSumService.getAll(new DataSumQuery(overview.getId()).setDecoy(false).setStatus(IdentifyStatus.SUCCESS.getCode()).setIsUnique(true), PeptideRt.class, projectId);
-
-
+            
             if (limitRts.size() != 0) {
                 Set<Float> finalLimitRts = limitRts;
                 realRtList = realRtList.stream().filter(p -> finalLimitRts.contains(p.apexRt().floatValue())).toList();
