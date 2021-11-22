@@ -5,7 +5,10 @@ import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.algorithm.core.CoreFunc;
 import net.csibio.propro.algorithm.fitter.LinearFitter;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
-import net.csibio.propro.algorithm.peak.*;
+import net.csibio.propro.algorithm.peak.GaussFilter;
+import net.csibio.propro.algorithm.peak.PeakGroupPicker;
+import net.csibio.propro.algorithm.peak.PeakPicker;
+import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.features.*;
 import net.csibio.propro.constants.enums.IdentifyStatus;
@@ -44,8 +47,6 @@ public class Scorer {
     PeakPicker peakPicker;
     @Autowired
     SignalToNoiseEstimator signalToNoiseEstimator;
-    @Autowired
-    ChromatogramPicker chromatogramPicker;
     @Autowired
     PeakGroupPicker peakGroupPicker;
     @Autowired
@@ -143,12 +144,13 @@ public class Scorer {
             float[] spectrumIntArray = mzIntensityPairs.getIntensityArray();
 
             xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
+            xicScorer.calculateLogSnScore(peakGroup, scoreTypes);
             diaScorer.calculateIsotopeScores(peakGroup, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, scoreTypes);
             diaScorer.calculateDiaMassDiffScore(productMzMap, spectrumMzArray, spectrumIntArray, normedLibIntMap, peakGroup, scoreTypes);
-            xicScorer.calculateLogSnScore(peakGroup, scoreTypes);
-            libraryScorer.calculateIntensityScore(peakGroup, params.getMethod().getScore().getScoreTypes());
+            libraryScorer.calculateIntensityScore(peakGroup, scoreTypes);
             libraryScorer.calculateNormRtScore(peakGroup, run.getIrt().getSi(), dataDO.getLibRt(), scoreTypes);
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scoreTypes);
+//            libraryScorer.calculateSpearmanScore(peakGroup, coord, scoreTypes);
             peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
             peakGroup.put(ScoreType.InitScore, peakGroup.getTotal(), scoreTypes);
         }
@@ -211,7 +213,7 @@ public class Scorer {
         double maxScore = -Double.MAX_VALUE;
         PeakGroup topPeakGroup = null;
         for (PeakGroup peakGroup : dataScore.getPeakGroupList()) {
-            if (peakGroup.getOther() != null) {
+            if (peakGroup.getNotMine()) {
                 continue;
             }
             Double targetScore = peakGroup.getTotalScore();
@@ -259,7 +261,6 @@ public class Scorer {
     public List<SelectedPeakGroup> findBestPeakGroupByTargetScoreType(List<DataScore> dataScoreList, String targetScoreType, List<String> scoreTypes) {
         List<SelectedPeakGroup> bestFeatureScoresList = new ArrayList<>();
         for (DataScore dataScore : dataScoreList) {
-
             if (dataScore.getPeakGroupList() == null || dataScore.getPeakGroupList().size() == 0) {
                 continue;
             }

@@ -54,14 +54,23 @@ public class ScoreUtil {
      * @param intensityList input intensity list
      * @return output normalized intensity list
      */
-    public static double[] normalizeSumDouble(List<Double> intensityList) {
-        double[] normalizedIntensity = new double[intensityList.size()];
-        double sum = 0d;
-        for (Double intensity : intensityList) {
-            sum += intensity;
+    public static Double[] normalizeSumDoubleArray(Double[] intensityList, double sum) {
+        Double[] normalizedIntensity = new Double[intensityList.length];
+        for (int i = 0; i < intensityList.length; i++) {
+            normalizedIntensity[i] = (intensityList[i] / sum);
         }
-        for (int i = 0; i < intensityList.size(); i++) {
-            normalizedIntensity[i] = (intensityList.get(i) / sum);
+        return normalizedIntensity;
+    }
+
+    public static Double[] normalizeSumDoubleArray(Double[] intensityList) {
+
+        double sum = 0d;
+        for (int i = 0; i < intensityList.length; i++) {
+            sum += intensityList[i];
+        }
+        Double[] normalizedIntensity = new Double[intensityList.length];
+        for (int i = 0; i < intensityList.length; i++) {
+            normalizedIntensity[i] = (intensityList[i] / sum);
         }
         return normalizedIntensity;
     }

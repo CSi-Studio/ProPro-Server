@@ -624,6 +624,18 @@ public class ArrayUtil {
         return dArray;
     }
 
+    public static double[] toPrimitive(Double[] array) {
+        if (array.length == 0) {
+            return new double[0];
+        }
+        double[] dArray = new double[array.length];
+        for (int i = 0; i < array.length; i++) {
+            dArray[i] = array[i];
+        }
+
+        return dArray;
+    }
+
     /**
      * 在目标数组中搜索目标值,返回离目标值最接近的值的索引位置
      *

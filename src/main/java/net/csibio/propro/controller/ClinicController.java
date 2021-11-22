@@ -152,7 +152,6 @@ public class ClinicController {
         List<RunDataVO> dataList = new ArrayList<>();
         PeptideDO peptide = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(peptideRef), PeptideDO.class);
 
-
         for (int i = 0; i < overviewIds.size(); i++) {
             String overviewId = overviewIds.get(i);
             OverviewDO overview = overviewService.getById(overviewId);
@@ -271,7 +270,7 @@ public class ClinicController {
             }
 
             List<PeptideRt> realRtList = dataSumService.getAll(new DataSumQuery(overview.getId()).setDecoy(false).setStatus(IdentifyStatus.SUCCESS.getCode()).setIsUnique(true), PeptideRt.class, projectId);
-            
+
             if (limitRts.size() != 0) {
                 Set<Float> finalLimitRts = limitRts;
                 realRtList = realRtList.stream().filter(p -> finalLimitRts.contains(p.apexRt().floatValue())).toList();

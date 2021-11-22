@@ -498,7 +498,6 @@ public class PeakGroupPicker {
         List<DoublePair> pairs = unSearchPeakGroup.getMaxPeaks4IonsHigh(); //所有的峰顶
         int maxIndex = ionsHigh.length - 1;
         for (DoublePair pair : pairs) {
-
             int apexRtIndex = ArrayUtil.binaryNearSearch(rtArray, pair.left());
 
             //如果搜到了两个极致
@@ -576,6 +575,7 @@ public class PeakGroupPicker {
             //取得[bestLeft,bestRight]对应范围的Intensity
             HashMap<String, Double[]> ionHullInt = new HashMap<>();
             HashMap<String, Double> ionIntensity = new HashMap<>();
+            HashMap<String, Double> apexIonIntensity = new HashMap<>();
             Double peakGroupInt = 0D;
             double signalToNoiseSum = 0d;
             String maxCutInfo = null;
@@ -603,6 +603,7 @@ public class PeakGroupPicker {
                 peakGroupInt += ionIntTemp;
                 //离子峰强度
                 ionIntensity.put(cutInfo, ionIntTemp);
+                apexIonIntensity.put(cutInfo, intArray[apexRtIndex]);
                 //信噪比
                 signalToNoiseSum += unSearchPeakGroup.getNoise1000Map().get(cutInfo)[apexRtIndex];
             }
@@ -615,6 +616,7 @@ public class PeakGroupPicker {
             peakGroup.setIntensitySum(peakGroupInt);
             peakGroup.setTic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
+            peakGroup.setApexIonsIntensity(apexIonIntensity);
             peakGroup.setSignalToNoiseSum(signalToNoiseSum);
             peakGroup.setMaxIon(maxCutInfo);
             peakGroup.setMaxIonIntensity(maxCutInfoIntensity);

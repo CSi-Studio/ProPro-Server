@@ -59,7 +59,7 @@ public class LearningParams {
     List<String> scoreTypes;
 
     //首批训练时默认作为主分数的分数类型
-    String mainScore = ScoreType.InitScore.getName();
+    String mainScore = ScoreType.TotalScore.getName();
 
     double progressiveRate = 0.8d;
 

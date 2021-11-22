@@ -88,6 +88,7 @@ public class PeptideDO extends BaseDO {
     /**
      * 对应的肽段碎片的信息
      * key为cutinfo
+     * 默认按照intensity从大到小排列
      */
     List<FragmentInfo> fragments = new ArrayList<>();
 

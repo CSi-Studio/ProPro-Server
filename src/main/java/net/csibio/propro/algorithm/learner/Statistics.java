@@ -149,12 +149,12 @@ public class Statistics {
         ErrorStat errorStat = errorStatistics(topTargets, topDecoys, learningParams);
 
         List<SelectedPeakGroup> bestScores = errorStat.getBestFeatureScoresList();
-        double[] qvalue_CutoffAbs = new double[bestScores.size()];
+        double[] qValueCutoffAbs = new double[bestScores.size()];
         for (int i = 0; i < bestScores.size(); i++) {
-            qvalue_CutoffAbs[i] = Math.abs(bestScores.get(i).getQValue() - cutoff);
+            qValueCutoffAbs[i] = Math.abs(bestScores.get(i).getQValue() - cutoff);
         }
-        int i0 = MathUtil.argmin(qvalue_CutoffAbs);
-        return bestScores.get(i0).getMainScore();
+        int k = MathUtil.argmin(qValueCutoffAbs);
+        return bestScores.get(k).getMainScore();
     }
 
     /**

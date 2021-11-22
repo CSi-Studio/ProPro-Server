@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -243,9 +244,7 @@ public class ElutionScorer {
         double sqrt2Pi = Math.sqrt(2 * Math.PI);
         double sqrt2 = Math.sqrt(2);
         double[] weight = new double[preparedPairs.getRtArray().length];
-        for (int i = 0; i < weight.length; i++) {
-            weight[i] = 1.0;
-        }
+        Arrays.fill(weight, 1.0);
 
         LevenbergMarquardt optimizer = new LevenbergMarquardt() {
             @Override

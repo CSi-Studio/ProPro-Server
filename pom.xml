@@ -103,11 +103,11 @@
             <artifactId>guava</artifactId>
             <version>30.1.1-jre</version>
         </dependency>
-
+        
         <dependency>
             <groupId>ml.dmlc</groupId>
-            <artifactId>xgboost4j</artifactId>
-            <version>0.90</version>
+            <artifactId>xgboost4j_2.12</artifactId>
+            <version>1.5.0</version>
         </dependency>
 
         <dependency>

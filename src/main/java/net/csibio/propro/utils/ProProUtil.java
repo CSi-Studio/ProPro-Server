@@ -436,8 +436,8 @@ public class ProProUtil {
 
         //每一轮开始前将上一轮的加权总分去掉
         for (DataScore ss : scores) {
-            for (PeakGroup sft : ss.getPeakGroupList()) {
-                sft.remove(ScoreType.TotalScore.getName(), scoreTypes);
+            for (PeakGroup peakGroup : ss.getPeakGroupList()) {
+                peakGroup.remove(ScoreType.TotalScore.getName(), scoreTypes);
             }
         }
 

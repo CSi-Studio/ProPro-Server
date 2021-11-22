@@ -21,7 +21,7 @@ public class PeakGroup extends BaseScores {
     //最接近apexRt的光谱rt值
     Double selectedRt;
 
-    //最终的强度总和
+    //所有碎片的最终的强度总和
     double intensitySum;
 
     //算法选定的峰形范围左侧最合适的RT
@@ -34,8 +34,6 @@ public class PeakGroup extends BaseScores {
     //最大强度碎片的强度
     Double maxIonIntensity;
 
-    String other;
-
     //中间计算变量,不需要存入数据库
     @Transient
     double tic;  //所有离子在所有RT上的Intensity总和
@@ -46,7 +44,9 @@ public class PeakGroup extends BaseScores {
     @Transient
     HashMap<String, Double[]> ionHullInt;
     @Transient
-    HashMap<String, Double> ionIntensity;
+    HashMap<String, Double> ionIntensity; //各个cutInfo在该peakGroup范围内的intensity总和
+    @Transient
+    HashMap<String, Double> apexIonsIntensity; //各个cutInfo在apex处的intensity
     @Transient
     Boolean notMine = false;
 

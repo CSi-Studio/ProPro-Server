@@ -70,8 +70,8 @@ public class PeakIdentifier {
                             DataScore dataA = dataMap.get(peptideA.getPeptideRef());
                             DataScore dataB = dataMap.get(peptideB.getPeptideRef());
                             //如果两组分数相同
-                            if (selectedPeakGroupA.getTotalScore().equals(selectedPeakGroupB.getTotalScore())) {
-                                log.info("两组的得分完全一样");
+                            if (Math.abs(selectedPeakGroupA.getTotalScore() - selectedPeakGroupB.getTotalScore()) < 0.1) {
+//                                log.info("两组的得分几乎一样");
                                 continue; //如果两组分数完全相同,那么不做处理
                             }
                             //选择得分较小的一组
@@ -79,14 +79,12 @@ public class PeakIdentifier {
                                 for (PeakGroup peakGroup : dataA.getPeakGroupList()) {
                                     if (peakGroup.getSelectedRt().equals(selectedPeakGroupA.getSelectedRt())) {
                                         peakGroup.setNotMine(true);
-                                        peakGroup.setOther(dataB.getPeptideRef());
                                     }
                                 }
                             } else {
                                 for (PeakGroup peakGroup : dataB.getPeakGroupList()) {
                                     if (peakGroup.getSelectedRt().equals(selectedPeakGroupB.getSelectedRt())) {
                                         peakGroup.setNotMine(true);
-                                        peakGroup.setOther(dataA.getPeptideRef());
                                     }
                                 }
                             }

@@ -13,8 +13,10 @@ public enum ScoreType {
     XcorrShape("↑XcorrShape", "互相关序列最大值的平均值"),
     XcorrShapeWeighted("↑XcorrShapeWeighted", "带权重的互相关序列最大值的平均值"),
     LibraryCorr("↑LibraryCorr", "对run和library intensity算Pearson相关系,当有干扰碎片的时候得分会很差"),
+    LibraryApexCorr("↑LibraryApexCorr", "对run和library intensity算Pearson相关系,当有干扰碎片的时候得分会很差"),
     LibraryDotprod("↑LibraryDotprod", ""),
     LibraryRsmd("↓LibraryRsmd", "对归一化后 库强度与实验强度的差平均值Avg(|LibInt-RunInt|)"),
+    //    LibrarySpearman("↑LibrarySpearman", "实验中碎片顺序与库中顺序的差别"),
     LibraryManhattan("↓LibraryManhattan", ""),
     LibrarySangle("↓LibrarySangle", ""),
     LibraryRootmeansquare("↓LibraryRootmeansquare", ""),
@@ -55,20 +57,6 @@ public enum ScoreType {
         }
         return scoreNameList;
     }
-
-    public static List<String> scoreTypes4Irt() {
-        List<String> scoreTypes4Irt = new ArrayList<>();
-        scoreTypes4Irt.add(ScoreType.TotalScore.getName());
-        scoreTypes4Irt.add(ScoreType.InitScore.getName());
-        scoreTypes4Irt.add(ScoreType.IonsDelta.getName());
-        scoreTypes4Irt.add(ScoreType.XcorrShape.getName());
-        scoreTypes4Irt.add(ScoreType.XcorrShapeWeighted.getName());
-        scoreTypes4Irt.add(ScoreType.XcorrCoelution.getName());
-        scoreTypes4Irt.add(ScoreType.XcorrCoelutionWeighted.getName());
-        scoreTypes4Irt.add(ScoreType.LibraryDotprod.getName());
-        return scoreTypes4Irt;
-    }
-
 
     public static List<String> usedScoreTypes() {
         List<String> scoreTypes = getAllTypesName();

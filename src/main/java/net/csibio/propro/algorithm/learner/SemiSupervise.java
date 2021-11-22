@@ -88,7 +88,9 @@ public class SemiSupervise {
                 lda.score(dataList, weightsMap, params.getScoreTypes());
                 finalResult.setWeightsMap(weightsMap);
             }
-            case xgboost -> xgboost.classifier(dataList, overview.fetchScoreTypes(), params);
+            case xgboost -> {
+                xgboost.classifier(dataList, overview.fetchScoreTypes(), params);
+            }
             default -> {
             }
         }
@@ -105,9 +107,9 @@ public class SemiSupervise {
             minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
             log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
         } else {
-            log.info("什么情况");
+            return finalResult;
         }
-        
+
         //将PeptideList转换为Map
         Map<String, SelectedPeakGroup> selectedDataMap = selectedPeakGroupListV1.stream().filter(peakGroup -> !peakGroup.getDecoy()).collect(Collectors.toMap(SelectedPeakGroup::getPeptideRef, Function.identity()));
         RunDO run = runService.getById(overview.getRunId());

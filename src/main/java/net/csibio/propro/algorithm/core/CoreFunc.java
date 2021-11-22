@@ -508,9 +508,9 @@ public class CoreFunc {
             DataUtil.compress(dataDO);
 
             //如果没有打分数据,那么对应的decoy也不再计算,以保持target与decoy 1:1的混合比例,这里需要注意的是,即便是scoreList是空,也需要将DataDO存储到数据库中,以便后续的重新统计和分析
-            if (dataDO.getPeakGroupList() == null) {
-                return;
-            }
+//            if (dataDO.getPeakGroupList() == null) {
+//                return;
+//            }
 
             coord.setDecoy(true);
             DataDO decoyData = extractOne(coord, rtMap, params);
