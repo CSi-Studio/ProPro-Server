@@ -34,7 +34,7 @@ public class Statistics {
         double std = MathUtil.std(decoyScoresArray, mean);
         double args;
         for (SelectedPeakGroup sfs : targetScores) {
-            args = (sfs.getMainScore() - mean) / std;
+            args = (sfs.getTotalScore() - mean) / std;
             sfs.setPValue(1 - (0.5 * (1.0 + MathUtil.erf(args / Math.sqrt(2.0)))));
         }
     }
@@ -120,7 +120,7 @@ public class Statistics {
             pEmpirical(sortedTargets, sortedDecoys);
         }
         Pi0Est pi0Est = new Pi0Est();
-        if (sortedTargets.get(0).getMainScore() > sortedDecoys.get(sortedDecoys.size() - 1).getMainScore()) {
+        if (sortedTargets.get(0).getTotalScore() > sortedDecoys.get(sortedDecoys.size() - 1).getTotalScore()) {
             pi0Est.setPi0(1d / Constants.PRECISION);
         } else {
             //estimate pi0;
@@ -154,7 +154,7 @@ public class Statistics {
             qValueCutoffAbs[i] = Math.abs(bestScores.get(i).getQValue() - cutoff);
         }
         int k = MathUtil.argmin(qValueCutoffAbs);
-        return bestScores.get(k).getMainScore();
+        return bestScores.get(k).getTotalScore();
     }
 
     /**

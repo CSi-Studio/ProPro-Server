@@ -162,7 +162,7 @@ public class ClinicController {
             //如果使用预测方法,则进行实时EIC获取
             if (predict) {
                 RunDO run = runService.getById(overview.getRunId());
-                DataSumDO existed = dataSumService.getOne(new DataSumQuery().setOverviewId(overview.getId()).setPeptideRef(peptideRef).setDecoy(false), DataSumDO.class, projectId);
+//                DataSumDO existed = dataSumService.getOne(new DataSumQuery().setOverviewId(overview.getId()).setPeptideRef(peptideRef).setDecoy(false), DataSumDO.class, projectId);
 //                if (existed.getStatus() == IdentifyStatus.SUCCESS.getCode()) {
 //                    DataDO existedData = dataService.getById(existed.getId(), projectId);
 //                    DataSumDO dataSum = scorer.calcBestTotalScore(existedData, overview, null);
@@ -171,7 +171,7 @@ public class ClinicController {
 //                    data.setAlias(run.getAlias());
 //                    data.setExpId(run.getId());
 //                } else {
-                peptide.setFragments(peptide.getFragments().stream().filter(f -> !f.getCutInfo().equals("y14^2")).toList());
+//                peptide.setFragments(peptide.getFragments().stream().filter(f -> !f.getCutInfo().equals("y14^2")).toList());
                 Result<RunDataVO> res = dataService.predictDataFromFile(run, peptide, changeCharge, overview.getId());
                 if (res.isSuccess()) {
                     data = res.getData();

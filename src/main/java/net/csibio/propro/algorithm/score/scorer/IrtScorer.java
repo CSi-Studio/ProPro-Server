@@ -65,7 +65,7 @@ public class IrtScorer {
             peakGroup.put(ScoreType.IonsDelta.getName(), (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes4Irt);
             double deltaWeight = (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount;
             peakGroup.put(ScoreType.IonsDelta, deltaWeight, scoreTypes4Irt);
-            peakGroup.put(ScoreType.TotalScore, totalScore(peakGroup, scoreTypes4Irt), scoreTypes4Irt);
+            peakGroup.setTotalScore(totalScore(peakGroup, scoreTypes4Irt));
         }
         data.setPeakGroupList(peakGroupList);
         return data;

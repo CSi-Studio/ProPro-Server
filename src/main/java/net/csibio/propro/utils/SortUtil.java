@@ -41,9 +41,9 @@ public class SortUtil {
             public int compare(SelectedPeakGroup o1, SelectedPeakGroup o2) {
                 try {
                     if (isDesc) {
-                        return o2.getMainScore().compareTo(o1.getMainScore());
+                        return o2.getTotalScore().compareTo(o1.getTotalScore());
                     } else {
-                        return o1.getMainScore().compareTo(o2.getMainScore());
+                        return o1.getTotalScore().compareTo(o2.getTotalScore());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

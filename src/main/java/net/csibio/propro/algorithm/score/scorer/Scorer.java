@@ -254,11 +254,9 @@ public class Scorer {
      * 以scoreType为主分数挑选出所有主分数最高的峰
      *
      * @param dataScoreList
-     * @param targetScoreType 需要作为主分数的分数
-     * @param scoreTypes      打分开始的时候所有参与打分的子分数快照列表
      * @return
      */
-    public List<SelectedPeakGroup> findBestPeakGroupByTargetScoreType(List<DataScore> dataScoreList, String targetScoreType, List<String> scoreTypes) {
+    public List<SelectedPeakGroup> findBestPeakGroup(List<DataScore> dataScoreList) {
         List<SelectedPeakGroup> bestFeatureScoresList = new ArrayList<>();
         for (DataScore dataScore : dataScoreList) {
             if (dataScore.getPeakGroupList() == null || dataScore.getPeakGroupList().size() == 0) {
@@ -271,14 +269,14 @@ public class Scorer {
                 if (peakGroup.getNotMine()) {
                     continue;
                 }
-                Double targetScore = peakGroup.get(targetScoreType, scoreTypes);
+                Double targetScore = peakGroup.getTotalScore();
                 if (targetScore != null && targetScore > maxScore) {
                     maxScore = targetScore;
                     topPeakGroup = peakGroup;
                 }
             }
             if (topPeakGroup != null) {
-                bestPeakGroup.setMainScore(topPeakGroup.get(targetScoreType, scoreTypes));
+                bestPeakGroup.setTotalScore(topPeakGroup.getTotalScore());
                 bestPeakGroup.setScores(topPeakGroup.getScores());
                 bestPeakGroup.setApexRt(topPeakGroup.getApexRt());
                 bestPeakGroup.setSelectedRt(topPeakGroup.getSelectedRt());
@@ -289,7 +287,7 @@ public class Scorer {
         return bestFeatureScoresList;
     }
 
-    public List<SelectedPeakGroup> findBestPeakGroupByTargetScoreTypeAndMinTotalScore(List<DataScore> dataScoreList, String targetScoreType, List<String> scoreTypes, Double minTotalScore) {
+    public List<SelectedPeakGroup> findBestPeakGroupByMinTotalScore(List<DataScore> dataScoreList, List<String> scoreTypes, Double minTotalScore) {
         List<SelectedPeakGroup> selectedPeakGroups = new ArrayList<>();
         for (DataScore dataScore : dataScoreList) {
             if (dataScore.getPeakGroupList() == null || dataScore.getPeakGroupList().size() == 0) {
@@ -301,7 +299,7 @@ public class Scorer {
             PeakGroup topPeakGroup = scorer.getBestPeakGroup(dataScore.getPeakGroupList(), minTotalScore, scoreTypes, null);
             if (topPeakGroup != null) {
                 selectedPeakGroup.setIonsLow(topPeakGroup.getIonsLow());
-                selectedPeakGroup.setMainScore(topPeakGroup.get(targetScoreType, scoreTypes));
+                selectedPeakGroup.setTotalScore(topPeakGroup.getTotalScore());
                 selectedPeakGroup.setScores(topPeakGroup.getScores());
                 selectedPeakGroup.setApexRt(topPeakGroup.getApexRt());
                 selectedPeakGroup.setSelectedRt(topPeakGroup.getSelectedRt());

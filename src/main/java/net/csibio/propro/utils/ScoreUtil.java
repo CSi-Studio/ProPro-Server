@@ -127,7 +127,7 @@ public class ScoreUtil {
     public static List<String> getScoreTypes(HttpServletRequest request) {
         List<String> scoreTypes = new ArrayList<>();
         scoreTypes.add(ScoreType.InitScore.getName());
-        scoreTypes.add(ScoreType.TotalScore.getName());
+//        scoreTypes.add(ScoreType.TotalScore.getName());
         for (ScoreType type : ScoreType.values()) {
             String typeParam = request.getParameter(type.getName());
             if (typeParam != null && typeParam.equals("on")) {

@@ -65,7 +65,6 @@ public class RunDataVO {
     //所在overview的最低分数阈值
     Double minTotalScore;
 
-
     public RunDataVO() {
     }
 

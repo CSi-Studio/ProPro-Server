@@ -1,14 +1,12 @@
 package net.csibio.propro.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.constants.constant.FdrConst;
 import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.ScoreData;
 import net.csibio.propro.domain.bean.learner.TrainAndTest;
 import net.csibio.propro.domain.bean.learner.TrainData;
-import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 
 import java.util.*;
@@ -323,7 +321,7 @@ public class ProProUtil {
     public static Double[] buildMainScoreArray(List<SelectedPeakGroup> scores, Boolean needToSort) {
         Double[] result = new Double[scores.size()];
         for (int i = 0; i < scores.size(); i++) {
-            result[i] = scores.get(i).getMainScore();
+            result[i] = scores.get(i).getTotalScore();
         }
         if (needToSort) {
             Arrays.sort(result);
@@ -361,7 +359,7 @@ public class ProProUtil {
     public static List<SelectedPeakGroup> peaksFilter(List<SelectedPeakGroup> trainTargets, double cutOff) {
         List<SelectedPeakGroup> peakScores = new ArrayList<>();
         for (SelectedPeakGroup i : trainTargets) {
-            if (i.getMainScore() >= cutOff) {
+            if (i.getTotalScore() >= cutOff) {
                 peakScores.add(i);
             }
         }
@@ -433,14 +431,6 @@ public class ProProUtil {
      * @return
      */
     public static TrainData split(List<DataScore> scores, double fraction, boolean isDebug, List<String> scoreTypes) {
-
-        //每一轮开始前将上一轮的加权总分去掉
-        for (DataScore ss : scores) {
-            for (PeakGroup peakGroup : ss.getPeakGroupList()) {
-                peakGroup.remove(ScoreType.TotalScore.getName(), scoreTypes);
-            }
-        }
-
         List<DataScore> targets = new ArrayList<>();
         List<DataScore> decoys = new ArrayList<>();
         //按照是否是伪肽段分为两个数组

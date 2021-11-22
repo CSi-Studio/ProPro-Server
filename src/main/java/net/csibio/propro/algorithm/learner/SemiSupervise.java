@@ -5,7 +5,6 @@ import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.learner.classifier.Xgboost;
 import net.csibio.propro.algorithm.peak.PeakIdentifier;
-import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
@@ -89,7 +88,7 @@ public class SemiSupervise {
                 finalResult.setWeightsMap(weightsMap);
             }
             case xgboost -> {
-                xgboost.classifier(dataList, overview.fetchScoreTypes(), params);
+                xgboost.classifier(dataList, params, overview.fetchScoreTypes());
             }
             default -> {
             }
@@ -97,7 +96,7 @@ public class SemiSupervise {
 
         //进行第一轮严格意义的初筛
         log.info("开始第一轮严格意义上的初筛");
-        List<SelectedPeakGroup> selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(dataList, ScoreType.TotalScore.getName(), overview.fetchScoreTypes());
+        List<SelectedPeakGroup> selectedPeakGroupListV1 = scorer.findBestPeakGroup(dataList);
         statistics.errorStatistics(selectedPeakGroupListV1, params);
         giveDecoyFdr(selectedPeakGroupListV1);
 
@@ -116,7 +115,7 @@ public class SemiSupervise {
         List<WindowRange> ranges = run.getWindowRanges();
 
         peakIdentifier.identify(overview.getRunId(), dataList, selectedDataMap, ranges, overview.getAnaLibId(), minTotalScore); //后置优化算法1->选择了相同rt的近似肽段做一个区分
-        List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreType(dataList, ScoreType.TotalScore.getName(), overview.fetchScoreTypes());
+        List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroup(dataList);
         //重新统计
         ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupListV2, params);
         giveDecoyFdr(selectedPeakGroupListV2);
@@ -173,7 +172,7 @@ public class SemiSupervise {
                 rightFeatureScore = selectedPeakGroup;
                 if (leftFeatureScore != null && !decoyPartList.isEmpty()) {
                     for (SelectedPeakGroup decoy : decoyPartList) {
-                        if (decoy.getMainScore() - leftFeatureScore.getMainScore() < rightFeatureScore.getMainScore() - decoy.getMainScore()) {
+                        if (decoy.getTotalScore() - leftFeatureScore.getTotalScore() < rightFeatureScore.getTotalScore() - decoy.getTotalScore()) {
                             decoy.setFdr(leftFeatureScore.getFdr());
                             decoy.setQValue(leftFeatureScore.getQValue());
                         } else {

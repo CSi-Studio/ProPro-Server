@@ -2,7 +2,6 @@ package net.csibio.propro.algorithm.learner.classifier;
 
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.learner.Statistics;
-import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.learner.LearningParams;
@@ -52,7 +51,8 @@ public abstract class Classifier {
                 for (Map.Entry<String, Double> entry : entries) {
                     addedScore += peakGroupScore.get(entry.getKey(), scoreTypes) * entry.getValue();
                 }
-                peakGroupScore.put(ScoreType.TotalScore.getName(), addedScore, scoreTypes);
+                peakGroupScore.setTotalScore(addedScore);
+//                peakGroupScore.put(ScoreType.TotalScore.getName(), addedScore, scoreTypes);
             }
         }
     }
@@ -67,26 +67,26 @@ public abstract class Classifier {
             for (Map.Entry<String, Double> entry : entries) {
                 addedScore += peakGroupScore.get(entry.getKey(), scoreTypes) * entry.getValue();
             }
-            peakGroupScore.put(ScoreType.TotalScore.getName(), addedScore, scoreTypes);
+            peakGroupScore.setTotalScore(addedScore);
         }
     }
 
-    public TrainPeaks selectTrainPeaks(TrainData trainData, String usedScoreType, LearningParams learningParams, Double cutoff) {
+    public TrainPeaks selectTrainPeaks(TrainData trainData, LearningParams learningParams, Double cutoff) {
 
-        List<SelectedPeakGroup> topTargetPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getTargets(), usedScoreType, learningParams.getScoreTypes());
-        List<SelectedPeakGroup> topDecoyPeaks = scorer.findBestPeakGroupByTargetScoreType(trainData.getDecoys(), usedScoreType, learningParams.getScoreTypes());
+        List<SelectedPeakGroup> topTargetPeaks = scorer.findBestPeakGroup(trainData.getTargets());
+        List<SelectedPeakGroup> topDecoyPeaks = scorer.findBestPeakGroup(trainData.getDecoys());
 
         Double cutoffNew;
         if (topTargetPeaks.size() < 100) {
             Double decoyMax = Double.MIN_VALUE, targetMax = Double.MIN_VALUE;
             for (SelectedPeakGroup scores : topDecoyPeaks) {
-                if (scores.getMainScore() > decoyMax) {
-                    decoyMax = scores.getMainScore();
+                if (scores.getTotalScore() > decoyMax) {
+                    decoyMax = scores.getTotalScore();
                 }
             }
             for (SelectedPeakGroup scores : topTargetPeaks) {
-                if (scores.getMainScore() > targetMax) {
-                    targetMax = scores.getMainScore();
+                if (scores.getTotalScore() > targetMax) {
+                    targetMax = scores.getTotalScore();
                 }
             }
             cutoffNew = (decoyMax + targetMax) / 2;

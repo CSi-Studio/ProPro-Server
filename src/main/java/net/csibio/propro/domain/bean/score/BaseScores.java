@@ -33,6 +33,9 @@ public class BaseScores {
      * scores.massdev_score 按spectrum intensity加权的mz与product mz的偏差ppm百分比之和
      * scores.weighted_massdev_score 按spectrum intensity加权的mz与product mz的偏差ppm百分比按libraryIntensity加权之和
      */
+    //加权总分
+    Double totalScore;
+
     Double[] scores;
 
     public void put(String typeName, Double score, List<String> scoreTypes) {
@@ -82,9 +85,5 @@ public class BaseScores {
         if (scores != null && index != -1) {
             scores[index] = null;
         }
-    }
-
-    public Double getTotalScore() {
-        return scores[0];
     }
 }

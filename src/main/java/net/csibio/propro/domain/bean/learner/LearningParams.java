@@ -1,7 +1,6 @@
 package net.csibio.propro.domain.bean.learner;
 
 import lombok.Data;
-import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.constants.enums.Classifier;
 
@@ -59,7 +58,7 @@ public class LearningParams {
     List<String> scoreTypes;
 
     //首批训练时默认作为主分数的分数类型
-    String mainScore = ScoreType.TotalScore.getName();
+//    String mainScore = ScoreType.TotalScore.getName();
 
     double progressiveRate = 0.8d;
 

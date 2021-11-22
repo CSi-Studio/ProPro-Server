@@ -33,7 +33,7 @@ public class SelectedPeakGroup extends BaseScores {
     Double intensitySum;
 
     //本峰对应的最终综合打分
-    Double mainScore;
+    Double totalScore;
 
     Double pValue;
 

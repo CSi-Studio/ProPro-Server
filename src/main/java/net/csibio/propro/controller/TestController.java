@@ -7,6 +7,7 @@ import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.learner.SemiSupervise;
 import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
+import net.csibio.propro.algorithm.learner.classifier.Xgboost;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.features.InitScorer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
@@ -66,6 +67,8 @@ public class TestController {
     @Autowired
     Lda lda;
     @Autowired
+    Xgboost xgboost;
+    @Autowired
     Statistics statistics;
     @Autowired
     Scorer scorer;
@@ -96,7 +99,7 @@ public class TestController {
         List<IdName> idNameList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), IdName.class);
         List<String> overviewIds = idNameList.stream().map(IdName::id).collect(Collectors.toList());
         overviewIds.clear();
-        overviewIds.add("61964761a329a247b874e64c");
+        overviewIds.add("619a44f1a6d4d22e6b55e129");
 
         log.info("一共overview" + overviewIds.size() + "个");
         boolean success = true;
@@ -130,16 +133,13 @@ public class TestController {
             log.info("开始第一轮严格意义上的初筛");
             List<SelectedPeakGroup> selectedPeakGroupListV1 = null;
             try {
-                selectedPeakGroupListV1 = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.TotalScore.getName(), overview.fetchScoreTypes());
+                selectedPeakGroupListV1 = scorer.findBestPeakGroup(peptideList);
                 statistics.errorStatistics(selectedPeakGroupListV1, params);
                 semiSupervise.giveDecoyFdr(selectedPeakGroupListV1);
                 //获取第一轮严格意义上的最小总分阈值
                 double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
                 log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
-                List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByTargetScoreTypeAndMinTotalScore(peptideList,
-                        ScoreType.TotalScore.getName(),
-                        overview.getParams().getMethod().getScore().getScoreTypes(),
-                        minTotalScore);
+                List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByMinTotalScore(peptideList, overview.fetchScoreTypes(), minTotalScore);
                 //重新统计
                 ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupListV2, params);
                 semiSupervise.giveDecoyFdr(selectedPeakGroupListV2);
@@ -153,6 +153,86 @@ public class TestController {
                 dataSumService.buildDataSumList(selectedPeakGroupListV2, params.getFdr(), overview, overview.getProjectId());
                 log.info("插入Sum数据" + selectedPeakGroupListV2.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
                 overview.setWeights(weightsMap);
+
+                semiSupervise.targetDecoyDistribution(selectedPeakGroupListV2, overview); //统计Target Decoy分布的函数
+                overviewService.update(overview);
+                overviewService.statistic(overview);
+
+                finalResult.setAllInfo(errorStat);
+                int count = ProProUtil.checkFdr(finalResult, params.getFdr());
+                if (count < 20000) {
+                    success = false;
+                    break;
+                }
+                log.info("合并打分完成,共找到新肽段" + count + "个");
+            } catch (Exception e) {
+                e.printStackTrace();
+                success = false;
+                break;
+            }
+
+        }
+
+        return Result.OK();
+    }
+
+    @GetMapping(value = "/lms2_1")
+    Result lms2_1() {
+        String projectId = "6166a5fd6113c157a6431ab9";
+        List<IdName> idNameList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), IdName.class);
+        List<String> overviewIds = idNameList.stream().map(IdName::id).collect(Collectors.toList());
+        overviewIds.clear();
+        overviewIds.add("619a44f1a6d4d22e6b55e129");
+
+        log.info("一共overview" + overviewIds.size() + "个");
+        boolean success = true;
+        for (String overviewId : overviewIds) {
+            OverviewDO overview = overviewService.getById(overviewId);
+            LearningParams params = new LearningParams();
+            params.setScoreTypes(overview.fetchScoreTypes());
+            params.setFdr(overview.getParams().getMethod().getClassifier().getFdr());
+
+            FinalResult finalResult = new FinalResult();
+
+            //Step1. 数据预处理
+            log.info("数据预处理");
+            params.setType(overview.getType());
+            //Step2. 从数据库读取全部含打分结果的数据
+            log.info("开始获取打分数据");
+            List<DataScore> peptideList = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), DataScore.class, overview.getProjectId());
+            if (peptideList == null || peptideList.size() == 0) {
+                log.info("没有合适的数据");
+                return null;
+            }
+            log.info("总计有待鉴定态肽段" + peptideList.size() + "个");
+
+            log.info("重新计算初始分完毕");
+            //Step3. 开始训练数据集
+            xgboost.classifier(peptideList, params, overview.fetchScoreTypes());
+
+            //进行第一轮严格意义的初筛
+            log.info("开始第一轮严格意义上的初筛");
+            List<SelectedPeakGroup> selectedPeakGroupListV1 = null;
+            try {
+                selectedPeakGroupListV1 = scorer.findBestPeakGroup(peptideList);
+                statistics.errorStatistics(selectedPeakGroupListV1, params);
+                semiSupervise.giveDecoyFdr(selectedPeakGroupListV1);
+                //获取第一轮严格意义上的最小总分阈值
+                double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
+                log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
+                List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByMinTotalScore(peptideList, overview.fetchScoreTypes(), minTotalScore);
+                //重新统计
+                ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupListV2, params);
+                semiSupervise.giveDecoyFdr(selectedPeakGroupListV2);
+
+                long start = System.currentTimeMillis();
+                //Step4. 对于最终的打分结果和选峰结果保存到数据库中, 插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
+                log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + selectedPeakGroupListV2.size() + "条数据,开始统计相关数据,FDR:" + params.getFdr());
+                minTotalScore = selectedPeakGroupListV2.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
+
+                log.info("最小阈值总分为:" + minTotalScore);
+                dataSumService.buildDataSumList(selectedPeakGroupListV2, params.getFdr(), overview, overview.getProjectId());
+                log.info("插入Sum数据" + selectedPeakGroupListV2.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
 
                 semiSupervise.targetDecoyDistribution(selectedPeakGroupListV2, overview); //统计Target Decoy分布的函数
                 overviewService.update(overview);

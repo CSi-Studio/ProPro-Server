@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component("lda")
@@ -43,7 +42,7 @@ public class Lda extends Classifier {
                 continue;
             }
             score(peptideList, ldaLearnData.getWeightsMap(), scoreTypes);
-            List<SelectedPeakGroup> selectedPeakGroups = scorer.findBestPeakGroupByTargetScoreType(peptideList, ScoreType.TotalScore.getName(), scoreTypes);
+            List<SelectedPeakGroup> selectedPeakGroups = scorer.findBestPeakGroup(peptideList);
             int count = 0;
             ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroups, learningParams);
             count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
@@ -65,7 +64,7 @@ public class Lda extends Classifier {
             TrainData trainData = ProProUtil.split(scores, learningParams.getTrainTestRatio(), learningParams.isDebug(), learningParams.getScoreTypes());
             TrainPeaks trainPeaks = selectFirstTrainPeaks(trainData, learningParams);
 
-            HashMap<String, Double> weightsMap = learn(trainPeaks, learningParams.getMainScore(), learningParams.getScoreTypes());
+            HashMap<String, Double> weightsMap = learn(trainPeaks, learningParams.getScoreTypes());
             log.info("Train Weight:" + JSONArray.toJSONString(weightsMap));
 
             //根据weightsMap计算子分数的加权总分
@@ -73,9 +72,9 @@ public class Lda extends Classifier {
             weightsMap = new HashMap<>();
             HashMap<String, Double> lastWeightsMap = new HashMap<>();
             for (int times = 0; times < learningParams.getXevalNumIter(); times++) {
-                TrainPeaks trainPeaksTemp = selectTrainPeaks(trainData, ScoreType.TotalScore.getName(), learningParams, learningParams.getSsIterationFdr());
+                TrainPeaks trainPeaksTemp = selectTrainPeaks(trainData, learningParams, learningParams.getSsIterationFdr());
                 lastWeightsMap = weightsMap;
-                weightsMap = learn(trainPeaksTemp, ScoreType.TotalScore.getName(), learningParams.getScoreTypes());
+                weightsMap = learn(trainPeaksTemp, learningParams.getScoreTypes());
                 log.info("Train Weight:" + JSONArray.toJSONString(weightsMap));
                 for (Double value : weightsMap.values()) {
                     if (value == null || Double.isNaN(value)) {
@@ -131,56 +130,55 @@ public class Lda extends Classifier {
         }
         TrainPeaks trainPeaks = new TrainPeaks();
         trainPeaks.setTopDecoys(decoyPeaks);
-
-        List<SelectedPeakGroup> targetPeaks = new ArrayList<>();
-        for (DataScore dataScore : trainData.getTargets()) {
-            PeakGroup topTarget = null;
-            double maxMainScore = -Double.MAX_VALUE;
-            for (PeakGroup peakGroupScore : dataScore.getPeakGroupList()) {
-                double mainScore = peakGroupScore.get(ScoreType.InitScore.getName(), scoreTypes);
-                if (mainScore > maxMainScore) {
-                    maxMainScore = mainScore;
-                    topTarget = peakGroupScore;
-                }
-            }
-
-            if (topTarget == null || topTarget.getScores() == null) {
-                log.error("Scores为空");
-                continue;
-            }
-
-            SelectedPeakGroup selectedPeakGroup = new SelectedPeakGroup();
-            selectedPeakGroup.setDecoy(dataScore.getDecoy());
-            selectedPeakGroup.setScores(topTarget.getScores());
-            targetPeaks.add(selectedPeakGroup);
-        }
-
-//        SelectedPeakGroup bestTargetScore = new SelectedPeakGroup(learningParams.getScoreTypes().size());
-//        bestTargetScore.setDecoy(false);
-//        bestTargetScore.put(ScoreType.InitScore.getName(), 3d, scoreTypes);
-//        bestTargetScore.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes);
-//        bestTargetScore.put(ScoreType.XcorrShapeWeighted.getName(), 1d, scoreTypes);
-//        bestTargetScore.put(ScoreType.XcorrCoelution.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.XcorrCoelutionWeighted.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.LibraryCorr.getName(), 1d, scoreTypes);
-//        bestTargetScore.put(ScoreType.LibraryApexCorr.getName(), 1d, scoreTypes);
-//        bestTargetScore.put(ScoreType.LibraryRsmd.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.LibrarySpearman.getName(), 1d, scoreTypes);
-//        bestTargetScore.put(ScoreType.LibraryManhattan.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.LibraryDotprod.getName(), 1d, scoreTypes);
-//        bestTargetScore.put(ScoreType.LibrarySangle.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.LogSnScore.getName(), 5d, scoreTypes);
-//        bestTargetScore.put(ScoreType.NormRtScore.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.IntensityScore.getName(), 1d, scoreTypes);
-//        bestTargetScore.put(ScoreType.IsoCorr.getName(), 1d, scoreTypes);
-//        bestTargetScore.put(ScoreType.IsoOverlap.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.MassdevScore.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.MassdevScoreWeighted.getName(), 0d, scoreTypes);
-//        bestTargetScore.put(ScoreType.IonsDelta.getName(), 0d, scoreTypes);
 //
-//        List<SelectedPeakGroup> bestTargets = new ArrayList<>();
-//        bestTargets.add(bestTargetScore);
-        trainPeaks.setBestTargets(targetPeaks);
+//        List<SelectedPeakGroup> targetPeaks = new ArrayList<>();
+//        for (DataScore dataScore : trainData.getTargets()) {
+//            PeakGroup topTarget = null;
+//            double maxMainScore = -Double.MAX_VALUE;
+//            for (PeakGroup peakGroupScore : dataScore.getPeakGroupList()) {
+//                double mainScore = peakGroupScore.get(ScoreType.InitScore.getName(), scoreTypes);
+//                if (mainScore > maxMainScore) {
+//                    maxMainScore = mainScore;
+//                    topTarget = peakGroupScore;
+//                }
+//            }
+//
+//            if (topTarget == null || topTarget.getScores() == null) {
+//                log.error("Scores为空");
+//                continue;
+//            }
+//
+//            SelectedPeakGroup selectedPeakGroup = new SelectedPeakGroup();
+//            selectedPeakGroup.setDecoy(dataScore.getDecoy());
+//            selectedPeakGroup.setScores(topTarget.getScores());
+//            targetPeaks.add(selectedPeakGroup);
+//        }
+
+        SelectedPeakGroup bestTargetScore = new SelectedPeakGroup(learningParams.getScoreTypes().size());
+        bestTargetScore.setDecoy(false);
+        bestTargetScore.put(ScoreType.InitScore.getName(), 3d, scoreTypes);
+        bestTargetScore.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.XcorrShapeWeighted.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.XcorrCoelution.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.XcorrCoelutionWeighted.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibraryCorr.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibraryApexCorr.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibraryRsmd.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibraryManhattan.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibraryDotprod.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibrarySangle.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.LogSnScore.getName(), 5d, scoreTypes);
+        bestTargetScore.put(ScoreType.NormRtScore.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.IntensityScore.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.IsoCorr.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.IsoOverlap.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.MassdevScore.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.MassdevScoreWeighted.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.IonsDelta.getName(), 0d, scoreTypes);
+
+        List<SelectedPeakGroup> bestTargets = new ArrayList<>();
+        bestTargets.add(bestTargetScore);
+        trainPeaks.setBestTargets(bestTargets);
         return trainPeaks;
     }
 
@@ -188,16 +186,15 @@ public class Lda extends Classifier {
      * 使用apache的svd库进行计算
      *
      * @param trainPeaks
-     * @param skipScoreType 需要在结果中剔除的主分数,如果为空则不删除
      * @return key为子分数的名称, value是该子分数的权重值
      */
-    public HashMap<String, Double> learn(TrainPeaks trainPeaks, String skipScoreType, List<String> scoreTypes) {
+    public HashMap<String, Double> learn(TrainPeaks trainPeaks, List<String> scoreTypes) {
 
         int row = trainPeaks.getBestTargets().size() + trainPeaks.getTopDecoys().size();
         if (row == 0) {
             log.error("训练数据集为空");
         }
-        int column = scoreTypes.contains(skipScoreType) ? (scoreTypes.size() - 1) : scoreTypes.size();
+        int column = scoreTypes.size();
 
         //先将需要进入学习的打分转化为二维矩阵
         RealMatrix scoresMatrix = MatrixUtils.createRealMatrix(row, column);
@@ -205,7 +202,7 @@ public class Lda extends Classifier {
         List<SelectedPeakGroup> totalPeakGroups = new ArrayList<>();
         totalPeakGroups.addAll(trainPeaks.getBestTargets());
         totalPeakGroups.addAll(trainPeaks.getTopDecoys());
-        assignment(scoresMatrix, labelVector, totalPeakGroups, skipScoreType, scoreTypes);
+        assignment(scoresMatrix, labelVector, totalPeakGroups, scoreTypes);
         //计算SVD的解
         SingularValueDecomposition solver = new SingularValueDecomposition(scoresMatrix);
         RealVector realVector = solver.getSolver().solve(labelVector);
@@ -214,9 +211,6 @@ public class Lda extends Classifier {
         HashMap<String, Double> weightsMap = new HashMap<>();
         int tempJ = 0;
         for (String key : scoreTypes) {
-            if (key.equals(skipScoreType)) {
-                continue;
-            }
             weightsMap.put(key, realVector.getEntry(tempJ));
             tempJ++;
         }
@@ -230,14 +224,13 @@ public class Lda extends Classifier {
         return weightsMap;
     }
 
-    private void assignment(RealMatrix xMatrix, RealVector yVector, List<SelectedPeakGroup> peakGroupList, String skipScoreType, List<String> scoreTypes) {
+    private void assignment(RealMatrix xMatrix, RealVector yVector, List<SelectedPeakGroup> peakGroupList, List<String> scoreTypes) {
 
-        List<String> usedScoreTypes = scoreTypes.stream().filter(s -> !s.equals(skipScoreType)).collect(Collectors.toList());
         for (int i = 0; i < peakGroupList.size(); i++) {
             yVector.setEntry(i, peakGroupList.get(i).getDecoy() ? 0 : 1);
             try {
-                for (int j = 0; j < usedScoreTypes.size(); j++) {
-                    xMatrix.setEntry(i, j, peakGroupList.get(i).get(usedScoreTypes.get(j), scoreTypes));
+                for (int j = 0; j < scoreTypes.size(); j++) {
+                    xMatrix.setEntry(i, j, peakGroupList.get(i).get(scoreTypes.get(j), scoreTypes));
                 }
             } catch (Exception e) {
                 log.error(e.getMessage());
