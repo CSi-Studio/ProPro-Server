@@ -3,10 +3,7 @@ package net.csibio.propro.utils;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.constants.constant.FdrConst;
 import net.csibio.propro.domain.bean.data.DataScore;
-import net.csibio.propro.domain.bean.learner.FinalResult;
-import net.csibio.propro.domain.bean.learner.ScoreData;
-import net.csibio.propro.domain.bean.learner.TrainAndTest;
-import net.csibio.propro.domain.bean.learner.TrainData;
+import net.csibio.propro.domain.bean.learner.*;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 
 import java.util.*;
@@ -397,7 +394,7 @@ public class ProProUtil {
         Integer[] decoyIds = getDecoyPeaks(groupNumId, isDecoy);
         Integer[] targetIds = getTargetPeaks(groupNumId, isDecoy);
 
-        if (isDebug) {
+        if (LearningParams.isDebug) {
             TreeSet<Integer> decoyIdSet = new TreeSet<Integer>(Arrays.asList(decoyIds));
             TreeSet<Integer> targetIdSet = new TreeSet<Integer>(Arrays.asList(targetIds));
 
@@ -427,10 +424,9 @@ public class ProProUtil {
      *
      * @param scores
      * @param fraction 切分比例,目前写死1:1,即0.5
-     * @param isDebug  是否取测试集
      * @return
      */
-    public static TrainData split(List<DataScore> scores, double fraction, boolean isDebug, List<String> scoreTypes) {
+    public static TrainData split(List<DataScore> scores, double fraction) {
         List<DataScore> targets = new ArrayList<>();
         List<DataScore> decoys = new ArrayList<>();
         //按照是否是伪肽段分为两个数组
@@ -443,7 +439,7 @@ public class ProProUtil {
         }
 
         //是否在调试程序,调试程序时需要保证每一次的随机结果都相同,因此不做随机打乱,而是每一次都按照PeptideRef进行排序
-        if (isDebug) {
+        if (LearningParams.isDebug) {
             SortUtil.sortByPeptideRef(targets);
             SortUtil.sortByPeptideRef(decoys);
         } else {

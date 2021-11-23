@@ -11,6 +11,7 @@ import net.csibio.propro.domain.bean.learner.TrainData;
 import net.csibio.propro.domain.bean.learner.TrainPeaks;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
+import net.csibio.propro.utils.ArrayUtil;
 import net.csibio.propro.utils.ProProUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,20 +42,21 @@ public class Xgboost extends Classifier {
 //            put("eval_metric", "auc");
 //            put("seed", "23");
             put("booster", "gbtree");
-            put("min_child_weight", 10);//cv
-            put("eta", 0.1);//0.01-0.2
-            put("max_depth", 4);//3-10,与max_leaf_nodes互斥
-//            put("silent", 0);
+            put("min_child_weight", 3);//cv
+            put("eta", 0.01);//0.01-0.2
+            put("max_depth", 3);//3-10,与max_leaf_nodes互斥
+            put("silent", 1);
 //            put("alpha", 1);
 //            put("lambda", 0.5);// 用于逻辑回归的时候L2正则选项
             put("objective", "binary:logitraw");
             put("eval_metric", "error");
+//            put("eval_metric", "auc");
             put("seed", "23");
             put("subsample", 0.5);
         }
     };
 
-    public void classifier(List<DataScore> scores, LearningParams learningParams, List<String> scoreTypes) {
+    public void classifier(List<DataScore> scores, LearningParams learningParams) {
         logger.info("开始训练Booster");
         Booster booster = learnRandomized(scores, learningParams);
         try {
@@ -71,27 +73,33 @@ public class Xgboost extends Classifier {
         }
     }
 
-    public Booster learnRandomized(List<DataScore> scores, LearningParams learningParams) {
+    public Booster learnRandomized(List<DataScore> scores, LearningParams params) {
         try {
             //Get part of scores as train input.
-            TrainData trainData = ProProUtil.split(scores, learningParams.getTrainTestRatio(), learningParams.isDebug(), learningParams.getScoreTypes());
+            TrainData trainData = ProProUtil.split(scores, params.getTrainTestRatio());
             //第一次训练数据集使用MainScore进行训练
             long startTime = System.currentTimeMillis();
-            TrainPeaks trainPeaks = selectTrainPeaks(trainData, learningParams, learningParams.getSsInitialFdr());
+            TrainPeaks trainPeaks = selectFirstTrainPeaks(trainData, params);
             logger.info("高可信Target个数：" + trainPeaks.getBestTargets().size());
-            Booster booster = train(trainPeaks, learningParams.getScoreTypes());
-            predict(booster, trainData, learningParams.getScoreTypes());
-            for (int times = 0; times < learningParams.getXevalNumIter(); times++) {
+            Booster booster = train(trainPeaks, params.getScoreTypes());
+            predict(booster, trainData, params.getScoreTypes());
+            for (int times = 0; times < params.getXevalNumIter(); times++) {
                 logger.info("开始第" + times + "轮训练");
-                TrainPeaks trainPeaksTemp = selectTrainPeaks(trainData, learningParams, learningParams.getXgbIterationFdr());
+                long start = System.currentTimeMillis();
+                TrainPeaks trainPeaksTemp = selectTrainPeaks(trainData, params, params.getXgbIterationFdr());
                 logger.info("高可信Target个数：" + trainPeaksTemp.getBestTargets().size());
-                booster = train(trainPeaksTemp, learningParams.getScoreTypes());
-                predict(booster, trainData, learningParams.getScoreTypes());
+                booster = train(trainPeaksTemp, params.getScoreTypes());
+                logger.info("训练耗时:" + (System.currentTimeMillis() - start));
+                start = System.currentTimeMillis();
+                predict(booster, trainData, params.getScoreTypes());
+                System.out.println("predict耗时:" + (System.currentTimeMillis() - start));
             }
+
+
             logger.info("总时间：" + (System.currentTimeMillis() - startTime));
             List<SelectedPeakGroup> featureScoresList = scorer.findBestPeakGroup(scores);
-            ErrorStat errorStat = statistics.errorStatistics(featureScoresList, learningParams);
-            int count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
+            ErrorStat errorStat = statistics.errorStatistics(featureScoresList, params);
+            int count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), params.getFdr());
             logger.info("Train count:" + count);
             return booster;
         } catch (Exception e) {
@@ -105,8 +113,9 @@ public class Xgboost extends Classifier {
         DMatrix trainMat = trainPeaksToDMatrix(trainPeaks, scoreTypes);
         Map<String, DMatrix> watches = new HashMap<>();
         watches.put("train", trainMat);
-
-        Booster booster = XGBoost.train(trainMat, this.params, 500, watches, null, null);
+        String[] metrics = null;
+//        String[] evalHist = XGBoost.crossValidation(trainMat, params, 5, 5, metrics, null, null);
+        Booster booster = XGBoost.train(trainMat, this.params, 5, watches, null, null);
         return booster;
     }
 
@@ -117,31 +126,29 @@ public class Xgboost extends Classifier {
     }
 
     public void predictAll(Booster booster, List<DataScore> scores, List<String> scoreTypes) throws XGBoostError {
-        int scoreTypesCount = scoreTypes.size() - 1;
-//        List<Float> testData = new ArrayList<>();
+        int scoreTypesCount = scoreTypes.size();
+        List<PeakGroup> peakGroupList = new ArrayList<>();
         for (DataScore dataScore : scores) {
-            for (PeakGroup peakGroupScore : dataScore.getPeakGroupList()) {
-                if (!dataScore.getDecoy() && !checkRationality(peakGroupScore, scoreTypes)) {
-                    peakGroupScore.setTotalScore(0d);
-                    continue;
-                }
-                float[] testData = new float[scoreTypesCount];
-                int tempIndex = 0;
-                for (String scoreName : scoreTypes) {
-                    testData[tempIndex] = peakGroupScore.get(scoreName, scoreTypes).floatValue();
-                    tempIndex++;
-                }
-                DMatrix dMatrix = new DMatrix(testData, 1, scoreTypesCount);
-                float[][] predicts = booster.predict(dMatrix);
-                double score = predicts[0][0];
-                peakGroupScore.setTotalScore(score);
-            }
+            peakGroupList.addAll(dataScore.getPeakGroupList());
+        }
+
+        float[] totalScoreArray = new float[peakGroupList.size() * scoreTypesCount];
+        int desPos = 0;
+        for (int i = 0; i < peakGroupList.size(); i++) {
+            float[] peakGroupX = ArrayUtil.doubleTofloat(peakGroupList.get(i).getScores());
+            System.arraycopy(peakGroupX, 0, totalScoreArray, desPos, peakGroupX.length);
+            desPos += peakGroupX.length;
+        }
+        DMatrix dMatrix = new DMatrix(totalScoreArray, peakGroupList.size(), scoreTypes.size(), 0f);
+        float[][] predicts = booster.predict(dMatrix, true);
+        for (int i = 0; i < peakGroupList.size(); i++) {
+            peakGroupList.get(i).setTotalScore((double) predicts[i][0]);
         }
     }
 
     public DMatrix trainPeaksToDMatrix(TrainPeaks trainPeaks, List<String> scoreTypes) throws XGBoostError {
         int totalLength = trainPeaks.getBestTargets().size() + trainPeaks.getTopDecoys().size();
-        int scoreTypesCount = scoreTypes.size() - 1;
+        int scoreTypesCount = scoreTypes.size();
 
         float[] trainData = new float[totalLength * scoreTypesCount];
         float[] trainLabel = new float[totalLength];
@@ -163,17 +170,8 @@ public class Xgboost extends Classifier {
             labelIndex++;
         }
 
-        DMatrix trainMat = new DMatrix(trainData, totalLength, scoreTypesCount);
+        DMatrix trainMat = new DMatrix(trainData, totalLength, scoreTypesCount, 0f);
         trainMat.setLabel(trainLabel);
         return trainMat;
-    }
-
-    private boolean checkRationality(PeakGroup peakGroupScore, List<String> scoreTypes) {
-//        if (peakGroupScore.get(ScoreType.XcorrShape.getName(), scoreTypes) < 0.5) {
-//            return false;
-//        } else {
-//            return true;
-//        }
-        return true;
     }
 }

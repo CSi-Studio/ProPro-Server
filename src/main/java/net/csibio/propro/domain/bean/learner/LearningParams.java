@@ -20,18 +20,15 @@ public class LearningParams {
 
     double trainTestRatio = 1;
 
-    int xevalNumIter = 20;
+    int xevalNumIter = 10;
 
-    double ssInitialFdr = 0.15;
+//    double ssInitialFdr = 0.15;
 
     double ssIterationFdr = 0.05; //0.1 3310; 0.08 3300; 0.05 3276
 
     double xgbInitialFdr = 0.01;
 
     double xgbIterationFdr = 0.008;
-
-    //训练数据集的次数
-    int trainTimes = 1;
 
     String ssMainScore = "var_xcorr_shape";
 
@@ -52,13 +49,10 @@ public class LearningParams {
 
     Double[] qvalues = {0.0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5};
 
-    boolean isDebug = false;
+    public static boolean isDebug = false;
 
     //用于打分的子分数模板快照,会和AnalyseDataDO中的每一个FeatureScore中的scores对象做一一映射
     List<String> scoreTypes;
-
-    //首批训练时默认作为主分数的分数类型
-//    String mainScore = ScoreType.TotalScore.getName();
 
     double progressiveRate = 0.8d;
 

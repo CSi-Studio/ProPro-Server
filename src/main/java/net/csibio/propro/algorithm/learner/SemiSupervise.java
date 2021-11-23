@@ -83,12 +83,15 @@ public class SemiSupervise {
         HashMap<String, Double> weightsMap = new HashMap<>();
         switch (params.getClassifier()) {
             case lda -> {
-                weightsMap = lda.classifier(dataList, params, overview.fetchScoreTypes());
-                lda.score(dataList, weightsMap, params.getScoreTypes());
+                weightsMap = lda.classifier(dataList, params);
+                if (weightsMap == null) {
+                    return finalResult;
+                }
+                lda.score(dataList, weightsMap, params.getScoreTypes()); //补全所有PeakGroup的TotalScore字段
                 finalResult.setWeightsMap(weightsMap);
             }
             case xgboost -> {
-                xgboost.classifier(dataList, params, overview.fetchScoreTypes());
+                xgboost.classifier(dataList, params);
             }
             default -> {
             }
@@ -212,7 +215,7 @@ public class SemiSupervise {
                 }
             }
         }
-
+        
         overviewDO.getStatistic().put(StatConst.TARGET_DIST, targetDistributions);
         overviewDO.getStatistic().put(StatConst.DECOY_DIST, decoyDistributions);
     }

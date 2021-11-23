@@ -73,7 +73,7 @@ public class LibraryScorer {
         //library_corr pearson 相关系数
         //需要的前置变量：dotprod, sum, 2sum
         if (scoreTypes.contains(ScoreType.LibraryCorr.getName())) {
-            double pearsonR = 0d;
+            double pearsonSum = 0d;
             if (DeveloperParams.USE_NEW_LIBRARY_SHIFT_SCORE) {
                 peakGroup.put(ScoreType.LibraryCorr.getName(), calculateLibraryShiftScore(normedLibInt, normedRunInt), scoreTypes);
             } else {
@@ -82,9 +82,17 @@ public class LibraryScorer {
                 if (runDeno <= Constants.MIN_DOUBLE || libDeno <= Constants.MIN_DOUBLE) {
                     peakGroup.put(ScoreType.LibraryCorr.getName(), 0d, scoreTypes);
                 } else {
-                    pearsonR = dotprod - runSum * librarySum / normedLibInt.length;
-                    pearsonR /= FastMath.sqrt(runDeno * libDeno);
-                    peakGroup.put(ScoreType.LibraryCorr.getName(), pearsonR, scoreTypes);
+                    pearsonSum = dotprod - runSum * librarySum / normedLibInt.length;
+                    pearsonSum /= FastMath.sqrt(runDeno * libDeno);
+
+                    //Apex处的pearson系数
+                    PearsonsCorrelation pearson = new PearsonsCorrelation();
+                    double pearsonApex = pearson.correlation(ArrayUtil.toPrimitive(normedLibInt), ArrayUtil.toPrimitive(normedApexRunInt));
+                    if (Double.isNaN(pearsonApex)) {
+                        pearsonApex = 0d;
+                    }
+                    peakGroup.put(ScoreType.LibraryCorr.getName(), Math.max(pearsonSum, pearsonApex), scoreTypes);
+                    peakGroup.put(ScoreType.LibraryCorr.getName(), pearsonApex, scoreTypes);
                 }
             }
 
@@ -94,7 +102,7 @@ public class LibraryScorer {
             if (Double.isNaN(pearsonResult)) {
                 pearsonResult = 0d;
             }
-            peakGroup.put(ScoreType.LibraryApexCorr.getName(), pearsonResult, scoreTypes);
+//            peakGroup.put(ScoreType.LibraryApexCorr.getName(), pearsonResult, scoreTypes);
         }
 
         double[] runSqrt = new double[runIntensity.length];

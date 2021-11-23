@@ -32,6 +32,7 @@ public class OverviewController {
 
     @GetMapping(value = "/list")
     Result list(OverviewQuery query) {
+        query.setPageSize(50);
         Result<List<OverviewDO>> result = overviewService.getList(query, OverviewDO.class);
         return result;
     }

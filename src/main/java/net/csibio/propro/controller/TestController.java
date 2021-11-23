@@ -125,7 +125,7 @@ public class TestController {
 
             log.info("重新计算初始分完毕");
             //Step3. 开始训练数据集
-            HashMap<String, Double> weightsMap = lda.classifier(peptideList, params, overview.fetchScoreTypes());
+            HashMap<String, Double> weightsMap = lda.classifier(peptideList, params);
             lda.score(peptideList, weightsMap, params.getScoreTypes());
             finalResult.setWeightsMap(weightsMap);
 
@@ -178,11 +178,11 @@ public class TestController {
 
     @GetMapping(value = "/lms2_1")
     Result lms2_1() {
-        String projectId = "6166a5fd6113c157a6431ab9";
+        String projectId = "613f5d8262cbcf5bb4345270";
         List<IdName> idNameList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), IdName.class);
         List<String> overviewIds = idNameList.stream().map(IdName::id).collect(Collectors.toList());
         overviewIds.clear();
-        overviewIds.add("619a44f1a6d4d22e6b55e129");
+        overviewIds.add("619b3907130b5f12ee620956");
 
         log.info("一共overview" + overviewIds.size() + "个");
         boolean success = true;
@@ -191,7 +191,6 @@ public class TestController {
             LearningParams params = new LearningParams();
             params.setScoreTypes(overview.fetchScoreTypes());
             params.setFdr(overview.getParams().getMethod().getClassifier().getFdr());
-
             FinalResult finalResult = new FinalResult();
 
             //Step1. 数据预处理
@@ -208,7 +207,7 @@ public class TestController {
 
             log.info("重新计算初始分完毕");
             //Step3. 开始训练数据集
-            xgboost.classifier(peptideList, params, overview.fetchScoreTypes());
+            xgboost.classifier(peptideList, params);
 
             //进行第一轮严格意义的初筛
             log.info("开始第一轮严格意义上的初筛");

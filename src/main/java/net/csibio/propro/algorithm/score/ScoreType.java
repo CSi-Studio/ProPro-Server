@@ -35,8 +35,7 @@ public enum ScoreType {
     String name;
 
     String desc;
-
-
+    
     ScoreType(String typeName, String description) {
         this.name = typeName;
         this.desc = description;

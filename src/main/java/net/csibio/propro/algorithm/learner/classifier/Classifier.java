@@ -2,6 +2,7 @@ package net.csibio.propro.algorithm.learner.classifier;
 
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.learner.Statistics;
+import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.learner.LearningParams;
@@ -12,10 +13,7 @@ import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 import net.csibio.propro.utils.ProProUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 分类器,目前有LDA和XGBoost两种
@@ -52,7 +50,6 @@ public abstract class Classifier {
                     addedScore += peakGroupScore.get(entry.getKey(), scoreTypes) * entry.getValue();
                 }
                 peakGroupScore.setTotalScore(addedScore);
-//                peakGroupScore.put(ScoreType.TotalScore.getName(), addedScore, scoreTypes);
             }
         }
     }
@@ -69,6 +66,68 @@ public abstract class Classifier {
             }
             peakGroupScore.setTotalScore(addedScore);
         }
+    }
+
+    /**
+     * 选择第一批初始数据集
+     *
+     * @param trainData
+     * @param learningParams
+     * @return
+     */
+    public TrainPeaks selectFirstTrainPeaks(TrainData trainData, LearningParams learningParams) {
+        List<SelectedPeakGroup> decoyPeaks = new ArrayList<>();
+        List<String> scoreTypes = learningParams.getScoreTypes();
+        for (DataScore dataScore : trainData.getDecoys()) {
+            PeakGroup topDecoy = null;
+            double maxMainScore = -Double.MAX_VALUE;
+            for (PeakGroup peakGroupScore : dataScore.getPeakGroupList()) {
+                double mainScore = peakGroupScore.get(ScoreType.InitScore.getName(), scoreTypes);
+                if (mainScore > maxMainScore) {
+                    maxMainScore = mainScore;
+                    topDecoy = peakGroupScore;
+                }
+            }
+
+            if (topDecoy == null || topDecoy.getScores() == null) {
+                log.error("Scores为空");
+                continue;
+            }
+
+            SelectedPeakGroup selectedPeakGroup = new SelectedPeakGroup();
+            selectedPeakGroup.setDecoy(dataScore.getDecoy());
+            selectedPeakGroup.setScores(topDecoy.getScores());
+            decoyPeaks.add(selectedPeakGroup);
+        }
+        TrainPeaks trainPeaks = new TrainPeaks();
+        trainPeaks.setTopDecoys(decoyPeaks);
+
+        SelectedPeakGroup bestTargetScore = new SelectedPeakGroup(learningParams.getScoreTypes().size());
+        bestTargetScore.setDecoy(false);
+        bestTargetScore.put(ScoreType.InitScore.getName(), 3d, scoreTypes);
+        bestTargetScore.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.XcorrShapeWeighted.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.XcorrCoelution.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.XcorrCoelutionWeighted.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibraryCorr.getName(), 1d, scoreTypes);
+//        bestTargetScore.put(ScoreType.LibraryApexCorr.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibraryRsmd.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibraryManhattan.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibraryDotprod.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.LibrarySangle.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.LogSnScore.getName(), 5d, scoreTypes);
+        bestTargetScore.put(ScoreType.NormRtScore.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.IntensityScore.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.IsoCorr.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.IsoOverlap.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.MassdevScore.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.MassdevScoreWeighted.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.IonsDelta.getName(), 0d, scoreTypes);
+
+        List<SelectedPeakGroup> bestTargets = new ArrayList<>();
+        bestTargets.add(bestTargetScore);
+        trainPeaks.setBestTargets(bestTargets);
+        return trainPeaks;
     }
 
     public TrainPeaks selectTrainPeaks(TrainData trainData, LearningParams learningParams, Double cutoff) {

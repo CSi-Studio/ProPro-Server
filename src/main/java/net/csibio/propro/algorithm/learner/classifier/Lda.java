@@ -3,10 +3,8 @@ package net.csibio.propro.algorithm.learner.classifier;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import lombok.extern.slf4j.Slf4j;
-import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.learner.*;
-import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
 import net.csibio.propro.utils.ProProUtil;
 import org.apache.commons.math3.linear.*;
@@ -25,43 +23,35 @@ public class Lda extends Classifier {
      * @param learningParams
      * @return
      */
-    public HashMap<String, Double> classifier(List<DataScore> peptideList, LearningParams learningParams, List<String> scoreTypes) {
+    public HashMap<String, Double> classifier(List<DataScore> peptideList, LearningParams learningParams) {
         log.info("开始训练学习数据权重");
         if (peptideList.size() < 500) {
             learningParams.setXevalNumIter(10);
             learningParams.setSsIterationFdr(0.02);
             learningParams.setProgressiveRate(0.8);
         }
-        int neval = learningParams.getTrainTimes();
-        List<HashMap<String, Double>> weightsMapList = new ArrayList<>();
-        for (int i = 0; i < neval; i++) {
-            log.info("开始第" + i + "轮尝试,总计" + neval + "轮");
-            LDALearnData ldaLearnData = learnRandomized(peptideList, learningParams);
-            if (ldaLearnData == null) {
-                log.info("跳过本轮训练");
-                continue;
-            }
-            score(peptideList, ldaLearnData.getWeightsMap(), scoreTypes);
-            List<SelectedPeakGroup> selectedPeakGroups = scorer.findBestPeakGroup(peptideList);
-            int count = 0;
-            ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroups, learningParams);
-            count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
-            if (count > 0) {
-                log.info("本轮尝试有效果:检测结果:" + count + "个");
-            }
-            weightsMapList.add(ldaLearnData.getWeightsMap());
-            if (learningParams.isDebug()) {
-                break;
-            }
+
+        LDALearnData ldaLearnData = learnRandomized(peptideList, learningParams);
+        if (ldaLearnData == null || ldaLearnData.getWeightsMap() == null) {
+            log.info("本轮训练失败");
+            return null;
+        }
+        score(peptideList, ldaLearnData.getWeightsMap(), learningParams.getScoreTypes());
+        List<SelectedPeakGroup> selectedPeakGroups = scorer.findBestPeakGroup(peptideList);
+        int count = 0;
+        ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroups, learningParams);
+        count = ProProUtil.checkFdr(errorStat.getStatMetrics().getFdr(), learningParams.getFdr());
+        if (count > 0) {
+            log.info("本轮尝试有效果:检测结果:" + count + "个");
         }
 
-        return ProProUtil.averagedWeights(weightsMapList);
+        return ldaLearnData.getWeightsMap();
     }
 
     public LDALearnData learnRandomized(List<DataScore> scores, LearningParams learningParams) {
         LDALearnData ldaLearnData = new LDALearnData();
         try {
-            TrainData trainData = ProProUtil.split(scores, learningParams.getTrainTestRatio(), learningParams.isDebug(), learningParams.getScoreTypes());
+            TrainData trainData = ProProUtil.split(scores, learningParams.getTrainTestRatio());
             TrainPeaks trainPeaks = selectFirstTrainPeaks(trainData, learningParams);
 
             HashMap<String, Double> weightsMap = learn(trainPeaks, learningParams.getScoreTypes());
@@ -97,90 +87,6 @@ public class Lda extends Classifier {
         }
     }
 
-    /**
-     * 选择第一批初始数据集
-     *
-     * @param trainData
-     * @param learningParams
-     * @return
-     */
-    private TrainPeaks selectFirstTrainPeaks(TrainData trainData, LearningParams learningParams) {
-        List<SelectedPeakGroup> decoyPeaks = new ArrayList<>();
-        List<String> scoreTypes = learningParams.getScoreTypes();
-        for (DataScore dataScore : trainData.getDecoys()) {
-            PeakGroup topDecoy = null;
-            double maxMainScore = -Double.MAX_VALUE;
-            for (PeakGroup peakGroupScore : dataScore.getPeakGroupList()) {
-                double mainScore = peakGroupScore.get(ScoreType.InitScore.getName(), scoreTypes);
-                if (mainScore > maxMainScore) {
-                    maxMainScore = mainScore;
-                    topDecoy = peakGroupScore;
-                }
-            }
-
-            if (topDecoy == null || topDecoy.getScores() == null) {
-                log.error("Scores为空");
-                continue;
-            }
-
-            SelectedPeakGroup selectedPeakGroup = new SelectedPeakGroup();
-            selectedPeakGroup.setDecoy(dataScore.getDecoy());
-            selectedPeakGroup.setScores(topDecoy.getScores());
-            decoyPeaks.add(selectedPeakGroup);
-        }
-        TrainPeaks trainPeaks = new TrainPeaks();
-        trainPeaks.setTopDecoys(decoyPeaks);
-//
-//        List<SelectedPeakGroup> targetPeaks = new ArrayList<>();
-//        for (DataScore dataScore : trainData.getTargets()) {
-//            PeakGroup topTarget = null;
-//            double maxMainScore = -Double.MAX_VALUE;
-//            for (PeakGroup peakGroupScore : dataScore.getPeakGroupList()) {
-//                double mainScore = peakGroupScore.get(ScoreType.InitScore.getName(), scoreTypes);
-//                if (mainScore > maxMainScore) {
-//                    maxMainScore = mainScore;
-//                    topTarget = peakGroupScore;
-//                }
-//            }
-//
-//            if (topTarget == null || topTarget.getScores() == null) {
-//                log.error("Scores为空");
-//                continue;
-//            }
-//
-//            SelectedPeakGroup selectedPeakGroup = new SelectedPeakGroup();
-//            selectedPeakGroup.setDecoy(dataScore.getDecoy());
-//            selectedPeakGroup.setScores(topTarget.getScores());
-//            targetPeaks.add(selectedPeakGroup);
-//        }
-
-        SelectedPeakGroup bestTargetScore = new SelectedPeakGroup(learningParams.getScoreTypes().size());
-        bestTargetScore.setDecoy(false);
-        bestTargetScore.put(ScoreType.InitScore.getName(), 3d, scoreTypes);
-        bestTargetScore.put(ScoreType.XcorrShape.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.XcorrShapeWeighted.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.XcorrCoelution.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.XcorrCoelutionWeighted.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.LibraryCorr.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.LibraryApexCorr.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.LibraryRsmd.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.LibraryManhattan.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.LibraryDotprod.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.LibrarySangle.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.LogSnScore.getName(), 5d, scoreTypes);
-        bestTargetScore.put(ScoreType.NormRtScore.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.IntensityScore.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.IsoCorr.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.IsoOverlap.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.MassdevScore.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.MassdevScoreWeighted.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.IonsDelta.getName(), 0d, scoreTypes);
-
-        List<SelectedPeakGroup> bestTargets = new ArrayList<>();
-        bestTargets.add(bestTargetScore);
-        trainPeaks.setBestTargets(bestTargets);
-        return trainPeaks;
-    }
 
     /**
      * 使用apache的svd库进行计算
