@@ -6,7 +6,7 @@ import java.util.List;
 public enum ScoreType {
 
     //    TotalScore("↑TotalScore", "根据权重算出的加权总分-加权总分的平均分"),
-    InitScore("↑InitScore", "初始打分"),
+//    InitScore("↑InitScore", "初始打分"),
     IonsDelta("↓IonsDelta", "该次运算中所有峰中最高离子数总和 - 对应的光谱图中可以检测到的符合该碎裂模式下的离子数量之和"),
     IsoCorr("↑IsoCorr", "碎片的同位素存在的可能性"),
     IsoOverlap("↓IsoOverlap", "碎片是其他肽段同位素的可能性,feature intensity加权的可能（带电量1-4）无法区分同位素峰值的平均发生次数之和"),

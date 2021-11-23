@@ -139,6 +139,7 @@ public class TraMLParser extends BaseLibraryParser {
         // parse rt, sequence, full name, protein name from peptideMap
         Peptide peptide = peptideMap.get(transition.getPeptideRef());
         String rt = peptide.getRetentionTimeList().get(0).getCvParams().get(0).getValue();
+        peptideDO.setPeptideRef(peptide.getId());
         peptideDO.setRt(Double.valueOf(rt));
         peptideDO.setSequence(peptide.getSequence());
         peptideDO.setProteins(PeptideUtil.parseProtein(peptide.getProteinRefList().get(0).getRef()));
@@ -146,7 +147,7 @@ public class TraMLParser extends BaseLibraryParser {
         for (CvParam cvParam : peptide.getCvParams()) {
             if (cvParam.getName().equals("charge state")) {
                 peptideDO.setCharge(Integer.valueOf(cvParam.getValue()));
-                peptideDO.setPeptideRef(peptideDO.getFullName() + "_" + peptideDO.getCharge());
+//                peptideDO.setPeptideRef(peptideDO.getFullName() + "_" + peptideDO.getCharge());
             }
         }
 

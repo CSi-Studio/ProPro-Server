@@ -10,7 +10,10 @@ import net.csibio.propro.algorithm.peak.PeakGroupPicker;
 import net.csibio.propro.algorithm.peak.PeakPicker;
 import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.algorithm.score.features.*;
+import net.csibio.propro.algorithm.score.features.DIAScorer;
+import net.csibio.propro.algorithm.score.features.ElutionScorer;
+import net.csibio.propro.algorithm.score.features.LibraryScorer;
+import net.csibio.propro.algorithm.score.features.XicScorer;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
@@ -61,8 +64,6 @@ public class Scorer {
     ElutionScorer elutionScorer;
     @Autowired
     LibraryScorer libraryScorer;
-    @Autowired
-    InitScorer initScorer;
     @Autowired
     LinearFitter linearFitter;
     @Autowired
@@ -144,8 +145,6 @@ public class Scorer {
             libraryScorer.calculateNormRtScore(peakGroup, run.getIrt().getSi(), dataDO.getLibRt(), scoreTypes);
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scoreTypes);
             peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
-//            peakGroup.put(ScoreType.InitScore, peakGroup.getTotal(), scoreTypes);
-            peakGroup.put(ScoreType.InitScore, 0d, scoreTypes);
         }
 
         dataDO.setStatus(IdentifyStatus.WAIT.getCode());
@@ -351,11 +350,11 @@ public class Scorer {
         int selectPeakGroupIndex = bestIndex;
         if (candidateIndexList.size() > 0 && bestIndex != -1) {
             //BY离子分与isotope分均高的才切换
-            double bestTotal = peakGroupList.get(bestIndex).get(ScoreType.InitScore, scoreTypes) + peakGroupList.get(bestIndex).getTotalScore();
+            double bestTotal = peakGroupList.get(bestIndex).getTotal();
             for (Integer index : candidateIndexList) {
                 //按照total分数进行排序
-                if (peakGroupList.get(index).get(ScoreType.InitScore, scoreTypes) + peakGroupList.get(index).getTotalScore() > bestTotal) {
-                    bestTotal = peakGroupList.get(index).get(ScoreType.InitScore, scoreTypes) + peakGroupList.get(index).getTotalScore();
+                if (peakGroupList.get(index).getTotal() > bestTotal) {
+                    bestTotal = peakGroupList.get(index).getTotal();
                     selectPeakGroupIndex = index;
                 }
             }

@@ -82,7 +82,7 @@ public abstract class Classifier {
             PeakGroup topDecoy = null;
             double maxMainScore = -Double.MAX_VALUE;
             for (PeakGroup peakGroupScore : dataScore.getPeakGroupList()) {
-                double mainScore = peakGroupScore.get(ScoreType.InitScore.getName(), scoreTypes);
+                double mainScore = peakGroupScore.get(ScoreType.Dotprod.getName(), scoreTypes);
                 if (mainScore > maxMainScore) {
                     maxMainScore = mainScore;
                     topDecoy = peakGroupScore;
@@ -104,7 +104,6 @@ public abstract class Classifier {
 
         SelectedPeakGroup bestTargetScore = new SelectedPeakGroup(learningParams.getScoreTypes().size());
         bestTargetScore.setDecoy(false);
-        bestTargetScore.put(ScoreType.InitScore.getName(), 3d, scoreTypes);
         bestTargetScore.put(ScoreType.CorrShape.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.CorrShapeW.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.CorrCoe.getName(), 0d, scoreTypes);

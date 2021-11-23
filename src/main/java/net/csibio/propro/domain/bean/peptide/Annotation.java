@@ -59,6 +59,6 @@ public class Annotation {
     }
 
     public String toCutInfo() {
-        return type + location + (charge == 1 ? "" : ("^" + charge))+(isBrotherIcon ? ("[" + (int)(deviation*100000) + "]") : "");
+        return type + location + (adjust == 0 ? "" : String.valueOf(adjust)) + (charge == 1 ? "" : ("^" + charge)) + (isBrotherIcon ? ("[" + (int) (deviation * 100000) + "]") : "");
     }
 }

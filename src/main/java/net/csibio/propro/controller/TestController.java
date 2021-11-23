@@ -9,7 +9,6 @@ import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.learner.classifier.Xgboost;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.algorithm.score.features.InitScorer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.Result;
@@ -72,8 +71,6 @@ public class TestController {
     Statistics statistics;
     @Autowired
     Scorer scorer;
-    @Autowired
-    InitScorer initScorer;
     @Autowired
     FragmentFactory fragmentFactory;
     @Autowired
