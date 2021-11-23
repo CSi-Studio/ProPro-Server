@@ -120,26 +120,20 @@ public class Scorer {
             productChargeMap.put(key, charge);
             productMzMap.put(key, value);
         });
-        HashMap<Double, MzIntensityPairs> peakSpecMap = new HashMap<>();
+        HashMap<Double, MzIntensityPairs> selectedSpectMap = new HashMap<>();
         int maxIonsCount = Arrays.stream(dataDO.getIonsLow()).max().getAsInt();
 
         for (PeakGroup peakGroup : peakGroupList) {
-            peakSpecMap.put(peakGroup.getSelectedRt(), rtMap.get(peakGroup.getSelectedRt().floatValue()));
+            selectedSpectMap.put(peakGroup.getSelectedRt(), rtMap.get(peakGroup.getSelectedRt().floatValue()));
         }
 
-        //如果数组长度超过20,则筛选ions数目最大的20个碎片
-        peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getIonsLow).reversed()).toList();
-        if (peakGroupList.size() > 20) {
-            log.info("PeakGroup数组过多,仅保留IonsLow前20的峰组:" + dataDO.getPeptideRef());
-            peakGroupList = peakGroupList.subList(0, 20);
-        }
         peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getSelectedRt)).collect(Collectors.toList());
 
         //开始对所有的PeakGroup进行打分
         for (PeakGroup peakGroup : peakGroupList) {
             peakGroup.initScore(scoreTypes.size());
             //根据RT时间和前体m/z获取最近的一个原始谱图
-            MzIntensityPairs mzIntensityPairs = peakSpecMap.get(peakGroup.getSelectedRt());
+            MzIntensityPairs mzIntensityPairs = selectedSpectMap.get(peakGroup.getSelectedRt());
             float[] spectrumMzArray = mzIntensityPairs.getMzArray();
             float[] spectrumIntArray = mzIntensityPairs.getIntensityArray();
 
@@ -150,7 +144,7 @@ public class Scorer {
             libraryScorer.calculateIntensityScore(peakGroup, scoreTypes);
             libraryScorer.calculateNormRtScore(peakGroup, run.getIrt().getSi(), dataDO.getLibRt(), scoreTypes);
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scoreTypes);
-//            libraryScorer.calculateSpearmanScore(peakGroup, coord, scoreTypes);
+            libraryScorer.calculateSpearmanScore(peakGroup, coord, scoreTypes);
             peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
             peakGroup.put(ScoreType.InitScore, peakGroup.getTotal(), scoreTypes);
         }
@@ -178,9 +172,9 @@ public class Scorer {
             peakGroup.initScore(2);
             List<String> scoreTypes = new ArrayList<>();
             scoreTypes.add(ScoreType.XcorrShape.getName());
-            scoreTypes.add(ScoreType.XcorrShapeWeighted.getName());
+            scoreTypes.add(ScoreType.XcorrShapeW.getName());
             xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
-            if (peakGroup.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes) < shapeScoreThreshold || peakGroup.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
+            if (peakGroup.get(ScoreType.XcorrShapeW.getName(), scoreTypes) < shapeScoreThreshold || peakGroup.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
                 continue;
             }
             peakGroup.setApexRt(peakGroup.getApexRt());

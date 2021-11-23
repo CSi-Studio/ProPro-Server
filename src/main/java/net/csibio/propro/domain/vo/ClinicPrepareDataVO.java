@@ -3,8 +3,8 @@ package net.csibio.propro.domain.vo;
 import lombok.Data;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.common.IdNameAlias;
+import net.csibio.propro.domain.bean.method.Method;
 import net.csibio.propro.domain.bean.overview.Overview4Clinic;
-import net.csibio.propro.domain.db.MethodDO;
 import net.csibio.propro.domain.db.ProjectDO;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public class ClinicPrepareDataVO {
     IdName anaLib;
     Long peptideCount;
     Long proteinCount;
-    MethodDO method;
+    Method method;
     Set<String> proteins;
     List<IdNameAlias> runList;
     Map<String, List<Overview4Clinic>> overviewMap; //key为runId

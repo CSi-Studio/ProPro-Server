@@ -115,6 +115,7 @@ public class AnalyzeController {
                 TaskDO task = new TaskDO(TaskTemplate.EXTRACT_PEAKPICK_SCORE, "Analyze-EPPS-" + project.getName());
                 taskService.insert(task);
                 AnalyzeParams params = new AnalyzeParams(method);
+                params.getMethod().getScore().setScoreTypes(ScoreType.getAllTypesName());
                 params.setAnaLibId(anaLib.getId());
                 params.setAnaLibName(anaLib.getName());
                 params.setInsLibId(finalInsLib.getId());

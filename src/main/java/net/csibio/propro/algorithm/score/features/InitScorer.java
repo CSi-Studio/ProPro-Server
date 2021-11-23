@@ -33,13 +33,13 @@ public class InitScorer {
 //        Double massdevScore = scores.get(ScoreType.MassdevScore.getName(), scoreTypes);
 //        massdevScore = (massdevScore == null ? 0 : massdevScore);
 
-        Double xcorrCoelution = scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes);
+        Double xcorrCoelution = scores.get(ScoreType.CorrCoelution.getName(), scoreTypes);
         xcorrCoelution = (xcorrCoelution == null ? 0 : xcorrCoelution);
 
 //        Double xcorrShape = scores.get(ScoreType.XcorrShape.getName(), scoreTypes);
 //        xcorrShape = (xcorrShape == null ? 0 : xcorrShape);
 
-        Double xcorrShapeWeight = scores.get(ScoreType.XcorrShapeWeighted.getName(), scoreTypes);
+        Double xcorrShapeWeight = scores.get(ScoreType.XcorrShapeW.getName(), scoreTypes);
         xcorrShapeWeight = (xcorrShapeWeight == null ? 0 : xcorrShapeWeight);
 
         Double ionsCountDeltaScore = scores.get(ScoreType.IonsDelta.getName(), scoreTypes);
@@ -85,7 +85,7 @@ public class InitScorer {
 //        Double massdevScore = scores.get(ScoreType.MassdevScore.getName(), scoreTypes);
 //        massdevScore = (massdevScore == null ? 0 : massdevScore);
 
-        Double xcorrCoelution = scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes);
+        Double xcorrCoelution = scores.get(ScoreType.CorrCoelution.getName(), scoreTypes);
         xcorrCoelution = (xcorrCoelution == null ? 0 : xcorrCoelution);
 
 //        Double xcorrShape = scores.get(ScoreType.XcorrShape.getName(), scoreTypes);

@@ -85,8 +85,8 @@ public class DIAScorer {
         if (scoreTypes.contains(ScoreType.MassdevScore.getName())) {
             scores.put(ScoreType.MassdevScore.getName(), ppmScore, scoreTypes);
         }
-        if (scoreTypes.contains(ScoreType.MassdevScoreWeighted.getName())) {
-            scores.put(ScoreType.MassdevScoreWeighted.getName(), ppmScoreWeighted, scoreTypes);
+        if (scoreTypes.contains(ScoreType.MassdevScoreW.getName())) {
+            scores.put(ScoreType.MassdevScoreW.getName(), ppmScoreWeighted, scoreTypes);
         }
     }
 

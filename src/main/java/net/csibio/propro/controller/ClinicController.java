@@ -16,6 +16,7 @@ import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.common.IdNameAlias;
 import net.csibio.propro.domain.bean.common.PeptideRtPairs;
 import net.csibio.propro.domain.bean.data.PeptideRt;
+import net.csibio.propro.domain.bean.method.Method;
 import net.csibio.propro.domain.bean.overview.Overview4Clinic;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.db.*;
@@ -85,10 +86,6 @@ public class ClinicController {
         if (insLib == null) {
             return Result.Error(ResultCode.INS_LIBRARY_NOT_EXISTED);
         }
-        MethodDO method = methodService.getById(project.getMethodId());
-        if (method == null) {
-            return Result.Error(ResultCode.METHOD_NOT_EXISTED);
-        }
         //TODO 王嘉伟 当overviewIds不为空的时候,检测他们的projectId, methodId, insId, anaId是否一致
 
         List<IdNameAlias> runList = null;
@@ -112,6 +109,14 @@ public class ClinicController {
         }
         data.setInsLib(new IdName(insLib.getId(), insLib.getName()));
         data.setAnaLib(new IdName(anaLib.getId(), anaLib.getName()));
+
+        Method method = null;
+        if (totalOverviewList.size() > 0) {
+            method = overviewService.getById(totalOverviewList.get(0).getId()).getParams().getMethod();
+        }
+        if (method == null) {
+            Result.Error(ResultCode.METHOD_NOT_EXISTED);
+        }
         data.setMethod(method);
         data.setProteins(anaLib.getProteins());
         data.setOverviewMap(overviewMap);

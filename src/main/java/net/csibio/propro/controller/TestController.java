@@ -291,8 +291,8 @@ public class TestController {
                 DataSumDO sum = sumMap.get(data.getPeptideRef());
                 if (sum != null && sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())) {
                     PeakGroup peakGroup = data.getPeakGroupList().stream().filter(peak -> peak.getSelectedRt().equals(sum.getSelectedRt())).findFirst().get();
-                    double libCorr = peakGroup.get(ScoreType.LibraryCorr, ScoreType.usedScoreTypes());
-                    double libDotprod = peakGroup.get(ScoreType.LibraryDotprod, ScoreType.usedScoreTypes());
+                    double libCorr = peakGroup.get(ScoreType.LibCorr, ScoreType.usedScoreTypes());
+                    double libDotprod = peakGroup.get(ScoreType.LibDotprod, ScoreType.usedScoreTypes());
                     double isoOverlap = peakGroup.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes());
                     if (libDotprod < 0.9 && libCorr < 0) {
                         stat.getAndIncrement();

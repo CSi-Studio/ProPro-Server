@@ -83,17 +83,17 @@ public class XicScorer {
         if (deltas.size() != 1) {
             stdDelta = Math.sqrt(sumDelta / (deltas.size() - 1));
         }
-        if (scoreTypes.contains(ScoreType.XcorrCoelution.getName())) {
-            peakGroup.put(ScoreType.XcorrCoelution.getName(), meanDelta + stdDelta, scoreTypes); //时间偏差
+        if (scoreTypes.contains(ScoreType.CorrCoelution.getName())) {
+            peakGroup.put(ScoreType.CorrCoelution.getName(), meanDelta + stdDelta, scoreTypes); //时间偏差
         }
-        if (scoreTypes.contains(ScoreType.XcorrCoelutionWeighted.getName())) {
-            peakGroup.put(ScoreType.XcorrCoelutionWeighted.getName(), sumDeltaWeighted, scoreTypes);
+        if (scoreTypes.contains(ScoreType.CorrCoelutionW.getName())) {
+            peakGroup.put(ScoreType.CorrCoelutionW.getName(), sumDeltaWeighted, scoreTypes);
         }
         if (scoreTypes.contains(ScoreType.XcorrShape.getName())) {
             peakGroup.put(ScoreType.XcorrShape.getName(), meanIntensity, scoreTypes); // 平均的吻合程度--> 新的吻合系数
         }
-        if (scoreTypes.contains(ScoreType.XcorrShapeWeighted.getName())) {
-            peakGroup.put(ScoreType.XcorrShapeWeighted.getName(), sumIntensityWeighted, scoreTypes);
+        if (scoreTypes.contains(ScoreType.XcorrShapeW.getName())) {
+            peakGroup.put(ScoreType.XcorrShapeW.getName(), sumIntensityWeighted, scoreTypes);
         }
     }
 
