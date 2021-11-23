@@ -82,11 +82,11 @@ public class DIAScorer {
                 e.printStackTrace();
             }
         }
-        if (scoreTypes.contains(ScoreType.MassdevScore.getName())) {
-            scores.put(ScoreType.MassdevScore.getName(), ppmScore, scoreTypes);
+        if (scoreTypes.contains(ScoreType.MassDev.getName())) {
+            scores.put(ScoreType.MassDev.getName(), ppmScore, scoreTypes);
         }
-        if (scoreTypes.contains(ScoreType.MassdevScoreW.getName())) {
-            scores.put(ScoreType.MassdevScoreW.getName(), ppmScoreWeighted, scoreTypes);
+        if (scoreTypes.contains(ScoreType.MassDevW.getName())) {
+            scores.put(ScoreType.MassDevW.getName(), ppmScoreWeighted, scoreTypes);
         }
     }
 

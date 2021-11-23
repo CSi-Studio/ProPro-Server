@@ -141,12 +141,11 @@ public class Scorer {
             xicScorer.calculateLogSnScore(peakGroup, scoreTypes);
             diaScorer.calculateIsotopeScores(peakGroup, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, scoreTypes);
             diaScorer.calculateDiaMassDiffScore(productMzMap, spectrumMzArray, spectrumIntArray, normedLibIntMap, peakGroup, scoreTypes);
-            libraryScorer.calculateIntensityScore(peakGroup, scoreTypes);
             libraryScorer.calculateNormRtScore(peakGroup, run.getIrt().getSi(), dataDO.getLibRt(), scoreTypes);
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scoreTypes);
-            libraryScorer.calculateSpearmanScore(peakGroup, coord, scoreTypes);
             peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
-            peakGroup.put(ScoreType.InitScore, peakGroup.getTotal(), scoreTypes);
+//            peakGroup.put(ScoreType.InitScore, peakGroup.getTotal(), scoreTypes);
+            peakGroup.put(ScoreType.InitScore, 0d, scoreTypes);
         }
 
         dataDO.setStatus(IdentifyStatus.WAIT.getCode());
@@ -171,10 +170,10 @@ public class Scorer {
         for (PeakGroup peakGroup : peakGroupList) {
             peakGroup.initScore(2);
             List<String> scoreTypes = new ArrayList<>();
-            scoreTypes.add(ScoreType.XcorrShape.getName());
-            scoreTypes.add(ScoreType.XcorrShapeW.getName());
+            scoreTypes.add(ScoreType.CorrShape.getName());
+            scoreTypes.add(ScoreType.CorrShapeW.getName());
             xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
-            if (peakGroup.get(ScoreType.XcorrShapeW.getName(), scoreTypes) < shapeScoreThreshold || peakGroup.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
+            if (peakGroup.get(ScoreType.CorrShapeW.getName(), scoreTypes) < shapeScoreThreshold || peakGroup.get(ScoreType.CorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
                 continue;
             }
             peakGroup.setApexRt(peakGroup.getApexRt());

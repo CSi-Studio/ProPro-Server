@@ -293,8 +293,8 @@ public class Extractor {
 
     public void calcIonsCount(DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap) {
         String maxIon = coord.getFragments().get(0).getCutInfo();
-        int[] ions50 = new int[dataDO.getRtArray().length];
-        int[] ions300 = new int[dataDO.getRtArray().length];
+        int[] ionsLow = new int[dataDO.getRtArray().length];
+        int[] ionsHigh = new int[dataDO.getRtArray().length];
         for (int i = 0; i < dataDO.getRtArray().length; i++) {
             MzIntensityPairs pairs = rtMap.get(dataDO.getRtArray()[i]);
             float[] maxIntensities = dataDO.getIntMap().get(maxIon); //获取该spectrum中maxIon的强度列表
@@ -306,12 +306,12 @@ public class Extractor {
             }
 
             IntegerPair pair = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 50f, 300f, maxIonIntensityInThisSpectrum);
-            ions50[i] = pair.left();
-            ions300[i] = pair.right();
+            ionsLow[i] = pair.left();
+            ionsHigh[i] = pair.right();
         }
 
-        dataDO.setIonsLow(ions50);
-        dataDO.setIonsHigh(ions300);
+        dataDO.setIonsLow(ionsLow);
+        dataDO.setIonsHigh(ionsHigh);
     }
 
     /**

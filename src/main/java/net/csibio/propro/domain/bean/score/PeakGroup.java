@@ -92,11 +92,11 @@ public class PeakGroup extends BaseScores {
         if (!base()) {
             return false;
         }
-        double shapeAvg = (this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) + this.get(ScoreType.XcorrShapeW, ScoreType.usedScoreTypes())) / 2;
-        double libDotProd = this.get(ScoreType.LibDotprod, ScoreType.usedScoreTypes());
-        double libCorr = this.get(ScoreType.LibCorr, ScoreType.usedScoreTypes());
+        double shapeAvg = (this.get(ScoreType.CorrShape, ScoreType.usedScoreTypes()) + this.get(ScoreType.CorrShapeW, ScoreType.usedScoreTypes())) / 2;
+        double libDotProd = this.get(ScoreType.Dotprod, ScoreType.usedScoreTypes());
+        double libCorr = this.get(ScoreType.Pearson, ScoreType.usedScoreTypes());
         double ionsCount = this.get(ScoreType.IonsDelta, ScoreType.usedScoreTypes());
-        double coelutionWeight = this.get(ScoreType.CorrCoelutionW, ScoreType.usedScoreTypes());
+        double coelutionWeight = this.get(ScoreType.CorrCoeW, ScoreType.usedScoreTypes());
         double isoForward = this.get(ScoreType.IsoCorr, ScoreType.usedScoreTypes());
         double isoBack = this.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes());
 
@@ -113,11 +113,11 @@ public class PeakGroup extends BaseScores {
         if (!base()) {
             return false;
         }
-        double shapeAvg = (this.get(ScoreType.XcorrShape, ScoreType.usedScoreTypes()) + this.get(ScoreType.XcorrShapeW, ScoreType.usedScoreTypes())) / 2;
-        double libDotProd = this.get(ScoreType.LibDotprod, ScoreType.usedScoreTypes());
-        double libCorr = this.get(ScoreType.LibCorr, ScoreType.usedScoreTypes());
+        double shapeAvg = (this.get(ScoreType.CorrShape, ScoreType.usedScoreTypes()) + this.get(ScoreType.CorrShapeW, ScoreType.usedScoreTypes())) / 2;
+        double libDotProd = this.get(ScoreType.Dotprod, ScoreType.usedScoreTypes());
+        double libCorr = this.get(ScoreType.Pearson, ScoreType.usedScoreTypes());
         double ionsCount = this.get(ScoreType.IonsDelta, ScoreType.usedScoreTypes());
-        double coelutionWeight = this.get(ScoreType.CorrCoelutionW, ScoreType.usedScoreTypes());
+        double coelutionWeight = this.get(ScoreType.CorrCoeW, ScoreType.usedScoreTypes());
         double isoForward = this.get(ScoreType.IsoCorr, ScoreType.usedScoreTypes());
         double isoBack = this.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes());
 
@@ -130,10 +130,10 @@ public class PeakGroup extends BaseScores {
     }
 
     public double getTotal() {
-        return this.get(ScoreType.XcorrShapeW, ScoreType.usedScoreTypes()) +
+        return this.get(ScoreType.CorrShapeW, ScoreType.usedScoreTypes()) +
 //                this.get(ScoreType.XcorrShapeW, ScoreType.usedScoreTypes()) +
-                this.get(ScoreType.LibCorr, ScoreType.usedScoreTypes()) +
-                this.get(ScoreType.LibDotprod, ScoreType.usedScoreTypes()) -
+                this.get(ScoreType.Pearson, ScoreType.usedScoreTypes()) +
+                this.get(ScoreType.Dotprod, ScoreType.usedScoreTypes()) -
                 this.get(ScoreType.IonsDelta, ScoreType.usedScoreTypes()) -
 //                this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes()) -
                 this.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes())

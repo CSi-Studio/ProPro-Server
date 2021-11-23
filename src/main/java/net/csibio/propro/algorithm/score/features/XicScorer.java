@@ -83,17 +83,17 @@ public class XicScorer {
         if (deltas.size() != 1) {
             stdDelta = Math.sqrt(sumDelta / (deltas.size() - 1));
         }
-        if (scoreTypes.contains(ScoreType.CorrCoelution.getName())) {
-            peakGroup.put(ScoreType.CorrCoelution.getName(), meanDelta + stdDelta, scoreTypes); //时间偏差
+        if (scoreTypes.contains(ScoreType.CorrCoe.getName())) {
+            peakGroup.put(ScoreType.CorrCoe.getName(), meanDelta + stdDelta, scoreTypes); //时间偏差
         }
-        if (scoreTypes.contains(ScoreType.CorrCoelutionW.getName())) {
-            peakGroup.put(ScoreType.CorrCoelutionW.getName(), sumDeltaWeighted, scoreTypes);
+        if (scoreTypes.contains(ScoreType.CorrCoeW.getName())) {
+            peakGroup.put(ScoreType.CorrCoeW.getName(), sumDeltaWeighted, scoreTypes);
         }
-        if (scoreTypes.contains(ScoreType.XcorrShape.getName())) {
-            peakGroup.put(ScoreType.XcorrShape.getName(), meanIntensity, scoreTypes); // 平均的吻合程度--> 新的吻合系数
+        if (scoreTypes.contains(ScoreType.CorrShape.getName())) {
+            peakGroup.put(ScoreType.CorrShape.getName(), meanIntensity, scoreTypes); // 平均的吻合程度--> 新的吻合系数
         }
-        if (scoreTypes.contains(ScoreType.XcorrShapeW.getName())) {
-            peakGroup.put(ScoreType.XcorrShapeW.getName(), sumIntensityWeighted, scoreTypes);
+        if (scoreTypes.contains(ScoreType.CorrShapeW.getName())) {
+            peakGroup.put(ScoreType.CorrShapeW.getName(), sumIntensityWeighted, scoreTypes);
         }
     }
 
@@ -103,9 +103,9 @@ public class XicScorer {
         double snScore = peakGroup.getSignalToNoiseSum();
         snScore /= peakGroup.getIonIntensity().size();
         if (snScore < 1) {
-            peakGroup.put(ScoreType.LogSnScore.getName(), 0d, scoreTypes);
+            peakGroup.put(ScoreType.LogSn.getName(), 0d, scoreTypes);
         } else {
-            peakGroup.put(ScoreType.LogSnScore.getName(), FastMath.log(snScore), scoreTypes);
+            peakGroup.put(ScoreType.LogSn.getName(), FastMath.log(snScore), scoreTypes);
         }
     }
 

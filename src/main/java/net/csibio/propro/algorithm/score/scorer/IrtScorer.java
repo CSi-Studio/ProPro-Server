@@ -83,12 +83,12 @@ public class IrtScorer {
 //             scores.get(ScoreType.LogSnScore.getName(), scoreTypes) * -0.72989582 +
 //        return scores.get(ScoreType.XcorrCoelution.getName(), scoreTypes) * (-0.09445371d) +
 //                scores.get(ScoreType.XcorrShape.getName(), scoreTypes) * -5.71823862d;
-        return scores.get(ScoreType.XcorrShape.getName(), scoreTypes) +
-                scores.get(ScoreType.XcorrShapeW.getName(), scoreTypes) +
-                scores.get(ScoreType.LibDotprod.getName(), scoreTypes) +
-                scores.get(ScoreType.LibCorr.getName(), scoreTypes) -
+        return scores.get(ScoreType.CorrShape.getName(), scoreTypes) +
+                scores.get(ScoreType.CorrShapeW.getName(), scoreTypes) +
+                scores.get(ScoreType.Dotprod.getName(), scoreTypes) +
+                scores.get(ScoreType.Pearson.getName(), scoreTypes) -
                 scores.get(ScoreType.IonsDelta.getName(), scoreTypes) -
-                scores.get(ScoreType.CorrCoelutionW.getName(), scoreTypes)
+                scores.get(ScoreType.CorrCoeW.getName(), scoreTypes)
 
                 ;
     }
