@@ -111,8 +111,16 @@ public class PeptideCoord {
 
     //根据自身构建IntensityMap,key为cutInfo,value为对应的Intensity值
     public Map<String, Float> buildIntensityMap() {
-        return getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getIntensity().floatValue()));
-//        return intensityMap;
+
+        try {
+            Map<String, Float> map = getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getIntensity().floatValue()));
+            return map;
+        } catch (Exception e) {
+            System.out.printf(peptideRef);
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public void setRtRange(double start, double end) {

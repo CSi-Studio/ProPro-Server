@@ -9,7 +9,6 @@ import net.csibio.propro.algorithm.learner.Statistics;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.learner.classifier.Xgboost;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.algorithm.score.features.InitScorer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.Result;
@@ -72,8 +71,6 @@ public class TestController {
     Statistics statistics;
     @Autowired
     Scorer scorer;
-    @Autowired
-    InitScorer initScorer;
     @Autowired
     FragmentFactory fragmentFactory;
     @Autowired
@@ -291,8 +288,8 @@ public class TestController {
                 DataSumDO sum = sumMap.get(data.getPeptideRef());
                 if (sum != null && sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())) {
                     PeakGroup peakGroup = data.getPeakGroupList().stream().filter(peak -> peak.getSelectedRt().equals(sum.getSelectedRt())).findFirst().get();
-                    double libCorr = peakGroup.get(ScoreType.LibCorr, ScoreType.usedScoreTypes());
-                    double libDotprod = peakGroup.get(ScoreType.LibDotprod, ScoreType.usedScoreTypes());
+                    double libCorr = peakGroup.get(ScoreType.Pearson, ScoreType.usedScoreTypes());
+                    double libDotprod = peakGroup.get(ScoreType.Dotprod, ScoreType.usedScoreTypes());
                     double isoOverlap = peakGroup.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes());
                     if (libDotprod < 0.9 && libCorr < 0) {
                         stat.getAndIncrement();

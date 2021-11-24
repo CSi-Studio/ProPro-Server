@@ -6,14 +6,12 @@ import net.csibio.propro.algorithm.fitter.LinearFitter;
 import net.csibio.propro.algorithm.peak.PeakPicker;
 import net.csibio.propro.algorithm.score.scorer.IrtScorer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
-import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.ListPairs;
 import net.csibio.propro.domain.bean.common.Pair;
 import net.csibio.propro.domain.bean.irt.IrtResult;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.bean.score.ScoreRtPair;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.RunDO;
@@ -86,11 +84,11 @@ public abstract class Irt {
      * @return irt结果
      */
     protected Result<IrtResult> align(List<DataDO> dataList, AnalyzeParams params) throws Exception {
-        List<List<ScoreRtPair>> scoreRtList = new ArrayList<>();
         List<Double> compoundRt = new ArrayList<>();
         double minGroupRt = Double.MAX_VALUE;
         double maxGroupRt = -Double.MAX_VALUE;
         dataList = dataList.stream().sorted(Comparator.comparing(DataDO::getLibRt)).toList();
+        List<DataDO> selectedDataList = new ArrayList<>();
         for (DataDO data : dataList) {
 
             double groupRt = data.getLibRt();
@@ -102,15 +100,14 @@ public abstract class Irt {
             }
 
             data = irtScorer.score(data, params);
-//            scoreRtPairs = scoreRtPairs.stream().sorted(Comparator.comparing(ScoreRtPair::getScore).reversed()).toList();
             if (data.getPeakGroupList() == null || data.getPeakGroupList().size() == 0) {
                 continue;
             }
-//            scoreRtList.add(scoreRtPairs);
+            selectedDataList.add(data);
             compoundRt.add(groupRt);
         }
 
-        List<Pair> pairs = findBestFeature(dataList, compoundRt);
+        List<Pair> pairs = findBestFeature(selectedDataList, compoundRt);
         double delta = (maxGroupRt - minGroupRt) / 30d;
         List<Pair> pairsCorrected = selectPairs(pairs, delta);
 
@@ -163,11 +160,13 @@ public abstract class Irt {
                     runRt = peakGroupList.get(j).getApexRt();
                 }
             }
-            if (Constants.ESTIMATE_BEST_PEPTIDES && max < Constants.OVERALL_QUALITY_CUTOFF) {
+            if (max < 1d) {
                 continue;
             }
             pairs.add(new Pair(rt.get(i), runRt));
+            log.info(dataList.get(i).getPeptideRef() + "RT:" + runRt + ", Max Total Score:" + max);
         }
+
         return pairs;
     }
 

@@ -10,7 +10,10 @@ import net.csibio.propro.algorithm.peak.PeakGroupPicker;
 import net.csibio.propro.algorithm.peak.PeakPicker;
 import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.algorithm.score.features.*;
+import net.csibio.propro.algorithm.score.features.DIAScorer;
+import net.csibio.propro.algorithm.score.features.ElutionScorer;
+import net.csibio.propro.algorithm.score.features.LibraryScorer;
+import net.csibio.propro.algorithm.score.features.XicScorer;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
@@ -61,8 +64,6 @@ public class Scorer {
     ElutionScorer elutionScorer;
     @Autowired
     LibraryScorer libraryScorer;
-    @Autowired
-    InitScorer initScorer;
     @Autowired
     LinearFitter linearFitter;
     @Autowired
@@ -141,12 +142,9 @@ public class Scorer {
             xicScorer.calculateLogSnScore(peakGroup, scoreTypes);
             diaScorer.calculateIsotopeScores(peakGroup, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, scoreTypes);
             diaScorer.calculateDiaMassDiffScore(productMzMap, spectrumMzArray, spectrumIntArray, normedLibIntMap, peakGroup, scoreTypes);
-            libraryScorer.calculateIntensityScore(peakGroup, scoreTypes);
             libraryScorer.calculateNormRtScore(peakGroup, run.getIrt().getSi(), dataDO.getLibRt(), scoreTypes);
             libraryScorer.calculateLibraryScores(peakGroup, normedLibIntMap, scoreTypes);
-            libraryScorer.calculateSpearmanScore(peakGroup, coord, scoreTypes);
             peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
-            peakGroup.put(ScoreType.InitScore, peakGroup.getTotal(), scoreTypes);
         }
 
         dataDO.setStatus(IdentifyStatus.WAIT.getCode());
@@ -171,10 +169,10 @@ public class Scorer {
         for (PeakGroup peakGroup : peakGroupList) {
             peakGroup.initScore(2);
             List<String> scoreTypes = new ArrayList<>();
-            scoreTypes.add(ScoreType.XcorrShape.getName());
-            scoreTypes.add(ScoreType.XcorrShapeW.getName());
+            scoreTypes.add(ScoreType.CorrShape.getName());
+            scoreTypes.add(ScoreType.CorrShapeW.getName());
             xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
-            if (peakGroup.get(ScoreType.XcorrShapeW.getName(), scoreTypes) < shapeScoreThreshold || peakGroup.get(ScoreType.XcorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
+            if (peakGroup.get(ScoreType.CorrShapeW.getName(), scoreTypes) < shapeScoreThreshold || peakGroup.get(ScoreType.CorrShape.getName(), scoreTypes) < shapeScoreThreshold) {
                 continue;
             }
             peakGroup.setApexRt(peakGroup.getApexRt());
@@ -352,11 +350,11 @@ public class Scorer {
         int selectPeakGroupIndex = bestIndex;
         if (candidateIndexList.size() > 0 && bestIndex != -1) {
             //BY离子分与isotope分均高的才切换
-            double bestTotal = peakGroupList.get(bestIndex).get(ScoreType.InitScore, scoreTypes) + peakGroupList.get(bestIndex).getTotalScore();
+            double bestTotal = peakGroupList.get(bestIndex).getTotal();
             for (Integer index : candidateIndexList) {
                 //按照total分数进行排序
-                if (peakGroupList.get(index).get(ScoreType.InitScore, scoreTypes) + peakGroupList.get(index).getTotalScore() > bestTotal) {
-                    bestTotal = peakGroupList.get(index).get(ScoreType.InitScore, scoreTypes) + peakGroupList.get(index).getTotalScore();
+                if (peakGroupList.get(index).getTotal() > bestTotal) {
+                    bestTotal = peakGroupList.get(index).getTotal();
                     selectPeakGroupIndex = index;
                 }
             }

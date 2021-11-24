@@ -3,7 +3,6 @@ package net.csibio.propro.algorithm.score.features;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.constants.constant.Constants;
-import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.bean.score.SlopeIntercept;
 import net.csibio.propro.utils.ArrayUtil;
@@ -13,10 +12,8 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.util.FastMath;
 import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * scores.library_corr
@@ -53,12 +50,12 @@ public class LibraryScorer {
         Double[] normedApexRunInt = ScoreUtil.normalizeSumDoubleArray(apexRunIntensity);
 
         //library_norm_manhattan
-        if (scoreTypes.contains(ScoreType.LibRsmd.getName())) {
+        if (scoreTypes.contains(ScoreType.Rsmd.getName())) {
             double sum = 0.0d;
             for (int i = 0; i < normedLibInt.length; i++) {
                 sum += Math.abs(normedLibInt[i] - normedRunInt[i]);
             }
-            peakGroup.put(ScoreType.LibRsmd.getName(), sum / normedLibInt.length, scoreTypes);
+            peakGroup.put(ScoreType.Rsmd.getName(), sum / normedLibInt.length, scoreTypes);
         }
 
         double runSum = 0.0d, librarySum = 0.0d, run2Sum = 0.0d, library2Sum = 0.0d, dotprod = 0.0d;
@@ -70,14 +67,14 @@ public class LibraryScorer {
             library2Sum += normedLibInt[i] * normedLibInt[i]; // library ^2
         }
 
-        peakGroup.put(ScoreType.LibShift.getName(), calculateLibraryShiftScore(normedLibInt, normedRunInt), scoreTypes);
+        peakGroup.put(ScoreType.IntShift.getName(), calculateLibraryShiftScore(normedLibInt, normedRunInt), scoreTypes);
         //library_corr pearson 相关系数, 需要的前置变量：dotprod, sum, 2sum
 
         double pearsonSum = 0d;
         double runDeno = run2Sum - runSum * runSum / normedLibInt.length;
         double libDeno = library2Sum - librarySum * librarySum / normedLibInt.length;
         if (runDeno <= Constants.MIN_DOUBLE || libDeno <= Constants.MIN_DOUBLE) {
-            peakGroup.put(ScoreType.LibCorr.getName(), 0d, scoreTypes);
+            peakGroup.put(ScoreType.Pearson.getName(), 0d, scoreTypes);
         } else {
             pearsonSum = dotprod - runSum * librarySum / normedLibInt.length;
             pearsonSum /= FastMath.sqrt(runDeno * libDeno);
@@ -88,8 +85,8 @@ public class LibraryScorer {
             if (Double.isNaN(pearsonApex)) {
                 pearsonApex = 0d;
             }
-            peakGroup.put(ScoreType.LibCorr.getName(), pearsonSum, scoreTypes);
-            peakGroup.put(ScoreType.LibApexCorr.getName(), pearsonApex, scoreTypes);
+            peakGroup.put(ScoreType.Pearson.getName(), pearsonSum, scoreTypes);
+            peakGroup.put(ScoreType.ApexPearson.getName(), pearsonApex, scoreTypes);
         }
 
         double[] runSqrt = new double[runIntensity.length];
@@ -101,7 +98,7 @@ public class LibraryScorer {
 
         //dotprodScoring
         //需要的前置变量：runSum, librarySum, runSqrt, libSqrt
-        if (scoreTypes.contains(ScoreType.LibDotprod.getName())) {
+        if (scoreTypes.contains(ScoreType.Dotprod.getName())) {
             double runVecNorm = FastMath.sqrt(runSum);
             double libVecNorm = FastMath.sqrt(librarySum);
 
@@ -112,12 +109,12 @@ public class LibraryScorer {
             for (int i = 0; i < runSqrt.length; i++) {
                 sumOfMult += runSqrtVecNormed[i] * libSqrtVecNormed[i];
             }
-            peakGroup.put(ScoreType.LibDotprod.getName(), sumOfMult, scoreTypes);
+            peakGroup.put(ScoreType.Dotprod.getName(), sumOfMult, scoreTypes);
         }
 
         //manhattan
         //需要的前置变量：runSqrt, libSqrt
-        if (scoreTypes.contains(ScoreType.LibManhattan.getName())) {
+        if (scoreTypes.contains(ScoreType.Manhattan.getName())) {
             double runIntTotal = MathUtil.sum(runSqrt);
             double libIntTotal = MathUtil.sum(libSqrt);
             double[] runSqrtNormed = normalize(runSqrt, runIntTotal);
@@ -126,67 +123,54 @@ public class LibraryScorer {
             for (int i = 0; i < runSqrt.length; i++) {
                 sumOfDivide += FastMath.abs(runSqrtNormed[i] - libSqrtNormed[i]);
             }
-            peakGroup.put(ScoreType.LibManhattan.getName(), sumOfDivide, scoreTypes);
+            peakGroup.put(ScoreType.Manhattan.getName(), sumOfDivide, scoreTypes);
         }
 
         //spectral angle
-        if (scoreTypes.contains(ScoreType.LibSangle.getName())) {
+        if (scoreTypes.contains(ScoreType.Sangle.getName())) {
             double spectralAngle = FastMath.acos(dotprod / (FastMath.sqrt(run2Sum) * FastMath.sqrt(library2Sum)));
-            peakGroup.put(ScoreType.LibSangle.getName(), spectralAngle, scoreTypes);
+            peakGroup.put(ScoreType.Sangle.getName(), spectralAngle, scoreTypes);
         }
 
         //root mean square
-        if (scoreTypes.contains(ScoreType.LibMeanSquare.getName())) {
+        if (scoreTypes.contains(ScoreType.AvgSqr.getName())) {
             double rms = 0;
             for (int i = 0; i < normedLibInt.length; i++) {
                 rms += (normedLibInt[i] - normedRunInt[i]) * (normedLibInt[i] - normedRunInt[i]);
             }
             rms = Math.sqrt(rms / normedLibInt.length);
-            peakGroup.put(ScoreType.LibMeanSquare.getName(), rms, scoreTypes);
+            peakGroup.put(ScoreType.AvgSqr.getName(), rms, scoreTypes);
         }
     }
 
     public void calculateNormRtScore(PeakGroup peakGroup, SlopeIntercept slopeIntercept, double libRt, List<String> scoreTypes) {
         double runRt = peakGroup.getApexRt();
         double normRunRt = ScoreUtil.trafoApplier(slopeIntercept, runRt);
-        peakGroup.put(ScoreType.NormRtScore.getName(), Math.abs(normRunRt - libRt), scoreTypes);
+        peakGroup.put(ScoreType.NormRt.getName(), Math.abs(normRunRt - libRt), scoreTypes);
     }
 
-    public void calculateSpearmanScore(PeakGroup peakGroup, PeptideCoord coord, List<String> scoreTypes) {
-        List<Map.Entry<String, Double>> entryList = peakGroup.getIonIntensity().entrySet().stream().sorted(Comparator.comparing(Map.Entry<String, Double>::getValue).reversed()).toList();
-        int length = coord.getFragments().size();
-
-        HashMap<String, Integer> orderMap = new HashMap<>();
-        for (int i = 0; i < entryList.size(); i++) {
-            orderMap.put(entryList.get(i).getKey(), i);
-        }
-        double diffSum = 0;
-        for (int i = 0; i < coord.getFragments().size(); i++) {
-            String cutInfo = coord.getFragments().get(i).getCutInfo();
-            int index = -1;
-            if (orderMap.get(cutInfo) == null) {
-                index = coord.getFragments().size();
-            } else {
-                index = orderMap.get(cutInfo);
-            }
-            diffSum += (index - i) * (index - i);
-        }
-        double score = 1 - diffSum * 6 / (length * length * length - length);
-        peakGroup.put(ScoreType.LibSpearman.getName(), score, scoreTypes);
-    }
-
-    /**
-     * 当出现干扰碎片的时候,本打分会有很大的副作用
-     * scores.var_intensity_score
-     * <p>
-     * sum of intensitySum:
-     * totalXic
-     */
-    public void calculateIntensityScore(PeakGroup peakGroup, List<String> scoreTypes) {
-        double intensitySum = peakGroup.getIntensitySum();
-        double totalXic = peakGroup.getTic();
-        peakGroup.put(ScoreType.IntensityScore.getName(), intensitySum / totalXic, scoreTypes);
-    }
+//    public void calculateSpearmanScore(PeakGroup peakGroup, PeptideCoord coord, List<String> scoreTypes) {
+//        List<Map.Entry<String, Double>> entryList = peakGroup.getIonIntensity().entrySet().stream().sorted(Comparator.comparing(Map.Entry<String, Double>::getValue).reversed()).toList();
+//        int length = coord.getFragments().size();
+//
+//        HashMap<String, Integer> orderMap = new HashMap<>();
+//        for (int i = 0; i < entryList.size(); i++) {
+//            orderMap.put(entryList.get(i).getKey(), i);
+//        }
+//        double diffSum = 0;
+//        for (int i = 0; i < coord.getFragments().size(); i++) {
+//            String cutInfo = coord.getFragments().get(i).getCutInfo();
+//            int index = -1;
+//            if (orderMap.get(cutInfo) == null) {
+//                index = coord.getFragments().size();
+//            } else {
+//                index = orderMap.get(cutInfo);
+//            }
+//            diffSum += (index - i) * (index - i);
+//        }
+//        double score = 1 - diffSum * 6 / (length * length * length - length);
+//        peakGroup.put(ScoreType.Spearman.getName(), score, scoreTypes);
+//    }
 
     private double[] normalize(double[] array, double value) {
         if (value > 0) {
