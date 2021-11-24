@@ -6,7 +6,6 @@ import net.csibio.propro.algorithm.fitter.LinearFitter;
 import net.csibio.propro.algorithm.peak.PeakPicker;
 import net.csibio.propro.algorithm.score.scorer.IrtScorer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
-import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.ListPairs;
@@ -161,11 +160,13 @@ public abstract class Irt {
                     runRt = peakGroupList.get(j).getApexRt();
                 }
             }
-            if (Constants.ESTIMATE_BEST_PEPTIDES && max < Constants.OVERALL_QUALITY_CUTOFF) {
+            if (max < 1d) {
                 continue;
             }
             pairs.add(new Pair(rt.get(i), runRt));
+            log.info(dataList.get(i).getPeptideRef() + "RT:" + runRt + ", Max Total Score:" + max);
         }
+
         return pairs;
     }
 
