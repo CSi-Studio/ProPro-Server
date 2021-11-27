@@ -12,6 +12,7 @@ public class DataUtil {
         data.setRtArray(null);
         data.setIntMap(null);
         data.setCutInfoMap(null);
+        data.setLibIntMap(null);
         data.setIonsLow(null);
         data.setIonsHigh(null);
     }
@@ -20,6 +21,7 @@ public class DataUtil {
         data.setRtBytes(null);
         data.setIntMapBytes(null);
         data.setCutInfosFeature(null);
+        data.setLibIntMap(null);
         data.setIonsLowBytes(null);
         data.setIonsHighBytes(null);
     }
@@ -46,6 +48,7 @@ public class DataUtil {
             data.setIntMapBytes(intMap);
         }
         data.setCutInfosFeature(FeatureUtil.toString(data.getCutInfoMap()));
+        data.setLibIntFeature(FeatureUtil.toString(data.getLibIntMap()));
         clearOrigin(data);
     }
 
@@ -74,7 +77,9 @@ public class DataUtil {
         if (data.getCutInfosFeature() != null) {
             data.setCutInfoMap(FeatureUtil.toFloatMap(data.getCutInfosFeature()));
         }
-
+        if (data.getLibIntFeature() != null) {
+            data.setLibIntMap(FeatureUtil.toDoubleMap(data.getLibIntFeature()));
+        }
         clearCompressed(data);
     }
 

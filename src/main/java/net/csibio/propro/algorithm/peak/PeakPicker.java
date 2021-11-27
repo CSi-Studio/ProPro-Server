@@ -215,7 +215,7 @@ public class PeakPicker {
         unSearchPeakGroup.setCoord(coord);
         List<PeakGroup> peakGroups = peakGroupPicker.findPeakGroupsV3(unSearchPeakGroup);
         if (peakGroups.size() == 0) {
-//            log.error("居然没有匹配到,蛋疼:" + data.getPeptideRef());
+            return new PeakGroupListWrapper(false);
         }
 
         return new PeakGroupListWrapper(peakGroups, normedLibIntMap);

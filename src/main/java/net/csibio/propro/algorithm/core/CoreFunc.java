@@ -8,6 +8,7 @@ import net.csibio.propro.algorithm.extract.IonStat;
 import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.GaussFilter;
+import net.csibio.propro.algorithm.peak.PeakFitter;
 import net.csibio.propro.algorithm.score.features.DIAScorer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.constants.enums.IdentifyStatus;
@@ -63,6 +64,8 @@ public class CoreFunc {
     GaussFilter gaussFilter;
     @Autowired
     Extractor extractor;
+    @Autowired
+    PeakFitter peakFitter;
 
     /**
      * EIC Core Function
@@ -142,7 +145,7 @@ public class CoreFunc {
 
         //如果所有的片段均没有提取到XIC的结果,则直接返回null
         if (!isHit) {
-            log.info(coord.getPeptideRef() + ":EIC结果为空");
+//            log.info(coord.getPeptideRef() + ":EIC结果为空");
             return null;
         }
         //计算每一帧的离子碎片总数
@@ -242,8 +245,8 @@ public class CoreFunc {
         return bestPair;
     }
 
-    public AnyPair<DataDO, DataSumDO> predictOneNiubi(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, RunDO run, AnalyzeParams params) {
-//        coord.setFragments(coord.getFragments().stream().filter(f -> !f.getCutInfo().equals("y7")).collect(Collectors.toSet()));
+    public AnyPair<DataDO, DataSumDO> predictOneNiubi(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, RunDO run, OverviewDO overview, AnalyzeParams params) {
+
         DataDO dataDO = extractOne(coord, rtMap, params);
         //EIC结果如果为空则没有继续的必要了
         if (dataDO == null) {
@@ -257,7 +260,11 @@ public class CoreFunc {
         }
 
         dataDO = scorer.score(run, dataDO, coord, rtMap, params);
-        DataSumDO sum = judge(dataDO);
+        lda.scoreForPeakGroups(dataDO.getPeakGroupList(), overview.getWeights(), overview.fetchScoreTypes());
+        for (PeakGroup peakGroup : dataDO.getPeakGroupList()) {
+            peakFitter.fit(peakGroup, coord, false);
+        }
+        DataSumDO sum = judge(dataDO, overview.getMinTotalScore());
         return new AnyPair<>(dataDO, sum);
     }
 
@@ -385,7 +392,7 @@ public class CoreFunc {
             DataDO dataDO = extractOne(coord, rtMap, params);
             //如果EIC结果中所有的碎片均为空,那么也不需要再做Reselect操作,直接跳过
             if (dataDO == null) {
-                log.info(coord.getPeptideRef() + ":EIC结果为空");
+//                log.info(coord.getPeptideRef() + ":EIC结果为空");
                 return;
             }
 
@@ -437,7 +444,7 @@ public class CoreFunc {
             DataDO dataDO = extractOne(coord, rtMap, params);
             //如果EIC结果中所有的碎片均为空,那么也不需要再做Reselect操作,直接跳过
             if (dataDO == null) {
-                log.info(coord.getPeptideRef() + ":EIC结果为空");
+//                log.info(coord.getPeptideRef() + ":EIC结果为空");
                 return;
             }
             //Step2. 常规选峰及打分,未满足条件的直接忽略
@@ -590,15 +597,15 @@ public class CoreFunc {
         return statList;
     }
 
-    private DataSumDO judge(DataDO dataDO) {
+    private DataSumDO judge(DataDO dataDO, double minTotalScore) {
 
         DataSumDO sum = new DataSumDO(dataDO);
         PeakGroup finalPgs = null;
         List<PeakGroup> peakGroupList = dataDO.getPeakGroupList();
         if (peakGroupList != null && peakGroupList.size() > 0) {
-            List<PeakGroup> candidateList = peakGroupList.stream().filter(PeakGroup::getFine).collect(Collectors.toList());
+            List<PeakGroup> candidateList = peakGroupList.stream().filter(peakGroup -> peakGroup.getTotalScore() >= minTotalScore).collect(Collectors.toList());
             if (candidateList.size() > 0) {
-                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroup::getTotal).reversed()).collect(Collectors.toList()).get(0);
+                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroup::getTotalScore).reversed()).collect(Collectors.toList()).get(0);
             }
         }
 
@@ -606,6 +613,7 @@ public class CoreFunc {
             sum.setApexRt(finalPgs.getApexRt());
             sum.setSelectedRt(finalPgs.getSelectedRt());
             sum.setIntensitySum(finalPgs.getIntensitySum());
+            sum.setFitIntSum(finalPgs.getFitIntSum());
             sum.setIonsLow(finalPgs.getIonsLow());
             dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
             sum.setStatus(IdentifyStatus.SUCCESS.getCode());

@@ -116,8 +116,6 @@ public class PeakGroupPicker {
             peakGroup.setTic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
 //            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
-            peakGroup.setMaxIon(maxCutInfo);
-            peakGroup.setMaxIonIntensity(peakGroup.getIonIntensity().get(maxCutInfo));
             peakGroupList.add(peakGroup);
             if (peakGroupInt > 0 && peakGroupInt / totalXic < Constants.STOP_AFTER_INTENSITY_RATIO) {
                 break;
@@ -235,8 +233,6 @@ public class PeakGroupPicker {
             peakGroup.setTic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
 //            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
-            peakGroup.setMaxIon(maxIon);
-            peakGroup.setMaxIonIntensity(peakGroup.getIonIntensity().get(maxIon));
             peakGroupList.add(peakGroup);
         }
         return peakGroupList;
@@ -345,8 +341,6 @@ public class PeakGroupPicker {
             peakGroup.setTic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
 //            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
-            peakGroup.setMaxIon(maxIon);
-            peakGroup.setMaxIonIntensity(peakGroup.getIonIntensity().get(maxIon));
             peakGroupList.add(peakGroup);
         }
 
@@ -474,8 +468,6 @@ public class PeakGroupPicker {
             peakGroup.setTic(totalXic);
             peakGroup.setIonIntensity(ionIntensity);
 //            peakGroup.setSignalToNoiseSum(signalToNoiseSum);
-            peakGroup.setMaxIon(maxCutInfo);
-            peakGroup.setMaxIonIntensity(peakGroup.getIonIntensity().get(maxCutInfo));
             peakGroupList.add(peakGroup);
             if (peakGroupInt > 0 && peakGroupInt / totalXic < Constants.STOP_AFTER_INTENSITY_RATIO) {
                 break;
@@ -618,8 +610,6 @@ public class PeakGroupPicker {
             peakGroup.setIonIntensity(ionIntensity);
             peakGroup.setApexIonsIntensity(apexIonIntensity);
             peakGroup.setSignalToNoiseSum(signalToNoiseSum);
-            peakGroup.setMaxIon(maxCutInfo);
-            peakGroup.setMaxIonIntensity(maxCutInfoIntensity);
             peakGroupList.add(peakGroup);
         }
 

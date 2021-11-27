@@ -183,7 +183,13 @@ public class PeptideServiceImpl implements PeptideService {
                 peptideCoord.setRtEnd(99999);
             }
         }
-
+        
+        for (PeptideCoord coord : targetList) {
+            if (coord.getFragments().size() > 6) {
+                coord.setFragments(coord.getFragments().subList(0, 6));
+                coord.setDecoyFragments(coord.getDecoyFragments().subList(0, 6));
+            }
+        }
         logger.info("构建提取XIC的MS2坐标,总计" + targetList.size() + "条记录,读取标准库耗时:" + dbTime + "毫秒,mz start:" + mzRange.getStart());
         return targetList;
     }

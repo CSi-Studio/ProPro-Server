@@ -90,89 +90,6 @@ public class TestController {
         return Result.OK();
     }
 
-    @GetMapping(value = "/lms2")
-    Result lms2() {
-        String projectId = "6166a5fd6113c157a6431ab9";
-        List<IdName> idNameList = overviewService.getAll(new OverviewQuery(projectId).setDefaultOne(true), IdName.class);
-        List<String> overviewIds = idNameList.stream().map(IdName::id).collect(Collectors.toList());
-        overviewIds.clear();
-        overviewIds.add("619a44f1a6d4d22e6b55e129");
-
-        log.info("一共overview" + overviewIds.size() + "个");
-        boolean success = true;
-        for (String overviewId : overviewIds) {
-            OverviewDO overview = overviewService.getById(overviewId);
-            LearningParams params = new LearningParams();
-            params.setScoreTypes(overview.fetchScoreTypes());
-            params.setFdr(overview.getParams().getMethod().getClassifier().getFdr());
-
-            FinalResult finalResult = new FinalResult();
-
-            //Step1. 数据预处理
-            log.info("数据预处理");
-            params.setType(overview.getType());
-            //Step2. 从数据库读取全部含打分结果的数据
-            log.info("开始获取打分数据");
-            List<DataScore> peptideList = dataService.getAll(new DataQuery().setOverviewId(overviewId).setStatus(IdentifyStatus.WAIT.getCode()), DataScore.class, overview.getProjectId());
-            if (peptideList == null || peptideList.size() == 0) {
-                log.info("没有合适的数据");
-                return null;
-            }
-            log.info("总计有待鉴定态肽段" + peptideList.size() + "个");
-
-            log.info("重新计算初始分完毕");
-            //Step3. 开始训练数据集
-            HashMap<String, Double> weightsMap = lda.classifier(peptideList, params);
-            lda.score(peptideList, weightsMap, params.getScoreTypes());
-            finalResult.setWeightsMap(weightsMap);
-
-            //进行第一轮严格意义的初筛
-            log.info("开始第一轮严格意义上的初筛");
-            List<SelectedPeakGroup> selectedPeakGroupListV1 = null;
-            try {
-                selectedPeakGroupListV1 = scorer.findBestPeakGroup(peptideList);
-                statistics.errorStatistics(selectedPeakGroupListV1, params);
-                semiSupervise.giveDecoyFdr(selectedPeakGroupListV1);
-                //获取第一轮严格意义上的最小总分阈值
-                double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
-                log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
-                List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByMinTotalScore(peptideList, overview.fetchScoreTypes(), minTotalScore);
-                //重新统计
-                ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupListV2, params);
-                semiSupervise.giveDecoyFdr(selectedPeakGroupListV2);
-
-                long start = System.currentTimeMillis();
-                //Step4. 对于最终的打分结果和选峰结果保存到数据库中, 插入最终的DataSum表的数据为所有的鉴定结果以及 fdr小于0.01的伪肽段
-                log.info("将合并打分及定量结果反馈更新到数据库中,总计:" + selectedPeakGroupListV2.size() + "条数据,开始统计相关数据,FDR:" + params.getFdr());
-                minTotalScore = selectedPeakGroupListV2.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
-
-                log.info("最小阈值总分为:" + minTotalScore);
-                dataSumService.buildDataSumList(selectedPeakGroupListV2, params.getFdr(), overview, overview.getProjectId());
-                log.info("插入Sum数据" + selectedPeakGroupListV2.size() + "条一共用时：" + (System.currentTimeMillis() - start) + "毫秒");
-                overview.setWeights(weightsMap);
-
-                semiSupervise.targetDecoyDistribution(selectedPeakGroupListV2, overview); //统计Target Decoy分布的函数
-                overviewService.update(overview);
-                overviewService.statistic(overview);
-
-                finalResult.setAllInfo(errorStat);
-                int count = ProProUtil.checkFdr(finalResult, params.getFdr());
-                if (count < 20000) {
-                    success = false;
-                    break;
-                }
-                log.info("合并打分完成,共找到新肽段" + count + "个");
-            } catch (Exception e) {
-                e.printStackTrace();
-                success = false;
-                break;
-            }
-
-        }
-
-        return Result.OK();
-    }
-
     @GetMapping(value = "/lms2_1")
     Result lms2_1() {
         String projectId = "613f5d8262cbcf5bb4345270";
@@ -216,7 +133,7 @@ public class TestController {
                 //获取第一轮严格意义上的最小总分阈值
                 double minTotalScore = selectedPeakGroupListV1.stream().filter(s -> s.getFdr() != null && s.getFdr() < params.getFdr()).max(Comparator.comparingDouble(SelectedPeakGroup::getFdr)).get().getTotalScore();
                 log.info("初筛下的最小总分值为:" + minTotalScore + ";开始第二轮筛选");
-                List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroupByMinTotalScore(peptideList, overview.fetchScoreTypes(), minTotalScore);
+                List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroup(peptideList);
                 //重新统计
                 ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupListV2, params);
                 semiSupervise.giveDecoyFdr(selectedPeakGroupListV2);
@@ -288,10 +205,11 @@ public class TestController {
                 DataSumDO sum = sumMap.get(data.getPeptideRef());
                 if (sum != null && sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode())) {
                     PeakGroup peakGroup = data.getPeakGroupList().stream().filter(peak -> peak.getSelectedRt().equals(sum.getSelectedRt())).findFirst().get();
-                    double libCorr = peakGroup.get(ScoreType.Pearson, ScoreType.usedScoreTypes());
+                    double pearson = peakGroup.get(ScoreType.Pearson, ScoreType.usedScoreTypes());
+                    double apexPearson = peakGroup.get(ScoreType.ApexPearson, ScoreType.usedScoreTypes());
                     double libDotprod = peakGroup.get(ScoreType.Dotprod, ScoreType.usedScoreTypes());
-                    double isoOverlap = peakGroup.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes());
-                    if (libDotprod < 0.9 && libCorr < 0) {
+//                    double isoOverlap = peakGroup.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes());
+                    if (apexPearson < 0.2) {
                         stat.getAndIncrement();
                         findItList.add(sum.getPeptideRef());
                     }

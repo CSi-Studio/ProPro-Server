@@ -28,7 +28,7 @@ public class DataScore {
 
     //是否是伪肽段
     Boolean decoy = false;
-
+    
     //所有峰组的打分情况
     List<PeakGroup> peakGroupList;
 

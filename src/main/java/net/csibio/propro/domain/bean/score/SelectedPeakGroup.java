@@ -31,6 +31,8 @@ public class SelectedPeakGroup extends BaseScores {
 
     //定量结果
     Double intensitySum;
+    //定量修正过以后的sum
+    Double fitIntSum;
 
     //本峰对应的最终综合打分
     Double totalScore;

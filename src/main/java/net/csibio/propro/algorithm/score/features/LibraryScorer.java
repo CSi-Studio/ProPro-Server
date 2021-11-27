@@ -68,8 +68,8 @@ public class LibraryScorer {
         }
 
         peakGroup.put(ScoreType.IntShift.getName(), calculateLibraryShiftScore(normedLibInt, normedRunInt), scoreTypes);
-        //library_corr pearson 相关系数, 需要的前置变量：dotprod, sum, 2sum
 
+        //library_corr pearson 相关系数, 需要的前置变量：dotprod, sum, 2sum
         double pearsonSum = 0d;
         double runDeno = run2Sum - runSum * runSum / normedLibInt.length;
         double libDeno = library2Sum - librarySum * librarySum / normedLibInt.length;

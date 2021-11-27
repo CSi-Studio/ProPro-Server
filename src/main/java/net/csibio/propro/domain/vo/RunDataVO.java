@@ -60,6 +60,8 @@ public class RunDataVO {
     //Intensity Sum
     Double intensitySum;
 
+    Double fitIntSum;
+
     Integer ionsLow;
 
     //所在overview的最低分数阈值

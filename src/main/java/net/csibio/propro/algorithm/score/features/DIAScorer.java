@@ -1,6 +1,7 @@
 package net.csibio.propro.algorithm.score.features;
 
 import lombok.extern.slf4j.Slf4j;
+import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.constants.constant.Constants;
@@ -49,16 +50,15 @@ public class DIAScorer {
     FragmentFactory fragmentFactory;
 
     /**
-     * scores.massdev_score 按光谱图中的强度加权mz与库中mz的偏差ppm百分比之和
-     * scores.weighted_massdev_score 按spectrum intensity加权的mz与product mz的偏差ppm百分比按libraryIntensity加权之和
+     * peakGroup.massdev_score 按光谱图中的强度加权mz与库中mz的偏差ppm百分比之和
+     * peakGroup.weighted_massdev_score 按spectrum intensity加权的mz与product mz的偏差ppm百分比按libraryIntensity加权之和
      *
-     * @param productMzArray   根据transitionGroup获得存在transition中的productMz，存成Float array
-     * @param spectrumMzArray  根据transitionGroup选取的RT选择的最近的Spectrum对应的mzArray
-     * @param spectrumIntArray 根据transitionGroup选取的RT选择的最近的Spectrum对应的intensityArray
-     * @param normedLibIntMap  unNormalized library intensity(in peptidepeptide)
-     * @param scores           scoreForAll
+     * @param productMzArray  根据transitionGroup获得存在transition中的productMz，存成Float array
+     * @param pairs           根据transitionGroup选取的RT选择的最近的Spectrum
+     * @param normedLibIntMap unNormalized library intensity(in peptidepeptide)
+     * @param peakGroup       scoreForAll
      */
-    public void calculateDiaMassDiffScore(HashMap<String, Float> productMzArray, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Double> normedLibIntMap, PeakGroup scores, List<String> scoreTypes) {
+    public void calculateDiaMassDiffScore(HashMap<String, Float> productMzArray, MzIntensityPairs pairs, HashMap<String, Double> normedLibIntMap, PeakGroup peakGroup, List<String> scoreTypes) {
 
         double ppmScore = 0.0d;
         double ppmScoreWeighted = 0.0d;
@@ -68,7 +68,7 @@ public class DIAScorer {
             float right = productMz + Constants.DIA_EXTRACT_WINDOW;
 
             try {
-                IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left, right);
+                IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(pairs.getMzArray(), pairs.getIntensityArray(), left, right);
                 if (mzIntensity.isSignalFound()) {
                     if (normedLibIntMap.get(key) == null) {
                         continue;
@@ -83,10 +83,10 @@ public class DIAScorer {
             }
         }
         if (scoreTypes.contains(ScoreType.MassDev.getName())) {
-            scores.put(ScoreType.MassDev.getName(), ppmScore, scoreTypes);
+            peakGroup.put(ScoreType.MassDev.getName(), ppmScore, scoreTypes);
         }
         if (scoreTypes.contains(ScoreType.MassDevW.getName())) {
-            scores.put(ScoreType.MassDevW.getName(), ppmScoreWeighted, scoreTypes);
+            peakGroup.put(ScoreType.MassDevW.getName(), ppmScoreWeighted, scoreTypes);
         }
     }
 
@@ -97,12 +97,11 @@ public class DIAScorer {
      *
      * @param peakGroup        single mrmFeature
      * @param productMzMap     mz of fragment
-     * @param spectrumMzArray  mz array of selected Rt
-     * @param spectrumIntArray intensity array of selected Rt
+     * @param pairs            spectrum of selected Rt
      * @param productChargeMap charge in peptide
      * @param scoreTypes       scoreForAll for JProphet
      */
-    public void calculateIsotopeScores(PeakGroup peakGroup, HashMap<String, Float> productMzMap, float[] spectrumMzArray, float[] spectrumIntArray, HashMap<String, Integer> productChargeMap, List<String> scoreTypes) {
+    public void calculateIsotopeScores(PeakGroup peakGroup, HashMap<String, Float> productMzMap, HashMap<String, Integer> productChargeMap, MzIntensityPairs pairs, List<String> scoreTypes) {
         double isotopeCorr = 0d;
         double isotopeOverlap = 0d;
         int maxIsotope = Constants.DIA_NR_ISOTOPES + 1;
@@ -124,7 +123,7 @@ public class DIAScorer {
                 right += Constants.DIA_EXTRACT_WINDOW;
 
                 //integrate window
-                IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left, right);
+                IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(pairs.getMzArray(), pairs.getIntensityArray(), left, right);
                 if (mzIntensity.getIntensity() > maxIntensity) {
                     maxIntensity = mzIntensity.getIntensity();
                 }
@@ -190,7 +189,7 @@ public class DIAScorer {
                 Double right = center + Constants.DIA_EXTRACT_WINDOW;
 
                 //对于多种带电量，对-i同位素的mz位置进行数据提取，若强度高于0同位素强度，且-i同位素的理论mz与实际mz差距小于阈值，认为-i同位素出现
-                IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left.floatValue(), right.floatValue());
+                IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(pairs.getMzArray(), pairs.getIntensityArray(), left.floatValue(), right.floatValue());
                 if (!mzIntensity.isSignalFound()) {
                     continue;
                 }

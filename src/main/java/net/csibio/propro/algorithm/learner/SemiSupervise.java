@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.learner.classifier.Xgboost;
+import net.csibio.propro.algorithm.peak.PeakFitter;
 import net.csibio.propro.algorithm.peak.PeakIdentifier;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
@@ -57,6 +58,8 @@ public class SemiSupervise {
     RunService runService;
     @Autowired
     PeakIdentifier peakIdentifier;
+    @Autowired
+    PeakFitter peakFitter;
 
     public FinalResult doSemiSupervise(String overviewId, LearningParams params) {
         FinalResult finalResult = new FinalResult();
@@ -117,8 +120,12 @@ public class SemiSupervise {
         RunDO run = runService.getById(overview.getRunId());
         List<WindowRange> ranges = run.getWindowRanges();
 
+        //策略1. 相似重叠峰校准策略
         peakIdentifier.identify(overview.getRunId(), dataList, selectedDataMap, ranges, overview.getAnaLibId(), minTotalScore); //后置优化算法1->选择了相同rt的近似肽段做一个区分
+        //策略2. 基于IonsCount的组内切换策略
         List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroup(dataList);
+        //策略3. 干扰离子校准技术
+
         //重新统计
         ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupListV2, params);
         giveDecoyFdr(selectedPeakGroupListV2);
@@ -215,7 +222,7 @@ public class SemiSupervise {
                 }
             }
         }
-        
+
         overviewDO.getStatistic().put(StatConst.TARGET_DIST, targetDistributions);
         overviewDO.getStatistic().put(StatConst.DECOY_DIST, decoyDistributions);
     }

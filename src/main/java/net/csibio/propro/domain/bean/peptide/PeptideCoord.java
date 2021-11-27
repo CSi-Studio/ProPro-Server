@@ -116,7 +116,7 @@ public class PeptideCoord {
             Map<String, Float> map = getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, f -> f.getIntensity().floatValue()));
             return map;
         } catch (Exception e) {
-            System.out.printf(peptideRef);
+            System.out.println(peptideRef);
             e.printStackTrace();
         }
 

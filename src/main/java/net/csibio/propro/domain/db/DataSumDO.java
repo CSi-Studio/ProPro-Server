@@ -46,6 +46,8 @@ public class DataSumDO extends BaseDO {
 
     Double intensitySum;  //Intensity Sum
 
+    Double fitIntSum;
+
     Integer ionsLow; //最低信号量要求下的离子碎片总数
 
     public static DataSumDO buildByPeakGroupScore(List<String> proteins, String peptideRef, PeakGroup selectPeakGroup) {

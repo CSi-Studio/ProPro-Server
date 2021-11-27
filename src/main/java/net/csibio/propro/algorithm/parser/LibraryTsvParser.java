@@ -58,6 +58,11 @@ public class LibraryTsvParser extends BaseLibraryParser {
     private static String Identifying = "identifying_transition";
     private static String Quantifying = "quantifying_transition";
 
+    private static String FragmentType = "fragmenttype";
+    private static String FragmentCharge = "fragmentcharge";
+    private static String FragmentSeriesNumber = "fragmentseriesnumber";
+    private static String FragmentLossType = "fragmentlosstype";
+
     @Override
     public Result parseAndInsert(InputStream in, LibraryDO library, TaskDO taskDO) {
 
@@ -84,7 +89,10 @@ public class LibraryTsvParser extends BaseLibraryParser {
             while ((line = reader.readLine()) != null) {
                 Result<PeptideDO> Result = parseTransition(line, columnMap, library);
                 if (Result.isFailed()) {
-                    if (!Result.getErrorCode().equals(ResultCode.NO_DECOY.getCode())) {
+                    if (Result.getErrorCode() == null) {
+                        log.info("什么情况");
+                    }
+                    if (Result.getErrorCode() != null && !Result.getErrorCode().equals(ResultCode.NO_DECOY.getCode())) {
                         tranResult.addErrorMsg(Result.getErrorMessage());
                     }
                     continue;
@@ -199,7 +207,10 @@ public class LibraryTsvParser extends BaseLibraryParser {
      */
     private Result<PeptideDO> parseTransition(String line, HashMap<String, Integer> columnMap, LibraryDO library) {
         Result<PeptideDO> result = new Result<>(true);
-        String[] row = StringUtils.splitByWholeSeparator(line, "\t");
+        String[] row = StringUtils.splitByWholeSeparatorPreserveAllTokens(line, "\t");
+        if (row.length != columnMap.size()) {
+            log.info("Error Format:" + line);
+        }
         PeptideDO peptideDO = new PeptideDO();
         boolean isDecoy = !row[columnMap.get(IsDecoy)].equals("0");
         if (isDecoy) {
@@ -217,8 +228,31 @@ public class LibraryTsvParser extends BaseLibraryParser {
         String proteinName = row[columnMap.get(ProteinName)];
         peptideDO.setProteins(PeptideUtil.parseProtein(proteinName));
 
-        String annotations = row[columnMap.get(Annotation)].replaceAll("\"", "");
-        fi.setAnnotations(annotations);
+        if (columnMap.get(Annotation) != null) {
+            String annotations = row[columnMap.get(Annotation)].replaceAll("\"", "");
+            fi.setAnnotations(annotations);
+        } else {
+            //DIA_NN中新增了Fragment系列标签,但是没有annotation标签的兼容方案
+            String lossType = row[columnMap.get(FragmentLossType)];
+            if (lossType.equals("noloss")) {
+                lossType = "";
+            } else if (lossType.equals("NH3")) {
+                lossType = "-17";
+            } else if (lossType.equals("H2O")) {
+                lossType = "-18";
+            } else if (lossType.equals("CO")) {
+                lossType = "-28";
+            }
+
+            fi.setAnnotations(
+                    row[columnMap.get(FragmentType)]
+                            + row[columnMap.get(FragmentSeriesNumber)]
+                            + lossType
+                            + "^"
+                            + row[columnMap.get(FragmentCharge)]
+            );
+        }
+
         String fullName = row[columnMap.get(FullUniModPeptideName)];//no target sequence
         String[] transitionGroupId = row[columnMap.get(TransitionGroupId)].split("_");
         if (fullName == null) {

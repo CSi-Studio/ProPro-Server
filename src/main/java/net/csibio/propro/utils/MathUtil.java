@@ -8,10 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Nico Wang Ruimin
@@ -307,6 +304,19 @@ public class MathUtil {
         }
     }
 
+    public static Map<String, Double> normalizeMap(Map<String, Double> doubleMap) {
+        double sum = 0.0d;
+        for (double value : doubleMap.values()) {
+            sum += value;
+        }
+        double finalSum = sum;
+        HashMap<String, Double> map = new HashMap<>();
+        doubleMap.keySet().forEach(key -> {
+            map.put(key, doubleMap.get(key) / finalSum);
+        });
+        return map;
+    }
+
     /**
      * 求出数组的平均值和方差
      *
@@ -327,7 +337,7 @@ public class MathUtil {
     /**
      * Normalize a with a's mean and std.
      */
-    public static List<Float> normalizeSum(HashMap<String, Float> map) {
+    public static List<Float> normalizeSum(Map<String, Float> map) {
         List<Float> normedList = new ArrayList<>();
         Float sum = 0f;
         for (Float f : map.values()) {

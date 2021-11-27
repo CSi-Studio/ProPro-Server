@@ -5,6 +5,7 @@ import net.csibio.propro.algorithm.score.ScoreType;
 import org.springframework.data.annotation.Transient;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Data
@@ -28,12 +29,8 @@ public class PeakGroup extends BaseScores {
     double leftRt;
     //算法选定的峰形范围右侧最合适的RT
     double rightRt;
-
-    //最大强度碎片cutInfo
-    String maxIon;
-    //最大强度碎片的强度
-    Double maxIonIntensity;
-
+    //定量拟合值
+    Double fitIntSum;
 
     //中间计算变量,不需要存入数据库
     @Transient
@@ -131,12 +128,25 @@ public class PeakGroup extends BaseScores {
 
     public double getTotal() {
         return this.get(ScoreType.CorrShapeW, ScoreType.usedScoreTypes()) +
-//                this.get(ScoreType.XcorrShapeW, ScoreType.usedScoreTypes()) +
-                this.get(ScoreType.Pearson, ScoreType.usedScoreTypes()) +
+                Math.max(this.get(ScoreType.Pearson, ScoreType.usedScoreTypes()), this.get(ScoreType.ApexPearson, ScoreType.usedScoreTypes())) +
                 this.get(ScoreType.Dotprod, ScoreType.usedScoreTypes()) -
                 this.get(ScoreType.IonsDelta, ScoreType.usedScoreTypes()) -
-//                this.get(ScoreType.XcorrCoelutionWeighted, ScoreType.usedScoreTypes()) -
                 this.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes())
                 ;
+    }
+
+    public void remove(String cutInfo) {
+        this.getIonIntensity().remove(cutInfo);
+        this.getIonHullInt().remove(cutInfo);
+        this.getApexIonsIntensity().remove(cutInfo);
+    }
+
+    public void remove(List<String> cutInfos) {
+        for (String cutInfo : cutInfos) {
+            this.setIntensitySum(this.getIntensitySum() - this.getIonIntensity().get(cutInfo));
+            this.getIonIntensity().remove(cutInfo);
+            this.getIonHullInt().remove(cutInfo);
+            this.getApexIonsIntensity().remove(cutInfo);
+        }
     }
 }
