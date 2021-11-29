@@ -134,18 +134,7 @@ public class Scorer {
             xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
             diaScorer.calculateIsotopeScores(peakGroup, productMzMap, productChargeMap, mzIntensityPairs, scoreTypes);
             peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
-            peakFitter.fit(peakGroup, coord, false);
-//            double dotprod = peakGroup.get(ScoreType.Dotprod, scoreTypes);
-//            if (dotprod <= 0.8 && peakGroup.getIntensitySum() > 100000) {
-//                HashMap<String, Double> tempNormedLibIntMap = peakFitter.fit(peakGroup, normedLibIntMap);
-////                libraryScorer.calculateLibraryScores(peakGroup, tempNormedLibIntMap, scoreTypes);
-////                xicScorer.calcXICScores(peakGroup, tempNormedLibIntMap, scoreTypes);
-////                diaScorer.calculateIsotopeScores(peakGroup, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, scoreTypes);
-//            } else {
-////                xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
-////                diaScorer.calculateIsotopeScores(peakGroup, productMzMap, spectrumMzArray, spectrumIntArray, productChargeMap, scoreTypes);
-//            }
-
+            peakFitter.fit(peakGroup, coord); //拟合定量结果
         }
 
         dataDO.setStatus(IdentifyStatus.WAIT.getCode());

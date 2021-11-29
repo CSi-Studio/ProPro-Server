@@ -6,23 +6,22 @@ import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroup;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component("peakFitter")
 public class PeakFitter {
 
-    public void fit(PeakGroup peakGroup, PeptideCoord coord, boolean removeIons) {
+    public void fit(PeakGroup peakGroup, PeptideCoord coord) {
 
         FragmentInfo bestLibIon = coord.getFragments().get(0);
-        List<FragmentInfo> top3Fragments = coord.getFragments().subList(0, 3);
+        //TODO 陆妙善 如果最强碎片被离子干扰了,就会带来大幅度的定量偏高
         Double bestIonIntensity = peakGroup.getIonIntensity().get(bestLibIon.getCutInfo());
         if (bestIonIntensity == null) {
             return;
         }
 
-        Map<String, Double> libIntMap = top3Fragments.stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, FragmentInfo::getIntensity));
+        Map<String, Double> libIntMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, FragmentInfo::getIntensity));
         double bestLibIonsIntensity = libIntMap.get(bestLibIon.getCutInfo());
         AtomicDouble fitSum = new AtomicDouble(0d);
 
@@ -31,22 +30,10 @@ public class PeakFitter {
                 fitSum.getAndAdd(bestIonIntensity);
             } else {
                 double libRatio = libIntMap.get(entry.getKey()) / bestLibIonsIntensity;
-                Double entryIntensity = peakGroup.getIonIntensity().get(entry.getKey());
-                if (entryIntensity == null) {
-                    entryIntensity = 0d;
-                }
-                if (entryIntensity > bestIonIntensity) {
-                    fitSum.getAndAdd(bestIonIntensity * libRatio);
-                } else {
-                    fitSum.getAndAdd(entryIntensity);
-                }
+                fitSum.getAndAdd(bestIonIntensity * libRatio); //直接按照库中比例进行拟合
             }
         }
 
-//        for (String disturbIon : disturbIons) {
-//            double libRatio = libIntMap.get(disturbIon) / bestLibIonsIntensity;
-//            fitSum = fitSum + peakGroup.getIonIntensity().get(bestIon.getCutInfo()) * libRatio - peakGroup.getIonIntensity().get(disturbIon);
-//        }
         peakGroup.setFitIntSum(fitSum.get());
     }
 }

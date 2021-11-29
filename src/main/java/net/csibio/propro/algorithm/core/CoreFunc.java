@@ -262,7 +262,7 @@ public class CoreFunc {
         dataDO = scorer.score(run, dataDO, coord, rtMap, params);
         lda.scoreForPeakGroups(dataDO.getPeakGroupList(), overview.getWeights(), overview.fetchScoreTypes());
         for (PeakGroup peakGroup : dataDO.getPeakGroupList()) {
-            peakFitter.fit(peakGroup, coord, false);
+            peakFitter.fit(peakGroup, coord);
         }
         DataSumDO sum = judge(dataDO, overview.getMinTotalScore());
         return new AnyPair<>(dataDO, sum);

@@ -353,7 +353,7 @@ public class PeakGroupPicker {
         int[] ions50 = unSearchPeakGroup.getIonsLow();
         Double[] ions300Smooth = unSearchPeakGroup.getIonsHighSmooth();
         Double[] rtArray = unSearchPeakGroup.getRtArray();
-        Set<String> max6Ions = unSearchPeakGroup.getCoord().getFragments().subList(0, 6).stream().map(FragmentInfo::getCutInfo).collect(Collectors.toSet());
+        Set<String> maxTopIons = unSearchPeakGroup.getCoord().getFragments().subList(0, 3).stream().map(FragmentInfo::getCutInfo).collect(Collectors.toSet());
         List<PeakGroup> peakGroupList = new ArrayList<>();
         List<DoublePair> pairs = unSearchPeakGroup.getMaxPeaks4IonsHigh();
 
@@ -438,10 +438,9 @@ public class PeakGroupPicker {
             double signalToNoiseSum = 0d;
             for (String cutInfo : unSearchPeakGroup.getPeaks4Ions().keySet()) {
                 Double[] intArray = unSearchPeakGroup.getIntensitiesMap().get(cutInfo);
-                //库中排名前3的碎片离子在最高峰处的信号不能为0,否则直接忽略
-                if (max6Ions.contains(cutInfo)) {
+                //库中排名前的碎片离子在最高峰处的信号不能为0,否则直接忽略
+                if (maxTopIons.contains(cutInfo)) {
                     if (intArray[bestRtIndex] == 0d) {
-//                        log.info("精彩的判定:" + unSearchPeakGroup.getCoord().getPeptideRef());
                         hit = false;
                         break;
                     }
