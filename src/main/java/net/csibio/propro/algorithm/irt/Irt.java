@@ -100,7 +100,7 @@ public abstract class Irt {
             }
 
             data = irtScorer.score(data, params);
-            if (data.getPeakGroupList() == null || data.getPeakGroupList().size() == 0) {
+            if (data == null || data.getPeakGroupList() == null || data.getPeakGroupList().size() == 0) {
                 continue;
             }
             selectedDataList.add(data);

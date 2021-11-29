@@ -2,6 +2,7 @@ package net.csibio.propro.algorithm.parser;
 
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.peptide.Annotation;
+import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.db.LibraryDO;
 import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.domain.db.TaskDO;
@@ -117,7 +118,12 @@ public abstract class BaseLibraryParser {
         if (existedPeptide == null) {
             map.put(peptide.getPeptideRef(), peptide);
         } else {
-            existedPeptide.getFragments().addAll(peptide.getFragments());
+            //去重
+            for (FragmentInfo fragment : peptide.getFragments()) {
+                if (!existedPeptide.getFragments().contains(fragment)) {
+                    existedPeptide.getFragments().add(fragment);
+                }
+            }
         }
     }
 
