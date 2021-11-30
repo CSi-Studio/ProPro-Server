@@ -16,21 +16,19 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @Api(tags = {"LFQBench"})
 @RestController
-@RequestMapping("/bench")
+@RequestMapping("/api/bench")
 public class BenchController {
 
-    @Autowired
-    ProjectService projectService;
-    @Autowired
-    LfqBench lfqBench;
+  @Autowired ProjectService projectService;
+  @Autowired LfqBench lfqBench;
 
-    @GetMapping(value = "/peptideRatio")
-    Result peptideRatio(@RequestParam("projectId") String projectId) {
-        ProjectDO project = projectService.getById(projectId);
-        if (project == null) {
-            return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
-        }
-
-        return lfqBench.buildPeptideRatio(project);
+  @GetMapping(value = "/peptideRatio")
+  Result peptideRatio(@RequestParam("projectId") String projectId) {
+    ProjectDO project = projectService.getById(projectId);
+    if (project == null) {
+      return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
     }
+
+    return lfqBench.buildPeptideRatio(project);
+  }
 }

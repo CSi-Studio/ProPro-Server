@@ -27,124 +27,124 @@ import java.util.stream.Collectors;
 @Slf4j
 @Api(tags = {"Run Module"})
 @RestController
-@RequestMapping("run/")
+@RequestMapping("/api/run/")
 public class RunController {
 
-    @Autowired
-    RunService runService;
-    @Autowired
-    RunTask runTask;
-    @Autowired
-    LibraryService libraryService;
-    @Autowired
-    TaskService taskService;
-    @Autowired
-    LibraryTask libraryTask;
-    @Autowired
-    RepeatCount repeatCount;
+  @Autowired RunService runService;
+  @Autowired RunTask runTask;
+  @Autowired LibraryService libraryService;
+  @Autowired TaskService taskService;
+  @Autowired LibraryTask libraryTask;
+  @Autowired RepeatCount repeatCount;
 
-    @GetMapping(value = "/listByProjectId")
-    Result<List<IdName>> listByProjectId(@RequestParam("projectId") String projectId) {
-        List<IdName> runList = runService.getAll(new RunQuery().setProjectId(projectId), IdName.class);
-        return Result.OK(runList);
+  @GetMapping(value = "/listByProjectId")
+  Result<List<IdName>> listByProjectId(@RequestParam("projectId") String projectId) {
+    List<IdName> runList = runService.getAll(new RunQuery().setProjectId(projectId), IdName.class);
+    return Result.OK(runList);
+  }
+
+  @GetMapping(value = "/list")
+  Result<List<BaseRun>> list(RunQuery query) {
+    if (StringUtils.isEmpty(query.getProjectId())) {
+      return Result.Error(ResultCode.PROJECT_ID_CANNOT_BE_EMPTY);
+    }
+    List<BaseRun> runList = runService.getAll(query, BaseRun.class);
+    return Result.OK(runList);
+  }
+
+  @PostMapping(value = "/generateAlias")
+  Result generateAlias(
+      @RequestParam(value = "projectId") String projectId,
+      @RequestParam(value = "prefix", defaultValue = "Run") String prefix,
+      @RequestParam(value = "runIds", required = false) List<String> runIds) {
+    List<RunDO> runList;
+    if (runIds == null || runIds.size() == 0) {
+      runList = runService.getAll(new RunQuery().setProjectId(projectId));
+    } else {
+      runList = runService.getAll(new RunQuery().setIds(runIds));
     }
 
-    @GetMapping(value = "/list")
-    Result<List<BaseRun>> list(RunQuery query) {
-        if (StringUtils.isEmpty(query.getProjectId())) {
-            return Result.Error(ResultCode.PROJECT_ID_CANNOT_BE_EMPTY);
-        }
-        List<BaseRun> runList = runService.getAll(query, BaseRun.class);
-        return Result.OK(runList);
-    }
-
-    @PostMapping(value = "/generateAlias")
-    Result generateAlias(@RequestParam(value = "projectId") String projectId,
-                         @RequestParam(value = "prefix", defaultValue = "Run") String prefix,
-                         @RequestParam(value = "runIds", required = false) List<String> runIds) {
-        List<RunDO> runList;
-        if (runIds == null || runIds.size() == 0) {
-            runList = runService.getAll(new RunQuery().setProjectId(projectId));
-        } else {
-            runList = runService.getAll(new RunQuery().setIds(runIds));
-        }
-
-        if (runList != null) {
-            for (int i = 0; i < runList.size(); i++) {
-                RunDO run = runList.get(i);
-                run.setAlias(prefix + "-" + (i + 1) + "");
-                runService.update(run);
-            }
-        }
-        return Result.OK();
-    }
-
-    @PostMapping(value = "/edit")
-    Result<RunDO> edit(@RequestParam("id") String id,
-                       @RequestParam(value = "alias", required = false) String alias,
-                       @RequestParam(value = "fragMode", required = false) String fragMode,
-                       @RequestParam(value = "group", required = false) String group,
-                       @RequestParam(value = "tags", required = false) List<String> tags) {
-        RunDO run = runService.getById(id);
-        if (run == null) {
-            return Result.Error(ResultCode.RUN_NOT_EXISTED);
-        }
-        run.setAlias(alias);
-        run.setGroup(group);
-        run.setTags(tags);
-        run.setFragMode(fragMode);
+    if (runList != null) {
+      for (int i = 0; i < runList.size(); i++) {
+        RunDO run = runList.get(i);
+        run.setAlias(prefix + "-" + (i + 1) + "");
         runService.update(run);
-        return Result.OK(run);
+      }
+    }
+    return Result.OK();
+  }
+
+  @PostMapping(value = "/edit")
+  Result<RunDO> edit(
+      @RequestParam("id") String id,
+      @RequestParam(value = "alias", required = false) String alias,
+      @RequestParam(value = "fragMode", required = false) String fragMode,
+      @RequestParam(value = "group", required = false) String group,
+      @RequestParam(value = "tags", required = false) List<String> tags) {
+    RunDO run = runService.getById(id);
+    if (run == null) {
+      return Result.Error(ResultCode.RUN_NOT_EXISTED);
+    }
+    run.setAlias(alias);
+    run.setGroup(group);
+    run.setTags(tags);
+    run.setFragMode(fragMode);
+    runService.update(run);
+    return Result.OK(run);
+  }
+
+  @PostMapping(value = "/batchEdit")
+  Result<List<RunDO>> edit(
+      @RequestParam("ids") List<String> ids,
+      @RequestParam(value = "fragMode", required = false) String fragMode,
+      @RequestParam(value = "group", required = false) String group,
+      @RequestParam(value = "tags", required = false) List<String> tags) {
+    if (ids == null || ids.isEmpty()) {
+      return Result.Error(ResultCode.ID_CANNOT_BE_NULL_OR_ZERO);
     }
 
-    @PostMapping(value = "/batchEdit")
-    Result<List<RunDO>> edit(@RequestParam("ids") List<String> ids,
-                             @RequestParam(value = "fragMode", required = false) String fragMode,
-                             @RequestParam(value = "group", required = false) String group,
-                             @RequestParam(value = "tags", required = false) List<String> tags) {
-        if (ids == null || ids.isEmpty()) {
-            return Result.Error(ResultCode.ID_CANNOT_BE_NULL_OR_ZERO);
-        }
-
-        List<RunDO> runList = new ArrayList<>();
-        for (String id : ids) {
-            RunDO run = runService.getById(id);
-            if (run == null) {
-                return Result.Error(ResultCode.RUN_NOT_EXISTED);
-            }
-            if (StringUtils.isNotEmpty(group)) {
-                run.setGroup(group);
-            }
-            if (tags != null && tags.size() != 0) {
-                run.setTags(tags);
-            }
-            if (StringUtils.isNotEmpty(fragMode)) {
-                run.setFragMode(fragMode);
-            }
-            runService.update(run);
-            runList.add(run);
-        }
-
-        return Result.OK(runList);
+    List<RunDO> runList = new ArrayList<>();
+    for (String id : ids) {
+      RunDO run = runService.getById(id);
+      if (run == null) {
+        return Result.Error(ResultCode.RUN_NOT_EXISTED);
+      }
+      if (StringUtils.isNotEmpty(group)) {
+        run.setGroup(group);
+      }
+      if (tags != null && tags.size() != 0) {
+        run.setTags(tags);
+      }
+      if (StringUtils.isNotEmpty(fragMode)) {
+        run.setFragMode(fragMode);
+      }
+      runService.update(run);
+      runList.add(run);
     }
 
-    @GetMapping(value = "/detail")
-    Result<RunDO> detail(@RequestParam("id") String id) {
-        RunDO run = runService.getById(id);
-        if (run == null) {
-            return Result.Error(ResultCode.RUN_NOT_EXISTED);
-        }
-        return Result.OK(run);
-    }
+    return Result.OK(runList);
+  }
 
-    @GetMapping(value = "/getIrts")
-    Result getIrts(@RequestParam("runList") List<String> runList) {
-        if (runList.size() == 0) {
-            return Result.Error(ResultCode.RUN_NOT_EXISTED);
-        }
-        RunVO runSample = runService.getOne(new RunQuery().setId(runList.get(0)), RunVO.class);
-        List<RunIrt> irtAll = runService.getAllIrtByProjectId(runSample.getProjectId());
-        List<RunIrt> filtered = irtAll.stream().filter(runIrt -> runList.contains(runIrt.getId())).collect(Collectors.toList());
-        return Result.OK(filtered);
+  @GetMapping(value = "/detail")
+  Result<RunDO> detail(@RequestParam("id") String id) {
+    RunDO run = runService.getById(id);
+    if (run == null) {
+      return Result.Error(ResultCode.RUN_NOT_EXISTED);
     }
+    return Result.OK(run);
+  }
+
+  @GetMapping(value = "/getIrts")
+  Result getIrts(@RequestParam("runList") List<String> runList) {
+    if (runList.size() == 0) {
+      return Result.Error(ResultCode.RUN_NOT_EXISTED);
+    }
+    RunVO runSample = runService.getOne(new RunQuery().setId(runList.get(0)), RunVO.class);
+    List<RunIrt> irtAll = runService.getAllIrtByProjectId(runSample.getProjectId());
+    List<RunIrt> filtered =
+        irtAll.stream()
+            .filter(runIrt -> runList.contains(runIrt.getId()))
+            .collect(Collectors.toList());
+    return Result.OK(filtered);
+  }
 }
