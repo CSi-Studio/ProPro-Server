@@ -27,30 +27,33 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/excel/")
 public class ExcelController {
 
-  @Autowired OverviewService overviewService;
-  @Autowired ProjectService projectService;
-  @Autowired RunService runService;
+    @Autowired
+    OverviewService overviewService;
+    @Autowired
+    ProjectService projectService;
+    @Autowired
+    RunService runService;
 
-  @PostMapping(value = "report")
-  Result report(@RequestParam("projectId") String projectId) {
-    ProjectDO project = projectService.getById(projectId);
-    if (project == null) {
-      return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
+    @PostMapping(value = "report")
+    Result report(@RequestParam("projectId") String projectId) {
+        ProjectDO project = projectService.getById(projectId);
+        if (project == null) {
+            return Result.Error(ResultCode.PROJECT_NOT_EXISTED);
+        }
+
+        List<IdName> runIdNameList =
+                runService.getAll(new RunQuery().setProjectId(projectId), IdName.class);
+        List<String> runIds = runIdNameList.stream().map(IdName::id).collect(Collectors.toList());
+        List<String> runNames = runIdNameList.stream().map(IdName::name).collect(Collectors.toList());
+        Result<List<PeptideRow>> result = overviewService.report(runIds);
+        if (result.isFailed()) {
+            return result;
+        }
+
+        PeptideExcelBuilder builder =
+                new PeptideExcelBuilder(project.getName(), runNames, result.getData());
+        builder.export();
+        log.info("导出成功");
+        return Result.OK();
     }
-
-    List<IdName> runIdNameList =
-        runService.getAll(new RunQuery().setProjectId(projectId), IdName.class);
-    List<String> runIds = runIdNameList.stream().map(IdName::id).collect(Collectors.toList());
-    List<String> runNames = runIdNameList.stream().map(IdName::name).collect(Collectors.toList());
-    Result<List<PeptideRow>> result = overviewService.report(runIds);
-    if (result.isFailed()) {
-      return result;
-    }
-
-    PeptideExcelBuilder builder =
-        new PeptideExcelBuilder(project.getName(), runNames, result.getData());
-    builder.export();
-    log.info("导出成功");
-    return Result.OK();
-  }
 }

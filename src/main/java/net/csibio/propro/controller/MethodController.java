@@ -22,101 +22,102 @@ import java.util.List;
 @RequestMapping("/api/method/")
 public class MethodController {
 
-  @Autowired MethodService methodService;
+    @Autowired
+    MethodService methodService;
 
-  @GetMapping(value = "/list")
-  Result<List<MethodDO>> list(MethodQuery query) {
-    Result<List<MethodDO>> result = methodService.getList(query);
-    return result;
-  }
-
-  @PostMapping(value = "/add")
-  Result add(MethodUpdateVO methodUpdateVO) {
-    MethodDO method = new MethodDO();
-    BeanUtils.copyProperties(methodUpdateVO, method);
-
-    EicOptions eic = new EicOptions();
-    IrtOptions irt = new IrtOptions();
-    PeakFindingOptions peakFinding = new PeakFindingOptions();
-    QuickFilterOptions quickFilter = new QuickFilterOptions();
-    ScoreOptions score = new ScoreOptions();
-    ClassifierOptions classifier = new ClassifierOptions();
-
-    BeanUtils.copyProperties(methodUpdateVO, eic);
-    BeanUtils.copyProperties(methodUpdateVO, irt);
-    BeanUtils.copyProperties(methodUpdateVO, peakFinding);
-    BeanUtils.copyProperties(methodUpdateVO, quickFilter);
-    BeanUtils.copyProperties(methodUpdateVO, score);
-    BeanUtils.copyProperties(methodUpdateVO, classifier);
-
-    method.setEic(eic);
-    method.setIrt(irt);
-    method.setPeakFinding(peakFinding);
-    method.setQuickFilter(quickFilter);
-    method.setScore(score);
-    method.setClassifier(classifier);
-
-    Result result = methodService.insert(method);
-    return result;
-  }
-
-  @PostMapping(value = "/update")
-  Result update(MethodUpdateVO methodUpdateVO) {
-    MethodDO existedMethod = methodService.getById(methodUpdateVO.getId());
-    if (existedMethod == null) {
-      return Result.Error(ResultCode.METHOD_NOT_EXISTED);
+    @GetMapping(value = "/list")
+    Result<List<MethodDO>> list(MethodQuery query) {
+        Result<List<MethodDO>> result = methodService.getList(query);
+        return result;
     }
 
-    EicOptions eic = new EicOptions();
-    IrtOptions irt = new IrtOptions();
-    PeakFindingOptions peakFinding = new PeakFindingOptions();
-    QuickFilterOptions quickFilter = new QuickFilterOptions();
-    ScoreOptions score = new ScoreOptions();
-    ClassifierOptions classifier = new ClassifierOptions();
+    @PostMapping(value = "/add")
+    Result add(MethodUpdateVO methodUpdateVO) {
+        MethodDO method = new MethodDO();
+        BeanUtils.copyProperties(methodUpdateVO, method);
 
-    BeanUtils.copyProperties(methodUpdateVO, eic);
-    BeanUtils.copyProperties(methodUpdateVO, irt);
-    BeanUtils.copyProperties(methodUpdateVO, peakFinding);
-    BeanUtils.copyProperties(methodUpdateVO, quickFilter);
-    BeanUtils.copyProperties(methodUpdateVO, score);
-    BeanUtils.copyProperties(methodUpdateVO, classifier);
+        EicOptions eic = new EicOptions();
+        IrtOptions irt = new IrtOptions();
+        PeakFindingOptions peakFinding = new PeakFindingOptions();
+        QuickFilterOptions quickFilter = new QuickFilterOptions();
+        ScoreOptions score = new ScoreOptions();
+        ClassifierOptions classifier = new ClassifierOptions();
 
-    existedMethod.setName(methodUpdateVO.getName());
-    existedMethod.setDescription(methodUpdateVO.getDescription());
-    existedMethod.setEic(eic);
-    existedMethod.setIrt(irt);
-    existedMethod.setPeakFinding(peakFinding);
-    existedMethod.setQuickFilter(quickFilter);
-    existedMethod.setScore(score);
-    existedMethod.setClassifier(classifier);
-    return methodService.update(existedMethod);
-  }
+        BeanUtils.copyProperties(methodUpdateVO, eic);
+        BeanUtils.copyProperties(methodUpdateVO, irt);
+        BeanUtils.copyProperties(methodUpdateVO, peakFinding);
+        BeanUtils.copyProperties(methodUpdateVO, quickFilter);
+        BeanUtils.copyProperties(methodUpdateVO, score);
+        BeanUtils.copyProperties(methodUpdateVO, classifier);
 
-  @GetMapping(value = "/detail")
-  Result<MethodDO> detail(@RequestParam("id") String id) {
-    MethodDO method = methodService.getById(id);
-    if (method == null) {
-      return Result.Error(ResultCode.METHOD_NOT_EXISTED);
+        method.setEic(eic);
+        method.setIrt(irt);
+        method.setPeakFinding(peakFinding);
+        method.setQuickFilter(quickFilter);
+        method.setScore(score);
+        method.setClassifier(classifier);
+
+        Result result = methodService.insert(method);
+        return result;
     }
-    return Result.OK(method);
-  }
 
-  @GetMapping(value = "/remove")
-  Result remove(@RequestParam(value = "methodIds") List<String> methodIds) {
-    List<String> errorList = new ArrayList<>();
-    if (methodIds != null && methodIds.size() > 0) {
-      methodIds.forEach(
-          methodId -> {
-            Result res = methodService.removeById(methodId);
-            if (res.isFailed()) {
-              errorList.add(res.getErrorMessage());
-            }
-          });
+    @PostMapping(value = "/update")
+    Result update(MethodUpdateVO methodUpdateVO) {
+        MethodDO existedMethod = methodService.getById(methodUpdateVO.getId());
+        if (existedMethod == null) {
+            return Result.Error(ResultCode.METHOD_NOT_EXISTED);
+        }
+
+        EicOptions eic = new EicOptions();
+        IrtOptions irt = new IrtOptions();
+        PeakFindingOptions peakFinding = new PeakFindingOptions();
+        QuickFilterOptions quickFilter = new QuickFilterOptions();
+        ScoreOptions score = new ScoreOptions();
+        ClassifierOptions classifier = new ClassifierOptions();
+
+        BeanUtils.copyProperties(methodUpdateVO, eic);
+        BeanUtils.copyProperties(methodUpdateVO, irt);
+        BeanUtils.copyProperties(methodUpdateVO, peakFinding);
+        BeanUtils.copyProperties(methodUpdateVO, quickFilter);
+        BeanUtils.copyProperties(methodUpdateVO, score);
+        BeanUtils.copyProperties(methodUpdateVO, classifier);
+
+        existedMethod.setName(methodUpdateVO.getName());
+        existedMethod.setDescription(methodUpdateVO.getDescription());
+        existedMethod.setEic(eic);
+        existedMethod.setIrt(irt);
+        existedMethod.setPeakFinding(peakFinding);
+        existedMethod.setQuickFilter(quickFilter);
+        existedMethod.setScore(score);
+        existedMethod.setClassifier(classifier);
+        return methodService.update(existedMethod);
     }
-    if (errorList.size() != 0) {
-      return Result.Error(ResultCode.DELETE_ERROR, errorList);
-    } else {
-      return Result.OK();
+
+    @GetMapping(value = "/detail")
+    Result<MethodDO> detail(@RequestParam("id") String id) {
+        MethodDO method = methodService.getById(id);
+        if (method == null) {
+            return Result.Error(ResultCode.METHOD_NOT_EXISTED);
+        }
+        return Result.OK(method);
     }
-  }
+
+    @GetMapping(value = "/remove")
+    Result remove(@RequestParam(value = "methodIds") List<String> methodIds) {
+        List<String> errorList = new ArrayList<>();
+        if (methodIds != null && methodIds.size() > 0) {
+            methodIds.forEach(
+                    methodId -> {
+                        Result res = methodService.removeById(methodId);
+                        if (res.isFailed()) {
+                            errorList.add(res.getErrorMessage());
+                        }
+                    });
+        }
+        if (errorList.size() != 0) {
+            return Result.Error(ResultCode.DELETE_ERROR, errorList);
+        } else {
+            return Result.OK();
+        }
+    }
 }

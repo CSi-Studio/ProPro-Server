@@ -5,7 +5,6 @@ import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.query.PageQuery;
 import net.csibio.propro.service.BaseService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 
@@ -25,7 +24,6 @@ public class XController<T, Q extends PageQuery, S extends BaseService<T, Q>> {
         //TODO 李然 导出报表的相关代码
         return Result.OK();
     }
-
 
 
 }
