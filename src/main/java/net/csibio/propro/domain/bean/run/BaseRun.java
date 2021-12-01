@@ -2,6 +2,7 @@ package net.csibio.propro.domain.bean.run;
 
 import lombok.Data;
 import net.csibio.aird.bean.Compressor;
+import net.csibio.aird.bean.Instrument;
 import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.constants.constant.SuffixConst;
 import net.csibio.propro.domain.bean.irt.IrtResult;
@@ -22,6 +23,11 @@ public class BaseRun {
      * 实验类型
      */
     String type;
+
+    /**
+     * 仪器设备信息
+     */
+    List<Instrument> instruments;
 
     /**
      * 实验名称

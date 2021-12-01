@@ -131,7 +131,6 @@ public class Extractor {
      * @return
      */
     public Result<RunDataVO> predictOne(RunDO run, OverviewDO overview, PeptideCoord coord, AnalyzeParams params) {
-        params.setPredict(true);
         Double rt = coord.getRt();
         if (params.getMethod().getEic().getRtWindow() == -1) {
             coord.setRtRange(-1, 99999);
@@ -291,7 +290,7 @@ public class Extractor {
         }
     }
 
-    public void calcIonsCount(DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap) {
+    public void calcIonsCount(DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         String maxIon = coord.getFragments().get(0).getCutInfo();
         int[] ionsLow = new int[dataDO.getRtArray().length];
         int[] ionsHigh = new int[dataDO.getRtArray().length];
@@ -305,7 +304,7 @@ public class Extractor {
                 maxIonIntensityInThisSpectrum = maxIntensities[i];
             }
 
-            IntegerPair pair = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), 50f, 300f, maxIonIntensityInThisSpectrum);
+            IntegerPair pair = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), params.getMethod().getEic().getIonsLow(), params.getMethod().getEic().getIonsHigh(), maxIonIntensityInThisSpectrum);
             ionsLow[i] = pair.left();
             ionsHigh[i] = pair.right();
         }

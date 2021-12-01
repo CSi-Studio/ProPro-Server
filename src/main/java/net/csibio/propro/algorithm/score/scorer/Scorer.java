@@ -76,24 +76,27 @@ public class Scorer {
 
     public DataDO score(RunDO run, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
 
-        if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
+        if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= coord.getFragments().size() / 2) {
             dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
             return dataDO;
         }
 
         //获取标准库中对应的PeptideRef组
         //重要步骤,"或许是目前整个工程最重要的核心算法--选峰算法."--陆妙善
-        PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, params.getMethod().getIrt().getSs());
+        SigmaSpacing ss = params.getMethod().getIrt().getSs();
+        PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
         if (!peakGroupListWrapper.isFound()) {
-            //重试机制, 如果没有信号,扩大RT搜索范围
+            //重试机制A:扩大RT搜索范围并重新计算XIC
             coord.setRtRange(coord.getRtStart() - 100, coord.getRtEnd() + 100);
             dataDO = coreFunc.extractOne(coord, rtMap, params);
-            if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
+            if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= coord.getFragments().size() / 2) {
                 dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
                 return dataDO;
             }
-            peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, params.getMethod().getIrt().getSs());
+            peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
             if (!peakGroupListWrapper.isFound()) {
+                //重试机制B:使用基于IonsShape的选峰机制
+//                peakGroupListWrapper = peakPicker.searchByIonsShape(dataDO, coord, ss);
                 dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
                 return dataDO;
             }

@@ -149,7 +149,7 @@ public class CoreFunc {
             return null;
         }
         //计算每一帧的离子碎片总数
-        extractor.calcIonsCount(data, coord, rtMap);
+        extractor.calcIonsCount(data, coord, rtMap, params);
         return data;
     }
 
@@ -254,7 +254,7 @@ public class CoreFunc {
             return null;
         }
         //如果
-        if (dataDO.getIntMap() == null || (!params.getPredict() && dataDO.getIntMap().size() <= coord.getFragments().size() / 2)) {
+        if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= coord.getFragments().size() / 2) {
             dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
             return null;
         }

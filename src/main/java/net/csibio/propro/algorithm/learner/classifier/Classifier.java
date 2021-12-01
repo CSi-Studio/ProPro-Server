@@ -90,7 +90,7 @@ public abstract class Classifier {
             }
 
             if (topDecoy == null || topDecoy.getScores() == null) {
-                log.error("Scores为空");
+//                log.error("Scores为空");
                 continue;
             }
 

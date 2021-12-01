@@ -62,7 +62,7 @@ public class PeakPicker {
         Map<String, Float> libIntMap = coord.buildIntensityMap();
         PeakGroupListWrapper featureResult = new PeakGroupListWrapper(true);
         HashMap<String, RtIntensityPairsDouble> maxPeaksForIons = new HashMap<>();
-        HashMap<String, List<IonPeak>> peaksForIons = new HashMap<>();
+        HashMap<String, List<IonPeak>> peaks4Ions = new HashMap<>();
 
         //对每一个chromatogram进行运算,dataDO中不含有ms1
         HashMap<String, double[]> noise1000Map = new HashMap<>();
@@ -130,11 +130,11 @@ public class PeakPicker {
             }
             List<IonPeak> ionPeakList = pickChromatogram(rtArray, intensitiesMap.get(cutInfo), smoothIntensitiesMap.get(cutInfo), noisesOri1000, maxPeakPairs);
             maxPeaksForIons.put(cutInfo, maxPeakPairs);
-            peaksForIons.put(cutInfo, ionPeakList);
+            peaks4Ions.put(cutInfo, ionPeakList);
             noise1000Map.put(cutInfo, noisesOri1000);
             normedLibIntMap.put(cutInfo, libIntMap.get(cutInfo) / libIntSum);
         }
-        if (peaksForIons.size() == 0) {
+        if (peaks4Ions.size() == 0) {
             return new PeakGroupListWrapper(false);
         }
 
@@ -142,9 +142,10 @@ public class PeakPicker {
         unSearchPeakGroup.setRtArray(rtArray);
         unSearchPeakGroup.setIntensitiesMap(intensitiesMap);
         unSearchPeakGroup.setMaxPeaks4Ions(maxPeaksForIons);
+        unSearchPeakGroup.setPeaks4Ions(peaks4Ions);
         unSearchPeakGroup.setNoise1000Map(noise1000Map);
         unSearchPeakGroup.setCoord(coord);
-        List<PeakGroup> peakGroups = peakGroupPicker.findPeakGroupsV2(unSearchPeakGroup);
+        List<PeakGroup> peakGroups = peakGroupPicker.findPeakGroupsClassic(unSearchPeakGroup);
         if (peakGroups.size() == 0) {
 //            log.error("居然没有匹配到,蛋疼:" + data.getPeptideRef());
         }
@@ -213,7 +214,7 @@ public class PeakPicker {
         unSearchPeakGroup.setNoise1000Map(noise1000Map);
 
         unSearchPeakGroup.setCoord(coord);
-        List<PeakGroup> peakGroups = peakGroupPicker.findPeakGroupsV3(unSearchPeakGroup);
+        List<PeakGroup> peakGroups = peakGroupPicker.findPeakGroupsByIonsCount(unSearchPeakGroup);
         if (peakGroups.size() == 0) {
             return new PeakGroupListWrapper(false);
         }

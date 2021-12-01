@@ -21,10 +21,6 @@ public class AnalyzeParams {
     OverviewDO baseOverview; //仅在reselect模式下存在,为reselect之前的分析概览对象
     @Transient
     Boolean changeCharge = false;
-    /**
-     * 是否为预测
-     */
-    Boolean predict = false;
 
     /**
      * 是否强制执行Irt,如果是那么即便exp自带了irt结果也会强制重新计算irt并且把新计算的结果赋值给exp
