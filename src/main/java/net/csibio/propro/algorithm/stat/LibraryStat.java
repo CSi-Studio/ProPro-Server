@@ -23,7 +23,7 @@ public class LibraryStat {
     }
 
     public long proteinCount(LibraryDO library) {
-        return library.getProteins().size();
+        return library.getProteins() == null ? 0 : library.getProteins().size();
     }
 
     public long fragmentCount(List<FragmentGroup> peptideList) {

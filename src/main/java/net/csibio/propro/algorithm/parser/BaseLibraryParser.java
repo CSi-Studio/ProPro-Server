@@ -1,5 +1,6 @@
 package net.csibio.propro.algorithm.parser;
 
+import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.peptide.Annotation;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
@@ -128,10 +129,16 @@ public abstract class BaseLibraryParser {
     }
 
     protected HashMap<String, Integer> parseColumns(String line) {
-        String[] columns = line.split("\t");
+        String[] columns = null;
+        if (line.contains(SymbolConst.TAB)) {
+            columns = line.split(SymbolConst.TAB);
+        } else {
+            columns = line.split(SymbolConst.COMMA);
+        }
+
         HashMap<String, Integer> columnMap = new HashMap<>();
         for (int i = 0; i < columns.length; i++) {
-            columnMap.put(StringUtils.deleteWhitespace(columns[i].toLowerCase()), i);
+            columnMap.put(StringUtils.deleteWhitespace(columns[i].toLowerCase().replace(SymbolConst.DOUBLE_QUOTA, "")), i);
         }
         return columnMap;
     }

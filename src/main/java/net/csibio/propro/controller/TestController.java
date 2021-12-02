@@ -394,33 +394,27 @@ public class TestController {
                                     overview.getProjectId())
                             .stream()
                             .collect(Collectors.toMap(DataSumDO::getPeptideRef, Function.identity()));
-            Map<String, DataScore> dataMap =
-                    dataService
-                            .getAll(
-                                    new DataQuery().setOverviewId(overviewId).setDecoy(false),
-                                    DataScore.class,
-                                    overview.getProjectId())
-                            .stream()
-                            .collect(Collectors.toMap(DataScore::getPeptideRef, Function.identity()));
-            List<DataSumDO> sumList =
-                    sumMap.values().stream()
-                            .filter(sum -> sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode()))
-                            .toList();
+            Map<String, DataScore> dataMap = dataService.getAll(
+                            new DataQuery().setOverviewId(overviewId).setDecoy(false),
+                            DataScore.class,
+                            overview.getProjectId())
+                    .stream()
+                    .collect(Collectors.toMap(DataScore::getPeptideRef, Function.identity()));
+            List<DataSumDO> sumList = sumMap.values().stream()
+                    .filter(sum -> sum.getStatus().equals(IdentifyStatus.SUCCESS.getCode()))
+                    .toList();
             for (DataSumDO sum : sumList) {
                 DataScore data = dataMap.get(sum.getPeptideRef());
-                lda.scoreForPeakGroups(
-                        data.getPeakGroupList(),
+                lda.scoreForPeakGroups(data.getPeakGroupList(),
                         overview.getWeights(),
                         overview.getParams().getMethod().getScore().getScoreTypes());
-                List<PeakGroup> peakGroupList =
-                        data.getPeakGroupList().stream()
-                                .filter(peak -> peak.getTotalScore() > overview.getMinTotalScore())
-                                .toList();
+                List<PeakGroup> peakGroupList = data.getPeakGroupList().stream()
+                        .filter(peak -> peak.getTotalScore() > overview.getMinTotalScore())
+                        .toList();
                 if (peakGroupList.size() >= 2) {
-                    peakGroupList =
-                            peakGroupList.stream()
-                                    .sorted(Comparator.comparing(PeakGroup::getTotalScore).reversed())
-                                    .toList();
+                    peakGroupList = peakGroupList.stream()
+                            .sorted(Comparator.comparing(PeakGroup::getTotalScore).reversed())
+                            .toList();
                     if (peakGroupList.get(0).getTotalScore() - peakGroupList.get(1).getTotalScore() < 0.1) {
                         targetPeptideList.add(data.getPeptideRef());
                     }

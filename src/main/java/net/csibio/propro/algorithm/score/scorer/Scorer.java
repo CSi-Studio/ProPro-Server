@@ -84,16 +84,16 @@ public class Scorer {
         //获取标准库中对应的PeptideRef组
         //重要步骤,"或许是目前整个工程最重要的核心算法--选峰算法."--陆妙善
         SigmaSpacing ss = params.getMethod().getIrt().getSs();
-        PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
+        PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchByIonsShape(dataDO, coord, ss);
         if (!peakGroupListWrapper.isFound()) {
             //重试机制A:扩大RT搜索范围并重新计算XIC
-            coord.setRtRange(coord.getRtStart() - 100, coord.getRtEnd() + 100);
+            coord.setRtRange(coord.getRtStart() - 400, coord.getRtEnd() + 400);
             dataDO = coreFunc.extractOne(coord, rtMap, params);
             if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= coord.getFragments().size() / 2) {
                 dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
                 return dataDO;
             }
-            peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
+            peakGroupListWrapper = peakPicker.searchByIonsShape(dataDO, coord, ss);
             if (!peakGroupListWrapper.isFound()) {
                 //重试机制B:使用基于IonsShape的选峰机制
 //                peakGroupListWrapper = peakPicker.searchByIonsShape(dataDO, coord, ss);

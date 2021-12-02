@@ -3,6 +3,7 @@ package net.csibio.propro.algorithm.parser;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.decoy.generator.ShuffleGenerator;
 import net.csibio.propro.algorithm.formula.FragmentFactory;
+import net.csibio.propro.constants.constant.SymbolConst;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.peptide.Annotation;
@@ -69,9 +70,9 @@ public class LibraryTsvParser extends BaseLibraryParser {
         Result<List<PeptideDO>> tranResult = new Result<>(true);
         try {
             //开始插入前先清空原有的数据库数据
-            Result ResultTmp = peptideService.removeAllByLibraryId(library.getId());
-            if (ResultTmp.isFailed()) {
-                logger.error(ResultTmp.getErrorMessage());
+            Result resultTmp = peptideService.removeAllByLibraryId(library.getId());
+            if (resultTmp.isFailed()) {
+                logger.error(resultTmp.getErrorMessage());
                 return Result.Error(ResultCode.DELETE_ERROR);
             }
             taskDO.addLog("删除旧数据完毕,开始文件解析");
@@ -87,17 +88,25 @@ public class LibraryTsvParser extends BaseLibraryParser {
             HashMap<String, PeptideDO> map = new HashMap<>();
             Set<String> proteinSet = new HashSet<>();
             while ((line = reader.readLine()) != null) {
-                Result<PeptideDO> Result = parseTransition(line, columnMap, library);
-                if (Result.isFailed()) {
-                    if (Result.getErrorCode() == null) {
+                Result<PeptideDO> result = null;
+                try {
+                    result = parseTransition(line, columnMap, library);
+                } catch (Exception e) {
+                    log.info(line);
+                    e.printStackTrace();
+                    return Result.Error("Format Error");
+                }
+
+                if (result.isFailed()) {
+                    if (result.getErrorCode() == null) {
                         log.info("什么情况");
                     }
-                    if (Result.getErrorCode() != null && !Result.getErrorCode().equals(ResultCode.NO_DECOY.getCode())) {
-                        tranResult.addErrorMsg(Result.getErrorMessage());
+                    if (result.getErrorCode() != null && !result.getErrorCode().equals(ResultCode.NO_DECOY.getCode())) {
+                        tranResult.addErrorMsg(result.getErrorMessage());
                     }
                     continue;
                 }
-                PeptideDO peptide = Result.getData();
+                PeptideDO peptide = result.getData();
                 proteinSet.addAll(peptide.getProteins());
                 addFragment(peptide, map);
             }
@@ -143,8 +152,6 @@ public class LibraryTsvParser extends BaseLibraryParser {
                 return Result.Error(ResultCode.LINE_IS_EMPTY);
             }
             HashMap<String, Integer> columnMap = parseColumns(line);
-
-
             HashMap<String, PeptideDO> map = new HashMap<>();
 
             boolean withCharge = new ArrayList<>(selectedPepSet).get(0).contains("_");
@@ -207,9 +214,19 @@ public class LibraryTsvParser extends BaseLibraryParser {
      */
     private Result<PeptideDO> parseTransition(String line, HashMap<String, Integer> columnMap, LibraryDO library) {
         Result<PeptideDO> result = new Result<>(true);
-        String[] row = StringUtils.splitByWholeSeparatorPreserveAllTokens(line, "\t");
+        String[] row = null;
+        if (line.contains(SymbolConst.TAB)) {
+            row = StringUtils.splitByWholeSeparatorPreserveAllTokens(line, SymbolConst.TAB);
+        } else {
+            row = StringUtils.splitByWholeSeparatorPreserveAllTokens(line, SymbolConst.COMMA);
+        }
+
         if (row.length != columnMap.size()) {
             log.info("Error Format:" + line);
+            return Result.Error(ResultCode.PARSE_ERROR);
+        }
+        for (int i = 0; i < row.length; i++) {
+            row[i] = row[i].replace(SymbolConst.DOUBLE_QUOTA, "");
         }
         PeptideDO peptideDO = new PeptideDO();
         boolean isDecoy = !row[columnMap.get(IsDecoy)].equals("0");

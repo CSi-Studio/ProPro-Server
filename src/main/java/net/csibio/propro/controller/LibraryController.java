@@ -107,12 +107,10 @@ public class LibraryController extends XController<LibraryDO, LibraryQuery, Libr
         library.setName(libraryUpdateVO.getName());
         library.setDescription(libraryUpdateVO.getDescription());
         library.setType(libraryUpdateVO.getType());
-        library.setOrganism(
-                libraryUpdateVO.getOrganism() != null
-                        ? Arrays.stream(libraryUpdateVO.getOrganism().toLowerCase().split(SymbolConst.COMMA))
-                        .filter(s -> !s.isEmpty())
-                        .collect(Collectors.toSet())
-                        : null);
+        library.setOrganism(libraryUpdateVO.getOrganism() != null ? Arrays.stream(libraryUpdateVO.getOrganism().toLowerCase().split(SymbolConst.COMMA))
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet())
+                : null);
         Result result = libraryService.insert(library);
         if (result.isFailed()) {
             return result;

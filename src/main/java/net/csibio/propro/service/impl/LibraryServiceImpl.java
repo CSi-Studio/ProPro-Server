@@ -49,6 +49,8 @@ public class LibraryServiceImpl implements LibraryService {
     @Autowired
     LibraryTsvParser tsvParser;
     @Autowired
+    OpenCsvParser openCsvParser;
+    @Autowired
     TraMLParser traMLParser;
     @Autowired
     FastTraMLParser fastTraMLParser;
@@ -150,17 +152,13 @@ public class LibraryServiceImpl implements LibraryService {
             taskDO.finish(TaskStatus.FAILED.getName());
         }
 
-        /**
-         * 如果全部存储成功,开始统计蛋白质数目,肽段数目和Transition数目
-         */
+        //如果全部存储成功,开始统计蛋白质数目,肽段数目和Transition数目
         taskDO.addLog("开始统计蛋白质数目,肽段数目和Transition数目");
         taskService.update(taskDO);
-
 
         statistic(library);
         taskDO.finish(TaskStatus.SUCCESS.getName(), "统计完毕");
         taskService.update(taskDO);
-
     }
 
     @Override
@@ -169,11 +167,18 @@ public class LibraryServiceImpl implements LibraryService {
         Result result = null;
 
         String filePath = library.getFilePath();
-        if (filePath.toLowerCase().endsWith("tsv") || filePath.toLowerCase().endsWith("csv")) {
-            result = tsvParser.parseAndInsert(libFileStream, library, taskDO);
+
+        if (filePath.toLowerCase().endsWith("tsv")) {
+            library.setFileFormat("tsv");
+            result = openCsvParser.parseAndInsert(libFileStream, library, taskDO);
+        } else if (filePath.toLowerCase().endsWith("csv")) {
+            library.setFileFormat("csv");
+            result = openCsvParser.parseAndInsert(libFileStream, library, taskDO);
         } else if (filePath.toLowerCase().endsWith("traml")) {
+            library.setFileFormat("traml");
             result = traMLParser.parseAndInsert(libFileStream, library, taskDO);
         } else if (filePath.toLowerCase().endsWith("txt")) {
+            library.setFileFormat("txt");
             result = msmsParser.parseAndInsert(libFileStream, library, taskDO);
         } else {
             return Result.Error(ResultCode.INPUT_FILE_TYPE_MUST_BE_TSV_OR_TRAML);

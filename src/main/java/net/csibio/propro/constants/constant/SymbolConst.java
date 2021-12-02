@@ -12,4 +12,6 @@ public class SymbolConst {
     public static final String SPACE = " ";
     public static final String LEFT_SLASH = "/";
     public static final String RIGHT_SLASH = "\\";
+    public static final String DOUBLE_QUOTA = "\"";
+    public static final String QUOTA = "'";
 }

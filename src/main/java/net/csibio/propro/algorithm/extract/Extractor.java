@@ -304,7 +304,7 @@ public class Extractor {
                 maxIonIntensityInThisSpectrum = maxIntensities[i];
             }
 
-            IntegerPair pair = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), params.getMethod().getEic().getIonsLow(), params.getMethod().getEic().getIonsHigh(), maxIonIntensityInThisSpectrum);
+            IntegerPair pair = diaScorer.calcTotalIons(pairs.getMzArray(), pairs.getIntensityArray(), coord.getUnimodMap(), coord.getSequence(), coord.getCharge(), params.getMethod().getEic().getIonsLow(), 500, maxIonIntensityInThisSpectrum);
             ionsLow[i] = pair.left();
             ionsHigh[i] = pair.right();
         }
