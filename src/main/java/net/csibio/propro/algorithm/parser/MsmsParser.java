@@ -275,7 +275,7 @@ public class MsmsParser extends BaseLibraryParser {
             return true;
         }
 
-        BYSeries bySeries = fragmentFactory.getBYSeries(unimodMap, sequence, 1);
+        BYSeries bySeries = fragmentFactory.getBYSeries(unimodMap, sequence, 1, null);
         List<Double> bSeries = bySeries.getBSeries();
         List<Double> ySeries = bySeries.getYSeries();
         String[] bModInfoArray = new String[sequence.length()];

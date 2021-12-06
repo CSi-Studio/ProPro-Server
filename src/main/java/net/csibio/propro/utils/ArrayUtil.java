@@ -625,7 +625,7 @@ public class ArrayUtil {
     }
 
     public static double[] toPrimitive(Double[] array) {
-        if (array.length == 0) {
+        if (array == null || array.length == 0) {
             return new double[0];
         }
         double[] dArray = new double[array.length];

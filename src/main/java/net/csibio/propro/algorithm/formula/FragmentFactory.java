@@ -49,10 +49,10 @@ public class FragmentFactory {
     LibraryTsvParser libraryTsvParser;
 
     //根据UnimodMap,肽段的序列以及带电量获取该肽段所有B,Y类型的排列组合的离子MZ列表
-    public BYSeries getBYSeries(HashMap<Integer, String> unimodHashMap, String sequence, int charge) {
+    public BYSeries getBYSeries(HashMap<Integer, String> unimodHashMap, String sequence, int charge, Integer precision) {
 
         BYSeries bySeries = new BYSeries();
-
+        precision = precision == null ? 1 : precision;
         //bSeries 若要提高精度，提高json的精度
         List<Double> bSeries = new ArrayList<>();
         double monoWeight = Constants.PROTON_MASS_U * charge;
@@ -70,7 +70,7 @@ public class FragmentFactory {
                 }
             }
             monoWeight += aa.getMonoIsotopicMass();
-            bSeries.add(monoWeight);
+            bSeries.add(Math.round(monoWeight * precision) * 1d / precision);
         }
 
         //ySeries
@@ -90,7 +90,7 @@ public class FragmentFactory {
                 }
             }
             monoWeight += aa.getMonoIsotopicMass();
-            ySeries.add(monoWeight + h2oWeight);
+            ySeries.add(Math.round((monoWeight + h2oWeight) * precision) * 1d / precision);
         }
 
         bySeries.setBSeries(bSeries);
@@ -304,7 +304,7 @@ public class FragmentFactory {
     }
 
     public PeptideDO calcFingerPrints(PeptideDO peptide) {
-        BYSeries by = getBYSeries(peptide.getUnimodMap(), peptide.getSequence(), 1);
+        BYSeries by = getBYSeries(peptide.getUnimodMap(), peptide.getSequence(), 1, 10000);
         HashSet<Double> fingerPrints = new HashSet<>();
         fingerPrints.addAll(by.getBSeries());
         fingerPrints.addAll(by.getYSeries());

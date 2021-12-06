@@ -10,6 +10,7 @@ import net.csibio.propro.domain.bean.common.IntegerPair;
 import net.csibio.propro.domain.bean.score.BYSeries;
 import net.csibio.propro.domain.bean.score.IntegrateWindowMzIntensity;
 import net.csibio.propro.domain.bean.score.PeakGroup;
+import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.loader.AminoAcidLoader;
 import net.csibio.propro.loader.ElementsLoader;
 import net.csibio.propro.loader.UnimodLoader;
@@ -19,9 +20,8 @@ import org.apache.commons.math3.util.FastMath;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Nico Wang Ruimin
@@ -209,37 +209,40 @@ public class DIAScorer {
         peakGroup.put(ScoreType.IsoOverlap.getName(), isotopeOverlap, scoreTypes);
     }
 
-    public IntegerPair calcTotalIons(MzIntensityPairs pairs, HashMap<Integer, String> unimodHashMap, String sequence, int charge, float minIntensity, float minIntensity2, float maxIntensity) {
+    public IntegerPair calcTotalIons(MzIntensityPairs pairs, HashMap<Integer, String> unimodHashMap, String sequence, int charge, float minIntensity, float minIntensity2, float maxIntensity, DataDO data, int index) {
         //计算理论值
         int totalCount1 = 0;
         int totalCount2 = 0;
-        for (int i = 1; i <= charge; i++) {
-            BYSeries bySeries = fragmentFactory.getBYSeries(unimodHashMap, sequence, i);
-            List<Double> totalIons = new ArrayList<>();
+        Set<Double> totalIons = new HashSet<>();
+        for (int i = 0; i < charge; i++) {
+            BYSeries bySeries = fragmentFactory.getBYSeries(unimodHashMap, sequence, i, 10000);
             totalIons.addAll(bySeries.getBSeries());
             totalIons.addAll(bySeries.getYSeries());
+        }
 
-            int count1 = 0;
-            int count2 = 0;
-            for (double seriesMz : totalIons) {
-                Double left = seriesMz - 0.015;
-                Double right = seriesMz + 0.015;
+        AtomicInteger hitInLib = new AtomicInteger(0);
+        data.getCutInfoMap().forEach((key, value) -> {
+            if (data.getIntMap().get(key) != null && data.getIntMap().get(key)[index] != 0) {
+                hitInLib.getAndIncrement();
+            }
+            totalIons.remove(Math.round(value * 10000) / 10000d);
+        });
 
-                IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(pairs.getMzArray(), pairs.getIntensityArray(), left.floatValue(), right.floatValue());
-                if (mzIntensity.isSignalFound() &&
-                        (Math.abs(seriesMz - mzIntensity.getMz()) * 1000000 / seriesMz) < Constants.DIA_BYSERIES_PPM_DIFF &&
-                        mzIntensity.getIntensity() > minIntensity && mzIntensity.getIntensity() <= maxIntensity) {
-                    if (mzIntensity.getIntensity() > minIntensity) {
-                        count1++;
-                    }
-                    if (mzIntensity.getIntensity() > minIntensity2) {
-                        count2++;
-                    }
+        for (double seriesMz : totalIons) {
+            Double left = seriesMz - 0.015;
+            Double right = seriesMz + 0.015;
+
+            IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(pairs.getMzArray(), pairs.getIntensityArray(), left.floatValue(), right.floatValue());
+            if (mzIntensity.isSignalFound() &&
+                    (Math.abs(seriesMz - mzIntensity.getMz()) * 1000000 / seriesMz) < Constants.DIA_BYSERIES_PPM_DIFF &&
+                    mzIntensity.getIntensity() > minIntensity && mzIntensity.getIntensity() <= maxIntensity) {
+                if (mzIntensity.getIntensity() > minIntensity) {
+                    totalCount1++;
+                }
+                if (mzIntensity.getIntensity() > minIntensity2) {
+                    totalCount2++;
                 }
             }
-
-            totalCount1 += count1;
-            totalCount2 += count2;
         }
 
         return new IntegerPair(totalCount1, totalCount2);

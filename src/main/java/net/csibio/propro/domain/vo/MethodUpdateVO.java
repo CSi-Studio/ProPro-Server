@@ -18,12 +18,11 @@ public class MethodUpdateVO {
 
     //*********************************EIC参数****************************************************//
     Double mzWindow = 0.015d; //MZ窗口,为a时表示的是±a
-    Boolean adaptiveMzWindow = false; //是否使用自适应mz窗口,自适应mz算
     Double rtWindow = 300d; //RT窗口,为300时表示的是 ±300
     Float ionsLow = 50f; //计算IonsCountLow时的最小强度值
     Float ionsHigh = 300f; //计算IonsCountHigh时的最小强度值
     Integer maxIons = 6;
-    
+
     //*********************************Irt参数(需要包含基本参数)****************************************************//
     Boolean useAnaLibForIrt = false;  //是否使用标准库来做Irt校准
     String anaLibForIrt; //当useAnaLibForIrt为true时生效,表示用于做irt的标准库的id

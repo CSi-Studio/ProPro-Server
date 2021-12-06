@@ -22,15 +22,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Component("peakIdentifier")
-public class PeakIdentifier {
+@Component("similarPeakOptimizer")
+public class SimilarPeakOptimizer {
 
     @Autowired
     PeptideService peptideService;
     @Autowired
     BlockIndexService blockIndexService;
 
-    public List<SelectedPeakGroup> identify(String runId, List<DataScore> dataList, Map<String, SelectedPeakGroup> selectedDataMap, List<WindowRange> ranges, String libraryId, double minTotalScore) {
+    public List<SelectedPeakGroup> optimizer(String runId, List<DataScore> dataList, Map<String, SelectedPeakGroup> selectedDataMap, List<WindowRange> ranges, String libraryId, double minTotalScore) {
         List<SelectedPeakGroup> selectedList = new ArrayList<>();
         Map<String, DataScore> dataMap = dataList.stream().filter(data -> !data.getDecoy()).collect(Collectors.toMap(DataScore::getPeptideRef, Function.identity()));
         for (WindowRange range : ranges) {

@@ -11,6 +11,7 @@ import net.csibio.propro.algorithm.peak.GaussFilter;
 import net.csibio.propro.algorithm.peak.PeakFitter;
 import net.csibio.propro.algorithm.score.features.DIAScorer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
+import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
@@ -101,39 +102,28 @@ public class CoreFunc {
         data.setRtArray(rtArray);
         if (StringUtils.isNotEmpty(params.getOverviewId())) {
             data.setOverviewId(params.getOverviewId());
-            //在此处直接设置data的Id
-            data.setId(params.getOverviewId() + coord.getPeptideRef() + data.getDecoy());
+            data.setId(params.getOverviewId() + coord.getPeptideRef() + data.getDecoy());            //在此处直接设置data的Id
         }
 
         boolean isHit = false;
-        float window = params.getMethod().getEic().getMzWindow().floatValue();
-        Boolean adaptiveMzWindow = params.getMethod().getEic().getAdaptiveMzWindow();
-
+        float ppmWindow = params.getMethod().getEic().getMzWindow().floatValue();
         for (FragmentInfo fi : coord.getFragments()) {
             float mz = fi.getMz().floatValue();
+            float window = mz * ppmWindow * Constants.PPM_F;
             mzStart = mz - window;
             mzEnd = mz + window;
             float[] intArray = new float[rtArray.length];
             boolean isAllZero = true;
 
             //本函数极其注重性能,为整个流程最关键的耗时步骤,每提升10毫秒都可以带来巨大的性能提升  --陆妙善
-            if (adaptiveMzWindow) {
-                for (int i = 0; i < rtArray.length; i++) {
-                    float acc = ConvolutionUtil.adaptiveAccumulation(rtMap.get(rtArray[i]), mz);
-                    if (acc != 0) {
-                        isAllZero = false;
-                    }
-                    intArray[i] = acc;
+            for (int i = 0; i < rtArray.length; i++) {
+                float acc = ConvolutionUtil.accumulation(rtMap.get(rtArray[i]), mzStart, mzEnd);
+                if (acc != 0) {
+                    isAllZero = false;
                 }
-            } else {
-                for (int i = 0; i < rtArray.length; i++) {
-                    float acc = ConvolutionUtil.accumulation(rtMap.get(rtArray[i]), mzStart, mzEnd);
-                    if (acc != 0) {
-                        isAllZero = false;
-                    }
-                    intArray[i] = acc;
-                }
+                intArray[i] = acc;
             }
+
             if (isAllZero) {
                 //如果该cutInfo没有XIC到任何数据,则不存入IntMap中,这里专门写这个if逻辑是为了帮助后续阅读代码的时候更加容易理解.我们在这边是特地没有将未检测到的碎片放入map的
                 continue;

@@ -3,6 +3,7 @@ package net.csibio.propro.algorithm.learner.classifier;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import lombok.extern.slf4j.Slf4j;
+import net.csibio.propro.algorithm.score.ScoreType;
 import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.learner.*;
 import net.csibio.propro.domain.bean.score.SelectedPeakGroup;
@@ -10,9 +11,7 @@ import net.csibio.propro.utils.ProProUtil;
 import org.apache.commons.math3.linear.*;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Component("lda")
@@ -132,11 +131,18 @@ public class Lda extends Classifier {
 
     private void assignment(RealMatrix xMatrix, RealVector yVector, List<SelectedPeakGroup> peakGroupList, List<String> scoreTypes) {
 
+        Set<String> skipTypes = new HashSet<>();
+        skipTypes.add(ScoreType.CorrShape.getName());
         for (int i = 0; i < peakGroupList.size(); i++) {
             yVector.setEntry(i, peakGroupList.get(i).getDecoy() ? 0 : 1);
             try {
                 for (int j = 0; j < scoreTypes.size(); j++) {
-                    xMatrix.setEntry(i, j, peakGroupList.get(i).get(scoreTypes.get(j), scoreTypes));
+                    if (skipTypes.contains(scoreTypes.get(j))) {
+                        xMatrix.setEntry(i, j, 0);
+                    } else {
+                        xMatrix.setEntry(i, j, peakGroupList.get(i).get(scoreTypes.get(j), scoreTypes));
+                    }
+
                 }
             } catch (Exception e) {
                 log.error(e.getMessage());

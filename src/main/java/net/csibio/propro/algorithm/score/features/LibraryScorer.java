@@ -85,8 +85,8 @@ public class LibraryScorer {
             if (Double.isNaN(pearsonApex)) {
                 pearsonApex = 0d;
             }
-            peakGroup.put(ScoreType.Pearson.getName(), pearsonSum, scoreTypes);
-            peakGroup.put(ScoreType.ApexPearson.getName(), pearsonApex, scoreTypes);
+            peakGroup.put(ScoreType.Pearson.getName(), Math.max(pearsonSum, pearsonApex), scoreTypes);
+//            peakGroup.put(ScoreType.ApexPearson.getName(), , scoreTypes);
         }
 
         double[] runSqrt = new double[runIntensity.length];

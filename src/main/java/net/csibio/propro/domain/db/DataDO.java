@@ -86,7 +86,6 @@ public class DataDO extends BaseDO {
         } catch (Exception e) {
             System.out.println(peptideRef);
         }
-
     }
 
     public DataDO clone() {

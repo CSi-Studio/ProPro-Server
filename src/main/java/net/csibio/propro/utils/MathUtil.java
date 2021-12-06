@@ -779,4 +779,21 @@ public class MathUtil {
     public static double keepLength(double d, int keepLength) {
         return ((double) Math.round(d * keepLength) / keepLength);
     }
+
+    public static double corr(Double[] x, Double[] y) {
+        if (x == null || y == null || x.length != y.length) {
+            return Double.NaN;
+        }
+        double sx = 0.0, sy = 0.0, sx2 = 0.0, sy2 = 0.0, sxy = 0.0;
+        double n = x.length;
+        for (int i = 0; i < x.length; i++) {
+            double xi = x[i], yi = y[i];
+            sx += xi;
+            sy += yi;
+            sx2 += Math.sqrt(xi);
+            sy2 += Math.sqrt(yi);
+            sxy += xi * yi;
+        }
+        return (n * sxy - sx * sy) / Math.sqrt(Math.max(0.000001, (n * sx2 - Math.sqrt(sx)) * (n * sy2 - Math.sqrt(sy))));
+    }
 }

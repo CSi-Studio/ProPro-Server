@@ -5,7 +5,7 @@ import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.learner.classifier.Xgboost;
 import net.csibio.propro.algorithm.peak.PeakFitter;
-import net.csibio.propro.algorithm.peak.PeakIdentifier;
+import net.csibio.propro.algorithm.peak.SimilarPeakOptimizer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
@@ -57,7 +57,7 @@ public class SemiSupervise {
     @Autowired
     RunService runService;
     @Autowired
-    PeakIdentifier peakIdentifier;
+    SimilarPeakOptimizer similarPeakOptimizer;
     @Autowired
     PeakFitter peakFitter;
 
@@ -121,7 +121,7 @@ public class SemiSupervise {
         List<WindowRange> ranges = run.getWindowRanges();
 
         //策略1. 相似重叠峰校准策略
-        peakIdentifier.identify(overview.getRunId(), dataList, selectedDataMap, ranges, overview.getAnaLibId(), minTotalScore); //后置优化算法1->选择了相同rt的近似肽段做一个区分
+        similarPeakOptimizer.optimizer(overview.getRunId(), dataList, selectedDataMap, ranges, overview.getAnaLibId(), minTotalScore); //后置优化算法1->选择了相同rt的近似肽段做一个区分
         //策略2. 基于IonsCount的组内切换策略
         List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroup(dataList);
         //策略3. 干扰离子校准技术

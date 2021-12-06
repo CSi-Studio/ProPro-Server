@@ -131,7 +131,7 @@ public class PeakGroup extends BaseScores {
 
     public double getTotal() {
         return this.get(ScoreType.CorrShapeW, ScoreType.usedScoreTypes()) +
-                Math.max(this.get(ScoreType.Pearson, ScoreType.usedScoreTypes()), this.get(ScoreType.ApexPearson, ScoreType.usedScoreTypes())) +
+                this.get(ScoreType.Pearson, ScoreType.usedScoreTypes()) +
                 this.get(ScoreType.Dotprod, ScoreType.usedScoreTypes()) -
                 this.get(ScoreType.IonsDelta, ScoreType.usedScoreTypes()) -
                 this.get(ScoreType.IsoOverlap, ScoreType.usedScoreTypes())

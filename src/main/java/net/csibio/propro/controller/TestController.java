@@ -263,12 +263,11 @@ public class TestController {
                                                     .findFirst()
                                                     .get();
                                     double pearson = peakGroup.get(ScoreType.Pearson, ScoreType.usedScoreTypes());
-                                    double apexPearson =
-                                            peakGroup.get(ScoreType.ApexPearson, ScoreType.usedScoreTypes());
+//                                    double apexPearson = peakGroup.get(ScoreType.ApexPearson, ScoreType.usedScoreTypes());
                                     double libDotprod = peakGroup.get(ScoreType.Dotprod, ScoreType.usedScoreTypes());
                                     //                    double isoOverlap = peakGroup.get(ScoreType.IsoOverlap,
                                     // ScoreType.usedScoreTypes());
-                                    if (apexPearson < 0.2) {
+                                    if (pearson < 0.2) {
                                         stat.getAndIncrement();
                                         findItList.add(sum.getPeptideRef());
                                     }

@@ -109,7 +109,7 @@ public abstract class Classifier {
         bestTargetScore.put(ScoreType.CorrCoe.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.CorrCoeW.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.Pearson.getName(), 1d, scoreTypes);
-//        bestTargetScore.put(ScoreType.ApexPearson.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.Elution.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.IntShift.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.Rsmd.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.Manhattan.getName(), 0d, scoreTypes);
