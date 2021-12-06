@@ -63,6 +63,7 @@ public class DataSumServiceImpl implements DataSumService {
             sum.setIntensitySum(selectedPeakGroup.getIntensitySum());
             sum.setFitIntSum(selectedPeakGroup.getFitIntSum());
             sum.setTotalScore(selectedPeakGroup.getTotalScore());
+            sum.setBestIon(selectedPeakGroup.getBestIon());
             sum.setIonsLow(selectedPeakGroup.getIonsLow());
             if (selectedPeakGroup.getFdr() != null && selectedPeakGroup.getFdr() <= fdr) {
                 sum.setStatus(IdentifyStatus.SUCCESS.getCode());

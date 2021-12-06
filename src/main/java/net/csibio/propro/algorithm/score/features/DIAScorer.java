@@ -209,7 +209,7 @@ public class DIAScorer {
         peakGroup.put(ScoreType.IsoOverlap.getName(), isotopeOverlap, scoreTypes);
     }
 
-    public IntegerPair calcTotalIons(float[] spectrumMzArray, float[] spectrumIntArray, HashMap<Integer, String> unimodHashMap, String sequence, int charge, float minIntensity, float minIntensity2, float maxIntensity) {
+    public IntegerPair calcTotalIons(MzIntensityPairs pairs, HashMap<Integer, String> unimodHashMap, String sequence, int charge, float minIntensity, float minIntensity2, float maxIntensity) {
         //计算理论值
         int totalCount1 = 0;
         int totalCount2 = 0;
@@ -225,7 +225,7 @@ public class DIAScorer {
                 Double left = seriesMz - 0.015;
                 Double right = seriesMz + 0.015;
 
-                IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(spectrumMzArray, spectrumIntArray, left.floatValue(), right.floatValue());
+                IntegrateWindowMzIntensity mzIntensity = ScoreUtil.integrateWindow(pairs.getMzArray(), pairs.getIntensityArray(), left.floatValue(), right.floatValue());
                 if (mzIntensity.isSignalFound() &&
                         (Math.abs(seriesMz - mzIntensity.getMz()) * 1000000 / seriesMz) < Constants.DIA_BYSERIES_PPM_DIFF &&
                         mzIntensity.getIntensity() > minIntensity && mzIntensity.getIntensity() <= maxIntensity) {

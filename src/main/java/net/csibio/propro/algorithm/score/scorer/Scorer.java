@@ -84,19 +84,18 @@ public class Scorer {
         //获取标准库中对应的PeptideRef组
         //重要步骤,"或许是目前整个工程最重要的核心算法--选峰算法."--陆妙善
         SigmaSpacing ss = params.getMethod().getIrt().getSs();
-        PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchByIonsShape(dataDO, coord, ss);
+        PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
         if (!peakGroupListWrapper.isFound()) {
-            //重试机制A:扩大RT搜索范围并重新计算XIC
-            coord.setRtRange(coord.getRtStart() - 400, coord.getRtEnd() + 400);
-            dataDO = coreFunc.extractOne(coord, rtMap, params);
+            //重试机制:扩大RT搜索范围并使用IonsShape重新计算XIC
+            coord.setRtRange(coord.getRtStart() - 200, coord.getRtEnd() + 200);
+            dataDO = coreFunc.extractOne(coord, rtMap, params, true, 100f);
             if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= coord.getFragments().size() / 2) {
                 dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
                 return dataDO;
             }
-            peakGroupListWrapper = peakPicker.searchByIonsShape(dataDO, coord, ss);
+
+            peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
             if (!peakGroupListWrapper.isFound()) {
-                //重试机制B:使用基于IonsShape的选峰机制
-//                peakGroupListWrapper = peakPicker.searchByIonsShape(dataDO, coord, ss);
                 dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
                 return dataDO;
             }
@@ -135,8 +134,10 @@ public class Scorer {
             diaScorer.calculateDiaMassDiffScore(productMzMap, mzIntensityPairs, normedLibIntMap, peakGroup, scoreTypes);
             libraryScorer.calculateNormRtScore(peakGroup, run.getIrt().getSi(), dataDO.getLibRt(), scoreTypes);
             xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
+            xicScorer.calcPearsonMatrixScore(peakGroup, normedLibIntMap, coord, scoreTypes);
             diaScorer.calculateIsotopeScores(peakGroup, productMzMap, productChargeMap, mzIntensityPairs, scoreTypes);
             peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
+
             peakFitter.fit(peakGroup, coord); //拟合定量结果
         }
 
@@ -264,6 +265,7 @@ public class Scorer {
                 bestPeakGroup.setTotalScore(topPeakGroup.getTotalScore());
                 bestPeakGroup.setScores(topPeakGroup.getScores());
                 bestPeakGroup.setApexRt(topPeakGroup.getApexRt());
+                bestPeakGroup.setBestIon(topPeakGroup.getBestIon());
                 bestPeakGroup.setSelectedRt(topPeakGroup.getSelectedRt());
                 bestPeakGroup.setIntensitySum(topPeakGroup.getIntensitySum());
                 bestPeakGroup.setFitIntSum(topPeakGroup.getFitIntSum());
@@ -288,6 +290,7 @@ public class Scorer {
                 selectedPeakGroup.setTotalScore(topPeakGroup.getTotalScore());
                 selectedPeakGroup.setScores(topPeakGroup.getScores());
                 selectedPeakGroup.setApexRt(topPeakGroup.getApexRt());
+                selectedPeakGroup.setBestIon(topPeakGroup.getBestIon());
                 selectedPeakGroup.setSelectedRt(topPeakGroup.getSelectedRt());
                 selectedPeakGroup.setIntensitySum(topPeakGroup.getIntensitySum());
                 selectedPeakGroup.setFitIntSum(topPeakGroup.getFitIntSum());

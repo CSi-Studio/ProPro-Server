@@ -44,6 +44,8 @@ public class DataSumDO extends BaseDO {
 
     Double totalScore; //对应的最终的主峰的打分
 
+    String bestIon;
+
     Double intensitySum;  //Intensity Sum
 
     Double fitIntSum;
@@ -58,6 +60,7 @@ public class DataSumDO extends BaseDO {
         dataSum.setIntensitySum(selectPeakGroup.getIntensitySum());
         dataSum.setApexRt(selectPeakGroup.getApexRt());
         dataSum.setSelectedRt(selectPeakGroup.getSelectedRt());
+        dataSum.setBestIon(selectPeakGroup.getBestIon());
         dataSum.setTotalScore(selectPeakGroup.getTotalScore());
 
         return dataSum;

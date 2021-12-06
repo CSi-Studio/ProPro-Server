@@ -363,6 +363,20 @@ public class MathUtil {
     }
 
     /**
+     * Normalize a with a's mean and std.
+     */
+    public static double[] normalizeAsPrimitive(Double[] array) {
+//        Double[] result = array.clone();
+        double[] result = new double[array.length];
+        double mean = mean(array);
+        double std = std(array, mean);
+        for (int i = 0; i < array.length; i++) {
+            result[i] = (array[i] - mean) / std;
+        }
+        return result;
+    }
+
+    /**
      * Normalize a with b's mean and std.
      */
     public static Double[] normalize(Double[] arrayA, Double[] arrayB) {
@@ -480,6 +494,14 @@ public class MathUtil {
     public static double sum(List<Double> array) {
         double sum = 0;
         for (double value : array) {
+            sum += value;
+        }
+        return sum;
+    }
+
+    public static double sumDouble(Collection<Double> array) {
+        double sum = 0;
+        for (Double value : array) {
             sum += value;
         }
         return sum;

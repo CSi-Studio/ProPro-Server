@@ -158,12 +158,6 @@ public class ClinicController {
         log.info("开始获取新预测数据-------------------------------------------------------------------------------");
         List<RunDataVO> dataList = new ArrayList<>();
         PeptideDO peptide = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(peptideRef), PeptideDO.class);
-        if (peptide.getFragments().size() > 6) {
-            peptide.setFragments(peptide.getFragments().subList(0, 6));
-        }
-        if (peptide.getDecoyFragments().size() > 6) {
-            peptide.setDecoyFragments(peptide.getDecoyFragments().subList(0, 6));
-        }
         for (int i = 0; i < overviewIds.size(); i++) {
             String overviewId = overviewIds.get(i);
             OverviewDO overview = overviewService.getById(overviewId);

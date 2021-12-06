@@ -3,15 +3,23 @@ package net.csibio.propro.algorithm.score.features;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import lombok.extern.slf4j.Slf4j;
+import net.csibio.propro.algorithm.peak.Smoother;
 import net.csibio.propro.algorithm.score.ScoreType;
+import net.csibio.propro.domain.bean.common.DoublePairs;
+import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroup;
+import net.csibio.propro.domain.options.PeakFindingOptions;
+import net.csibio.propro.utils.ArrayUtil;
 import net.csibio.propro.utils.MathUtil;
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.util.FastMath;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * xcorr_coelution_score 互相关偏移的mean + std
@@ -21,9 +29,12 @@ import java.util.List;
  * log_sn_score log(距离ApexRt最近点的stn值之和)
  * var_intensity_score 同一个peptideRef下, 所有HullPoints的intensity之和 除以 所有intensity之和
  */
-@Component("chromatographicScorer")
+@Component("xicScorer")
 @Slf4j
 public class XicScorer {
+
+    @Autowired
+    Smoother smoother;
 
     /**
      * xcorrCoelutionScore
@@ -97,8 +108,68 @@ public class XicScorer {
         }
     }
 
+    /**
+     * 每一个ion和其他ions的pearson相关系数
+     *
+     * @param peakGroup
+     * @return
+     */
+    public void calcPearsonMatrixScore(PeakGroup peakGroup, HashMap<String, Double> normedLibIntMap, PeptideCoord coord, List<String> scoreTypes) {
+        String bestIon = null;
+        String maxIon = null;
+        double maxIonIntensity = -1d;
+        for (int i = 0; i < coord.getFragments().size(); i++) {
+            String cutInfo = coord.getFragments().get(i).getCutInfo();
+            Double intensity = peakGroup.getIonIntensity().get(cutInfo);
+            if (intensity != null) {
+                if (bestIon == null) { //默认取存在的最大碎片最为最佳碎片
+                    bestIon = coord.getFragments().get(i).getCutInfo();
+                }
+                if (intensity > maxIonIntensity) {
+                    maxIon = cutInfo;
+                    maxIonIntensity = intensity;
+                }
+            }
+        }
+        //实际最大碎片就是理论最大碎片的时候,考虑实际最大碎片是否被干扰导致增强
+        if (maxIon.equals(bestIon)) {
+            //判定方式为整体占比
+            double realRatio = maxIonIntensity / peakGroup.getIntensitySum();
+            double libRatio = normedLibIntMap.get(bestIon) / MathUtil.sumDouble(normedLibIntMap.values());
+            if (realRatio / libRatio > 5) { //如果超过理论2倍的占比
+                log.info("最大碎片干扰:" + coord.getPeptideRef());
+                for (int i = 1; i < coord.getFragments().size(); i++) {
+                    String cutInfo = coord.getFragments().get(i).getCutInfo();
+                    Double intensity = peakGroup.getIonIntensity().get(cutInfo);
+                    if (intensity != null) {
+                        bestIon = coord.getFragments().get(i).getCutInfo();
+                        break;
+                    }
+                }
+            }
+        }
+
+        HashMap<String, Double[]> ionMap = peakGroup.getIonHullInt();
+        PeakFindingOptions options = new PeakFindingOptions();
+        options.fillParams();
+        double[] rts = ArrayUtil.toPrimitive(peakGroup.getIonHullRt());
+        DoublePairs pairs = smoother.doSmooth(new DoublePairs(rts, ArrayUtil.toPrimitive(peakGroup.getIonHullInt().get(bestIon))), options);
+        double[] bestIonSmoothEic = pairs.y();
+        double total = 0d;
+        for (Map.Entry<String, Double[]> entry : ionMap.entrySet()) {
+            Double pearson = new PearsonsCorrelation().correlation(bestIonSmoothEic, ArrayUtil.toPrimitive(entry.getValue()));
+            if (pearson.isNaN()) {
+                pearson = -1d;
+            }
+            total += pearson;
+        }
+
+        peakGroup.setBestIon(bestIon);
+        peakGroup.put(ScoreType.PearsonBest, total, scoreTypes);
+    }
+
     public void calculateLogSnScore(PeakGroup peakGroup, List<String> scoreTypes) {
-        //logSnScore
+
         // log(mean of Apex sn s)
         double snScore = peakGroup.getSignalToNoiseSum();
         snScore /= peakGroup.getIonIntensity().size();
@@ -122,6 +193,7 @@ public class XicScorer {
         List<Double[]> intensityList = new ArrayList<>(peakGroup.getIonHullInt().values());
         int listLength = intensityList.size();
         Table<Integer, Integer, Double[]> xcorrMatrix = HashBasedTable.create();
+        Table<Integer, Integer, Double> pearsonMatrix = HashBasedTable.create();
         double[] intensityi, intensityj;
         HashMap<Integer, double[]> standardizeDataMap = new HashMap<>();
         for (int i = 0; i < listLength; i++) {
@@ -132,8 +204,15 @@ public class XicScorer {
                 intensityi = standardizeDataMap.get(i);
                 intensityj = standardizeDataMap.get(j);
                 xcorrMatrix.put(i, j, calculateCrossCorrelation(intensityi, intensityj));
+                PearsonsCorrelation pearson = new PearsonsCorrelation();
+                double pearsonApex = pearson.correlation(intensityi, intensityj);
+                if (Double.isNaN(pearsonApex)) {
+                    pearsonApex = 0d;
+                }
+                pearsonMatrix.put(i, j, pearsonApex);
             }
         }
+
         return xcorrMatrix;
     }
 

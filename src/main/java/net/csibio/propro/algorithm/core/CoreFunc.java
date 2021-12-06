@@ -78,7 +78,7 @@ public class CoreFunc {
      * @param params
      * @return
      */
-    public DataDO extractOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public DataDO extractOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params, boolean withIonCount, Float ionsHighLimit) {
         float mzStart = 0;
         float mzEnd = -1;
         //所有的碎片共享同一个RT数组
@@ -145,11 +145,12 @@ public class CoreFunc {
 
         //如果所有的片段均没有提取到XIC的结果,则直接返回null
         if (!isHit) {
-//            log.info(coord.getPeptideRef() + ":EIC结果为空");
             return null;
         }
         //计算每一帧的离子碎片总数
-        extractor.calcIonsCount(data, coord, rtMap, params);
+        if (withIonCount) {
+            extractor.calcIonsCount(data, coord, rtMap, params.getMethod().getEic().getIonsLow(), ionsHighLimit == null ? params.getMethod().getEic().getIonsHigh() : ionsHighLimit);
+        }
         return data;
     }
 
@@ -166,8 +167,7 @@ public class CoreFunc {
      */
     public AnyPair<DataDO, DataSumDO> predictOneDelete(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, RunDO run, OverviewDO overview, AnalyzeParams params) {
 
-        List<FragmentInfo> libFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
-        int size = coord.getFragments().size();
+        List<FragmentInfo> libFrags = new ArrayList<>(coord.getFragments());
 
         //初始化原始数据对象集
         HashMap<Double, List<AnyPair<DataDO, DataSumDO>>> hitPairMap = new HashMap<>();
@@ -175,16 +175,12 @@ public class CoreFunc {
         AnyPair<DataDO, DataSumDO> bestPair = null;
         DataDO data = null;
         //当i=0的时候,不切换,也就是说跳过了强度比最高的碎片,强度比最高的碎片不进行离子替换
-        for (int i = -1; i < size; i++) {
+        for (int i = 0; i < libFrags.size(); i++) {
             //i==-1的时候检测的就是自己本身
-            if (i != -1) {
-                FragmentInfo temp = libFrags.get(i);
-                libFrags.remove(i);
-                coord.setFragments(libFrags);
-                libFrags.add(i, temp);
-            }
-
-            data = extractOne(coord, rtMap, params);
+            List<FragmentInfo> newLibFrags = new ArrayList<>(libFrags);
+            newLibFrags.remove(i);
+            coord.setFragments(newLibFrags);
+            data = extractOne(coord, rtMap, params, true, null);
             if (data == null) {
                 continue;
             }
@@ -236,36 +232,35 @@ public class CoreFunc {
             return null;
         }
 
-        if (maxHitRt.get() != bestPair.getRight().getSelectedRt()) {
-            log.info("有问题:" + run.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
-        } else {
-            log.info("RT吻合:" + run.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
-        }
+//        if (maxHitRt.get() != bestPair.getRight().getSelectedRt()) {
+//            log.info("有问题:" + run.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
+//        } else {
+//            log.info("RT吻合:" + run.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
+//        }
 
         return bestPair;
     }
 
     public AnyPair<DataDO, DataSumDO> predictOneNiubi(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, RunDO run, OverviewDO overview, AnalyzeParams params) {
-
-        DataDO dataDO = extractOne(coord, rtMap, params);
+        DataDO dataDO = extractOne(coord, rtMap, params, true, null);
         //EIC结果如果为空则没有继续的必要了
         if (dataDO == null) {
             log.info(coord.getPeptideRef() + ":EIC结果为空");
             return null;
         }
-        //如果
         if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= coord.getFragments().size() / 2) {
             dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
             return null;
         }
 
         dataDO = scorer.score(run, dataDO, coord, rtMap, params);
-        lda.scoreForPeakGroups(dataDO.getPeakGroupList(), overview.getWeights(), overview.fetchScoreTypes());
-        for (PeakGroup peakGroup : dataDO.getPeakGroupList()) {
-            peakFitter.fit(peakGroup, coord);
+        if (dataDO.getPeakGroupList() != null && dataDO.getPeakGroupList().size() > 0) {
+            lda.scoreForPeakGroups(dataDO.getPeakGroupList(), overview.getWeights(), overview.fetchScoreTypes());
+            DataSumDO sum = judge(dataDO, overview.getMinTotalScore());
+            return new AnyPair<>(dataDO, sum);
+        } else {
+            return null;
         }
-        DataSumDO sum = judge(dataDO, overview.getMinTotalScore());
-        return new AnyPair<>(dataDO, sum);
     }
 
     /**
@@ -282,9 +277,8 @@ public class CoreFunc {
     public AnyPair<DataDO, DataSumDO> predictOneReplace(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, RunDO run, OverviewDO overview, AnalyzeParams params) {
         //Step1.对库中的碎片进行排序,按照强度从大到小排列
         Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
-        List<FragmentInfo> sortedLibFrags = new ArrayList<>(coord.getFragments()).stream().sorted(Comparator.comparing(FragmentInfo::getIntensity).reversed()).collect(Collectors.toList());
-        List<String> libIons = sortedLibFrags.stream().map(FragmentInfo::getCutInfo).toList();
-        String maxLibIon = libIons.get(0);
+        List<String> libIons = coord.getFragments().stream().map(FragmentInfo::getCutInfo).toList();
+
         //Step2.生成碎片离子,碎片最大带电量为母离子的带电量,最小碎片长度为3
         Set<FragmentInfo> proproFiList = fragmentFactory.buildFragmentMap(coord, 3);
         proproFiList.forEach(fi -> fi.setIntensity(500d)); //给到一个任意的初始化强度
@@ -295,7 +289,7 @@ public class CoreFunc {
         });
         //Step3.对所有碎片进行EIC计算
         coord.setFragments(new ArrayList<>(proproFiList));
-        DataDO data = extractOne(coord, rtMap, params);
+        DataDO data = extractOne(coord, rtMap, params, true, null);
         Map<String, float[]> intMap = data.getIntMap();
 
         //Step4.获取所有碎片的统计分,并按照CV值进行排序,记录前15的碎片
@@ -389,7 +383,7 @@ public class CoreFunc {
         //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
         coordinates.parallelStream().forEach(coord -> {
             //Step1. 常规提取XIC,XIC结果不进行压缩处理,如果没有提取到任何结果,那么加入忽略列表
-            DataDO dataDO = extractOne(coord, rtMap, params);
+            DataDO dataDO = extractOne(coord, rtMap, params, true, null);
             //如果EIC结果中所有的碎片均为空,那么也不需要再做Reselect操作,直接跳过
             if (dataDO == null) {
 //                log.info(coord.getPeptideRef() + ":EIC结果为空");
@@ -410,7 +404,7 @@ public class CoreFunc {
 
             //Step4. 如果第一,二步均符合条件,那么开始对对应的伪肽段进行数据提取和打分
             coord.setDecoy(true);
-            DataDO decoyData = extractOne(coord, rtMap, params);
+            DataDO decoyData = extractOne(coord, rtMap, params, true, null);
             if (decoyData == null) {
                 return;
             }
@@ -441,10 +435,9 @@ public class CoreFunc {
         AtomicLong newIonsGroup = new AtomicLong(0);
         //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
         coordinates.parallelStream().forEach(coord -> {
-            DataDO dataDO = extractOne(coord, rtMap, params);
+            DataDO dataDO = extractOne(coord, rtMap, params, true, null);
             //如果EIC结果中所有的碎片均为空,那么也不需要再做Reselect操作,直接跳过
             if (dataDO == null) {
-//                log.info(coord.getPeptideRef() + ":EIC结果为空");
                 return;
             }
             //Step2. 常规选峰及打分,未满足条件的直接忽略
@@ -473,7 +466,7 @@ public class CoreFunc {
 
             //Step4. 如果第一,二步均符合条件,那么开始对对应的伪肽段进行数据提取和打分
             coord.setDecoy(true);
-            DataDO decoyData = extractOne(coord, rtMap, params);
+            DataDO decoyData = extractOne(coord, rtMap, params, true, null);
             if (decoyData == null) {
                 return;
             }
@@ -501,15 +494,16 @@ public class CoreFunc {
             log.error("肽段坐标为空");
             return null;
         }
+        int maxIons = params.getMethod().getEic().getMaxIons();
         //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
         coordinates.parallelStream().forEach(coord -> {
-            if (coord.getFragments().size() > 6) {
-                coord.setFragments(coord.getFragments().subList(0, 6));
+            if (coord.getFragments().size() > maxIons) {
+                coord.setFragments(coord.getFragments().subList(0, maxIons));
             }
-            if (coord.getDecoyFragments().size() > 6) {
-                coord.setDecoyFragments(coord.getDecoyFragments().subList(0, 6));
+            if (coord.getDecoyFragments().size() > maxIons) {
+                coord.setDecoyFragments(coord.getDecoyFragments().subList(0, maxIons));
             }
-            DataDO dataDO = extractOne(coord, rtMap, params);
+            DataDO dataDO = extractOne(coord, rtMap, params, true, null);
             if (dataDO == null) {
                 return;
             }
@@ -526,7 +520,7 @@ public class CoreFunc {
 //            }
 
             coord.setDecoy(true);
-            DataDO decoyData = extractOne(coord, rtMap, params);
+            DataDO decoyData = extractOne(coord, rtMap, params, true, null);
             if (decoyData == null) {
                 return;
             }
@@ -609,9 +603,9 @@ public class CoreFunc {
         PeakGroup finalPgs = null;
         List<PeakGroup> peakGroupList = dataDO.getPeakGroupList();
         if (peakGroupList != null && peakGroupList.size() > 0) {
-            List<PeakGroup> candidateList = peakGroupList.stream().filter(peakGroup -> peakGroup.getTotalScore() >= minTotalScore).collect(Collectors.toList());
+            List<PeakGroup> candidateList = peakGroupList.stream().filter(peakGroup -> peakGroup.getTotalScore() >= minTotalScore).toList();
             if (candidateList.size() > 0) {
-                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroup::getTotalScore).reversed()).collect(Collectors.toList()).get(0);
+                finalPgs = candidateList.stream().sorted(Comparator.comparing(PeakGroup::getTotalScore).reversed()).toList().get(0);
             }
         }
 
@@ -621,6 +615,7 @@ public class CoreFunc {
             sum.setIntensitySum(finalPgs.getIntensitySum());
             sum.setFitIntSum(finalPgs.getFitIntSum());
             sum.setIonsLow(finalPgs.getIonsLow());
+            sum.setBestIon(finalPgs.getBestIon());
             dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
             sum.setStatus(IdentifyStatus.SUCCESS.getCode());
         } else {

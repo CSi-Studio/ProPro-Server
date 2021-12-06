@@ -32,6 +32,9 @@ public class PeakGroup extends BaseScores {
     //定量拟合值
     Double fitIntSum;
 
+    //拥有最佳洗脱曲线的碎片
+    String bestIon;
+
     //中间计算变量,不需要存入数据库
     @Transient
     double tic;  //所有离子在所有RT上的Intensity总和

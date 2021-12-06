@@ -60,6 +60,8 @@ public class RunDataVO {
     //Intensity Sum
     Double intensitySum;
 
+    String bestIon;
+    
     Double fitIntSum;
 
     Integer ionsLow;

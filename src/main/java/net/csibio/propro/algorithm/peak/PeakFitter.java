@@ -14,19 +14,23 @@ public class PeakFitter {
 
     public void fit(PeakGroup peakGroup, PeptideCoord coord) {
 
-        FragmentInfo bestLibIon = coord.getFragments().get(0);
-        //TODO 陆妙善 如果最强碎片被离子干扰了,就会带来大幅度的定量偏高
-        Double bestIonIntensity = peakGroup.getIonIntensity().get(bestLibIon.getCutInfo());
-        if (bestIonIntensity == null) {
+//        String bestIon = coord.getFragments().get(0).getCutInfo();
+
+        String bestIon = peakGroup.getBestIon();
+        if (bestIon == null) {
+            bestIon = coord.getFragments().get(0).getCutInfo();
+        }
+        Double bestIonIntensity = peakGroup.getIonIntensity().get(bestIon);
+        if (bestIonIntensity == null || bestIonIntensity.isNaN()) {
             return;
         }
 
         Map<String, Double> libIntMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, FragmentInfo::getIntensity));
-        double bestLibIonsIntensity = libIntMap.get(bestLibIon.getCutInfo());
+        double bestLibIonsIntensity = libIntMap.get(bestIon);
         AtomicDouble fitSum = new AtomicDouble(0d);
 
         for (Map.Entry<String, Double> entry : libIntMap.entrySet()) {
-            if (entry.getKey().equals(bestLibIon.getCutInfo())) {
+            if (entry.getKey().equals(bestIon)) {
                 fitSum.getAndAdd(bestIonIntensity);
             } else {
                 double libRatio = libIntMap.get(entry.getKey()) / bestLibIonsIntensity;
