@@ -116,7 +116,7 @@ public class Scorer {
             productMzMap.put(key, value);
         });
         HashMap<Double, MzIntensityPairs> selectedSpectMap = new HashMap<>();
-        int maxIonsCount = Arrays.stream(dataDO.getIonsLow()).max().getAsInt();
+        int maxIonsCount = Arrays.stream(dataDO.getIonsHigh()).max().getAsInt();
 
         for (PeakGroup peakGroup : peakGroupList) {
             selectedSpectMap.put(peakGroup.getSelectedRt(), rtMap.get(peakGroup.getSelectedRt().floatValue()));
@@ -136,7 +136,7 @@ public class Scorer {
             xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
             xicScorer.calcPearsonMatrixScore(peakGroup, normedLibIntMap, coord, scoreTypes);
             diaScorer.calculateIsotopeScores(peakGroup, productMzMap, productChargeMap, mzIntensityPairs, scoreTypes);
-            peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsLow()) * 1d / maxIonsCount, scoreTypes);
+            peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsHigh()) * 1d / maxIonsCount, scoreTypes);
 
             peakFitter.fit(peakGroup, coord); //拟合定量结果
         }

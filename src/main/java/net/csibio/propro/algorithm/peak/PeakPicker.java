@@ -82,32 +82,32 @@ public class PeakPicker {
 
         UnSearchPeakGroup unSearchPeakGroup = new UnSearchPeakGroup();
         //计算IonCount对应的值
-        Double[] ions300 = ArrayUtil.intToDouble(data.getIonsHigh());
-        float[] ions50Float = ArrayUtil.intTofloat(data.getIonsLow());
-        float[] ions300Float = ArrayUtil.intTofloat(data.getIonsHigh());
-        Double[] ions300Smooth = gaussFilter.filter(rtArray, ions300, ss); //使用ions300进行平滑选峰
+        Double[] ionsHigh = ArrayUtil.intToDouble(data.getIonsHigh());
+        float[] ionsLowFloat = ArrayUtil.intTofloat(data.getIonsLow());
+        float[] ionsHighFloat = ArrayUtil.intTofloat(data.getIonsHigh());
+        Double[] ionsHighSmooth = gaussFilter.filter(rtArray, ionsHigh, ss); //使用ions300进行平滑选峰
 
         unSearchPeakGroup.setIonsLow(data.getIonsLow());
         unSearchPeakGroup.setIonsHigh(data.getIonsHigh());
-        unSearchPeakGroup.setIonsHighSmooth(ions300Smooth);
+        unSearchPeakGroup.setIonsHighSmooth(ionsHighSmooth);
 
-        RtIntensityPairsDouble maxPeaksForIons300 = peakPicker.pickMaxPeak(rtArray, ions300Smooth);
-        if (maxPeaksForIons300 == null || maxPeaksForIons300.getRtArray() == null) { //如果IonsCount没有找到任何峰,则直接认为没有鉴定成功
+        RtIntensityPairsDouble maxPeaksForIonsHigh = peakPicker.pickMaxPeak(rtArray, ionsHighSmooth);
+        if (maxPeaksForIonsHigh == null || maxPeaksForIonsHigh.getRtArray() == null) { //如果IonsCount没有找到任何峰,则直接认为没有鉴定成功
             log.warn("离子碎片定位峰没有找到任何信号,PeptideRef:" + data.getPeptideRef());
             return new PeakGroupListWrapper(false);
         }
-        float[] ionCountFloat = new float[ions300Smooth.length];
-        for (int i = 0; i < ions300Smooth.length; i++) {
-            ionCountFloat[i] = ions300Smooth[i].floatValue();
+        float[] ionCountFloat = new float[ionsHighSmooth.length];
+        for (int i = 0; i < ionsHighSmooth.length; i++) {
+            ionCountFloat[i] = ionsHighSmooth[i].floatValue();
         }
         data.getIntMap().put("HS", ionCountFloat);
-        data.getIntMap().put("H", ions300Float);
-        data.getIntMap().put("L", ions50Float);
+        data.getIntMap().put("H", ionsHighFloat);
+        data.getIntMap().put("L", ionsLowFloat);
         data.getCutInfoMap().put("HS", 0f);
         data.getCutInfoMap().put("H", 0f);
         data.getCutInfoMap().put("L", 0f);
 
-        List<DoublePair> pairs = maxPeaksForIons300.toPairs();
+        List<DoublePair> pairs = maxPeaksForIonsHigh.toPairs();
 
         if (pairs.size() == 0) {
             return new PeakGroupListWrapper(false);

@@ -310,9 +310,7 @@ public class Extractor {
                     coord.getCharge(),
                     ionsLowLimit,
                     ionsHighLimit,
-                    maxIonIntensityInThisSpectrum,
-                    dataDO,
-                    i);
+                    maxIonIntensityInThisSpectrum);
             ionsLow[i] = pair.left();
             ionsHigh[i] = pair.right();
         }

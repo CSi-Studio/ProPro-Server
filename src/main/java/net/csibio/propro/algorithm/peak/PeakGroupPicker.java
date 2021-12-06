@@ -354,6 +354,7 @@ public class PeakGroupPicker {
             PeakGroup peakGroup = new PeakGroup(rtArray[leftIndex], rtArray[rightIndex]);
             peakGroup.setApexRt(pair.left());
             peakGroup.setIonsLow(ionsLow[apexRtIndex]);
+            peakGroup.setIonsHigh(ionsHigh[apexRtIndex]);
             peakGroup.setSelectedRt(rtArray[apexRtIndex]);
 
             boolean hit = true;

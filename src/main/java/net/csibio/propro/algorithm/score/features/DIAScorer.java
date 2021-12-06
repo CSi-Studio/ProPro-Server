@@ -10,7 +10,6 @@ import net.csibio.propro.domain.bean.common.IntegerPair;
 import net.csibio.propro.domain.bean.score.BYSeries;
 import net.csibio.propro.domain.bean.score.IntegrateWindowMzIntensity;
 import net.csibio.propro.domain.bean.score.PeakGroup;
-import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.loader.AminoAcidLoader;
 import net.csibio.propro.loader.ElementsLoader;
 import net.csibio.propro.loader.UnimodLoader;
@@ -21,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Nico Wang Ruimin
@@ -209,7 +207,7 @@ public class DIAScorer {
         peakGroup.put(ScoreType.IsoOverlap.getName(), isotopeOverlap, scoreTypes);
     }
 
-    public IntegerPair calcTotalIons(MzIntensityPairs pairs, HashMap<Integer, String> unimodHashMap, String sequence, int charge, float minIntensity, float minIntensity2, float maxIntensity, DataDO data, int index) {
+    public IntegerPair calcTotalIons(MzIntensityPairs pairs, HashMap<Integer, String> unimodHashMap, String sequence, int charge, float minIntensity, float minIntensity2, float maxIntensity) {
         //计算理论值
         int totalCount1 = 0;
         int totalCount2 = 0;
@@ -219,14 +217,6 @@ public class DIAScorer {
             totalIons.addAll(bySeries.getBSeries());
             totalIons.addAll(bySeries.getYSeries());
         }
-
-        AtomicInteger hitInLib = new AtomicInteger(0);
-        data.getCutInfoMap().forEach((key, value) -> {
-            if (data.getIntMap().get(key) != null && data.getIntMap().get(key)[index] != 0) {
-                hitInLib.getAndIncrement();
-            }
-            totalIons.remove(Math.round(value * 10000) / 10000d);
-        });
 
         for (double seriesMz : totalIons) {
             Double left = seriesMz - 0.015;
