@@ -162,6 +162,7 @@ public class ClinicController {
         log.info("开始获取新预测数据-------------------------------------------------------------------------------");
         List<RunDataVO> dataList = new ArrayList<>();
         PeptideDO peptide = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(peptideRef), PeptideDO.class);
+        peptide.getFragments().add(new FragmentInfo("self", peptide.getMz(), 1000d, peptide.getCharge()));
         for (int i = 0; i < overviewIds.size(); i++) {
             String overviewId = overviewIds.get(i);
             OverviewDO overview = overviewService.getById(overviewId);
@@ -187,6 +188,8 @@ public class ClinicController {
                 if (data.getStatus() == null) {
                     data.setStatus(IdentifyStatus.FAILED.getCode());
                 }
+                data.getIntMap().put("ms1", data.getMs1Ints());
+                data.getCutInfoMap().put("ms1", 0f);
                 data.setMinTotalScore(overview.getMinTotalScore());
                 lda.scoreForPeakGroups(data.getPeakGroupList(), overview.getWeights(), overview.getParams().getMethod().getScore().getScoreTypes());
                 dataList.add(data);
@@ -244,7 +247,7 @@ public class ClinicController {
                 List<WindowRange> ranges = run.getWindowRanges();
                 for (WindowRange range : ranges) {
                     if (range.getStart() <= mz && range.getEnd() > mz) {
-                        BlockIndexDO index = blockIndexService.getOne(runId, range.getMz());
+                        BlockIndexDO index = blockIndexService.getMS2(runId, range.getMz());
                         limitRts = new HashSet<>(index.getRts());
                     }
                 }

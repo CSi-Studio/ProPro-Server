@@ -50,6 +50,8 @@ public class DataSumDO extends BaseDO {
 
     Double fitIntSum;
 
+    Double ms1Sum;
+
     Integer ionsLow; //最低信号量要求下的离子碎片总数
 
     public static DataSumDO buildByPeakGroupScore(List<String> proteins, String peptideRef, PeakGroup selectPeakGroup) {
@@ -62,7 +64,7 @@ public class DataSumDO extends BaseDO {
         dataSum.setSelectedRt(selectPeakGroup.getSelectedRt());
         dataSum.setBestIon(selectPeakGroup.getBestIon());
         dataSum.setTotalScore(selectPeakGroup.getTotalScore());
-
+        dataSum.setMs1Sum(selectPeakGroup.getMs1Sum());
         return dataSum;
     }
 

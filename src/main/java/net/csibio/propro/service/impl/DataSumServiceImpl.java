@@ -62,6 +62,7 @@ public class DataSumServiceImpl implements DataSumService {
             sum.setPeptideRef(selectedPeakGroup.getPeptideRef());
             sum.setIntensitySum(selectedPeakGroup.getIntensitySum());
             sum.setFitIntSum(selectedPeakGroup.getFitIntSum());
+            sum.setMs1Sum(selectedPeakGroup.getMs1Sum());
             sum.setTotalScore(selectedPeakGroup.getTotalScore());
             sum.setBestIon(selectedPeakGroup.getBestIon());
             sum.setIonsLow(selectedPeakGroup.getIonsLow());

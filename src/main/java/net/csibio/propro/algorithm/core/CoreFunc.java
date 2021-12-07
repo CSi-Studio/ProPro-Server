@@ -3,6 +3,7 @@ package net.csibio.propro.algorithm.core;
 import com.google.common.util.concurrent.AtomicDouble;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
+import net.csibio.aird.bean.common.Eic;
 import net.csibio.propro.algorithm.extract.Extractor;
 import net.csibio.propro.algorithm.extract.IonStat;
 import net.csibio.propro.algorithm.formula.FragmentFactory;
@@ -26,6 +27,7 @@ import net.csibio.propro.service.DataService;
 import net.csibio.propro.service.DataSumService;
 import net.csibio.propro.service.OverviewService;
 import net.csibio.propro.service.SimulateService;
+import net.csibio.propro.utils.ArrayUtil;
 import net.csibio.propro.utils.ConvolutionUtil;
 import net.csibio.propro.utils.DataUtil;
 import net.csibio.propro.utils.LogUtil;
@@ -68,6 +70,39 @@ public class CoreFunc {
     @Autowired
     PeakFitter peakFitter;
 
+    public Eic extractMS1(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, AnalyzeParams params) {
+        float mzStart = 0;
+        float mzEnd = -1;
+        //所有的碎片共享同一个RT数组
+        ArrayList<Float> rtList = new ArrayList<>();
+        for (Float rt : ms1Map.keySet()) {
+            if (params.getMethod().getEic().getRtWindow() != -1 && rt > coord.getRtEnd()) {
+                break;
+            }
+            if (params.getMethod().getEic().getRtWindow() == -1 || (rt >= coord.getRtStart() && rt <= coord.getRtEnd())) {
+                rtList.add(rt);
+            }
+        }
+
+        float[] rtArray = new float[rtList.size()];
+        for (int i = 0; i < rtList.size(); i++) {
+            rtArray[i] = rtList.get(i);
+        }
+
+        float ppmWindow = params.getMethod().getEic().getMzWindow().floatValue();
+        float mz = coord.getMz().floatValue();
+        float window = mz * ppmWindow * Constants.PPM_F;
+        mzStart = mz - window;
+        mzEnd = mz + window;
+        float[] intArray = new float[rtArray.length];
+        //本函数极其注重性能,为整个流程最关键的耗时步骤,每提升10毫秒都可以带来巨大的性能提升  --陆妙善
+        for (int i = 0; i < rtArray.length; i++) {
+            float acc = ConvolutionUtil.accumulation(ms1Map.get(rtArray[i]), mzStart, mzEnd);
+            intArray[i] = acc;
+        }
+        return new Eic(rtArray, intArray);
+    }
+
     /**
      * EIC Core Function
      * 核心EIC函数
@@ -75,16 +110,17 @@ public class CoreFunc {
      * 本函数为整个分析过程中最耗时的步骤
      *
      * @param coord
-     * @param rtMap
+     * @param ms2Map
      * @param params
      * @return
      */
-    public DataDO extractOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params, boolean withIonCount, Float ionsHighLimit) {
+    public DataDO extract(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params, boolean withIonCount, Float ionsHighLimit) {
+
         float mzStart = 0;
         float mzEnd = -1;
         //所有的碎片共享同一个RT数组
         ArrayList<Float> rtList = new ArrayList<>();
-        for (Float rt : rtMap.keySet()) {
+        for (Float rt : ms2Map.keySet()) {
             if (params.getMethod().getEic().getRtWindow() != -1 && rt > coord.getRtEnd()) {
                 break;
             }
@@ -117,7 +153,7 @@ public class CoreFunc {
 
             //本函数极其注重性能,为整个流程最关键的耗时步骤,每提升10毫秒都可以带来巨大的性能提升  --陆妙善
             for (int i = 0; i < rtArray.length; i++) {
-                float acc = ConvolutionUtil.accumulation(rtMap.get(rtArray[i]), mzStart, mzEnd);
+                float acc = ConvolutionUtil.accumulation(ms2Map.get(rtArray[i]), mzStart, mzEnd);
                 if (acc != 0) {
                     isAllZero = false;
                 }
@@ -139,7 +175,19 @@ public class CoreFunc {
         }
         //计算每一帧的离子碎片总数
         if (withIonCount) {
-            extractor.calcIonsCount(data, coord, rtMap, params.getMethod().getEic().getIonsLow(), ionsHighLimit == null ? params.getMethod().getEic().getIonsHigh() : ionsHighLimit);
+            extractor.calcIonsCount(data, coord, ms2Map, params.getMethod().getEic().getIonsLow(), ionsHighLimit == null ? params.getMethod().getEic().getIonsHigh() : ionsHighLimit);
+        }
+        //ms1数据不为空的时候需要增加ms1谱图
+        if (ms1Map != null) {
+            Eic eic = extractMS1(coord, ms1Map, params);
+
+            if (data.getRtArray().length > eic.rts().length) {
+                data.setMs1Ints(ArrayUtil.add(eic.ints(), 0));
+            } else if (data.getRtArray().length < eic.rts().length) {
+                data.setMs1Ints(Arrays.copyOfRange(eic.ints(), 0, eic.ints().length - 1));
+            } else {
+                data.setMs1Ints(eic.ints());
+            }
         }
         return data;
     }
@@ -151,11 +199,11 @@ public class CoreFunc {
      * <p>
      *
      * @param coord
-     * @param rtMap
+     * @param ms2Map
      * @param params
      * @return
      */
-    public AnyPair<DataDO, DataSumDO> predictOneDelete(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, RunDO run, OverviewDO overview, AnalyzeParams params) {
+    public AnyPair<DataDO, DataSumDO> predictOneDelete(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, RunDO run, OverviewDO overview, AnalyzeParams params) {
 
         List<FragmentInfo> libFrags = new ArrayList<>(coord.getFragments());
 
@@ -170,13 +218,13 @@ public class CoreFunc {
             List<FragmentInfo> newLibFrags = new ArrayList<>(libFrags);
             newLibFrags.remove(i);
             coord.setFragments(newLibFrags);
-            data = extractOne(coord, rtMap, params, true, null);
+            data = extract(coord, ms1Map, ms2Map, params, true, null);
             if (data == null) {
                 continue;
             }
 
             try {
-                data = scorer.score(run, data, coord, rtMap, params);
+                data = scorer.score(run, data, coord, ms1Map, ms2Map, params);
             } catch (Exception e) {
                 e.printStackTrace();
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
@@ -222,34 +270,29 @@ public class CoreFunc {
             return null;
         }
 
-//        if (maxHitRt.get() != bestPair.getRight().getSelectedRt()) {
-//            log.info("有问题:" + run.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
-//        } else {
-//            log.info("RT吻合:" + run.getAlias() + ":Max Hit RT:" + maxHitRt.get() + ";Hits:" + maxHits.get());
-//        }
-
         return bestPair;
     }
 
-    public AnyPair<DataDO, DataSumDO> predictOneNiubi(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, RunDO run, OverviewDO overview, AnalyzeParams params) {
-        DataDO dataDO = extractOne(coord, rtMap, params, true, null);
+    public AnyPair<DataDO, DataSumDO> predictOneNiubi(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, RunDO run, OverviewDO overview, AnalyzeParams params) {
+        DataDO data = extract(coord, ms1Map, ms2Map, params, true, null);
         //EIC结果如果为空则没有继续的必要了
-        if (dataDO == null) {
+        if (data == null) {
             log.info(coord.getPeptideRef() + ":EIC结果为空");
             return null;
         }
-        if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= coord.getFragments().size() / 2) {
-            dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
+        if (data.getIntMap() == null || data.getIntMap().size() <= coord.getFragments().size() / 2) {
+            data.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
             return null;
         }
 
-        dataDO = scorer.score(run, dataDO, coord, rtMap, params);
-        if (dataDO.getPeakGroupList() != null && dataDO.getPeakGroupList().size() > 0) {
-            lda.scoreForPeakGroups(dataDO.getPeakGroupList(), overview.getWeights(), overview.fetchScoreTypes());
-            DataSumDO sum = judge(dataDO, overview.getMinTotalScore());
-            return new AnyPair<>(dataDO, sum);
+        data = scorer.score(run, data, coord, ms1Map, ms2Map, params);
+
+        if (data.getPeakGroupList() != null && data.getPeakGroupList().size() > 0) {
+            lda.scoreForPeakGroups(data.getPeakGroupList(), overview.getWeights(), overview.fetchScoreTypes());
+            DataSumDO sum = judge(data, overview.getMinTotalScore());
+            return new AnyPair<>(data, sum);
         } else {
-            return null;
+            return new AnyPair<>(data, null);
         }
     }
 
@@ -260,11 +303,11 @@ public class CoreFunc {
      * <p>
      *
      * @param coord
-     * @param rtMap
+     * @param ms2Map
      * @param params
      * @return
      */
-    public AnyPair<DataDO, DataSumDO> predictOneReplace(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, RunDO run, OverviewDO overview, AnalyzeParams params) {
+    public AnyPair<DataDO, DataSumDO> predictOneReplace(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, RunDO run, OverviewDO overview, AnalyzeParams params) {
         //Step1.对库中的碎片进行排序,按照强度从大到小排列
         Map<String, FragmentInfo> libFragMap = coord.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, Function.identity()));
         List<String> libIons = coord.getFragments().stream().map(FragmentInfo::getCutInfo).toList();
@@ -279,7 +322,7 @@ public class CoreFunc {
         });
         //Step3.对所有碎片进行EIC计算
         coord.setFragments(new ArrayList<>(proproFiList));
-        DataDO data = extractOne(coord, rtMap, params, true, null);
+        DataDO data = extract(coord, ms1Map, ms2Map, params, true, null);
         Map<String, float[]> intMap = data.getIntMap();
 
         //Step4.获取所有碎片的统计分,并按照CV值进行排序,记录前15的碎片
@@ -316,7 +359,7 @@ public class CoreFunc {
             }
             coord.setFragments(selectFragments);
             try {
-                buildData = scorer.score(run, buildData, coord, rtMap, params);
+                buildData = scorer.score(run, buildData, coord, ms1Map, ms2Map, params);
             } catch (Exception e) {
                 log.error("Peptide打分异常:" + coord.getPeptideRef());
             }
@@ -358,11 +401,11 @@ public class CoreFunc {
      * 最终的提取XIC结果需要落盘数据库,一般用于正式XIC提取的计算
      *
      * @param coordinates
-     * @param rtMap
+     * @param ms2Map
      * @param params
      * @return
      */
-    public List<DataDO> epps(RunDO run, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public List<DataDO> epps(RunDO run, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params) {
         List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
         long start = System.currentTimeMillis();
         if (coordinates == null || coordinates.size() == 0) {
@@ -373,7 +416,7 @@ public class CoreFunc {
         //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
         coordinates.parallelStream().forEach(coord -> {
             //Step1. 常规提取XIC,XIC结果不进行压缩处理,如果没有提取到任何结果,那么加入忽略列表
-            DataDO dataDO = extractOne(coord, rtMap, params, true, null);
+            DataDO dataDO = extract(coord, ms1Map, ms2Map, params, true, null);
             //如果EIC结果中所有的碎片均为空,那么也不需要再做Reselect操作,直接跳过
             if (dataDO == null) {
 //                log.info(coord.getPeptideRef() + ":EIC结果为空");
@@ -381,7 +424,7 @@ public class CoreFunc {
             }
 
             //Step2. 常规选峰及打分,未满足条件的直接忽略
-            dataDO = scorer.score(run, dataDO, coord, rtMap, params);
+            dataDO = scorer.score(run, dataDO, coord, ms1Map, ms2Map, params);
             dataList.add(dataDO);
 
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
@@ -394,13 +437,13 @@ public class CoreFunc {
 
             //Step4. 如果第一,二步均符合条件,那么开始对对应的伪肽段进行数据提取和打分
             coord.setDecoy(true);
-            DataDO decoyData = extractOne(coord, rtMap, params, true, null);
+            DataDO decoyData = extract(coord, ms1Map, ms2Map, params, true, null);
             if (decoyData == null) {
                 return;
             }
 
             //Step5. 对Decoy进行打分
-            decoyData = scorer.score(run, decoyData, coord, rtMap, params);
+            decoyData = scorer.score(run, decoyData, coord, ms1Map, ms2Map, params);
             dataList.add(decoyData);
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
@@ -415,7 +458,7 @@ public class CoreFunc {
         return dataList;
     }
 
-    public List<DataDO> reselect(RunDO run, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public List<DataDO> reselect(RunDO run, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params) {
         List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
         long start = System.currentTimeMillis();
         if (coordinates == null || coordinates.size() == 0) {
@@ -425,19 +468,19 @@ public class CoreFunc {
         AtomicLong newIonsGroup = new AtomicLong(0);
         //传入的coordinates是没有经过排序的,需要排序先处理真实肽段,再处理伪肽段.如果先处理的真肽段没有被提取到任何信息,或者提取后的峰太差被忽略掉,都会同时删掉对应的伪肽段的XIC
         coordinates.parallelStream().forEach(coord -> {
-            DataDO dataDO = extractOne(coord, rtMap, params, true, null);
+            DataDO dataDO = extract(coord, ms1Map, ms2Map, params, true, null);
             //如果EIC结果中所有的碎片均为空,那么也不需要再做Reselect操作,直接跳过
             if (dataDO == null) {
                 return;
             }
             //Step2. 常规选峰及打分,未满足条件的直接忽略
-            dataDO = scorer.score(run, dataDO, coord, rtMap, params);
+            dataDO = scorer.score(run, dataDO, coord, ms1Map, ms2Map, params);
             lda.scoreForPeakGroups(dataDO.getPeakGroupList(), params.getBaseOverview().getWeights(), params.getBaseOverview().getParams().getMethod().getScore().getScoreTypes());
             DataSumDO tempSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview());
             if (tempSum == null || tempSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
                 DataSumDO dataSum = scorer.calcBestTotalScore(dataDO, params.getBaseOverview());
                 if (dataSum == null || dataSum.getStatus() != IdentifyStatus.SUCCESS.getCode()) {
-                    AnyPair<DataDO, DataSumDO> pair = predictOneDelete(coord, rtMap, run, params.getBaseOverview(), params);
+                    AnyPair<DataDO, DataSumDO> pair = predictOneDelete(coord, ms1Map, ms2Map, run, params.getBaseOverview(), params);
                     if (pair != null && pair.getLeft() != null) {
                         newIonsGroup.getAndIncrement();
                         dataDO = pair.getLeft();
@@ -456,13 +499,13 @@ public class CoreFunc {
 
             //Step4. 如果第一,二步均符合条件,那么开始对对应的伪肽段进行数据提取和打分
             coord.setDecoy(true);
-            DataDO decoyData = extractOne(coord, rtMap, params, true, null);
+            DataDO decoyData = extract(coord, ms1Map, ms2Map, params, true, null);
             if (decoyData == null) {
                 return;
             }
 
             //Step5. 对Decoy进行打分
-            decoyData = scorer.score(run, decoyData, coord, rtMap, params);
+            decoyData = scorer.score(run, decoyData, coord, ms1Map, ms2Map, params);
             dataList.add(decoyData);
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
@@ -478,7 +521,7 @@ public class CoreFunc {
         return dataList;
     }
 
-    public List<DataDO> csi(RunDO run, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public List<DataDO> csi(RunDO run, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params) {
         List<DataDO> dataList = Collections.synchronizedList(new ArrayList<>());
         if (coordinates == null || coordinates.size() == 0) {
             log.error("肽段坐标为空");
@@ -493,12 +536,12 @@ public class CoreFunc {
             if (coord.getDecoyFragments().size() > maxIons) {
                 coord.setDecoyFragments(coord.getDecoyFragments().subList(0, maxIons));
             }
-            DataDO dataDO = extractOne(coord, rtMap, params, true, null);
+            DataDO dataDO = extract(coord, ms1Map, ms2Map, params, true, null);
             if (dataDO == null) {
                 return;
             }
 
-            dataDO = scorer.score(run, dataDO, coord, rtMap, params);
+            dataDO = scorer.score(run, dataDO, coord, ms1Map, ms2Map, params);
 //            sumList.add(judge(dataDO));
             dataList.add(dataDO);
             //Step3. 忽略过程数据,将数据提取结果加入最终的列表
@@ -510,13 +553,13 @@ public class CoreFunc {
 //            }
 
             coord.setDecoy(true);
-            DataDO decoyData = extractOne(coord, rtMap, params, true, null);
+            DataDO decoyData = extract(coord, ms1Map, ms2Map, params, true, null);
             if (decoyData == null) {
                 return;
             }
 
             //Step5. 对Decoy进行打分
-            decoyData = scorer.score(run, decoyData, coord, rtMap, params);
+            decoyData = scorer.score(run, decoyData, coord, ms1Map, ms2Map, params);
             dataList.add(decoyData);
 
             //Step6. 忽略过程数据,将数据提取结果加入最终的列表
@@ -606,6 +649,7 @@ public class CoreFunc {
             sum.setFitIntSum(finalPgs.getFitIntSum());
             sum.setIonsLow(finalPgs.getIonsLow());
             sum.setBestIon(finalPgs.getBestIon());
+            sum.setMs1Sum(finalPgs.getMs1Sum());
             dataDO.setStatus(IdentifyStatus.SUCCESS.getCode());
             sum.setStatus(IdentifyStatus.SUCCESS.getCode());
         } else {

@@ -11,6 +11,7 @@ public class DataSum {
     String peptideRef;
     Double intensitySum;
     Double fitIntSum;
+    Double ms1Sum;
 
     public Double getIntensitySum() {
         if (fitIntSum != null) {

@@ -33,9 +33,9 @@ public class SelectedPeakGroup extends BaseScores {
     Double intensitySum;
     //定量修正过以后的sum
     Double fitIntSum;
-
+    Double ms1Sum;
     String bestIon;
-    
+
     //本峰对应的最终综合打分
     Double totalScore;
 

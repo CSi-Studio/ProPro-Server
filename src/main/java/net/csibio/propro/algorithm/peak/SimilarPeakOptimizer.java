@@ -35,7 +35,7 @@ public class SimilarPeakOptimizer {
         Map<String, DataScore> dataMap = dataList.stream().filter(data -> !data.getDecoy()).collect(Collectors.toMap(DataScore::getPeptideRef, Function.identity()));
         for (WindowRange range : ranges) {
             TreeMap<Double, List<SelectedPeakGroup>> rtMap = new TreeMap<>();
-            BlockIndexDO index = blockIndexService.getOne(runId, range.getMz());
+            BlockIndexDO index = blockIndexService.getMS2(runId, range.getMz());
             for (Float rt : index.getRts()) {
                 rtMap.put((double) rt, new ArrayList<>());
             }

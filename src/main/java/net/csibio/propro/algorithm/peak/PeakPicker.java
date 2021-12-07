@@ -140,6 +140,7 @@ public class PeakPicker {
 
         unSearchPeakGroup.setFloatRtArray(data.getRtArray());
         unSearchPeakGroup.setRtArray(rtArray);
+        unSearchPeakGroup.setMs1Intensity(ArrayUtil.floatToDouble(data.getMs1Ints()));
         unSearchPeakGroup.setIntensitiesMap(intensitiesMap);
         unSearchPeakGroup.setMaxPeaks4Ions(maxPeaksForIons);
         unSearchPeakGroup.setPeaks4Ions(peaks4Ions);
@@ -176,7 +177,7 @@ public class PeakPicker {
 
         //计算GaussFilter
         Double[] rtArray = ArrayUtil.floatToDouble(data.getRtArray());
-        Double[] ionsHighSmooth = gaussFilter.filter(rtArray, ArrayUtil.intToDouble(data.getIonsHigh()), ss); //使用ions300进行平滑选峰
+        Double[] ionsHighSmooth = gaussFilter.filter(rtArray, ArrayUtil.intToDouble(data.getIonsHigh()), ss); //使用ionsHigh进行平滑选峰
 
         UnSearchPeakGroup unSearchPeakGroup = new UnSearchPeakGroup();
         unSearchPeakGroup.setIonsLow(data.getIonsLow());
@@ -211,8 +212,8 @@ public class PeakPicker {
         unSearchPeakGroup.setFloatRtArray(data.getRtArray());
         unSearchPeakGroup.setRtArray(rtArray);
         unSearchPeakGroup.setIntensitiesMap(intensitiesMap);
+        unSearchPeakGroup.setMs1Intensity(ArrayUtil.floatToDouble(data.getMs1Ints()));
         unSearchPeakGroup.setNoise1000Map(noise1000Map);
-
         unSearchPeakGroup.setCoord(coord);
         List<PeakGroup> peakGroups = peakGroupPicker.findPeakGroupsByIonsCount(unSearchPeakGroup);
         if (peakGroups.size() == 0) {

@@ -59,8 +59,8 @@ public class IrtByInsLib extends Irt {
 
                 //Step3&4.提取指定原始谱图,提取数据并且存储数据,如果传入的库是标准库,那么使用采样的方式进行数据提取
                 try {
-                    TreeMap<Float, MzIntensityPairs> rtMap = parser.getSpectrums(blockIndex.getStartPtr(), blockIndex.getEndPtr(), blockIndex.getRts(), blockIndex.getMzs(), blockIndex.getInts());
-                    extractor.extract4Irt(finalDataList, coords, rtMap, params);
+                    TreeMap<Float, MzIntensityPairs> ms2Map = parser.getSpectrums(blockIndex.getStartPtr(), blockIndex.getEndPtr(), blockIndex.getRts(), blockIndex.getMzs(), blockIndex.getInts());
+                    extractor.extract4Irt(finalDataList, coords, ms2Map, params);
                 } catch (Exception e) {
                     log.error("Parsing Error!!Precursor m/z start:" + blockIndex.getRange().getStart());
                     throw e;

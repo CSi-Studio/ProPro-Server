@@ -28,6 +28,8 @@ public class RunDataVO {
 
     String overviewId;
 
+    float[] ms1Ints;
+
     List<String> proteins;
 
     String peptideRef;
@@ -61,8 +63,10 @@ public class RunDataVO {
     Double intensitySum;
 
     String bestIon;
-    
+
     Double fitIntSum;
+
+    Double ms1Sum;
 
     Integer ionsLow;
 

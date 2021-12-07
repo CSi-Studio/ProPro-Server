@@ -58,7 +58,13 @@ public class BlockIndexServiceImpl implements BlockIndexService {
     }
 
     @Override
-    public BlockIndexDO getOne(String runId, Double mz) {
+    public BlockIndexDO getMS1(String runId) {
+        BlockIndexQuery query = new BlockIndexQuery(runId, 1);
+        return blockIndexDAO.getOne(query);
+    }
+
+    @Override
+    public BlockIndexDO getMS2(String runId, Double mz) {
         BlockIndexQuery query = new BlockIndexQuery(runId, 2);
         query.setMz(mz);
         return blockIndexDAO.getOne(query);
@@ -77,14 +83,14 @@ public class BlockIndexServiceImpl implements BlockIndexService {
     @Override
     public List<BlockIndexDO> getLinkedBlockIndex(String runId, Double mz, Double deltaMz, Integer collectedNumber) {
         List<BlockIndexDO> indexList = new ArrayList<>();
-        BlockIndexDO index0 = getOne(runId, mz);
+        BlockIndexDO index0 = getMS2(runId, mz);
         indexList.add(index0);
         for (int i = 1; i <= collectedNumber; i++) {
-            BlockIndexDO index1 = getOne(runId, mz - deltaMz * i);
+            BlockIndexDO index1 = getMS2(runId, mz - deltaMz * i);
             if (index1 != null) {
                 indexList.add(index1);
             }
-            BlockIndexDO index2 = getOne(runId, mz + deltaMz * i);
+            BlockIndexDO index2 = getMS2(runId, mz + deltaMz * i);
             if (index2 != null) {
                 indexList.add(index2);
             }

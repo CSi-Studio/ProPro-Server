@@ -18,6 +18,8 @@ public class UnSearchPeakGroup {
     Double[] rtArray;
     //当前peptideRef对应的强度值,key为cutInfo
     HashMap<String, Double[]> intensitiesMap;
+    //ms1 eic intensity图
+    Double[] ms1Intensity;
     //每一个cutInfo对应的峰顶数组
     HashMap<String, RtIntensityPairsDouble> maxPeaks4Ions;
     //每一个cutInfo对应的峰组

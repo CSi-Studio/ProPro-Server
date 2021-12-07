@@ -124,7 +124,6 @@ public class SemiSupervise {
         similarPeakOptimizer.optimizer(overview.getRunId(), dataList, selectedDataMap, ranges, overview.getAnaLibId(), minTotalScore); //后置优化算法1->选择了相同rt的近似肽段做一个区分
         //策略2. 基于IonsCount的组内切换策略
         List<SelectedPeakGroup> selectedPeakGroupListV2 = scorer.findBestPeakGroup(dataList);
-        //策略3. 干扰离子校准技术
 
         //重新统计
         ErrorStat errorStat = statistics.errorStatistics(selectedPeakGroupListV2, params);

@@ -11,6 +11,7 @@ public class DataUtil {
     public static void clearOrigin(DataDO data) {
         data.setRtArray(null);
         data.setIntMap(null);
+        data.setMs1Ints(null);
         data.setCutInfoMap(null);
         data.setLibIntMap(null);
         data.setIonsLow(null);
@@ -20,6 +21,7 @@ public class DataUtil {
     public static void clearCompressed(DataDO data) {
         data.setRtBytes(null);
         data.setIntMapBytes(null);
+        data.setMs1IntsBytes(null);
         data.setCutInfosFeature(null);
         data.setLibIntMap(null);
         data.setIonsLowBytes(null);
@@ -29,6 +31,9 @@ public class DataUtil {
     public static void compress(DataDO data) {
         if (data.getRtArray() != null) {
             data.setRtBytes(CompressUtil.compressedToBytes(data.getRtArray()));
+        }
+        if (data.getMs1Ints() != null) {
+            data.setMs1IntsBytes(CompressUtil.compressedToBytes(data.getMs1Ints()));
         }
         if (data.getIonsLow() != null) {
             data.setIonsLowBytes(CompressUtil.compressedToBytes(data.getIonsLow()));
@@ -55,6 +60,9 @@ public class DataUtil {
     public static void decompress(DataDO data) {
         if (data.getRtBytes() != null) {
             data.setRtArray(CompressUtil.transTofloat(data.getRtBytes()));
+        }
+        if (data.getMs1IntsBytes() != null) {
+            data.setMs1Ints(CompressUtil.transTofloat(data.getMs1IntsBytes()));
         }
         if (data.getIonsLowBytes() != null) {
             data.setIonsLow(CompressUtil.transToInt(data.getIonsLowBytes()));

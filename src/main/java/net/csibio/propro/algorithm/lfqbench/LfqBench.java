@@ -102,13 +102,27 @@ public class LfqBench {
 
         BenchStat<PeptideRatio> points = new BenchStat<>(humanPoints, yeastPoints, ecoliPoints);
         DescriptiveStatistics human = new DescriptiveStatistics();
-        humanPoints.forEach(p -> human.addValue(p.y()));
+        humanPoints.forEach(p -> {
+                    if (!Double.isInfinite(p.y())) {
+                        human.addValue(p.y());
+                    }
+                }
+        );
+
 
         DescriptiveStatistics yeast = new DescriptiveStatistics();
-        yeastPoints.forEach(p -> yeast.addValue(p.y()));
+        yeastPoints.forEach(p -> {
+            if (!Double.isInfinite(p.y())) {
+                yeast.addValue(p.y());
+            }
+        });
 
         DescriptiveStatistics ecoli = new DescriptiveStatistics();
-        ecoliPoints.forEach(p -> ecoli.addValue(p.y()));
+        ecoliPoints.forEach(p -> {
+            if (!Double.isInfinite(p.y())) {
+                ecoli.addValue(p.y());
+            }
+        });
 
         points.setIdentifyNumA(statForA.getDataMap().size());
         points.setMissingRatioA(statForA.getMissingRatio());

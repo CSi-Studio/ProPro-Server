@@ -133,6 +133,7 @@ public class Lda extends Classifier {
 
         Set<String> skipTypes = new HashSet<>();
         skipTypes.add(ScoreType.CorrShape.getName());
+        skipTypes.add(ScoreType.CorrShapeW.getName());
         for (int i = 0; i < peakGroupList.size(); i++) {
             yVector.setEntry(i, peakGroupList.get(i).getDecoy() ? 0 : 1);
             try {
@@ -142,7 +143,6 @@ public class Lda extends Classifier {
                     } else {
                         xMatrix.setEntry(i, j, peakGroupList.get(i).get(scoreTypes.get(j), scoreTypes));
                     }
-
                 }
             } catch (Exception e) {
                 log.error(e.getMessage());

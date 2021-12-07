@@ -11,6 +11,7 @@ import net.csibio.propro.algorithm.score.features.DIAScorer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.ResultCode;
+import net.csibio.propro.constants.enums.TaskStatus;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.bean.common.IntegerPair;
@@ -62,10 +63,9 @@ public class Extractor {
      * 根据coord肽段坐标读取run对应的aird文件中涉及的相关光谱图
      *
      * @param run
-     * @param coord
      * @return
      */
-    public Result<TreeMap<Float, MzIntensityPairs>> getRtMap(RunDO run, PeptideCoord coord) {
+    public Result<TreeMap<Float, MzIntensityPairs>> getMS1Map(RunDO run) {
         Result checkResult = ConvolutionUtil.checkRun(run);
         if (checkResult.isFailed()) {
             log.error("条件检查失败:" + checkResult.getErrorMessage());
@@ -77,7 +77,83 @@ public class Extractor {
 
         //Step1.获取窗口信息
         TreeMap<Float, MzIntensityPairs> rtMap;
-        BlockIndexDO index = blockIndexService.getOne(run.getId(), coord.getMz());
+        BlockIndexDO index = blockIndexService.getMS1(run.getId());
+        if (index == null) {
+            return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
+        }
+        DIAParser parser = null;
+        try {
+            parser = new DIAParser(run.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
+            rtMap = parser.getSpectrums(index.getStartPtr(), index.getEndPtr(), index.getRts(), index.getMzs(), index.getInts());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Result.Error(ResultCode.PARSE_ERROR);
+        } finally {
+            if (parser != null) {
+                parser.close();
+            }
+        }
+        return Result.OK(rtMap);
+    }
+
+    /**
+     * 根据coord肽段坐标读取run对应的aird文件中涉及的相关光谱图
+     *
+     * @param run
+     * @param coord
+     * @return
+     */
+    public Result<TreeMap<Float, MzIntensityPairs>> getMS1Map(RunDO run, PeptideCoord coord) {
+        Result checkResult = ConvolutionUtil.checkRun(run);
+        if (checkResult.isFailed()) {
+            log.error("条件检查失败:" + checkResult.getErrorMessage());
+            return checkResult;
+        }
+
+        Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
+        Compressor intCompressor = run.fetchCompressor(Compressor.TARGET_INTENSITY);
+
+        //Step1.获取窗口信息
+        TreeMap<Float, MzIntensityPairs> rtMap;
+        BlockIndexDO index = blockIndexService.getMS1(run.getId());
+        if (index == null) {
+            return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
+        }
+        DIAParser parser = null;
+        try {
+            parser = new DIAParser(run.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
+            rtMap = parser.getSpectrumsByRtRange(index.getStartPtr(), index.getRts(), index.getMzs(), index.getInts(), (float) coord.getRtStart(), (float) coord.getRtEnd());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Result.Error(ResultCode.PARSE_ERROR);
+        } finally {
+            if (parser != null) {
+                parser.close();
+            }
+        }
+        return Result.OK(rtMap);
+    }
+
+    /**
+     * 根据coord肽段坐标读取run对应的aird文件中涉及的相关光谱图
+     *
+     * @param run
+     * @param coord
+     * @return
+     */
+    public Result<TreeMap<Float, MzIntensityPairs>> getMS2Map(RunDO run, PeptideCoord coord) {
+        Result checkResult = ConvolutionUtil.checkRun(run);
+        if (checkResult.isFailed()) {
+            log.error("条件检查失败:" + checkResult.getErrorMessage());
+            return checkResult;
+        }
+
+        Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
+        Compressor intCompressor = run.fetchCompressor(Compressor.TARGET_INTENSITY);
+
+        //Step1.获取窗口信息
+        TreeMap<Float, MzIntensityPairs> rtMap;
+        BlockIndexDO index = blockIndexService.getMS2(run.getId(), coord.getMz());
         if (index == null) {
             return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
         }
@@ -138,13 +214,17 @@ public class Extractor {
             double targetRt = run.getIrt().getSi().realRt(rt);
             coord.setRtRange(targetRt - 300, targetRt + 300);
         }
-        Result<TreeMap<Float, MzIntensityPairs>> rtMapResult = getRtMap(run, coord);
-        if (rtMapResult.isFailed()) {
-            return Result.Error(rtMapResult.getErrorCode());
+        Result<TreeMap<Float, MzIntensityPairs>> ms1Result = getMS1Map(run, coord);
+        Result<TreeMap<Float, MzIntensityPairs>> ms2Result = getMS2Map(run, coord);
+        if (ms1Result.isFailed()) {
+            return Result.Error(ms1Result.getErrorCode());
+        }
+        if (ms2Result.isFailed()) {
+            return Result.Error(ms2Result.getErrorCode());
         }
 
-        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneNiubi(coord, rtMapResult.getData(), run, overview, params);
-//        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneDelete(coord, rtMapResult.getData(), run, overview, params);
+        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneNiubi(coord, ms1Result.getData(), ms2Result.getData(), run, overview, params);
+//        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneDelete(coord, ms2Result.getData(), run, overview, params);
         if (dataPair == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
         }
@@ -163,20 +243,20 @@ public class Extractor {
      *
      * @param finalList
      * @param coordinates
-     * @param rtMap
+     * @param ms2Map
      * @param params
      */
-    public void extract4Irt(List<DataDO> finalList, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public void extract4Irt(List<DataDO> finalList, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params) {
         for (PeptideCoord coord : coordinates) {
-            DataDO data = eppsOne(coord, rtMap, params);
+            DataDO data = eppsOne(coord, null, ms2Map, params);
             if (data != null) {
                 finalList.add(data);
             }
         }
     }
 
-    public DataDO eppsOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
-        return coreFunc.extractOne(coord, rtMap, params, true, null);
+    public DataDO eppsOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params) {
+        return coreFunc.extract(coord, ms1Map, ms2Map, params, true, null);
     }
 
 
@@ -185,15 +265,16 @@ public class Extractor {
      *
      * @param overviewDO
      * @param run
-     * @param analyzeParams
+     * @param params
      */
-    private void extract(OverviewDO overviewDO, RunDO run, AnalyzeParams analyzeParams) {
-        TaskDO task = analyzeParams.getTaskDO();
+    private void extract(OverviewDO overviewDO, RunDO run, AnalyzeParams params) {
+        TaskDO task = params.getTaskDO();
         //Step1.获取窗口信息
         List<WindowRange> ranges = run.getWindowRanges();
         BlockIndexQuery query = new BlockIndexQuery(run.getId(), 2);
 
         //获取所有MS2的窗口
+
         List<BlockIndexDO> blockIndexList = blockIndexService.getAll(query);
         blockIndexList = blockIndexList.stream().sorted(Comparator.comparing(blockIndexDO -> blockIndexDO.getRange().getStart())).toList();
         task.addLog("总计有窗口:" + ranges.size() + "个,开始进行MS2 提取XIC计算");
@@ -205,10 +286,34 @@ public class Extractor {
             parser = new DIAParser(run.getAirdIndexPath());
             long peakCount = 0L;
             int dataCount = 0;
+            Result<TreeMap<Float, MzIntensityPairs>> ms1Result = getMS1Map(run);
+            if (ms1Result.isFailed()) {
+                task.finish(TaskStatus.FAILED.getName(), ResultCode.PARSE_MS1_SPECTRUM_FAILED.getMessage());
+                taskService.update(task);
+                return;
+            }
+            TreeMap<Float, MzIntensityPairs> ms1Map = ms1Result.getData();
+
             for (BlockIndexDO index : blockIndexList) {
+                List<DataDO> dataList = null;
                 long start = System.currentTimeMillis();
                 task.addLog("开始处理窗口:" + index.getRange().getStart() + "-" + index.getRange().getEnd() + ",当前轮数" + count + "/" + blockIndexList.size());
-                List<DataDO> dataList = doExtract(parser, run, index, analyzeParams);
+                //构建坐标
+                List<PeptideCoord> coords = peptideService.buildCoord(params.getAnaLibId(), index.getRange(), params.getMethod().getEic().getRtWindow(), run.getIrt().getSi());
+                if (coords.isEmpty()) {
+                    task.addLog("No Coordinates Found,Rang:" + index.getRange().getStart() + ":" + index.getRange().getEnd());
+                    taskService.update(task);
+                    log.warn("No Coordinates Found,Rang:" + index.getRange().getStart() + ":" + index.getRange().getEnd());
+                    continue;
+                }
+                //Step3.提取指定原始谱图
+                TreeMap<Float, MzIntensityPairs> ms2Map = parser.getSpectrums(index.getStartPtr(), index.getEndPtr(), index.getRts(), index.getMzs(), index.getInts());
+                if (params.getReselect()) {
+                    dataList = coreFunc.reselect(run, coords, ms1Map, ms2Map, params);
+                } else {
+                    dataList = coreFunc.csi(run, coords, ms1Map, ms2Map, params);
+                }
+
                 if (dataList != null) {
                     for (DataDO dataDO : dataList) {
                         if (dataDO.getPeakGroupList() != null) {
@@ -236,33 +341,6 @@ public class Extractor {
             if (parser != null) {
                 parser.close();
             }
-        }
-    }
-
-    /**
-     * 返回提取到的数目
-     *
-     * @param parser
-     * @param swathIndex
-     * @param params
-     * @return
-     */
-    private List<DataDO> doExtract(DIAParser parser, RunDO run, BlockIndexDO swathIndex, AnalyzeParams params) {
-        List<PeptideCoord> coords;
-        TreeMap<Float, MzIntensityPairs> rtMap;
-        //Step2.获取标准库的目标肽段片段的坐标
-        coords = peptideService.buildCoord(params.getAnaLibId(), swathIndex.getRange(), params.getMethod().getEic().getRtWindow(), run.getIrt().getSi());
-        if (coords.isEmpty()) {
-            log.warn("No Coordinates Found,Rang:" + swathIndex.getRange().getStart() + ":" + swathIndex.getRange().getEnd());
-            return null;
-        }
-        //Step3.提取指定原始谱图
-        rtMap = parser.getSpectrums(swathIndex.getStartPtr(), swathIndex.getEndPtr(), swathIndex.getRts(), swathIndex.getMzs(), swathIndex.getInts());
-        if (params.getReselect()) {
-            return coreFunc.reselect(run, coords, rtMap, params);
-        } else {
-//            return coreFunc.epps(run, coords, rtMap, params);
-            return coreFunc.csi(run, coords, rtMap, params);
         }
     }
 

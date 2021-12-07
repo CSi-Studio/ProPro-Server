@@ -84,7 +84,7 @@ public class DataServiceImpl implements DataService {
         params.setChangeCharge(changeCharge);
         params.setOverviewId(overviewId);
         params.getMethod().getPeakFinding().setPeakFindingMethod(peakPickerMethod);
-        
+
         PeptideCoord coord = peptide.toTargetPeptide();
         if (changeCharge) {
             if (peptide.getCharge() == 2) {

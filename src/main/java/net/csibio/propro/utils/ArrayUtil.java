@@ -660,4 +660,10 @@ public class ArrayUtil {
         }
         return targetIndex;
     }
+
+    public static float[] add(float[] old, float value) {
+        float[] newArray = Arrays.copyOf(old, old.length + 1);
+        newArray[newArray.length - 1] = value;
+        return newArray;
+    }
 }

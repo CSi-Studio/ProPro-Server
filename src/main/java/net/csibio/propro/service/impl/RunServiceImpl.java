@@ -146,7 +146,7 @@ public class RunServiceImpl implements RunService {
 
     @Override
     public FloatPairs getSpectrum(RunDO run, Double mz, Float rt) {
-        BlockIndexDO blockIndex = blockIndexService.getOne(run.getId(), mz);
+        BlockIndexDO blockIndex = blockIndexService.getMS2(run.getId(), mz);
         if (blockIndex == null) {
             return null;
         }

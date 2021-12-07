@@ -321,7 +321,7 @@ public class TestController {
                                                 .setMzEnd(range.getEnd()))
                                 .stream()
                                 .collect(Collectors.toMap(PeptideDO::getPeptideRef, Function.identity()));
-                BlockIndexDO index = blockIndexService.getOne(run.getId(), range.getMz());
+                BlockIndexDO index = blockIndexService.getMS2(run.getId(), range.getMz());
                 for (Float rt : index.getRts()) {
                     rtMap.put((double) rt, new ArrayList<>());
                 }

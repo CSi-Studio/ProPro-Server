@@ -31,9 +31,10 @@ public class PeakGroup extends BaseScores {
     double rightRt;
     //定量拟合值
     Double fitIntSum;
-
+    Double ms1Sum;
     //拥有最佳洗脱曲线的碎片
     String bestIon;
+
 
     //中间计算变量,不需要存入数据库
     @Transient
@@ -44,6 +45,8 @@ public class PeakGroup extends BaseScores {
     Double[] ionHullRt;     //在算法选定的峰形范围内的Rt和Intensity对
     @Transient
     HashMap<String, Double[]> ionHullInt;
+    @Transient
+    Double[] ms1Ints;
     @Transient
     HashMap<String, Double> ionIntensity; //各个cutInfo在该peakGroup范围内的intensity总和
     @Transient

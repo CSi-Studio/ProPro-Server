@@ -7,10 +7,7 @@ import net.csibio.propro.algorithm.fitter.LinearFitter;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.*;
 import net.csibio.propro.algorithm.score.ScoreType;
-import net.csibio.propro.algorithm.score.features.DIAScorer;
-import net.csibio.propro.algorithm.score.features.ElutionScorer;
-import net.csibio.propro.algorithm.score.features.LibraryScorer;
-import net.csibio.propro.algorithm.score.features.XicScorer;
+import net.csibio.propro.algorithm.score.features.*;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.PeakFindingMethod;
 import net.csibio.propro.domain.bean.data.DataScore;
@@ -59,6 +56,8 @@ public class Scorer {
     @Autowired
     DIAScorer diaScorer;
     @Autowired
+    Ms1Scorer ms1Scorer;
+    @Autowired
     ElutionScorer elutionScorer;
     @Autowired
     LibraryScorer libraryScorer;
@@ -75,7 +74,7 @@ public class Scorer {
     @Autowired
     PeakFitter peakFitter;
 
-    public DataDO score(RunDO run, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
+    public DataDO score(RunDO run, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params) {
 
         if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= coord.getFragments().size() / 2) {
             dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
@@ -96,17 +95,13 @@ public class Scorer {
         if (!peakGroupListWrapper.isFound()) {
             //重试机制:扩大RT搜索范围并使用IonsShape重新计算XIC
             coord.setRtRange(coord.getRtStart() - 200, coord.getRtEnd() + 200);
-            dataDO = coreFunc.extractOne(coord, rtMap, params, true, 100f);
+            dataDO = coreFunc.extract(coord, ms1Map, ms2Map, params, true, 100f);
             if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= coord.getFragments().size() / 2) {
                 dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
                 return dataDO;
             }
 
-            if (params.getMethod().getPeakFinding().getPeakFindingMethod().equals(PeakFindingMethod.IONS_COUNT.getName())) {
-                peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
-            } else {
-                peakGroupListWrapper = peakPicker.searchByIonsShape(dataDO, coord, ss);
-            }
+            peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
             if (!peakGroupListWrapper.isFound()) {
                 dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
                 return dataDO;
@@ -131,7 +126,7 @@ public class Scorer {
         int maxIonsCount = Arrays.stream(dataDO.getIonsHigh()).max().getAsInt();
 
         for (PeakGroup peakGroup : peakGroupList) {
-            selectedSpectMap.put(peakGroup.getSelectedRt(), rtMap.get(peakGroup.getSelectedRt().floatValue()));
+            selectedSpectMap.put(peakGroup.getSelectedRt(), ms2Map.get(peakGroup.getSelectedRt().floatValue()));
         }
 
         peakGroupList = peakGroupList.stream().sorted(Comparator.comparing(PeakGroup::getSelectedRt)).collect(Collectors.toList());
@@ -149,7 +144,7 @@ public class Scorer {
             xicScorer.calcPearsonMatrixScore(peakGroup, normedLibIntMap, coord, scoreTypes);
             diaScorer.calculateIsotopeScores(peakGroup, productMzMap, productChargeMap, mzIntensityPairs, scoreTypes);
             peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsHigh()) * 1d / maxIonsCount, scoreTypes);
-
+            ms1Scorer.calcPearsonScore(peakGroup, scoreTypes);
             peakFitter.fit(peakGroup, coord); //拟合定量结果
         }
 
@@ -276,6 +271,7 @@ public class Scorer {
             if (topPeakGroup != null) {
                 bestPeakGroup.setTotalScore(topPeakGroup.getTotalScore());
                 bestPeakGroup.setScores(topPeakGroup.getScores());
+                bestPeakGroup.setMs1Sum(topPeakGroup.getMs1Sum());
                 bestPeakGroup.setApexRt(topPeakGroup.getApexRt());
                 bestPeakGroup.setBestIon(topPeakGroup.getBestIon());
                 bestPeakGroup.setSelectedRt(topPeakGroup.getSelectedRt());
@@ -306,6 +302,7 @@ public class Scorer {
                 selectedPeakGroup.setSelectedRt(topPeakGroup.getSelectedRt());
                 selectedPeakGroup.setIntensitySum(topPeakGroup.getIntensitySum());
                 selectedPeakGroup.setFitIntSum(topPeakGroup.getFitIntSum());
+                selectedPeakGroup.setMs1Sum(topPeakGroup.getMs1Sum());
                 selectedPeakGroups.add(selectedPeakGroup);
             }
         }

@@ -14,6 +14,7 @@ public enum ScoreType {
     CorrShapeW("↑CorrShapeW", "带权重的互相关序列最大值的平均值"),
     Pearson("↑Pearson", "对run和library intensity算Pearson相关系,当有干扰碎片的时候得分会很差"),
     Elution("↑Elution", "对最佳碎片和其余碎片计算elution profile的Pearson相关性总和"),
+    MS1Pearson("↑MS1Pearson", "对最佳碎片和MS1谱图计算elution profile的Pearson相关性"),
     //    ApexPearson("↑ApexPearson", "对run和library intensity算Pearson相关系,当有干扰碎片的时候得分会很差"),
     IntShift("↓IntShift", "LibraryIntensityShift"),
     Dotprod("↑Dotprod", "LibDotprod"),
