@@ -71,7 +71,7 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public Result<RunDataVO> predictDataFromFile(RunDO run, PeptideDO peptide, Boolean changeCharge, String overviewId) {
+    public Result<RunDataVO> predictDataFromFile(RunDO run, PeptideDO peptide, Boolean changeCharge, String peakPickerMethod, String overviewId) {
         if (peptide == null) {
             return Result.Error(ResultCode.PEPTIDE_NOT_EXIST);
         }
@@ -83,7 +83,8 @@ public class DataServiceImpl implements DataService {
         AnalyzeParams params = new AnalyzeParams(new MethodDO().init());
         params.setChangeCharge(changeCharge);
         params.setOverviewId(overviewId);
-
+        params.getMethod().getPeakFinding().setPeakFindingMethod(peakPickerMethod);
+        
         PeptideCoord coord = peptide.toTargetPeptide();
         if (changeCharge) {
             if (peptide.getCharge() == 2) {

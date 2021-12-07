@@ -45,7 +45,7 @@ public class PeakPicker {
     @Autowired
     PeakPicker peakPicker;
     @Autowired
-    SignalToNoiseEstimator signalToNoiseEstimator;
+    NoiseEstimator noiseEstimator;
     @Autowired
     PeakGroupPicker peakGroupPicker;
     @Autowired
@@ -119,8 +119,8 @@ public class PeakPicker {
         HashMap<String, Double> normedLibIntMap = new HashMap<>();
         for (String cutInfo : intensitiesMap.keySet()) {
 //            //计算两个信噪比
-            double[] noises200 = signalToNoiseEstimator.computeSTN(rtArray, smoothIntensitiesMap.get(cutInfo), 200, 30);
-            double[] noisesOri1000 = signalToNoiseEstimator.computeSTN(rtArray, intensitiesMap.get(cutInfo), 1000, 30);
+            double[] noises200 = noiseEstimator.computeSTN(rtArray, smoothIntensitiesMap.get(cutInfo), 200, 30);
+            double[] noisesOri1000 = noiseEstimator.computeSTN(rtArray, intensitiesMap.get(cutInfo), 1000, 30);
             //根据信噪比和峰值形状选择最高峰,用降噪200及平滑过后的图去挑选Peak峰
             RtIntensityPairsDouble maxPeakPairs = peakPicker.pickMaxPeak(rtArray, smoothIntensitiesMap.get(cutInfo), noises200);
             //根据信噪比和最高峰选择谱图
@@ -203,7 +203,7 @@ public class PeakPicker {
         HashMap<String, Double> normedLibIntMap = new HashMap<>();
         HashMap<String, double[]> noise1000Map = new HashMap<>();
         for (String cutInfo : intensitiesMap.keySet()) {
-            double[] noisesOri1000 = signalToNoiseEstimator.computeSTN(rtArray, intensitiesMap.get(cutInfo), 1000, 30);
+            double[] noisesOri1000 = noiseEstimator.computeSTN(rtArray, intensitiesMap.get(cutInfo), 1000, 30);
             normedLibIntMap.put(cutInfo, libIntMap.get(cutInfo) / libIntSum);
             noise1000Map.put(cutInfo, noisesOri1000);
         }

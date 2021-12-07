@@ -89,15 +89,11 @@ public class AnalyzeController {
         if (anaLib == null) {
             return Result.Error(ResultCode.ANA_LIBRARY_NOT_EXISTED);
         }
-        LibraryDO insLib = null;
-        if (!method.getIrt().isUseAnaLibForIrt()) {
-            insLib = libraryService.getById(insLibId);
-            if (insLib == null) {
-                return Result.Error(ResultCode.INS_LIBRARY_NOT_EXISTED);
-            }
-        } else {
-            insLib = anaLib;
+        LibraryDO insLib = libraryService.getById(insLibId);
+        if (insLib == null) {
+            return Result.Error(ResultCode.INS_LIBRARY_NOT_EXISTED);
         }
+
         List<RunDO> runList = runService.getAll(new RunQuery().setProjectId(projectId).setIds(runIdList));
         LibraryDO finalInsLib = insLib;
 
@@ -151,16 +147,11 @@ public class AnalyzeController {
             if (anaLib == null) {
                 return Result.Error(ResultCode.ANA_LIBRARY_NOT_EXISTED);
             }
-            LibraryDO insLib = null;
-            if (!method.getIrt().isUseAnaLibForIrt()) {
-                insLib = libraryService.getById(baseOverview.getParams().getInsLibId());
-                if (insLib == null) {
-                    return Result.Error(ResultCode.INS_LIBRARY_NOT_EXISTED);
-                }
-            } else {
-                insLib = anaLib;
+            LibraryDO insLib = libraryService.getById(baseOverview.getParams().getInsLibId());
+            if (insLib == null) {
+                return Result.Error(ResultCode.INS_LIBRARY_NOT_EXISTED);
             }
-
+            
             TaskDO task = new TaskDO(TaskTemplate.RESELECT, "Analyze-Reselect-" + project.getName());
             taskService.insert(task);
             AnalyzeParams params = new AnalyzeParams(method);

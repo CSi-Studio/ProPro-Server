@@ -5,7 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.WindowRange;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.GaussFilter;
-import net.csibio.propro.algorithm.peak.SignalToNoiseEstimator;
+import net.csibio.propro.algorithm.peak.NoiseEstimator;
+import net.csibio.propro.algorithm.peak.Smoother;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
@@ -55,7 +56,7 @@ public class ClinicController {
     @Autowired
     DataSumService dataSumService;
     @Autowired
-    SignalToNoiseEstimator signalToNoiseEstimator;
+    NoiseEstimator noiseEstimator;
     @Autowired
     PeptideService peptideService;
     @Autowired
@@ -66,6 +67,8 @@ public class ClinicController {
     Scorer scorer;
     @Autowired
     GaussFilter gaussFilter;
+    @Autowired
+    Smoother smoother;
 
     @GetMapping(value = "prepare")
     Result<ClinicPrepareDataVO> prepare(
@@ -153,6 +156,7 @@ public class ClinicController {
             @RequestParam("predict") Boolean predict,
             @RequestParam(value = "changeCharge", required = false) Boolean changeCharge,
             @RequestParam(value = "smooth", required = false) Boolean smooth,
+            @RequestParam(value = "peakPickerMethod", required = false, defaultValue = "IONS_COUNT") String pickFindingMethod,
             @RequestParam(value = "denoise", required = false) Boolean denoise,
             @RequestParam("overviewIds") List<String> overviewIds) {
         log.info("开始获取新预测数据-------------------------------------------------------------------------------");
@@ -168,21 +172,7 @@ public class ClinicController {
             // 如果使用预测方法,则进行实时EIC获取
             if (predict) {
                 RunDO run = runService.getById(overview.getRunId());
-                //                DataSumDO existed = dataSumService.getOne(new
-                // DataSumQuery().setOverviewId(overview.getId()).setPeptideRef(peptideRef).setDecoy(false),
-                // DataSumDO.class, projectId);
-                //                if (existed.getStatus() == IdentifyStatus.SUCCESS.getCode()) {
-                //                    DataDO existedData = dataService.getById(existed.getId(), projectId);
-                //                    DataSumDO dataSum = scorer.calcBestTotalScore(existedData, overview,
-                // null);
-                //                    data = new ExpDataVO().merge(existedData, dataSum);
-                //                    data.setGroup(run.getGroup());
-                //                    data.setAlias(run.getAlias());
-                //                    data.setExpId(run.getId());
-                //                } else {
-                //                peptide.setFragments(peptide.getFragments().stream().filter(f ->
-                // !f.getCutInfo().equals("y14^2")).toList());
-                Result<RunDataVO> res = dataService.predictDataFromFile(run, peptide, changeCharge, overview.getId());
+                Result<RunDataVO> res = dataService.predictDataFromFile(run, peptide, changeCharge, pickFindingMethod, overview.getId());
                 if (res.isSuccess()) {
                     data = res.getData();
                     data.setGroup(run.getGroup());
@@ -190,7 +180,6 @@ public class ClinicController {
                     data.setRunId(run.getId());
                     data.setOverviewId(overviewId);
                 }
-                //                }
             } else {
                 data = dataService.getDataFromDB(projectId, overview.getRunId(), overview.getId(), peptideRef);
             }
@@ -208,29 +197,18 @@ public class ClinicController {
             return Result.Error(ResultCode.DATA_IS_EMPTY);
         }
 
+        //平滑
         if (smooth) {
-            SigmaSpacing ss = SigmaSpacing.create();
             dataList.forEach(data -> {
-                HashMap<String, float[]> smoothInt = gaussFilter.filter(data.getRtArray(), (HashMap<String, float[]>) data.getIntMap(), ss);
-                data.setIntMap(smoothInt);
+                data.setIntMap(gaussFilter.filter(data.getRtArray(), (HashMap<String, float[]>) data.getIntMap(), SigmaSpacing.create()));
             });
         }
 
+        //降噪
         if (denoise) {
-            dataList.forEach(
-                    data -> {
-                        HashMap<String, float[]> denoiseIntMap = new HashMap<>();
-                        float[] rt = data.getRtArray();
-                        for (String cutInfo : data.getIntMap().keySet()) {
-                            double[] noises200 = signalToNoiseEstimator.computeSTN(rt, data.getIntMap().get(cutInfo), 200, 30);
-                            float[] denoiseInt = new float[noises200.length];
-                            for (int i = 0; i < noises200.length; i++) {
-                                denoiseInt[i] = (float) (data.getIntMap().get(cutInfo)[i] * noises200[i] / (noises200[i] + 1));
-                            }
-                            denoiseIntMap.put(cutInfo, denoiseInt);
-                        }
-                        data.setIntMap(denoiseIntMap);
-                    });
+            dataList.forEach(data -> {
+                data.setIntMap(noiseEstimator.denoise(data.getRtArray(), data.getIntMap()));
+            });
         }
 
         Result<List<RunDataVO>> result = new Result<List<RunDataVO>>(true);

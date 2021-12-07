@@ -5,9 +5,26 @@ import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.utils.MathUtil;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
-@Component("signalToNoiseEstimator")
-public class SignalToNoiseEstimator {
+@Component("noiseEstimator")
+public class NoiseEstimator {
+
+    public Map<String, float[]> denoise(float[] rt, Map<String, float[]> intMap) {
+        HashMap<String, float[]> denoiseIntMap = new HashMap<>();
+
+        for (String cutInfo : intMap.keySet()) {
+            double[] noises200 = computeSTN(rt, intMap.get(cutInfo), 200, 30);
+            float[] denoiseInt = new float[noises200.length];
+            for (int i = 0; i < noises200.length; i++) {
+                denoiseInt[i] = (float) (intMap.get(cutInfo)[i] * noises200[i] / (noises200[i] + 1));
+            }
+            denoiseIntMap.put(cutInfo, denoiseInt);
+        }
+        return denoiseIntMap;
+    }
 
     /**
      * 计算信噪比
@@ -114,8 +131,8 @@ public class SignalToNoiseEstimator {
         Double[] rtArray = new Double[rts.length];
         Double[] rtIntensity = new Double[intensity.length];
         for (int i = 0; i < rts.length; i++) {
-            rtArray[i]= (double) rts[i];
-            rtIntensity[i]= (double) intensity[i];
+            rtArray[i] = (double) rts[i];
+            rtIntensity[i] = (double) intensity[i];
         }
 
         //final result

@@ -20,8 +20,6 @@ public class Method {
 
     PeakFindingOptions peakFinding;
 
-    QuickFilterOptions quickFilter;
-
     ScoreOptions score;
 
     ClassifierOptions classifier;

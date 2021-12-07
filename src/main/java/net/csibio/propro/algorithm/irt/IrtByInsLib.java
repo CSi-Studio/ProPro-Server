@@ -51,7 +51,7 @@ public class IrtByInsLib extends Irt {
                 //Step1.按照步长获取SwathList的点位库
                 BlockIndexDO blockIndex = blockList.get(i);
                 //Step2.获取标准库的目标肽段片段的坐标
-                List<PeptideCoord> coords = peptideService.buildCoord4Irt(params.getIrtLibraryId(), blockIndex.getRange());
+                List<PeptideCoord> coords = peptideService.buildCoord4Irt(params.getInsLibId(), blockIndex.getRange());
                 if (coords.size() == 0) {
                     log.warn("No iRT Targets Found,Rang:" + blockIndex.getRange().getStart() + ":" + blockIndex.getRange().getEnd());
                     continue;

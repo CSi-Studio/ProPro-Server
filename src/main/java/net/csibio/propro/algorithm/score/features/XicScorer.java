@@ -133,21 +133,21 @@ public class XicScorer {
         }
 
         //实际最大碎片就是理论最大碎片的时候,考虑实际最大碎片是否被干扰导致增强
-        if (bestIon != null && bestIon.equals(maxIon)) {
-            //判定方式为整体占比
-            double realRatio = maxIonIntensity / peakGroup.getIntensitySum();
-            double libRatio = normedLibIntMap.get(bestIon) / MathUtil.sumDouble(normedLibIntMap.values());
-            if (realRatio / libRatio > 4) { //如果超过理论2倍的占比
-                for (int i = 1; i < coord.getFragments().size(); i++) {
-                    String cutInfo = coord.getFragments().get(i).getCutInfo();
-                    Double intensity = peakGroup.getIonIntensity().get(cutInfo);
-                    if (intensity != null) {
-                        bestIon = coord.getFragments().get(i).getCutInfo();
-                        break;
-                    }
-                }
-            }
-        }
+//        if (bestIon != null && bestIon.equals(maxIon)) {
+//            //判定方式为整体占比
+//            double realRatio = maxIonIntensity / peakGroup.getIntensitySum();
+//            double libRatio = normedLibIntMap.get(bestIon) / MathUtil.sumDouble(normedLibIntMap.values());
+//            if (realRatio / libRatio > 4) { //如果超过理论2倍的占比
+//                for (int i = 1; i < coord.getFragments().size(); i++) {
+//                    String cutInfo = coord.getFragments().get(i).getCutInfo();
+//                    Double intensity = peakGroup.getIonIntensity().get(cutInfo);
+//                    if (intensity != null) {
+//                        bestIon = coord.getFragments().get(i).getCutInfo();
+//                        break;
+//                    }
+//                }
+//            }
+//        }
 
         //重新计算最佳ion
 //        List<Map.Entry<String, Double[]>> entries = new ArrayList<>(peakGroup.getIonHullInt().entrySet());
@@ -170,7 +170,6 @@ public class XicScorer {
 //                bestIon = entries.get(i).getKey();
 //            }
 //        }
-
 
         HashMap<String, Double[]> ionMap = peakGroup.getIonHullInt();
         if (ionMap.get(bestIon) == null) {

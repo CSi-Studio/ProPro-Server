@@ -72,7 +72,7 @@ public class DataSumServiceImpl implements DataSumService {
             }
             sumList.add(sum);
         });
-        Optional<DataSumDO> op = sumList.stream().filter(data -> data.getDecoy() && data.getStatus() == 1).min(Comparator.comparing(DataSumDO::getTotalScore));
+        Optional<DataSumDO> op = sumList.stream().filter(data -> data.getDecoy() && data.getStatus() == IdentifyStatus.SUCCESS.getCode()).min(Comparator.comparing(DataSumDO::getTotalScore));
         Double minTotalScore = -9999d;
         if (op.isPresent()) {
             minTotalScore = op.get().getTotalScore();

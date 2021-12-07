@@ -70,12 +70,4 @@ public class AnalyzeParams {
     public AnalyzeParams(MethodDO method) {
         this.method = method.toMethod();
     }
-
-    public String getIrtLibraryId() {
-        if (method.getIrt().isUseAnaLibForIrt()) {
-            return anaLibId;
-        } else {
-            return insLibId;
-        }
-    }
 }

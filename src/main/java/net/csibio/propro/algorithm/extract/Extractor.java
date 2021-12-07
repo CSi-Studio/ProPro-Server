@@ -175,30 +175,6 @@ public class Extractor {
         }
     }
 
-    public void extract4IrtByLib(List<DataDO> finalList, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
-        long start = System.currentTimeMillis();
-        int count = 0;
-        for (int i = 0; i < coordinates.size(); i++) {
-            if (count >= 1) {
-                break;
-            }
-            if (coordinates.get(i).getSequence().length() <= 13) {
-                continue;
-            }
-            DataDO dataDO = coreFunc.extractOne(coordinates.get(i), rtMap, params, false, null);
-            if (dataDO == null) {
-                continue;
-            }
-            scorer.strictScoreForOne(dataDO, coordinates.get(i), rtMap, params.getMethod().getQuickFilter().getMinShapeScore());
-
-            if (dataDO.getPeakGroupList() != null) {
-                finalList.add(dataDO);
-                log.info("第" + i + "次搜索找到了:" + dataDO.getPeptideRef() + ",BestRT:" + dataDO.getPeakGroupList().get(0).getApexRt() + "耗时:" + (System.currentTimeMillis() - start));
-                count++;
-            }
-        }
-    }
-
     public DataDO eppsOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> rtMap, AnalyzeParams params) {
         return coreFunc.extractOne(coord, rtMap, params, true, null);
     }

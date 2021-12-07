@@ -72,7 +72,8 @@ public class PeakFindingOptions {
     public void fillParams() {
         if (StringUtils.isEmpty(this.smoothMethod)) this.smoothMethod = SmoothMethod.GAUSS.getName();
         if (this.smoothPoints == null) this.smoothPoints = 5;
-        if (StringUtils.isEmpty(this.peakFindingMethod)) this.peakFindingMethod = PeakFindingMethod.WAVELET.getName();
+        if (StringUtils.isEmpty(this.peakFindingMethod))
+            this.peakFindingMethod = PeakFindingMethod.IONS_COUNT.getName();
         if (StringUtils.isEmpty(this.baselineMethod)) this.baselineMethod = BaselineMethod.TOLERANCE.getName();
         if (this.baselineRtTolerance == null) this.baselineRtTolerance = 0.2d;
         if (StringUtils.isEmpty(this.eicNoiseMethod)) this.eicNoiseMethod = NoiseEstimateMethod.PROPRO_EIC.getName();

@@ -5,13 +5,13 @@ package net.csibio.propro.constants.enums;
  * Time: 2020-03-10 16:11
  */
 public enum PeakFindingMethod {
-    PROPRO("PROPRO"),
+    IONS_SHAPE("IONS_SHAPE"),
+    IONS_COUNT("IONS_COUNT"),
     MZMINE("MZMINE"),
     WAVELET("WAVELET"),
     LOCAL_MINIMUM("LOCAL_MINIMUM"),
     SAVITZKY_GOLAY("SAVITZKY_GOLAY");
-
-
+    
     String name;
 
     PeakFindingMethod(String name) {

@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.algorithm.extract.Extractor;
 import net.csibio.propro.algorithm.formula.FragmentFactory;
 import net.csibio.propro.algorithm.irt.Irt;
-import net.csibio.propro.algorithm.irt.IrtByAnaLib;
 import net.csibio.propro.algorithm.irt.IrtByInsLib;
 import net.csibio.propro.algorithm.learner.SemiSupervise;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
@@ -48,8 +47,6 @@ public class RunTask extends BaseTask {
     FragmentFactory fragmentFactory;
     @Autowired
     LibraryService libraryService;
-    @Autowired
-    IrtByAnaLib irtByAnaLib;
     @Autowired
     IrtByInsLib irtByInsLib;
     @Autowired
@@ -96,7 +93,7 @@ public class RunTask extends BaseTask {
     public void doProPro(TaskDO taskDO, RunDO run, AnalyzeParams params) {
         long start = System.currentTimeMillis();
         //Step1. 如果还没有计算irt,先执行计算irt的步骤.
-        if (run.getIrt() == null || (params.getForceIrt() && params.getIrtLibraryId() != null)) {
+        if (run.getIrt() == null || (params.getForceIrt() && params.getInsLibId() != null)) {
             boolean exeResult = doIrt(taskDO, run, params);
             if (!exeResult) {
                 return;
@@ -133,7 +130,7 @@ public class RunTask extends BaseTask {
     public void doCSi(TaskDO taskDO, RunDO run, AnalyzeParams params) {
         long start = System.currentTimeMillis();
         //Step1. 如果还没有计算irt,先执行计算irt的步骤.
-        if (run.getIrt() == null || (params.getForceIrt() && params.getIrtLibraryId() != null)) {
+        if (run.getIrt() == null || (params.getForceIrt() && params.getInsLibId() != null)) {
             boolean exeResult = doIrt(taskDO, run, params);
             if (!exeResult) {
                 return;
@@ -176,7 +173,7 @@ public class RunTask extends BaseTask {
     }
 
     public void doIrt(TaskDO taskDO, List<RunDO> runs, AnalyzeParams params) {
-        Irt irt = params.getMethod().getIrt().isUseAnaLibForIrt() ? irtByAnaLib : irtByInsLib;
+        Irt irt = irtByInsLib;
         for (RunDO run : runs) {
             taskDO.addLog("Start Analyzing for iRT: " + run.getName());
             taskDO.addBindingRun(run.getId());
@@ -194,7 +191,7 @@ public class RunTask extends BaseTask {
     }
 
     public boolean doIrt(TaskDO taskDO, RunDO run, AnalyzeParams params) {
-        Irt irt = params.getMethod().getIrt().isUseAnaLibForIrt() ? irtByAnaLib : irtByInsLib;
+        Irt irt = irtByInsLib;
         taskDO.addLog("Start Analyzing for iRT: " + run.getName());
         taskDO.addBindingRun(run.getId());
         taskService.update(taskDO);

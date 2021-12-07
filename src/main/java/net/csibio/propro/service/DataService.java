@@ -15,11 +15,12 @@ public interface DataService extends BaseMultiService<DataDO, DataQuery> {
      * 根据一个肽段生成其预测 兄弟(2电)肽段并且构建其EIC谱图
      * 其中预测RT时间会根据其在库中的兄弟肽段来进行推测
      *
-     * @param run          数据所属实验
-     * @param peptide      原肽段
-     * @param changeCharge 使用异电肽段
-     * @param overviewId   原肽段检测结果对应的overviewId
+     * @param run              数据所属实验
+     * @param peptide          原肽段
+     * @param changeCharge     使用异电肽段
+     * @param peakPickerMethod 选峰算法
+     * @param overviewId       原肽段检测结果对应的overviewId
      * @return
      */
-    Result<RunDataVO> predictDataFromFile(RunDO run, PeptideDO peptide, Boolean changeCharge, String overviewId);
+    Result<RunDataVO> predictDataFromFile(RunDO run, PeptideDO peptide, Boolean changeCharge, String peakPickerMethod, String overviewId);
 }

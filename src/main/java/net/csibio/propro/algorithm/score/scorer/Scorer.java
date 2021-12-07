@@ -12,6 +12,7 @@ import net.csibio.propro.algorithm.score.features.ElutionScorer;
 import net.csibio.propro.algorithm.score.features.LibraryScorer;
 import net.csibio.propro.algorithm.score.features.XicScorer;
 import net.csibio.propro.constants.enums.IdentifyStatus;
+import net.csibio.propro.constants.enums.PeakFindingMethod;
 import net.csibio.propro.domain.bean.data.DataScore;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.bean.score.PeakGroup;
@@ -46,7 +47,7 @@ public class Scorer {
     @Autowired
     PeakPicker peakPicker;
     @Autowired
-    SignalToNoiseEstimator signalToNoiseEstimator;
+    NoiseEstimator noiseEstimator;
     @Autowired
     PeakGroupPicker peakGroupPicker;
     @Autowired
@@ -84,7 +85,14 @@ public class Scorer {
         //获取标准库中对应的PeptideRef组
         //重要步骤,"或许是目前整个工程最重要的核心算法--选峰算法."--陆妙善
         SigmaSpacing ss = params.getMethod().getIrt().getSs();
-        PeakGroupListWrapper peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
+        PeakGroupListWrapper peakGroupListWrapper = null;
+
+        if (params.getMethod().getPeakFinding().getPeakFindingMethod().equals(PeakFindingMethod.IONS_COUNT.getName())) {
+            peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
+        } else {
+            peakGroupListWrapper = peakPicker.searchByIonsShape(dataDO, coord, ss);
+        }
+
         if (!peakGroupListWrapper.isFound()) {
             //重试机制:扩大RT搜索范围并使用IonsShape重新计算XIC
             coord.setRtRange(coord.getRtStart() - 200, coord.getRtEnd() + 200);
@@ -94,7 +102,11 @@ public class Scorer {
                 return dataDO;
             }
 
-            peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
+            if (params.getMethod().getPeakFinding().getPeakFindingMethod().equals(PeakFindingMethod.IONS_COUNT.getName())) {
+                peakGroupListWrapper = peakPicker.searchByIonsCount(dataDO, coord, ss);
+            } else {
+                peakGroupListWrapper = peakPicker.searchByIonsShape(dataDO, coord, ss);
+            }
             if (!peakGroupListWrapper.isFound()) {
                 dataDO.setStatus(IdentifyStatus.NO_PEAK_GROUP_FIND.getCode());
                 return dataDO;
