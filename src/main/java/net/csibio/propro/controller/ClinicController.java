@@ -24,6 +24,7 @@ import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.domain.query.*;
 import net.csibio.propro.domain.vo.ClinicPrepareDataVO;
+import net.csibio.propro.domain.vo.PeakVO;
 import net.csibio.propro.domain.vo.RunDataVO;
 import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.*;
@@ -300,5 +301,14 @@ public class ClinicController {
         }
         log.info("rt坐标已渲染,耗时:" + (System.currentTimeMillis() - start));
         return Result.OK(map);
+    }
+
+    @PostMapping(value = "/manualCheck")
+    Result manualCheck(List<PeakVO> peaks) {
+        for (int i = 0; i < peaks.size(); i++) {
+            PeakVO peak = peaks.get(i);
+        }
+
+        return Result.OK();
     }
 }
