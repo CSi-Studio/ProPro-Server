@@ -67,23 +67,18 @@ public class Extractor {
      * @param params 将XIC提取,选峰及打分合并在一个步骤中执行,可以完整的省去一次IO读取及解析,提升分析速度,
      *               需要runDO,libraryId,rtExtractionWindow,mzExtractionWindow,SlopeIntercept
      */
-    public Result<OverviewDO> extractRun(RunDO run, AnalyzeParams params) throws XException {
-        Result<OverviewDO> resultDO = new Result(true);
+    public OverviewDO extractRun(RunDO run, AnalyzeParams params) throws XException {
         TaskDO task = params.getTaskDO();
-        task.addLog("基本条件检查开始");
+        task.addLog("Start Checking");
         ConvolutionUtil.checkRun(run);
-
         OverviewDO overview = overviewService.init(run, params);
         if (overview == null) {
-            task.finish(TaskStatus.FAILED.getName(), ResultCode.ANALYZE_CREATE_FAILED.getMessage());
-            taskService.update(task);
-            return Result.Error(ResultCode.ANALYZE_CREATE_FAILED);
+            throw new XException(ResultCode.ANALYZE_CREATE_FAILED);
         }
         //核心函数在这里
         extractRun(overview, run, params);
         overviewService.update(overview);
-        resultDO.setData(overview);
-        return resultDO;
+        return overview;
     }
 
     public Eic extractMS1(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, AnalyzeParams params) {
@@ -214,31 +209,31 @@ public class Extractor {
      * @param run
      * @return
      */
-    public Result<TreeMap<Float, MzIntensityPairs>> getMS1Map(RunDO run) throws XException {
+    public TreeMap<Float, MzIntensityPairs> getMS1Map(RunDO run) throws XException {
         ConvolutionUtil.checkRun(run);
 
         Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
         Compressor intCompressor = run.fetchCompressor(Compressor.TARGET_INTENSITY);
 
         //Step1.获取窗口信息
-        TreeMap<Float, MzIntensityPairs> rtMap;
+        TreeMap<Float, MzIntensityPairs> ms1Map;
         BlockIndexDO index = blockIndexService.getMS1(run.getId());
         if (index == null) {
-            return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
+            throw new XException(ResultCode.BLOCK_INDEX_NOT_EXISTED);
         }
         DIAParser parser = null;
         try {
             parser = new DIAParser(run.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
-            rtMap = parser.getSpectrums(index.getStartPtr(), index.getEndPtr(), index.getRts(), index.getMzs(), index.getInts());
+            ms1Map = parser.getSpectrums(index.getStartPtr(), index.getEndPtr(), index.getRts(), index.getMzs(), index.getInts());
         } catch (Exception e) {
             log.error(e.getMessage());
-            return Result.Error(ResultCode.PARSE_ERROR);
+            throw new XException(ResultCode.PARSE_MS1_SPECTRUM_FAILED);
         } finally {
             if (parser != null) {
                 parser.close();
             }
         }
-        return Result.OK(rtMap);
+        return ms1Map;
     }
 
     /**
@@ -248,32 +243,30 @@ public class Extractor {
      * @param coord
      * @return
      */
-    public Result<TreeMap<Float, MzIntensityPairs>> getMS1Map(RunDO run, PeptideCoord coord) throws XException {
+    public TreeMap<Float, MzIntensityPairs> getMS1Map(RunDO run, PeptideCoord coord) throws XException {
         ConvolutionUtil.checkRun(run);
-
-
         Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
         Compressor intCompressor = run.fetchCompressor(Compressor.TARGET_INTENSITY);
 
         //Step1.获取窗口信息
-        TreeMap<Float, MzIntensityPairs> rtMap;
+        TreeMap<Float, MzIntensityPairs> ms1Map;
         BlockIndexDO index = blockIndexService.getMS1(run.getId());
         if (index == null) {
-            return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
+            throw new XException(ResultCode.BLOCK_INDEX_NOT_EXISTED);
         }
         DIAParser parser = null;
         try {
             parser = new DIAParser(run.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
-            rtMap = parser.getSpectrumsByRtRange(index.getStartPtr(), index.getRts(), index.getMzs(), index.getInts(), (float) coord.getRtStart(), (float) coord.getRtEnd());
+            ms1Map = parser.getSpectrumsByRtRange(index.getStartPtr(), index.getRts(), index.getMzs(), index.getInts(), (float) coord.getRtStart(), (float) coord.getRtEnd());
         } catch (Exception e) {
             log.error(e.getMessage());
-            return Result.Error(ResultCode.PARSE_ERROR);
+            throw new XException(ResultCode.PARSE_ERROR);
         } finally {
             if (parser != null) {
                 parser.close();
             }
         }
-        return Result.OK(rtMap);
+        return ms1Map;
     }
 
     /**
@@ -283,30 +276,30 @@ public class Extractor {
      * @param coord
      * @return
      */
-    public Result<TreeMap<Float, MzIntensityPairs>> getMS2Map(RunDO run, PeptideCoord coord) throws XException {
+    public TreeMap<Float, MzIntensityPairs> getMS2Map(RunDO run, PeptideCoord coord) throws XException {
         ConvolutionUtil.checkRun(run);
         Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
         Compressor intCompressor = run.fetchCompressor(Compressor.TARGET_INTENSITY);
 
         //Step1.获取窗口信息
-        TreeMap<Float, MzIntensityPairs> rtMap;
+        TreeMap<Float, MzIntensityPairs> ms2Map;
         BlockIndexDO index = blockIndexService.getMS2(run.getId(), coord.getMz());
         if (index == null) {
-            return Result.Error(ResultCode.BLOCK_INDEX_NOT_EXISTED);
+            throw new XException(ResultCode.BLOCK_INDEX_NOT_EXISTED);
         }
         DIAParser parser = null;
         try {
             parser = new DIAParser(run.getAirdPath(), mzCompressor, intCompressor, mzCompressor.getPrecision());
-            rtMap = parser.getSpectrumsByRtRange(index.getStartPtr(), index.getRts(), index.getMzs(), index.getInts(), (float) coord.getRtStart(), (float) coord.getRtEnd());
+            ms2Map = parser.getSpectrumsByRtRange(index.getStartPtr(), index.getRts(), index.getMzs(), index.getInts(), (float) coord.getRtStart(), (float) coord.getRtEnd());
         } catch (Exception e) {
             log.error(e.getMessage());
-            return Result.Error(ResultCode.PARSE_ERROR);
+            throw new XException(ResultCode.PARSE_ERROR);
         } finally {
             if (parser != null) {
                 parser.close();
             }
         }
-        return Result.OK(rtMap);
+        return ms2Map;
     }
 
     /**
@@ -326,16 +319,9 @@ public class Extractor {
             double targetRt = run.getIrt().getSi().realRt(rt);
             coord.setRtRange(targetRt - 300, targetRt + 300);
         }
-        Result<TreeMap<Float, MzIntensityPairs>> ms1Result = getMS1Map(run, coord);
-        Result<TreeMap<Float, MzIntensityPairs>> ms2Result = getMS2Map(run, coord);
-        if (ms1Result.isFailed()) {
-            return Result.Error(ms1Result.getErrorCode());
-        }
-        if (ms2Result.isFailed()) {
-            return Result.Error(ms2Result.getErrorCode());
-        }
-
-        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneNiubi(coord, ms1Result.getData(), ms2Result.getData(), run, overview, params);
+        TreeMap<Float, MzIntensityPairs> ms1Map = getMS1Map(run, coord);
+        TreeMap<Float, MzIntensityPairs> ms2Map = getMS2Map(run, coord);
+        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneNiubi(coord, ms1Map, ms2Map, run, overview, params);
 //        AnyPair<DataDO, DataSumDO> dataPair = coreFunc.predictOneDelete(coord, ms2Result.getData(), run, overview, params);
         if (dataPair == null) {
             return Result.Error(ResultCode.ANALYSE_DATA_ARE_ALL_ZERO);
@@ -382,10 +368,9 @@ public class Extractor {
         BlockIndexQuery query = new BlockIndexQuery(run.getId(), 2);
 
         //获取所有MS2的窗口
-
         List<BlockIndexDO> blockIndexList = blockIndexService.getAll(query);
         blockIndexList = blockIndexList.stream().sorted(Comparator.comparing(blockIndexDO -> blockIndexDO.getRange().getStart())).toList();
-        task.addLog("总计有窗口:" + ranges.size() + "个,开始进行MS2 提取XIC计算");
+        task.addLog("Total Windows:" + ranges.size() + ",Start XIC processing");
         taskService.update(task);
         //按窗口开始扫描.如果一共有N个窗口,则一共分N个批次进行XIC提取
         int count = 1;
@@ -394,24 +379,17 @@ public class Extractor {
             parser = new DIAParser(run.getAirdIndexPath());
             long peakCount = 0L;
             int dataCount = 0;
-            Result<TreeMap<Float, MzIntensityPairs>> ms1Result = getMS1Map(run);
-            if (ms1Result.isFailed()) {
-                task.finish(TaskStatus.FAILED.getName(), ResultCode.PARSE_MS1_SPECTRUM_FAILED.getMessage());
-                taskService.update(task);
-                return;
-            }
-            TreeMap<Float, MzIntensityPairs> ms1Map = ms1Result.getData();
+            TreeMap<Float, MzIntensityPairs> ms1Map = getMS1Map(run);
 
             for (BlockIndexDO index : blockIndexList) {
                 List<DataDO> dataList = null;
                 long start = System.currentTimeMillis();
-                task.addLog("开始处理窗口:" + index.getRange().getStart() + "-" + index.getRange().getEnd() + ",当前轮数" + count + "/" + blockIndexList.size());
+                task.addLog("Processing:" + index.getRange().getStart() + "-" + index.getRange().getEnd() + ",Current:" + count + "/" + blockIndexList.size());
                 //构建坐标
                 List<PeptideCoord> coords = peptideService.buildCoord(params.getAnaLibId(), index.getRange(), params.getMethod().getEic().getRtWindow(), run.getIrt().getSi());
                 if (coords.isEmpty()) {
                     task.addLog("No Coordinates Found,Rang:" + index.getRange().getStart() + ":" + index.getRange().getEnd());
                     taskService.update(task);
-                    log.warn("No Coordinates Found,Rang:" + index.getRange().getStart() + ":" + index.getRange().getEnd());
                     continue;
                 }
                 //Step3.提取指定原始谱图
@@ -423,28 +401,25 @@ public class Extractor {
                 }
 
                 if (dataList != null) {
-                    for (DataDO dataDO : dataList) {
-                        if (dataDO.getPeakGroupList() != null) {
-                            peakCount += dataDO.getPeakGroupList().size();
-                        }
-                    }
+                    peakCount += dataList.stream().filter(data -> data.getPeakGroupList() != null).mapToInt(data -> data.getPeakGroupList().size()).sum();
                     dataCount += dataList.size();
                 } else {
-                    task.addLog("鉴定错误,有异常情况导致鉴定结果为空");
+                    task.addLog("Analysis Data is empty");
                 }
                 dataService.insert(dataList, overviewDO.getProjectId());
-                task.addLog("第" + count + "轮数据XIC提取完毕,Range:[" + index.getRange().getStart() + "," + index.getRange().getEnd() + "],有效肽段:" + (dataList == null ? 0 : dataList.size()) + "个,耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
+                task.addLog("(" + count + "-" + index.getRange().getStart() + "," + index.getRange().getEnd() + ")XIC Finished,Effective Peptides:" + (dataList == null ? 0 : dataList.size()) + ",Time Cost:" + (System.currentTimeMillis() - start) / 1000 + "s");
                 taskService.update(task);
                 count++;
             }
 
-            log.info("Total Peptide Count:" + dataCount);
-            log.info("Total Peak Count:" + peakCount);
+            task.addLog("Total Peptide Count:" + dataCount + ",Total Peak Count:" + peakCount);
             overviewDO.getStatistic().put(StatConst.TOTAL_PEPTIDE_COUNT, dataCount);
             overviewDO.getStatistic().put(StatConst.TOTAL_PEAK_COUNT, peakCount);
             overviewService.update(overviewDO);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (XException xe) {
+            xe.printStackTrace();
+            task.finish(TaskStatus.FAILED.getName(), xe.getErrorMsg());
+            taskService.update(task);
         } finally {
             if (parser != null) {
                 parser.close();

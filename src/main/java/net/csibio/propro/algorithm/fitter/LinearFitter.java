@@ -30,7 +30,7 @@ public class LinearFitter {
         return slopeIntercept;
     }
 
-    public SlopeIntercept huberFit(List<Pair> rtPairs, double delta) throws Exception {
+    public SlopeIntercept huberFit(List<Pair> rtPairs, double delta) {
         double tolerance = 0.001d;
         SlopeIntercept lastSlopeIntercept = getInitSlopeIntercept(rtPairs);
         SlopeIntercept slopeIntercept = updateHuberSlopeIntercept(rtPairs, lastSlopeIntercept, delta);
@@ -44,7 +44,7 @@ public class LinearFitter {
         return slopeIntercept;
     }
 
-    public SlopeIntercept proproFit(List<Pair> rtPairs, double delta) throws Exception {
+    public SlopeIntercept proproFit(List<Pair> rtPairs, double delta) {
         double tolerance = 0.001d;
         SlopeIntercept lastSlopeIntercept = getInitSlopeIntercept(rtPairs);
         SlopeIntercept slopeIntercept = updateProproSlopeIntercept(rtPairs, lastSlopeIntercept, delta);

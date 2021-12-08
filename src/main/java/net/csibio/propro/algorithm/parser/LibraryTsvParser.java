@@ -117,14 +117,13 @@ public class LibraryTsvParser extends BaseLibraryParser {
             }
             //在导入Peptide的同时生成伪肽段
             shuffleGenerator.generate(peptideDOList);
-            log.info("准备插入肽段:" + peptideDOList.size() + "条");
+            taskDO.addLog("准备插入肽段:" + peptideDOList.size() + "条");
             Result<List<PeptideDO>> res = peptideService.insert(peptideDOList);
-            log.info("实际插入肽段:" + res.getData().size() + "条");
+            taskDO.addLog("实际插入肽段:" + res.getData().size() + "条");
             library.setProteins(proteinSet);
             libraryService.update(library);
             taskDO.addLog(res.getData().size() + "条肽段数据插入成功");
             taskService.update(taskDO);
-            log.info(res.getData().size() + "条肽段数据插入成功");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -194,10 +193,10 @@ public class LibraryTsvParser extends BaseLibraryParser {
             }
             peptideService.insert(peptideList);
             taskDO.addLog(map.size() + "条肽段数据插入成功");
+            taskDO.addLog(map.size() + "条肽段数据插入成功");
+            taskDO.addLog("在选中的" + selectedCount + "条肽段中, 有" + selectedPepSet.size() + "条没有在库中找到");
+            taskDO.addLog(selectedPepSet.toString());
             taskService.update(taskDO);
-            log.info(map.size() + "条肽段数据插入成功");
-            log.info("在选中的" + selectedCount + "条肽段中, 有" + selectedPepSet.size() + "条没有在库中找到");
-            log.info(selectedPepSet.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }

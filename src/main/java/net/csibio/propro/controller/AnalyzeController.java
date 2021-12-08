@@ -117,7 +117,7 @@ public class AnalyzeController {
                 params.setInsLibId(finalInsLib.getId());
                 params.setInsLibName(finalInsLib.getName());
                 params.setNote(note);
-                runTask.doCSi(task, run, params);
+                runTask.doWorkflow(task, run, params);
             }
         }
         return Result.OK();
@@ -163,7 +163,7 @@ public class AnalyzeController {
             params.setAnaLibName(anaLib.getName());
             params.setInsLibId(insLib.getId());
             params.setInsLibName(insLib.getName());
-            runTask.doCSi(task, run, params);
+            runTask.doWorkflow(task, run, params);
         }
 
         return Result.OK();

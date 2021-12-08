@@ -19,6 +19,7 @@ public class XException extends Exception {
     }
 
     public XException(ResultCode resultCode) {
+        this.errorMsg = resultCode.getMessage();
         this.resultCode = resultCode;
     }
 

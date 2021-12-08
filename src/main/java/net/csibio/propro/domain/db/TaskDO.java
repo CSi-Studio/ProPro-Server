@@ -1,6 +1,7 @@
 package net.csibio.propro.domain.db;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.constants.enums.TaskStatus;
 import net.csibio.propro.constants.enums.TaskTemplate;
 import net.csibio.propro.domain.BaseDO;
@@ -18,6 +19,7 @@ import java.util.List;
  * Time: 2018-08-13 21:34
  */
 @Data
+@Slf4j
 @Document(collection = "task")
 public class TaskDO extends BaseDO {
 
@@ -71,7 +73,7 @@ public class TaskDO extends BaseDO {
             logs.add(new TaskLog("Task Started"));
         }
         TaskLog taskLog = new TaskLog(content);
-
+        log.info(content);
         logs.add(taskLog);
 
         return this;
@@ -84,6 +86,7 @@ public class TaskDO extends BaseDO {
         }
         for (String content : contents) {
             TaskLog taskLog = new TaskLog(content);
+            log.info(content);
             logs.add(taskLog);
         }
 
@@ -111,7 +114,6 @@ public class TaskDO extends BaseDO {
         addLog("Task Ended");
         this.status = status;
         totalCost = System.currentTimeMillis() - getStartTime();
-
         return this;
     }
 

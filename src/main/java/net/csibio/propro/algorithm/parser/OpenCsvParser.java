@@ -116,7 +116,6 @@ public class OpenCsvParser extends BaseLibraryParser {
                     if (transitionGroupId.length > 2) {
                         peptide.setFullName(transitionGroupId[2]);
                     } else {
-                        logger.info("Full Peptide Name cannot be empty");
                         taskDO.addLog("Full Peptide Name cannot be empty!" + JSON.toJSONString(transition));
                         continue;
                     }
@@ -138,7 +137,6 @@ public class OpenCsvParser extends BaseLibraryParser {
                 addFragment(peptide, map);
             } catch (Exception e) {
                 taskDO.addLog("Parse Error:" + JSON.toJSONString(transition));
-                logger.info("Parse Error:" + JSON.toJSONString(transition));
             }
         }
 
@@ -149,14 +147,13 @@ public class OpenCsvParser extends BaseLibraryParser {
         }
         //在导入Peptide的同时生成伪肽段
         shuffleGenerator.generate(peptideDOList);
-        logger.info("准备插入肽段:" + peptideDOList.size() + "条");
+        taskDO.addLog("准备插入肽段:" + peptideDOList.size() + "条");
         Result<List<PeptideDO>> res = peptideService.insert(peptideDOList);
-        logger.info("实际插入肽段:" + res.getData().size() + "条");
+        taskDO.addLog("实际插入肽段:" + res.getData().size() + "条");
         library.setProteins(proteinSet);
         libraryService.update(library);
         taskDO.addLog(res.getData().size() + "条肽段数据插入成功");
         taskService.update(taskDO);
-        logger.info(res.getData().size() + "条肽段数据插入成功");
         return Result.OK();
     }
 

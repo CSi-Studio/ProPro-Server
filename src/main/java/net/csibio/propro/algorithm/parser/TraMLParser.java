@@ -215,11 +215,8 @@ public class TraMLParser extends BaseLibraryParser {
             peptideList.forEach(peptide -> proteins.addAll(peptide.getProteins()));
             library.setProteins(proteins);
             libraryService.update(library);
-
             taskDO.addLog(map.size() + "条肽段数据插入成功");
-
             taskService.update(taskDO);
-            logger.info(map.size() + "条肽段数据插入成功");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -275,10 +272,10 @@ public class TraMLParser extends BaseLibraryParser {
             peptideService.insert(peptides);
             tranResult.setData(peptides);
             taskDO.addLog(peptides.size() + "条数据插入成功");
+            taskDO.addLog(map.size() + "条肽段数据插入成功");
+            taskDO.addLog("在选中的" + selectedCount + "条肽段中, 有" + selectedPepSet.size() + "条没有在库中找到");
+            taskDO.addLog(selectedPepSet.toString());
             taskService.update(taskDO);
-            logger.info(map.size() + "条肽段数据插入成功");
-            logger.info("在选中的" + selectedCount + "条肽段中, 有" + selectedPepSet.size() + "条没有在库中找到");
-            logger.info(selectedPepSet.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }

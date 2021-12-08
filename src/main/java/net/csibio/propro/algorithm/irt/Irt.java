@@ -7,7 +7,6 @@ import net.csibio.propro.algorithm.peak.PeakPicker;
 import net.csibio.propro.algorithm.score.scorer.IrtScorer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.constants.enums.ResultCode;
-import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.ListPairs;
 import net.csibio.propro.domain.bean.common.Pair;
 import net.csibio.propro.domain.bean.irt.IrtResult;
@@ -56,25 +55,17 @@ public abstract class Irt {
      * @param params
      * @return
      */
-    public Result<IrtResult> align(RunDO run, AnalyzeParams params) {
-        try {
-            List<DataDO> dataList = extract(run, params);
-            if (dataList == null || dataList.isEmpty()) {
-                return Result.Error(ResultCode.DATA_IS_EMPTY);
-            }
-
-            Result<IrtResult> result = align(dataList, params);
-            if (result.isFailed()) {
-                return result;
-            }
-            log.info("实验" + run.getName() + "IRT结束:" + result.getData().getSi().getFormula());
-            run.setIrt(result.getData());
-            runService.update(run);
-            return result;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Result.Error(ResultCode.IRT_EXCEPTION);
+    public IrtResult align(RunDO run, AnalyzeParams params) throws XException {
+        List<DataDO> dataList = extract(run, params);
+        if (dataList == null || dataList.isEmpty()) {
+            throw new XException("iRT计算失败:" + ResultCode.DATA_IS_EMPTY.getMessage());
         }
+
+        IrtResult irtResult = align(dataList, params);
+        log.info("实验" + run.getName() + "IRT结束:" + irtResult.getSi().getFormula());
+        run.setIrt(irtResult);
+        runService.update(run);
+        return irtResult;
     }
 
     /**
@@ -84,7 +75,7 @@ public abstract class Irt {
      * @param params   分析参数,其中的Sigma通常为30/8 = 6.25/Spacing通常为0.01
      * @return irt结果
      */
-    protected Result<IrtResult> align(List<DataDO> dataList, AnalyzeParams params) throws Exception {
+    protected IrtResult align(List<DataDO> dataList, AnalyzeParams params) throws XException {
         List<Double> compoundRt = new ArrayList<>();
         double minGroupRt = Double.MAX_VALUE;
         double maxGroupRt = -Double.MAX_VALUE;
@@ -134,7 +125,7 @@ public abstract class Irt {
         SlopeIntercept slopeIntercept = linearFitter.proproFit(pairsCorrected, delta);
         irtResult.setSi(slopeIntercept);
         irtResult.setLibraryId(params.getInsLibId());
-        return Result.OK(irtResult);
+        return irtResult;
     }
 
     /**
@@ -179,7 +170,7 @@ public abstract class Irt {
      * @return
      * @throws Exception
      */
-    protected List<Pair> selectPairs(List<Pair> rtPairsList, double delta) throws Exception {
+    protected List<Pair> selectPairs(List<Pair> rtPairsList, double delta) {
         List<Pair> rtPairsCorrected = new ArrayList<>(rtPairsList);
         preprocessRtPairs(rtPairsCorrected, 50d);
         SlopeIntercept slopeIntercept = linearFitter.huberFit(rtPairsCorrected, delta);

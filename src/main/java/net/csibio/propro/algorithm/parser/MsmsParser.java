@@ -92,7 +92,6 @@ public class MsmsParser extends BaseLibraryParser {
             peptideService.insert(new ArrayList<>(libPepMap.values()));
             taskDO.addLog(libPepMap.size() + "条肽段数据插入成功");
             taskService.update(taskDO);
-            logger.info(libPepMap.size() + "条肽段数据插入成功");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -172,10 +171,10 @@ public class MsmsParser extends BaseLibraryParser {
 
             peptideService.insert(selectedPepList);
             taskDO.addLog(selectedPepList.size() + "条肽段数据插入成功");
+            taskDO.addLog(selectedPepList.size() + "条肽段数据插入成功");
+            taskDO.addLog("在选中的" + selectedSeqSet.size() + "条肽段中, 有" + selectedPepSet.size() + "条没有在库中找到");
+            taskDO.addLog(selectedPepSet.toString());
             taskService.update(taskDO);
-            logger.info(selectedPepList.size() + "条肽段数据插入成功");
-            logger.info("在选中的" + selectedSeqSet.size() + "条肽段中, 有" + selectedPepSet.size() + "条没有在库中找到");
-            logger.info(selectedPepSet.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }

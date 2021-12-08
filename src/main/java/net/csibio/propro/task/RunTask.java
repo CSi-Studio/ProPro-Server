@@ -8,7 +8,6 @@ import net.csibio.propro.algorithm.irt.IrtByInsLib;
 import net.csibio.propro.algorithm.learner.SemiSupervise;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.constants.enums.TaskStatus;
-import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.irt.IrtResult;
 import net.csibio.propro.domain.bean.learner.FinalResult;
 import net.csibio.propro.domain.bean.learner.LearningParams;
@@ -91,25 +90,17 @@ public class RunTask extends BaseTask {
      * @return
      */
     @Async(value = "csiExecutor")
-    public void doCSi(TaskDO taskDO, RunDO run, AnalyzeParams params) {
+    public void doWorkflow(TaskDO taskDO, RunDO run, AnalyzeParams params) {
         try {
             long start = System.currentTimeMillis();
             //Step1. 如果还没有计算irt,先执行计算irt的步骤.
             if (run.getIrt() == null || (params.getForceIrt() && params.getInsLibId() != null)) {
-                boolean exeResult = doIrt(taskDO, run, params);
-                if (!exeResult) {
-                    return;
-                }
+                doIrt(taskDO, run, params);
                 LogUtil.log("Irt消耗时间", start);
             }
 
             //Step2 全新套路
-            boolean csiResult = doEpps(taskDO, run, params);
-            if (!csiResult) {
-                taskDO.finish(TaskStatus.FAILED.getName());
-                taskService.update(taskDO);
-                return;
-            }
+            doEpps(taskDO, run, params);
 
             //Step6. 机器学习,LDA分类
             logger.info(run.getAlias() + "开始执行机器学习部分");
@@ -118,7 +109,6 @@ public class RunTask extends BaseTask {
             ap.setFdr(params.getMethod().getClassifier().getFdr());
             FinalResult finalResult = semiSupervise.doSemiSupervise(params.getOverviewId(), ap);
             taskDO.addLog("流程执行完毕,总耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
-            log.info("流程执行完毕,总耗时:" + ((System.currentTimeMillis() - start) / 1000) + "秒");
             if (finalResult.getMatchedUniqueProteinCount() != null && finalResult.getMatchedUniqueProteinCount() != 0) {
                 taskDO.addLog("Peptide/Protein Rate:" + finalResult.getMatchedPeptideCount() / finalResult.getMatchedUniqueProteinCount());
             }
@@ -127,6 +117,8 @@ public class RunTask extends BaseTask {
             taskDO.finish(TaskStatus.SUCCESS.getName());
             taskService.update(taskDO);
         } catch (XException xe) {
+            taskDO.finish(TaskStatus.FAILED.getName(), xe.getErrorMsg());
+            taskService.update(taskDO);
             xe.printStackTrace();
         }
 
@@ -147,49 +139,34 @@ public class RunTask extends BaseTask {
             taskDO.addLog("Start Analyzing for iRT: " + run.getName());
             taskDO.addBindingRun(run.getId());
             taskService.update(taskDO);
-            Result<IrtResult> result = irt.align(run, params);
-
-            if (result.isFailed()) {
-                taskDO.addLog("iRT计算失败:" + result.getErrorMessage());
-                taskService.update(taskDO);
-                continue;
+            try {
+                IrtResult irtResult = irt.align(run, params);
+                SlopeIntercept slopeIntercept = irtResult.getSi();
+                taskDO.addLog("iRT计算完毕,斜率:" + slopeIntercept.getSlope() + ",截距:" + slopeIntercept.getIntercept());
+            } catch (XException xe) {
+                taskDO.addLog("Irt Error:" + xe.getErrorMsg());
             }
-            SlopeIntercept slopeIntercept = result.getData().getSi();
-            taskDO.addLog("iRT计算完毕,斜率:" + slopeIntercept.getSlope() + ",截距:" + slopeIntercept.getIntercept());
+
         }
     }
 
-    public boolean doIrt(TaskDO taskDO, RunDO run, AnalyzeParams params) {
+    public void doIrt(TaskDO taskDO, RunDO run, AnalyzeParams params) throws XException {
         Irt irt = irtByInsLib;
         taskDO.addLog("Start Analyzing for iRT: " + run.getName());
         taskDO.addBindingRun(run.getId());
         taskService.update(taskDO);
-        Result<IrtResult> result = irt.align(run, params);
-        if (result.isFailed()) {
-            taskDO.finish(TaskStatus.FAILED.getName(), "iRT计算失败:" + result.getErrorMessage());
-            taskService.update(taskDO);
-            return false;
-        }
-        SlopeIntercept slopeIntercept = result.getData().getSi();
+        IrtResult irtResult = irt.align(run, params);
+        SlopeIntercept slopeIntercept = irtResult.getSi();
         taskDO.addLog("iRT计算完毕,斜率:" + slopeIntercept.getSlope() + ",截距:" + slopeIntercept.getIntercept());
-        return true;
     }
 
-    public boolean doEpps(TaskDO taskDO, RunDO run, AnalyzeParams params) throws XException {
+    public void doEpps(TaskDO taskDO, RunDO run, AnalyzeParams params) throws XException {
         long start = System.currentTimeMillis();
         taskDO.addLog("Irt Result:" + run.getIrt().getSi().getFormula()).addLog("入参准备完毕,开始提取数据(打分)");
         taskService.update(taskDO);
         params.setTaskDO(taskDO);
-        Result<OverviewDO> result = extractor.extractRun(run, params);
+        OverviewDO overview = extractor.extractRun(run, params);
         taskService.update(taskDO);
-        if (result.isFailed()) {
-            throw new XException("任务执行失败:" + result.getErrorMessage());
-//            taskDO.finish(TaskStatus.FAILED.getName(), "任务执行失败:" + result.getErrorMessage());
-//            taskService.update(taskDO);
-//            return false;
-        }
         taskDO.addLog("处理完毕,EPPS总耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒,开始进行合并打分.....");
-        log.info("EPPS耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
-        return true;
     }
 }
