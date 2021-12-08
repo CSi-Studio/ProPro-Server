@@ -134,7 +134,7 @@ public enum ResultCode implements Serializable {
     BLOCK_INDEX_NOT_EXISTED("BLOCK_INDEX_NOT_EXISTED", "对应的索引数据不存在"),
 
     SPECTRUM_NOT_EXISTED("SPECTRUM_NOT_EXISTED", "对应的原始谱图不存在"),
-    
+
     PARSE_MS1_SPECTRUM_FAILED("PARSE_MS1_SPECTRUM_FAILED", "MS1谱图解析错误"),
 
     /**
@@ -158,7 +158,8 @@ public enum ResultCode implements Serializable {
      * Overview
      * *******
      */
-    ANALYZE_FAILED("CONVOLUTION_FAILED", "数据提取失败"),
+    ANALYZE_FAILED("ANALYZE_FAILED", "分析失败"),
+    ANALYZE_CREATE_FAILED("ANALYZE_CREATE_FAILED", "创建Overview失败"),
 
     ANALYSE_DATA_NOT_EXISTED("ANALYSE_DATA_NOT_EXISTED", "XIC数据不存在"),
 

@@ -2,7 +2,6 @@ package net.csibio.propro.algorithm.peak;
 
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.propro.constants.constant.Constants;
-import net.csibio.propro.domain.bean.common.DoublePair;
 import net.csibio.propro.domain.bean.data.RtIntensityPairsDouble;
 import net.csibio.propro.domain.bean.data.UnSearchPeakGroup;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
@@ -60,15 +59,8 @@ public class PeakPicker {
     public PeakGroupListWrapper searchByIonsShape(DataDO data, PeptideCoord coord, SigmaSpacing ss) {
 
         Map<String, Float> libIntMap = coord.buildIntensityMap();
-        PeakGroupListWrapper featureResult = new PeakGroupListWrapper(true);
-        HashMap<String, RtIntensityPairsDouble> maxPeaksForIons = new HashMap<>();
-        HashMap<String, List<IonPeak>> peaks4Ions = new HashMap<>();
-
-        //对每一个chromatogram进行运算,dataDO中不含有ms1
-        HashMap<String, double[]> noise1000Map = new HashMap<>();
-        HashMap<String, Double[]> intensitiesMap = new HashMap<>();
-
         //将没有提取到信号的CutInfo过滤掉,同时将Float类型的参数调整为Double类型进行计算
+        HashMap<String, Double[]> intensitiesMap = new HashMap<>();
         for (String cutInfo : libIntMap.keySet()) {
             float[] intensityArray = data.getIntMap().get(cutInfo); //获取对应的XIC数据
             //如果没有提取到信号,dataDO为null
@@ -78,15 +70,10 @@ public class PeakPicker {
 
         //计算GaussFilter
         Double[] rtArray = ArrayUtil.floatToDouble(data.getRtArray());
-        HashMap<String, Double[]> smoothIntensitiesMap = gaussFilter.filter(rtArray, intensitiesMap, ss);
+        //使用ionsHigh进行平滑选峰
+        Double[] ionsHighSmooth = gaussFilter.filter(rtArray, ArrayUtil.intToDouble(data.getIonsHigh()), ss);
 
         UnSearchPeakGroup unSearchPeakGroup = new UnSearchPeakGroup();
-        //计算IonCount对应的值
-        Double[] ionsHigh = ArrayUtil.intToDouble(data.getIonsHigh());
-        float[] ionsLowFloat = ArrayUtil.intTofloat(data.getIonsLow());
-        float[] ionsHighFloat = ArrayUtil.intTofloat(data.getIonsHigh());
-        Double[] ionsHighSmooth = gaussFilter.filter(rtArray, ionsHigh, ss); //使用ions300进行平滑选峰
-
         unSearchPeakGroup.setIonsLow(data.getIonsLow());
         unSearchPeakGroup.setIonsHigh(data.getIonsHigh());
         unSearchPeakGroup.setIonsHighSmooth(ionsHighSmooth);
@@ -96,23 +83,23 @@ public class PeakPicker {
             log.warn("离子碎片定位峰没有找到任何信号,PeptideRef:" + data.getPeptideRef());
             return new PeakGroupListWrapper(false);
         }
-        float[] ionCountFloat = new float[ionsHighSmooth.length];
-        for (int i = 0; i < ionsHighSmooth.length; i++) {
-            ionCountFloat[i] = ionsHighSmooth[i].floatValue();
-        }
-        data.getIntMap().put("HS", ionCountFloat);
-        data.getIntMap().put("H", ionsHighFloat);
-        data.getIntMap().put("L", ionsLowFloat);
+
+        data.getIntMap().put("HS", ArrayUtil.doubleTofloat(ionsHighSmooth));
+        data.getIntMap().put("H", ArrayUtil.intTofloat(data.getIonsHigh()));
+        data.getIntMap().put("L", ArrayUtil.intTofloat(data.getIonsLow()));
         data.getCutInfoMap().put("HS", 0f);
         data.getCutInfoMap().put("H", 0f);
         data.getCutInfoMap().put("L", 0f);
 
-        List<DoublePair> pairs = maxPeaksForIonsHigh.toPairs();
+        unSearchPeakGroup.setMaxPeaks4IonsHigh(maxPeaksForIonsHigh.toPairs());
 
-        if (pairs.size() == 0) {
-            return new PeakGroupListWrapper(false);
-        }
-        unSearchPeakGroup.setMaxPeaks4IonsHigh(pairs);
+        HashMap<String, Double[]> smoothIntensitiesMap = gaussFilter.filter(rtArray, intensitiesMap, ss);
+        HashMap<String, RtIntensityPairsDouble> maxPeaks4Ions = new HashMap<>();
+        HashMap<String, List<IonPeak>> peaks4Ions = new HashMap<>();
+
+        //对每一个chromatogram进行运算,dataDO中不含有ms1
+        HashMap<String, double[]> noise1000Map = new HashMap<>();
+
 
         //对每一个片段离子选峰
         double libIntSum = MathUtil.sum(libIntMap.values());
@@ -129,32 +116,31 @@ public class PeakPicker {
                 break;
             }
             List<IonPeak> ionPeakList = pickChromatogram(rtArray, intensitiesMap.get(cutInfo), smoothIntensitiesMap.get(cutInfo), noisesOri1000, maxPeakPairs);
-            maxPeaksForIons.put(cutInfo, maxPeakPairs);
+            maxPeaks4Ions.put(cutInfo, maxPeakPairs);
             peaks4Ions.put(cutInfo, ionPeakList);
-            noise1000Map.put(cutInfo, noisesOri1000);
+
             normedLibIntMap.put(cutInfo, libIntMap.get(cutInfo) / libIntSum);
+            noise1000Map.put(cutInfo, noisesOri1000);
         }
         if (peaks4Ions.size() == 0) {
             return new PeakGroupListWrapper(false);
         }
+        unSearchPeakGroup.setMaxPeaks4Ions(maxPeaks4Ions);
 
         unSearchPeakGroup.setFloatRtArray(data.getRtArray());
         unSearchPeakGroup.setRtArray(rtArray);
         unSearchPeakGroup.setMs1Intensity(ArrayUtil.floatToDouble(data.getMs1Ints()));
         unSearchPeakGroup.setIntensitiesMap(intensitiesMap);
-        unSearchPeakGroup.setMaxPeaks4Ions(maxPeaksForIons);
+
         unSearchPeakGroup.setPeaks4Ions(peaks4Ions);
         unSearchPeakGroup.setNoise1000Map(noise1000Map);
         unSearchPeakGroup.setCoord(coord);
         List<PeakGroup> peakGroups = peakGroupPicker.findPeakGroupsClassic(unSearchPeakGroup);
         if (peakGroups.size() == 0) {
-//            log.error("居然没有匹配到,蛋疼:" + data.getPeptideRef());
+            return new PeakGroupListWrapper(false);
         }
 
-        featureResult.setList(peakGroups);
-        featureResult.setNormIntMap(normedLibIntMap);
-
-        return featureResult;
+        return new PeakGroupListWrapper(peakGroups, normedLibIntMap);
     }
 
     /**
@@ -177,18 +163,13 @@ public class PeakPicker {
 
         //计算GaussFilter
         Double[] rtArray = ArrayUtil.floatToDouble(data.getRtArray());
-        Double[] ionsHighSmooth = gaussFilter.filter(rtArray, ArrayUtil.intToDouble(data.getIonsHigh()), ss); //使用ionsHigh进行平滑选峰
+        //使用ionsHigh进行平滑选峰
+        Double[] ionsHighSmooth = gaussFilter.filter(rtArray, ArrayUtil.intToDouble(data.getIonsHigh()), ss);
 
         UnSearchPeakGroup unSearchPeakGroup = new UnSearchPeakGroup();
         unSearchPeakGroup.setIonsLow(data.getIonsLow());
         unSearchPeakGroup.setIonsHigh(data.getIonsHigh());
         unSearchPeakGroup.setIonsHighSmooth(ionsHighSmooth);
-
-        RtIntensityPairsDouble maxPeaks4IonsHigh = peakPicker.pickMaxPeak(rtArray, ionsHighSmooth);
-        if (maxPeaks4IonsHigh == null || maxPeaks4IonsHigh.getRtArray() == null) { //如果IonsCount没有找到任何峰,则直接认为没有鉴定成功
-            log.warn("离子碎片定位峰没有找到任何信号,PeptideRef:" + data.getPeptideRef());
-            return new PeakGroupListWrapper(false);
-        }
 
         data.getIntMap().put("HS", ArrayUtil.doubleTofloat(ionsHighSmooth));
         data.getIntMap().put("H", ArrayUtil.intTofloat(data.getIonsHigh()));
@@ -196,8 +177,6 @@ public class PeakPicker {
         data.getCutInfoMap().put("HS", 0f);
         data.getCutInfoMap().put("H", 0f);
         data.getCutInfoMap().put("L", 0f);
-
-        unSearchPeakGroup.setMaxPeaks4IonsHigh(maxPeaks4IonsHigh.toPairs());
 
         //对每一个片段离子选峰
         double libIntSum = MathUtil.sum(libIntMap.values());
@@ -209,10 +188,17 @@ public class PeakPicker {
             noise1000Map.put(cutInfo, noisesOri1000);
         }
 
+        RtIntensityPairsDouble maxPeaks4IonsHigh = peakPicker.pickMaxPeak(rtArray, ionsHighSmooth);
+        if (maxPeaks4IonsHigh == null) { //如果IonsCount没有找到任何峰,则直接认为没有鉴定成功
+            return new PeakGroupListWrapper(false);
+        }
+        unSearchPeakGroup.setMaxPeaks4IonsHigh(maxPeaks4IonsHigh.toPairs());
+
         unSearchPeakGroup.setFloatRtArray(data.getRtArray());
         unSearchPeakGroup.setRtArray(rtArray);
-        unSearchPeakGroup.setIntensitiesMap(intensitiesMap);
         unSearchPeakGroup.setMs1Intensity(ArrayUtil.floatToDouble(data.getMs1Ints()));
+        unSearchPeakGroup.setIntensitiesMap(intensitiesMap);
+
         unSearchPeakGroup.setNoise1000Map(noise1000Map);
         unSearchPeakGroup.setCoord(coord);
         List<PeakGroup> peakGroups = peakGroupPicker.findPeakGroupsByIonsCount(unSearchPeakGroup);
@@ -538,4 +524,6 @@ public class PeakPicker {
         }
         return intensity;
     }
+
+
 }

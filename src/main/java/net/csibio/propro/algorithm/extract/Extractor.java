@@ -4,33 +4,34 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.Compressor;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.aird.bean.WindowRange;
+import net.csibio.aird.bean.common.Eic;
 import net.csibio.aird.parser.DIAParser;
 import net.csibio.propro.algorithm.core.CoreFunc;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.score.features.DIAScorer;
 import net.csibio.propro.algorithm.score.scorer.Scorer;
 import net.csibio.propro.algorithm.stat.StatConst;
+import net.csibio.propro.constants.constant.Constants;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.constants.enums.TaskStatus;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.AnyPair;
 import net.csibio.propro.domain.bean.common.IntegerPair;
+import net.csibio.propro.domain.bean.peptide.FragmentInfo;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.BlockIndexQuery;
-import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.domain.vo.RunDataVO;
+import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.*;
+import net.csibio.propro.utils.ArrayUtil;
 import net.csibio.propro.utils.ConvolutionUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 
 @Slf4j
 @Component("extractor")
@@ -60,17 +61,161 @@ public class Extractor {
     DIAScorer diaScorer;
 
     /**
+     * 提取XIC的核心函数,最终返回提取到XIC的Peptide数目
+     * 目前只支持MS2的XIC提取
+     *
+     * @param params 将XIC提取,选峰及打分合并在一个步骤中执行,可以完整的省去一次IO读取及解析,提升分析速度,
+     *               需要runDO,libraryId,rtExtractionWindow,mzExtractionWindow,SlopeIntercept
+     */
+    public Result<OverviewDO> extractRun(RunDO run, AnalyzeParams params) throws XException {
+        Result<OverviewDO> resultDO = new Result(true);
+        TaskDO task = params.getTaskDO();
+        task.addLog("基本条件检查开始");
+        ConvolutionUtil.checkRun(run);
+
+        OverviewDO overview = overviewService.init(run, params);
+        if (overview == null) {
+            task.finish(TaskStatus.FAILED.getName(), ResultCode.ANALYZE_CREATE_FAILED.getMessage());
+            taskService.update(task);
+            return Result.Error(ResultCode.ANALYZE_CREATE_FAILED);
+        }
+        //核心函数在这里
+        extractRun(overview, run, params);
+        overviewService.update(overview);
+        resultDO.setData(overview);
+        return resultDO;
+    }
+
+    public Eic extractMS1(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, AnalyzeParams params) {
+        float mzStart = 0;
+        float mzEnd = -1;
+        //所有的碎片共享同一个RT数组
+        ArrayList<Float> rtList = new ArrayList<>();
+        for (Float rt : ms1Map.keySet()) {
+            if (params.getMethod().getEic().getRtWindow() != -1 && rt > coord.getRtEnd()) {
+                break;
+            }
+            if (params.getMethod().getEic().getRtWindow() == -1 || (rt >= coord.getRtStart() && rt <= coord.getRtEnd())) {
+                rtList.add(rt);
+            }
+        }
+
+        float[] rtArray = new float[rtList.size()];
+        for (int i = 0; i < rtList.size(); i++) {
+            rtArray[i] = rtList.get(i);
+        }
+
+        float ppmWindow = params.getMethod().getEic().getMzWindow().floatValue();
+        float mz = coord.getMz().floatValue();
+        float window = mz * ppmWindow * Constants.PPM_F;
+        mzStart = mz - window;
+        mzEnd = mz + window;
+        float[] intArray = new float[rtArray.length];
+        //本函数极其注重性能,为整个流程最关键的耗时步骤,每提升10毫秒都可以带来巨大的性能提升  --陆妙善
+        for (int i = 0; i < rtArray.length; i++) {
+            float acc = ConvolutionUtil.accumulation(ms1Map.get(rtArray[i]), mzStart, mzEnd);
+            intArray[i] = acc;
+        }
+        return new Eic(rtArray, intArray);
+    }
+
+    /**
+     * EIC Core Function
+     * 核心EIC函数
+     * <p>
+     * 本函数为整个分析过程中最耗时的步骤
+     *
+     * @param coord
+     * @param ms2Map
+     * @param params
+     * @return
+     */
+    public DataDO extract(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params, boolean withIonCount, Float ionsHighLimit) {
+
+        float mzStart = 0;
+        float mzEnd = -1;
+        //所有的碎片共享同一个RT数组
+        ArrayList<Float> rtList = new ArrayList<>();
+        for (Float rt : ms2Map.keySet()) {
+            if (params.getMethod().getEic().getRtWindow() != -1 && rt > coord.getRtEnd()) {
+                break;
+            }
+            if (params.getMethod().getEic().getRtWindow() == -1 || (rt >= coord.getRtStart() && rt <= coord.getRtEnd())) {
+                rtList.add(rt);
+            }
+        }
+
+        float[] rtArray = new float[rtList.size()];
+        for (int i = 0; i < rtList.size(); i++) {
+            rtArray[i] = rtList.get(i);
+        }
+
+        DataDO data = new DataDO(coord);
+        data.setRtArray(rtArray);
+        if (StringUtils.isNotEmpty(params.getOverviewId())) {
+            data.setOverviewId(params.getOverviewId());
+            data.setId(params.getOverviewId() + coord.getPeptideRef() + data.getDecoy());            //在此处直接设置data的Id
+        }
+
+        boolean isHit = false;
+        float ppmWindow = params.getMethod().getEic().getMzWindow().floatValue();
+        for (FragmentInfo fi : coord.getFragments()) {
+            float mz = fi.getMz().floatValue();
+            float window = mz * ppmWindow * Constants.PPM_F;
+            mzStart = mz - window;
+            mzEnd = mz + window;
+            float[] intArray = new float[rtArray.length];
+            boolean isAllZero = true;
+
+            //本函数极其注重性能,为整个流程最关键的耗时步骤,每提升10毫秒都可以带来巨大的性能提升  --陆妙善
+            for (int i = 0; i < rtArray.length; i++) {
+                float acc = ConvolutionUtil.accumulation(ms2Map.get(rtArray[i]), mzStart, mzEnd);
+                if (acc != 0) {
+                    isAllZero = false;
+                }
+                intArray[i] = acc;
+            }
+
+            if (isAllZero) {
+                //如果该cutInfo没有XIC到任何数据,则不存入IntMap中,这里专门写这个if逻辑是为了帮助后续阅读代码的时候更加容易理解.我们在这边是特地没有将未检测到的碎片放入map的
+                continue;
+            } else {
+                isHit = true;
+                data.getIntMap().put(fi.getCutInfo(), intArray); //记录每一个碎片的光谱图
+            }
+        }
+
+        //如果所有的片段均没有提取到XIC的结果,则直接返回null
+        if (!isHit) {
+            return null;
+        }
+        //计算每一帧的离子碎片总数
+        if (withIonCount) {
+            calcIonsCount(data, coord, ms2Map, params.getMethod().getEic().getIonsLow(), ionsHighLimit == null ? params.getMethod().getEic().getIonsHigh() : ionsHighLimit);
+        }
+        //ms1数据不为空的时候需要增加ms1谱图
+        if (ms1Map != null) {
+            Eic eic = extractMS1(coord, ms1Map, params);
+
+            if (data.getRtArray().length > eic.rts().length) {
+                data.setMs1Ints(ArrayUtil.add(eic.ints(), 0));
+            } else if (data.getRtArray().length < eic.rts().length) {
+                data.setMs1Ints(Arrays.copyOfRange(eic.ints(), 0, eic.ints().length - 1));
+            } else {
+                data.setMs1Ints(eic.ints());
+            }
+        }
+        return data;
+    }
+
+    /**
      * 根据coord肽段坐标读取run对应的aird文件中涉及的相关光谱图
      *
      * @param run
      * @return
      */
-    public Result<TreeMap<Float, MzIntensityPairs>> getMS1Map(RunDO run) {
-        Result checkResult = ConvolutionUtil.checkRun(run);
-        if (checkResult.isFailed()) {
-            log.error("条件检查失败:" + checkResult.getErrorMessage());
-            return checkResult;
-        }
+    public Result<TreeMap<Float, MzIntensityPairs>> getMS1Map(RunDO run) throws XException {
+        ConvolutionUtil.checkRun(run);
 
         Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
         Compressor intCompressor = run.fetchCompressor(Compressor.TARGET_INTENSITY);
@@ -103,12 +248,9 @@ public class Extractor {
      * @param coord
      * @return
      */
-    public Result<TreeMap<Float, MzIntensityPairs>> getMS1Map(RunDO run, PeptideCoord coord) {
-        Result checkResult = ConvolutionUtil.checkRun(run);
-        if (checkResult.isFailed()) {
-            log.error("条件检查失败:" + checkResult.getErrorMessage());
-            return checkResult;
-        }
+    public Result<TreeMap<Float, MzIntensityPairs>> getMS1Map(RunDO run, PeptideCoord coord) throws XException {
+        ConvolutionUtil.checkRun(run);
+
 
         Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
         Compressor intCompressor = run.fetchCompressor(Compressor.TARGET_INTENSITY);
@@ -141,13 +283,8 @@ public class Extractor {
      * @param coord
      * @return
      */
-    public Result<TreeMap<Float, MzIntensityPairs>> getMS2Map(RunDO run, PeptideCoord coord) {
-        Result checkResult = ConvolutionUtil.checkRun(run);
-        if (checkResult.isFailed()) {
-            log.error("条件检查失败:" + checkResult.getErrorMessage());
-            return checkResult;
-        }
-
+    public Result<TreeMap<Float, MzIntensityPairs>> getMS2Map(RunDO run, PeptideCoord coord) throws XException {
+        ConvolutionUtil.checkRun(run);
         Compressor mzCompressor = run.fetchCompressor(Compressor.TARGET_MZ);
         Compressor intCompressor = run.fetchCompressor(Compressor.TARGET_INTENSITY);
 
@@ -173,31 +310,6 @@ public class Extractor {
     }
 
     /**
-     * 提取XIC的核心函数,最终返回提取到XIC的Peptide数目
-     * 目前只支持MS2的XIC提取
-     *
-     * @param params 将XIC提取,选峰及打分合并在一个步骤中执行,可以完整的省去一次IO读取及解析,提升分析速度,
-     *               需要runDO,libraryId,rtExtractionWindow,mzExtractionWindow,SlopeIntercept
-     */
-    public Result<OverviewDO> extract(RunDO run, AnalyzeParams params) {
-        Result<OverviewDO> resultDO = new Result(true);
-        TaskDO task = params.getTaskDO();
-        task.addLog("基本条件检查开始");
-        Result checkResult = ConvolutionUtil.checkRun(run);
-        if (checkResult.isFailed()) {
-            return Result.Error(ResultCode.RUN_NOT_EXISTED);
-        }
-
-        OverviewDO overview = createOverview(run, params);
-
-        //核心函数在这里
-        extract(overview, run, params);
-        overviewService.update(overview);
-        resultDO.setData(overview);
-        return resultDO;
-    }
-
-    /**
      * 实时提取某一个PeptideRef的XIC图谱
      * 其中Run如果没有包含irt结果,则会进行全rt进行搜索
      * 不适合用于大批量处理
@@ -206,7 +318,7 @@ public class Extractor {
      * @param coord
      * @return
      */
-    public Result<RunDataVO> predictOne(RunDO run, OverviewDO overview, PeptideCoord coord, AnalyzeParams params) {
+    public Result<RunDataVO> predictOne(RunDO run, OverviewDO overview, PeptideCoord coord, AnalyzeParams params) throws XException {
         Double rt = coord.getRt();
         if (params.getMethod().getEic().getRtWindow() == -1) {
             coord.setRtRange(-1, 99999);
@@ -248,15 +360,11 @@ public class Extractor {
      */
     public void extract4Irt(List<DataDO> finalList, List<PeptideCoord> coordinates, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params) {
         for (PeptideCoord coord : coordinates) {
-            DataDO data = eppsOne(coord, null, ms2Map, params);
+            DataDO data = extract(coord, null, ms2Map, params, true, null);
             if (data != null) {
                 finalList.add(data);
             }
         }
-    }
-
-    public DataDO eppsOne(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params) {
-        return coreFunc.extract(coord, ms1Map, ms2Map, params, true, null);
     }
 
 
@@ -267,7 +375,7 @@ public class Extractor {
      * @param run
      * @param params
      */
-    private void extract(OverviewDO overviewDO, RunDO run, AnalyzeParams params) {
+    private void extractRun(OverviewDO overviewDO, RunDO run, AnalyzeParams params) {
         TaskDO task = params.getTaskDO();
         //Step1.获取窗口信息
         List<WindowRange> ranges = run.getWindowRanges();
@@ -371,38 +479,5 @@ public class Extractor {
 
         dataDO.setIonsLow(ionsLow);
         dataDO.setIonsHigh(ionsHigh);
-    }
-
-    /**
-     * 根据input入参初始化一个AnalyseOverviewDO
-     *
-     * @param params
-     * @return
-     */
-    public OverviewDO createOverview(RunDO run, AnalyzeParams params) {
-        OverviewDO overview = new OverviewDO();
-        overview.setProjectId(run.getProjectId());
-        overview.setRunId(run.getId());
-        overview.setRunName(run.getName());
-        overview.setParams(params);
-        overview.setType(run.getType());
-        overview.setAnaLibId(params.getAnaLibId());
-        overview.setInsLibId(params.getInsLibId());
-        overview.setName(run.getName() + "-" + params.getInsLibName() + "-" + params.getAnaLibName() + "-" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
-        overview.setNote(params.getNote());
-        overview.setReselect(params.getReselect());
-
-        //是否是已存在的overview
-        boolean exist = overviewService.exist(new OverviewQuery().setProjectId(run.getProjectId()).setRunId(run.getId()));
-        if (!exist) {
-            overview.setDefaultOne(true);
-        }
-        Result result = overviewService.insert(overview);
-        if (result.isFailed()) {
-            log.error("Insert Overview Exception: " + overview.getName() + "-" + result.getErrorMessage());
-            return null;
-        }
-        params.setOverviewId(overview.getId());
-        return overview;
     }
 }

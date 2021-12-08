@@ -3,6 +3,7 @@ package net.csibio.propro.algorithm.score.scorer;
 import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.propro.algorithm.core.CoreFunc;
+import net.csibio.propro.algorithm.extract.Extractor;
 import net.csibio.propro.algorithm.fitter.LinearFitter;
 import net.csibio.propro.algorithm.learner.classifier.Lda;
 import net.csibio.propro.algorithm.peak.*;
@@ -72,6 +73,8 @@ public class Scorer {
     @Autowired
     CoreFunc coreFunc;
     @Autowired
+    Extractor extractor;
+    @Autowired
     PeakFitter peakFitter;
 
     public DataDO score(RunDO run, DataDO dataDO, PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params) {
@@ -95,7 +98,7 @@ public class Scorer {
         if (!peakGroupListWrapper.isFound()) {
             //重试机制:扩大RT搜索范围并使用IonsShape重新计算XIC
             coord.setRtRange(coord.getRtStart() - 200, coord.getRtEnd() + 200);
-            dataDO = coreFunc.extract(coord, ms1Map, ms2Map, params, true, 100f);
+            dataDO = extractor.extract(coord, ms1Map, ms2Map, params, true, 100f);
             if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= coord.getFragments().size() / 2) {
                 dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
                 return dataDO;

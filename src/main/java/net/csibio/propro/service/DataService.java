@@ -6,6 +6,7 @@ import net.csibio.propro.domain.db.PeptideDO;
 import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.query.DataQuery;
 import net.csibio.propro.domain.vo.RunDataVO;
+import net.csibio.propro.exceptions.XException;
 
 public interface DataService extends BaseMultiService<DataDO, DataQuery> {
 
@@ -22,5 +23,5 @@ public interface DataService extends BaseMultiService<DataDO, DataQuery> {
      * @param overviewId       原肽段检测结果对应的overviewId
      * @return
      */
-    Result<RunDataVO> predictDataFromFile(RunDO run, PeptideDO peptide, Boolean changeCharge, String peakPickerMethod, String overviewId);
+    Result<RunDataVO> predictDataFromFile(RunDO run, PeptideDO peptide, Boolean changeCharge, String peakPickerMethod, String overviewId) throws XException;
 }

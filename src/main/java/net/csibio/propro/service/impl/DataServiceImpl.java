@@ -71,7 +71,7 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public Result<RunDataVO> predictDataFromFile(RunDO run, PeptideDO peptide, Boolean changeCharge, String peakPickerMethod, String overviewId) {
+    public Result<RunDataVO> predictDataFromFile(RunDO run, PeptideDO peptide, Boolean changeCharge, String peakPickerMethod, String overviewId) throws XException {
         if (peptide == null) {
             return Result.Error(ResultCode.PEPTIDE_NOT_EXIST);
         }

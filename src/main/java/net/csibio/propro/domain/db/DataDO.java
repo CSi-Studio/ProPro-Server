@@ -57,6 +57,8 @@ public class DataDO extends BaseDO {
     byte[] rtBytes;
     //压缩后的ms1数据
     byte[] ms1IntsBytes;
+    //precursor未电解离的部分
+    byte[] selfIntsBytes;
     //压缩后的intensityMap,对应intensityMap
     Map<String, byte[]> intMapBytes;
 
@@ -67,6 +69,8 @@ public class DataDO extends BaseDO {
     Map<String, float[]> intMap = new HashMap<>();  //key为cutInfo, value为对应的intensity值列表(也即该碎片的光谱图信息)
     @Transient
     float[] ms1Ints; //ms1谱图
+    @Transient
+    float[] selfInts; //precursor未电解离的谱图
     @Transient
     Map<String, Float> cutInfoMap; //冗余的peptide切片信息,key为cutInfo,value为mz
     @Transient

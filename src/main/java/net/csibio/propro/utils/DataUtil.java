@@ -12,6 +12,7 @@ public class DataUtil {
         data.setRtArray(null);
         data.setIntMap(null);
         data.setMs1Ints(null);
+        data.setSelfInts(null);
         data.setCutInfoMap(null);
         data.setLibIntMap(null);
         data.setIonsLow(null);
@@ -22,6 +23,7 @@ public class DataUtil {
         data.setRtBytes(null);
         data.setIntMapBytes(null);
         data.setMs1IntsBytes(null);
+        data.setSelfIntsBytes(null);
         data.setCutInfosFeature(null);
         data.setLibIntMap(null);
         data.setIonsLowBytes(null);
@@ -34,6 +36,9 @@ public class DataUtil {
         }
         if (data.getMs1Ints() != null) {
             data.setMs1IntsBytes(CompressUtil.compressedToBytes(data.getMs1Ints()));
+        }
+        if (data.getSelfInts() != null) {
+            data.setSelfIntsBytes(CompressUtil.compressedToBytes(data.getSelfInts()));
         }
         if (data.getIonsLow() != null) {
             data.setIonsLowBytes(CompressUtil.compressedToBytes(data.getIonsLow()));
@@ -63,6 +68,9 @@ public class DataUtil {
         }
         if (data.getMs1IntsBytes() != null) {
             data.setMs1Ints(CompressUtil.transTofloat(data.getMs1IntsBytes()));
+        }
+        if (data.getSelfIntsBytes() != null) {
+            data.setSelfInts(CompressUtil.transTofloat(data.getSelfIntsBytes()));
         }
         if (data.getIonsLowBytes() != null) {
             data.setIonsLow(CompressUtil.transToInt(data.getIonsLowBytes()));

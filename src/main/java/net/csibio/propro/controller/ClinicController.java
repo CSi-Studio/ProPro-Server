@@ -25,6 +25,7 @@ import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.domain.query.*;
 import net.csibio.propro.domain.vo.ClinicPrepareDataVO;
 import net.csibio.propro.domain.vo.RunDataVO;
+import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -158,7 +159,7 @@ public class ClinicController {
             @RequestParam(value = "smooth", required = false) Boolean smooth,
             @RequestParam(value = "peakPickerMethod", required = false, defaultValue = "IONS_COUNT") String pickFindingMethod,
             @RequestParam(value = "denoise", required = false) Boolean denoise,
-            @RequestParam("overviewIds") List<String> overviewIds) {
+            @RequestParam("overviewIds") List<String> overviewIds) throws XException {
         log.info("开始获取新预测数据-------------------------------------------------------------------------------");
         List<RunDataVO> dataList = new ArrayList<>();
         PeptideDO peptide = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(peptideRef), PeptideDO.class);

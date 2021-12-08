@@ -10,6 +10,8 @@ import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.common.IdName;
 import net.csibio.propro.domain.bean.peptide.ProteinPeptide;
 import net.csibio.propro.domain.db.OverviewDO;
+import net.csibio.propro.domain.db.RunDO;
+import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.*;
 import net.csibio.propro.excel.peptide.PeptideRow;
 import net.csibio.propro.excel.peptide.PeptideSumStatus;
@@ -18,6 +20,7 @@ import net.csibio.propro.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -99,6 +102,34 @@ public class OverviewServiceImpl implements OverviewService {
             return Result.Error(ResultCode.DELETE_ERROR, errorList);
         }
         return Result.OK();
+    }
+
+    @Override
+    public OverviewDO init(RunDO run, AnalyzeParams params) {
+        OverviewDO overview = new OverviewDO();
+        overview.setProjectId(run.getProjectId());
+        overview.setRunId(run.getId());
+        overview.setRunName(run.getName());
+        overview.setParams(params);
+        overview.setType(run.getType());
+        overview.setAnaLibId(params.getAnaLibId());
+        overview.setInsLibId(params.getInsLibId());
+        overview.setName(run.getName() + "-" + params.getInsLibName() + "-" + params.getAnaLibName() + "-" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
+        overview.setNote(params.getNote());
+        overview.setReselect(params.getReselect());
+
+        //是否是已存在的overview
+        boolean exist = exist(new OverviewQuery().setProjectId(run.getProjectId()).setRunId(run.getId()));
+        if (!exist) {
+            overview.setDefaultOne(true);
+        }
+        Result result = insert(overview);
+        if (result.isFailed()) {
+            log.error("Insert Overview Exception: " + overview.getName() + "-" + result.getErrorMessage());
+            return null;
+        }
+        params.setOverviewId(overview.getId());
+        return overview;
     }
 
     @Override

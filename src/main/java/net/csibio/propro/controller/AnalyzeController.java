@@ -151,7 +151,7 @@ public class AnalyzeController {
             if (insLib == null) {
                 return Result.Error(ResultCode.INS_LIBRARY_NOT_EXISTED);
             }
-            
+
             TaskDO task = new TaskDO(TaskTemplate.RESELECT, "Analyze-Reselect-" + project.getName());
             taskService.insert(task);
             AnalyzeParams params = new AnalyzeParams(method);
@@ -163,7 +163,7 @@ public class AnalyzeController {
             params.setAnaLibName(anaLib.getName());
             params.setInsLibId(insLib.getId());
             params.setInsLibName(insLib.getName());
-            runTask.doProPro(task, run, params);
+            runTask.doCSi(task, run, params);
         }
 
         return Result.OK();

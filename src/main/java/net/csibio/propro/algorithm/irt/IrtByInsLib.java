@@ -4,12 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import net.csibio.aird.bean.Compressor;
 import net.csibio.aird.bean.MzIntensityPairs;
 import net.csibio.aird.parser.DIAParser;
-import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.peptide.PeptideCoord;
 import net.csibio.propro.domain.db.BlockIndexDO;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
+import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.utils.ConvolutionUtil;
 import org.springframework.stereotype.Component;
 
@@ -31,12 +31,8 @@ public class IrtByInsLib extends Irt {
      * @return
      */
     @Override
-    public List<DataDO> extract(RunDO run, AnalyzeParams params) {
-        Result checkResult = ConvolutionUtil.checkRun(run);
-        if (checkResult.isFailed()) {
-            log.error(checkResult.getErrorMessage());
-            return null;
-        }
+    public List<DataDO> extract(RunDO run, AnalyzeParams params) throws XException {
+        ConvolutionUtil.checkRun(run);
 
         List<DataDO> finalDataList = new ArrayList<>();
         List<BlockIndexDO> blockList = blockIndexService.getAllMS2ByRunId(run.getId());

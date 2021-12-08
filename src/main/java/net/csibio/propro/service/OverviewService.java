@@ -2,6 +2,8 @@ package net.csibio.propro.service;
 
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.db.OverviewDO;
+import net.csibio.propro.domain.db.RunDO;
+import net.csibio.propro.domain.options.AnalyzeParams;
 import net.csibio.propro.domain.query.OverviewQuery;
 import net.csibio.propro.excel.peptide.PeptideRow;
 
@@ -9,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface OverviewService extends BaseService<OverviewDO, OverviewQuery> {
+
+    OverviewDO init(RunDO run, AnalyzeParams params);
 
     /**
      * 获取实验的默认overview

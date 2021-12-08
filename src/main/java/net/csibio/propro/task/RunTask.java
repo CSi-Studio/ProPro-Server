@@ -17,6 +17,7 @@ import net.csibio.propro.domain.db.OverviewDO;
 import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.db.TaskDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
+import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.*;
 import net.csibio.propro.utils.LogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,78 +90,46 @@ public class RunTask extends BaseTask {
      *
      * @return
      */
-    @Async(value = "eicExecutor")
-    public void doProPro(TaskDO taskDO, RunDO run, AnalyzeParams params) {
-        long start = System.currentTimeMillis();
-        //Step1. 如果还没有计算irt,先执行计算irt的步骤.
-        if (run.getIrt() == null || (params.getForceIrt() && params.getInsLibId() != null)) {
-            boolean exeResult = doIrt(taskDO, run, params);
-            if (!exeResult) {
-                return;
-            }
-            LogUtil.log("Irt消耗时间", start);
-        }
-
-        //Step2,3,4,5 EIC,选峰,选峰组,打分四个关键步骤
-        boolean eppsResult = doEpps(taskDO, run, params);
-        if (!eppsResult) {
-            taskDO.finish(TaskStatus.FAILED.getName());
-            taskService.update(taskDO);
-            return;
-        }
-
-        //Step6. 机器学习,LDA分类
-        logger.info(run.getAlias() + "开始执行机器学习部分");
-        LearningParams ap = new LearningParams();
-        ap.setScoreTypes(params.getMethod().getScore().getScoreTypes());
-        ap.setFdr(params.getMethod().getClassifier().getFdr());
-        FinalResult finalResult = semiSupervise.doSemiSupervise(params.getOverviewId(), ap);
-        taskDO.addLog("流程执行完毕,总耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
-        log.info("流程执行完毕,总耗时:" + ((System.currentTimeMillis() - start) / 1000) + "秒");
-        if (finalResult.getMatchedUniqueProteinCount() != null && finalResult.getMatchedUniqueProteinCount() != 0) {
-            taskDO.addLog("Peptide/Protein Rate:" + finalResult.getMatchedPeptideCount() / finalResult.getMatchedUniqueProteinCount());
-        }
-
-        //Step7. Reselect ions
-        taskDO.finish(TaskStatus.SUCCESS.getName());
-        taskService.update(taskDO);
-    }
-
     @Async(value = "csiExecutor")
     public void doCSi(TaskDO taskDO, RunDO run, AnalyzeParams params) {
-        long start = System.currentTimeMillis();
-        //Step1. 如果还没有计算irt,先执行计算irt的步骤.
-        if (run.getIrt() == null || (params.getForceIrt() && params.getInsLibId() != null)) {
-            boolean exeResult = doIrt(taskDO, run, params);
-            if (!exeResult) {
+        try {
+            long start = System.currentTimeMillis();
+            //Step1. 如果还没有计算irt,先执行计算irt的步骤.
+            if (run.getIrt() == null || (params.getForceIrt() && params.getInsLibId() != null)) {
+                boolean exeResult = doIrt(taskDO, run, params);
+                if (!exeResult) {
+                    return;
+                }
+                LogUtil.log("Irt消耗时间", start);
+            }
+
+            //Step2 全新套路
+            boolean csiResult = doEpps(taskDO, run, params);
+            if (!csiResult) {
+                taskDO.finish(TaskStatus.FAILED.getName());
+                taskService.update(taskDO);
                 return;
             }
-            LogUtil.log("Irt消耗时间", start);
-        }
 
-        //Step2 全新套路
-        boolean csiResult = doEpps(taskDO, run, params);
-        if (!csiResult) {
-            taskDO.finish(TaskStatus.FAILED.getName());
+            //Step6. 机器学习,LDA分类
+            logger.info(run.getAlias() + "开始执行机器学习部分");
+            LearningParams ap = new LearningParams();
+            ap.setScoreTypes(params.getMethod().getScore().getScoreTypes());
+            ap.setFdr(params.getMethod().getClassifier().getFdr());
+            FinalResult finalResult = semiSupervise.doSemiSupervise(params.getOverviewId(), ap);
+            taskDO.addLog("流程执行完毕,总耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
+            log.info("流程执行完毕,总耗时:" + ((System.currentTimeMillis() - start) / 1000) + "秒");
+            if (finalResult.getMatchedUniqueProteinCount() != null && finalResult.getMatchedUniqueProteinCount() != 0) {
+                taskDO.addLog("Peptide/Protein Rate:" + finalResult.getMatchedPeptideCount() / finalResult.getMatchedUniqueProteinCount());
+            }
+
+            //Step7. Reselect ions
+            taskDO.finish(TaskStatus.SUCCESS.getName());
             taskService.update(taskDO);
-            return;
+        } catch (XException xe) {
+            xe.printStackTrace();
         }
 
-        //Step6. 机器学习,LDA分类
-        logger.info(run.getAlias() + "开始执行机器学习部分");
-        LearningParams ap = new LearningParams();
-        ap.setScoreTypes(params.getMethod().getScore().getScoreTypes());
-        ap.setFdr(params.getMethod().getClassifier().getFdr());
-        FinalResult finalResult = semiSupervise.doSemiSupervise(params.getOverviewId(), ap);
-        taskDO.addLog("流程执行完毕,总耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
-        log.info("流程执行完毕,总耗时:" + ((System.currentTimeMillis() - start) / 1000) + "秒");
-        if (finalResult.getMatchedUniqueProteinCount() != null && finalResult.getMatchedUniqueProteinCount() != 0) {
-            taskDO.addLog("Peptide/Protein Rate:" + finalResult.getMatchedPeptideCount() / finalResult.getMatchedUniqueProteinCount());
-        }
-
-        //Step7. Reselect ions
-        taskDO.finish(TaskStatus.SUCCESS.getName());
-        taskService.update(taskDO);
     }
 
     @Async(value = "eicExecutor")
@@ -206,17 +175,18 @@ public class RunTask extends BaseTask {
         return true;
     }
 
-    public boolean doEpps(TaskDO taskDO, RunDO run, AnalyzeParams params) {
+    public boolean doEpps(TaskDO taskDO, RunDO run, AnalyzeParams params) throws XException {
         long start = System.currentTimeMillis();
         taskDO.addLog("Irt Result:" + run.getIrt().getSi().getFormula()).addLog("入参准备完毕,开始提取数据(打分)");
         taskService.update(taskDO);
         params.setTaskDO(taskDO);
-        Result<OverviewDO> result = extractor.extract(run, params);
+        Result<OverviewDO> result = extractor.extractRun(run, params);
         taskService.update(taskDO);
         if (result.isFailed()) {
-            taskDO.finish(TaskStatus.FAILED.getName(), "任务执行失败:" + result.getErrorMessage());
-            taskService.update(taskDO);
-            return false;
+            throw new XException("任务执行失败:" + result.getErrorMessage());
+//            taskDO.finish(TaskStatus.FAILED.getName(), "任务执行失败:" + result.getErrorMessage());
+//            taskService.update(taskDO);
+//            return false;
         }
         taskDO.addLog("处理完毕,EPPS总耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒,开始进行合并打分.....");
         log.info("EPPS耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");

@@ -16,6 +16,7 @@ import net.csibio.propro.domain.bean.score.SlopeIntercept;
 import net.csibio.propro.domain.db.DataDO;
 import net.csibio.propro.domain.db.RunDO;
 import net.csibio.propro.domain.options.AnalyzeParams;
+import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.BlockIndexService;
 import net.csibio.propro.service.PeptideService;
 import net.csibio.propro.service.RunService;
@@ -46,7 +47,7 @@ public abstract class Irt {
     @Autowired
     RunService runService;
 
-    public abstract List<DataDO> extract(RunDO run, AnalyzeParams params);
+    public abstract List<DataDO> extract(RunDO run, AnalyzeParams params) throws XException;
 
     /**
      * XIC并且求出iRT

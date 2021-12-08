@@ -116,38 +116,43 @@ public class XicScorer {
      */
     public void calcPearsonMatrixScore(PeakGroup peakGroup, HashMap<String, Double> normedLibIntMap, PeptideCoord coord, List<String> scoreTypes) {
         String bestIon = null;
+        String nextIon = null;
         String maxIon = null;
         double maxIonIntensity = -1d;
         for (int i = 0; i < coord.getFragments().size(); i++) {
             String cutInfo = coord.getFragments().get(i).getCutInfo();
             Double intensity = peakGroup.getIonIntensity().get(cutInfo);
             if (intensity != null) {
-                if (bestIon == null) { //默认取存在的最大碎片最为最佳碎片
-                    bestIon = coord.getFragments().get(i).getCutInfo();
-                }
                 if (intensity > maxIonIntensity) {
                     maxIon = cutInfo;
                     maxIonIntensity = intensity;
+                }
+                if (bestIon == null) { //默认取存在的最大碎片最为最佳碎片
+                    bestIon = coord.getFragments().get(i).getCutInfo();
+                    continue;
+                }
+                if (nextIon == null) {
+                    nextIon = coord.getFragments().get(i).getCutInfo();
                 }
             }
         }
 
         //实际最大碎片就是理论最大碎片的时候,考虑实际最大碎片是否被干扰导致增强
-//        if (bestIon != null && bestIon.equals(maxIon)) {
-//            //判定方式为整体占比
-//            double realRatio = maxIonIntensity / peakGroup.getIntensitySum();
-//            double libRatio = normedLibIntMap.get(bestIon) / MathUtil.sumDouble(normedLibIntMap.values());
-//            if (realRatio / libRatio > 4) { //如果超过理论2倍的占比
-//                for (int i = 1; i < coord.getFragments().size(); i++) {
-//                    String cutInfo = coord.getFragments().get(i).getCutInfo();
-//                    Double intensity = peakGroup.getIonIntensity().get(cutInfo);
-//                    if (intensity != null) {
-//                        bestIon = coord.getFragments().get(i).getCutInfo();
-//                        break;
-//                    }
-//                }
-//            }
-//        }
+        if (bestIon != null && nextIon != null && bestIon.equals(maxIon)) {
+            //判定方式为整体占比
+            double realRatio = maxIonIntensity / peakGroup.getIonIntensity().get(nextIon);
+            double libRatio = normedLibIntMap.get(bestIon) / normedLibIntMap.get(nextIon);
+            if (realRatio / libRatio > 4) { //如果超过理论2倍的占比
+                for (int i = 1; i < coord.getFragments().size(); i++) {
+                    String cutInfo = coord.getFragments().get(i).getCutInfo();
+                    Double intensity = peakGroup.getIonIntensity().get(cutInfo);
+                    if (intensity != null) {
+                        bestIon = coord.getFragments().get(i).getCutInfo();
+                        break;
+                    }
+                }
+            }
+        }
 
         //重新计算最佳ion
 //        List<Map.Entry<String, Double[]>> entries = new ArrayList<>(peakGroup.getIonHullInt().entrySet());

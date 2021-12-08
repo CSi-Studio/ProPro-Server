@@ -8,9 +8,15 @@ import java.util.List;
 @Data
 public class XException extends Exception {
 
+    String errorMsg;
+
     ResultCode resultCode;
 
     List<String> errorList;
+
+    public XException(String errorMsg) {
+        this.errorMsg = errorMsg;
+    }
 
     public XException(ResultCode resultCode) {
         this.resultCode = resultCode;

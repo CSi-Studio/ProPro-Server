@@ -5,6 +5,7 @@ import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
 import net.csibio.propro.domain.bean.run.BaseRun;
 import net.csibio.propro.domain.db.RunDO;
+import net.csibio.propro.exceptions.XException;
 
 import java.io.File;
 
@@ -92,16 +93,16 @@ public class ConvolutionUtil {
         return result;
     }
 
-    public static Result<File> checkRun(RunDO runDO) {
+    public static File checkRun(RunDO runDO) throws XException {
         if (runDO == null) {
-            return Result.Error(ResultCode.RUN_NOT_EXISTED);
+            throw new XException(ResultCode.RUN_NOT_EXISTED);
         }
         File file = new File(runDO.getAirdPath());
         if (!file.exists()) {
-            return Result.Error(ResultCode.FILE_NOT_EXISTED);
+            throw new XException(ResultCode.FILE_NOT_EXISTED);
         }
 
-        return Result.OK(file);
+        return file;
     }
 
     public static Result<File> checkRun(BaseRun baseRun) {
