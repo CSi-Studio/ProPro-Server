@@ -164,7 +164,6 @@ public class ClinicController {
         log.info("开始获取新预测数据-------------------------------------------------------------------------------");
         List<RunDataVO> dataList = new ArrayList<>();
         PeptideDO peptide = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(peptideRef), PeptideDO.class);
-        peptide.getFragments().add(new FragmentInfo("self", peptide.getMz(), 1000d, peptide.getCharge()));
         for (int i = 0; i < overviewIds.size(); i++) {
             String overviewId = overviewIds.get(i);
             OverviewDO overview = overviewService.getById(overviewId);
@@ -191,7 +190,10 @@ public class ClinicController {
                     data.setStatus(IdentifyStatus.FAILED.getCode());
                 }
                 data.getIntMap().put("ms1", data.getMs1Ints());
+                data.getIntMap().put("self", data.getSelfInts());
                 data.getCutInfoMap().put("ms1", 0f);
+                data.getCutInfoMap().put("self", 0f);
+
                 data.setMinTotalScore(overview.getMinTotalScore());
                 lda.scoreForPeakGroups(data.getPeakGroupList(), overview.getWeights(), overview.getParams().getMethod().getScore().getScoreTypes());
                 dataList.add(data);
@@ -308,7 +310,12 @@ public class ClinicController {
         for (int i = 0; i < peaks.size(); i++) {
             PeakVO peak = peaks.get(i);
         }
+        //TODO
+        //Step1 overviewId->overviewDO
+        //overviewDO-> projectId
+        //DataDO-> peptideRef, overviewId, projectId, false
 
+        //Step2 New PeakGroup
         return Result.OK();
     }
 }

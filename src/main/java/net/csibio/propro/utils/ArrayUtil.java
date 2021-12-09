@@ -21,6 +21,9 @@ public class ArrayUtil {
     }
 
     public static float[] doubleTofloat(Double[] array) {
+        if (array == null) {
+            return null;
+        }
         float[] f = new float[array.length];
         for (int i = 0; i < array.length; i++) {
             f[i] = array[i].floatValue();
@@ -29,6 +32,9 @@ public class ArrayUtil {
     }
 
     public static Double[] floatToDouble(float[] array) {
+        if (array == null) {
+            return null;
+        }
         Double[] d = new Double[array.length];
         for (int i = 0; i < array.length; i++) {
             d[i] = (double) array[i];
@@ -38,6 +44,9 @@ public class ArrayUtil {
 
 
     public static Double[] intToDouble(int[] array) {
+        if (array == null) {
+            return null;
+        }
         Double[] d = new Double[array.length];
         for (int i = 0; i < array.length; i++) {
             d[i] = (double) array[i];
@@ -46,6 +55,9 @@ public class ArrayUtil {
     }
 
     public static float[] intTofloat(int[] array) {
+        if (array == null) {
+            return null;
+        }
         float[] d = new float[array.length];
         for (int i = 0; i < array.length; i++) {
             d[i] = (float) array[i];

@@ -109,7 +109,9 @@ public class PeakGroupPicker {
             Double[] rasteredRt = new Double[rightIndex - leftIndex + 1];
             System.arraycopy(rtArray, leftIndex, rasteredRt, 0, rightIndex - leftIndex + 1);
             Double[] ms1Ints = new Double[rightIndex - leftIndex + 1];
-            System.arraycopy(unSearchPeakGroup.getMs1Intensity(), leftIndex, ms1Ints, 0, rightIndex - leftIndex + 1);
+            Double[] selfInts = new Double[rightIndex - leftIndex + 1];
+            System.arraycopy(unSearchPeakGroup.getMs1Ints(), leftIndex, ms1Ints, 0, rightIndex - leftIndex + 1);
+            System.arraycopy(unSearchPeakGroup.getSelfInts(), leftIndex, selfInts, 0, rightIndex - leftIndex + 1);
             int selectedRtIndex = PeakUtil.findNearestIndex(rasteredRt, apexRt);
             int maxSpectrumIndex = selectedRtIndex + leftIndex;
             //取得[bestLeft,bestRight]对应范围的Intensity
@@ -141,7 +143,10 @@ public class PeakGroupPicker {
             if (maxIonIntensityInApex == 0) {
                 continue;
             }
-            if (unSearchPeakGroup.getMs1Intensity()[maxSpectrumIndex] < maxIonIntensityInApex) { //排除最高强度Ion小于ms1前体强度的峰
+            if (unSearchPeakGroup.getMs1Ints()[maxSpectrumIndex] < maxIonIntensityInApex) { //排除最高强度Ion小于ms1前体强度的峰
+                continue;
+            }
+            if (unSearchPeakGroup.getSelfInts()[maxSpectrumIndex] != null && unSearchPeakGroup.getMs1Ints()[maxSpectrumIndex] < unSearchPeakGroup.getSelfInts()[maxSpectrumIndex]) { //排除self大于ms1前体强度的峰
                 continue;
             }
             if (peakGroupInt == 0d) {
@@ -155,7 +160,8 @@ public class PeakGroupPicker {
             peakGroup.setIntensitySum(peakGroupInt);
             peakGroup.setTic(totalXic);
             peakGroup.setMs1Ints(ms1Ints);
-            peakGroup.setMs1Sum(unSearchPeakGroup.getMs1Intensity()[maxSpectrumIndex]);
+            peakGroup.setSelfInts(selfInts);
+            peakGroup.setMs1Sum(unSearchPeakGroup.getMs1Ints()[maxSpectrumIndex]);
             peakGroup.setIonIntensity(ionIntensity);
             peakGroup.setApexRt(apexRt);
             peakGroup.setApexIonsIntensity(apexIonIntensity);
@@ -251,7 +257,9 @@ public class PeakGroupPicker {
             Double[] rasteredRt = new Double[peakLength];
             System.arraycopy(rtArray, leftIndex, rasteredRt, 0, peakLength);
             Double[] ms1Ints = new Double[peakLength];
-            System.arraycopy(unSearchPeakGroup.getMs1Intensity(), leftIndex, ms1Ints, 0, peakLength);
+            Double[] selfInts = new Double[peakLength];
+            System.arraycopy(unSearchPeakGroup.getMs1Ints(), leftIndex, ms1Ints, 0, peakLength);
+            System.arraycopy(unSearchPeakGroup.getSelfInts(), leftIndex, selfInts, 0, peakLength);
             //取得[bestLeft,bestRight]对应范围的Intensity
             HashMap<String, Double[]> ionHullInt = new HashMap<>();
             HashMap<String, Double> ionIntensity = new HashMap<>();
@@ -282,7 +290,10 @@ public class PeakGroupPicker {
             if (maxIonIntensityInApex == 0) {
                 continue;
             }
-            if (unSearchPeakGroup.getMs1Intensity()[apexRtIndex] < maxIonIntensityInApex) { //排除最高强度Ion小于ms1前体强度的峰
+            if (unSearchPeakGroup.getMs1Ints()[apexRtIndex] < maxIonIntensityInApex) { //排除最高强度Ion大于ms1前体强度的峰
+                continue;
+            }
+            if (unSearchPeakGroup.getSelfInts()[apexRtIndex] != null && unSearchPeakGroup.getMs1Ints()[apexRtIndex] < unSearchPeakGroup.getSelfInts()[apexRtIndex]) { //排除self大于ms1前体强度的峰
                 continue;
             }
             if (peakGroupInt == 0D) {
@@ -293,7 +304,8 @@ public class PeakGroupPicker {
             peakGroup.setIntensitySum(peakGroupInt);
             peakGroup.setTic(totalXic);
             peakGroup.setMs1Ints(ms1Ints);
-            peakGroup.setMs1Sum(unSearchPeakGroup.getMs1Intensity()[apexRtIndex]);
+            peakGroup.setSelfInts(selfInts);
+            peakGroup.setMs1Sum(unSearchPeakGroup.getMs1Ints()[apexRtIndex]);
             peakGroup.setIonIntensity(ionIntensity);
             peakGroup.setApexIonsIntensity(apexIonIntensity);
             peakGroup.setSignalToNoiseSum(signalToNoiseSum);

@@ -142,7 +142,7 @@ public class XicScorer {
             //判定方式为整体占比
             double realRatio = maxIonIntensity / peakGroup.getIonIntensity().get(nextIon);
             double libRatio = normedLibIntMap.get(bestIon) / normedLibIntMap.get(nextIon);
-            if (realRatio / libRatio > 4) { //如果超过理论2倍的占比
+            if (realRatio / libRatio > 2) { //如果超过理论2倍的占比
                 for (int i = 1; i < coord.getFragments().size(); i++) {
                     String cutInfo = coord.getFragments().get(i).getCutInfo();
                     Double intensity = peakGroup.getIonIntensity().get(cutInfo);

@@ -126,9 +126,6 @@ public class Extractor {
      * @return
      */
     public DataDO extract(PeptideCoord coord, TreeMap<Float, MzIntensityPairs> ms1Map, TreeMap<Float, MzIntensityPairs> ms2Map, AnalyzeParams params, boolean withIonCount, Float ionsHighLimit) {
-
-        float mzStart = 0;
-        float mzEnd = -1;
         //所有的碎片共享同一个RT数组
         ArrayList<Float> rtList = new ArrayList<>();
         for (Float rt : ms2Map.keySet()) {
@@ -155,24 +152,8 @@ public class Extractor {
         boolean isHit = false;
         float ppmWindow = params.getMethod().getEic().getMzWindow().floatValue();
         for (FragmentInfo fi : coord.getFragments()) {
-            float mz = fi.getMz().floatValue();
-            float window = mz * ppmWindow * Constants.PPM_F;
-            mzStart = mz - window;
-            mzEnd = mz + window;
-            float[] intArray = new float[rtArray.length];
-            boolean isAllZero = true;
-
-            //本函数极其注重性能,为整个流程最关键的耗时步骤,每提升10毫秒都可以带来巨大的性能提升  --陆妙善
-            for (int i = 0; i < rtArray.length; i++) {
-                float acc = ConvolutionUtil.accumulation(ms2Map.get(rtArray[i]), mzStart, mzEnd);
-                if (acc != 0) {
-                    isAllZero = false;
-                }
-                intArray[i] = acc;
-            }
-
-            if (isAllZero) {
-                //如果该cutInfo没有XIC到任何数据,则不存入IntMap中,这里专门写这个if逻辑是为了帮助后续阅读代码的时候更加容易理解.我们在这边是特地没有将未检测到的碎片放入map的
+            float[] intArray = acc(fi.getMz().floatValue(), ppmWindow, rtArray, ms2Map);
+            if (intArray == null) {//如果该cutInfo没有XIC到任何数据,则不存入IntMap中,这里专门写这个if逻辑是为了帮助后续阅读代码的时候更加容易理解.我们在这边是特地没有将未检测到的碎片放入map的
                 continue;
             } else {
                 isHit = true;
@@ -180,10 +161,15 @@ public class Extractor {
             }
         }
 
+        //提取self mz
+        float[] selfIntArray = acc(coord.getMz().floatValue(), ppmWindow, rtArray, ms2Map);
+        data.setSelfInts(selfIntArray);
+
         //如果所有的片段均没有提取到XIC的结果,则直接返回null
         if (!isHit) {
             return null;
         }
+
         //计算每一帧的离子碎片总数
         if (withIonCount) {
             calcIonsCount(data, coord, ms2Map, params.getMethod().getEic().getIonsLow(), ionsHighLimit == null ? params.getMethod().getEic().getIonsHigh() : ionsHighLimit);
@@ -191,7 +177,6 @@ public class Extractor {
         //ms1数据不为空的时候需要增加ms1谱图
         if (ms1Map != null) {
             Eic eic = extractMS1(coord, ms1Map, params);
-
             if (data.getRtArray().length > eic.rts().length) {
                 data.setMs1Ints(ArrayUtil.add(eic.ints(), 0));
             } else if (data.getRtArray().length < eic.rts().length) {
@@ -382,7 +367,7 @@ public class Extractor {
             TreeMap<Float, MzIntensityPairs> ms1Map = getMS1Map(run);
 
             for (BlockIndexDO index : blockIndexList) {
-                List<DataDO> dataList = null;
+
                 long start = System.currentTimeMillis();
                 task.addLog("Processing:" + index.getRange().getStart() + "-" + index.getRange().getEnd() + ",Current:" + count + "/" + blockIndexList.size());
                 //构建坐标
@@ -392,7 +377,9 @@ public class Extractor {
                     taskService.update(task);
                     continue;
                 }
+
                 //Step3.提取指定原始谱图
+                List<DataDO> dataList = null;
                 TreeMap<Float, MzIntensityPairs> ms2Map = parser.getSpectrums(index.getStartPtr(), index.getEndPtr(), index.getRts(), index.getMzs(), index.getInts());
                 if (params.getReselect()) {
                     dataList = coreFunc.reselect(run, coords, ms1Map, ms2Map, params);
@@ -407,7 +394,7 @@ public class Extractor {
                     task.addLog("Analysis Data is empty");
                 }
                 dataService.insert(dataList, overviewDO.getProjectId());
-                task.addLog("(" + count + "-" + index.getRange().getStart() + "," + index.getRange().getEnd() + ")XIC Finished,Effective Peptides:" + (dataList == null ? 0 : dataList.size()) + ",Time Cost:" + (System.currentTimeMillis() - start) / 1000 + "s");
+                task.addLog("(" + count + "-[" + index.getRange().getStart() + "," + index.getRange().getEnd() + "])XIC Finished,Effective Peptides:" + (dataList == null ? 0 : dataList.size()) + ",Time Cost:" + (System.currentTimeMillis() - start) / 1000 + "s");
                 taskService.update(task);
                 count++;
             }
@@ -454,5 +441,35 @@ public class Extractor {
 
         dataDO.setIonsLow(ionsLow);
         dataDO.setIonsHigh(ionsHigh);
+    }
+
+    /**
+     * EIC一个mz,如果所有的光谱图上信号都为0,则返回null
+     * 本函数极其注重性能,为整个流程最关键的耗时步骤,每提升10毫秒都可以带来巨大的性能提升  --陆妙善
+     *
+     * @param mz
+     * @param ppm
+     * @param rtArray
+     * @param msMap
+     * @return
+     */
+    private float[] acc(float mz, float ppm, float[] rtArray, TreeMap<Float, MzIntensityPairs> msMap) {
+        float window = mz * ppm * Constants.PPM_F;
+        float mzStart = mz - window;
+        float mzEnd = mz + window;
+        float[] intArray = new float[rtArray.length];
+        boolean isAllZero = true;
+        for (int i = 0; i < rtArray.length; i++) {
+            float acc = ConvolutionUtil.accumulation(msMap.get(rtArray[i]), mzStart, mzEnd);
+            intArray[i] = acc;
+            if (acc != 0) {
+                isAllZero = false;
+            }
+        }
+        if (isAllZero) {
+            return null;
+        } else {
+            return intArray;
+        }
     }
 }

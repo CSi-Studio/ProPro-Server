@@ -30,6 +30,8 @@ public class RunDataVO {
 
     float[] ms1Ints;
 
+    float[] selfInts;
+
     List<String> proteins;
 
     String peptideRef;
@@ -69,6 +71,8 @@ public class RunDataVO {
     Double ms1Sum;
 
     Integer ionsLow;
+
+    Integer ionsHigh;
 
     //所在overview的最低分数阈值
     Double minTotalScore;

@@ -28,22 +28,38 @@ public class Ms1Scorer {
      */
     public void calcPearsonScore(PeakGroup peakGroup, List<String> scoreTypes) {
         Double[] ms1Ints = peakGroup.getMs1Ints();
+        Double[] selfInts = peakGroup.getSelfInts();
         Double[] bestIonInts = peakGroup.getIonHullInt().get(peakGroup.getBestIon());
         if (bestIonInts == null || ms1Ints == null) {
-            peakGroup.put(ScoreType.MS1Pearson, -1d, scoreTypes);
+            peakGroup.put(ScoreType.MS1, -1d, scoreTypes);
             return;
         }
 
+        double[] dBestIonInts = ArrayUtil.toPrimitive(bestIonInts);
+        double[] dMs1Ints = ArrayUtil.toPrimitive(ms1Ints);
+        double[] dSelfInts = ArrayUtil.toPrimitive(selfInts);
         PeakFindingOptions options = new PeakFindingOptions();
         options.fillParams();
         double[] rts = ArrayUtil.toPrimitive(peakGroup.getIonHullRt());
-        DoublePairs pairs = smoother.doSmooth(new DoublePairs(rts, ArrayUtil.toPrimitive(bestIonInts)), options);
+        DoublePairs pairs = smoother.doSmooth(new DoublePairs(rts, dBestIonInts), options);
         double[] bestIonSmoothEic = pairs.y();
-        Double pearson = new PearsonsCorrelation().correlation(bestIonSmoothEic, ArrayUtil.toPrimitive(ms1Ints));
-        if (pearson.isNaN()) {
-            pearson = -1d;
+        Double ms1Pearson = new PearsonsCorrelation().correlation(bestIonSmoothEic, dMs1Ints);
+        if (ms1Pearson.isNaN()) {
+            ms1Pearson = -1d;
         }
-        peakGroup.put(ScoreType.MS1Pearson, pearson, scoreTypes);
+        peakGroup.put(ScoreType.MS1, ms1Pearson, scoreTypes);
+
+        Double selfPearson = new PearsonsCorrelation().correlation(bestIonSmoothEic, dSelfInts);
+        if (selfPearson.isNaN()) {
+            selfPearson = -1d;
+        }
+        peakGroup.put(ScoreType.SELF, selfPearson, scoreTypes);
+
+        Double selfMs1Pearson = new PearsonsCorrelation().correlation(dMs1Ints, dSelfInts);
+        if (selfMs1Pearson.isNaN()) {
+            selfMs1Pearson = -1d;
+        }
+        peakGroup.put(ScoreType.MS1_SELF, selfMs1Pearson, scoreTypes);
     }
 
 }

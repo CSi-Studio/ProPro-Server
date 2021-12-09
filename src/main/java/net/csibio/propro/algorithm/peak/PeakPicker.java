@@ -129,7 +129,8 @@ public class PeakPicker {
 
         unSearchPeakGroup.setFloatRtArray(data.getRtArray());
         unSearchPeakGroup.setRtArray(rtArray);
-        unSearchPeakGroup.setMs1Intensity(ArrayUtil.floatToDouble(data.getMs1Ints()));
+        unSearchPeakGroup.setMs1Ints(ArrayUtil.floatToDouble(data.getMs1Ints()));
+        unSearchPeakGroup.setSelfInts(ArrayUtil.floatToDouble(data.getSelfInts()));
         unSearchPeakGroup.setIntensitiesMap(intensitiesMap);
 
         unSearchPeakGroup.setPeaks4Ions(peaks4Ions);
@@ -196,7 +197,8 @@ public class PeakPicker {
 
         unSearchPeakGroup.setFloatRtArray(data.getRtArray());
         unSearchPeakGroup.setRtArray(rtArray);
-        unSearchPeakGroup.setMs1Intensity(ArrayUtil.floatToDouble(data.getMs1Ints()));
+        unSearchPeakGroup.setMs1Ints(ArrayUtil.floatToDouble(data.getMs1Ints()));
+        unSearchPeakGroup.setSelfInts(ArrayUtil.floatToDouble(data.getSelfInts()));
         unSearchPeakGroup.setIntensitiesMap(intensitiesMap);
 
         unSearchPeakGroup.setNoise1000Map(noise1000Map);
