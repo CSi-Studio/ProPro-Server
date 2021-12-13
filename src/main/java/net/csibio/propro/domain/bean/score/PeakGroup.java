@@ -4,12 +4,13 @@ import lombok.Data;
 import net.csibio.propro.algorithm.score.ScoreType;
 import org.springframework.data.annotation.Transient;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Data
-public class PeakGroup extends BaseScores {
+public class PeakGroup extends BaseScores implements Serializable {
 
     //低信号量总碎片数目
     int ionsLow;

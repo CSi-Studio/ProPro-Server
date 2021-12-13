@@ -12,22 +12,20 @@ import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.common.FloatPairs;
-import net.csibio.propro.domain.bean.common.IdName;
-import net.csibio.propro.domain.bean.common.IdNameAlias;
-import net.csibio.propro.domain.bean.common.PeptideRtPairs;
+import net.csibio.propro.domain.bean.common.*;
 import net.csibio.propro.domain.bean.data.PeptideRt;
 import net.csibio.propro.domain.bean.method.Method;
 import net.csibio.propro.domain.bean.overview.Overview4Clinic;
 import net.csibio.propro.domain.bean.peptide.FragmentInfo;
+import net.csibio.propro.domain.bean.score.PeakGroup;
 import net.csibio.propro.domain.db.*;
 import net.csibio.propro.domain.options.SigmaSpacing;
 import net.csibio.propro.domain.query.*;
 import net.csibio.propro.domain.vo.ClinicPrepareDataVO;
-import net.csibio.propro.domain.vo.PeakVO;
 import net.csibio.propro.domain.vo.RunDataVO;
 import net.csibio.propro.exceptions.XException;
 import net.csibio.propro.service.*;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -93,7 +91,6 @@ public class ClinicController {
         if (insLib == null) {
             return Result.Error(ResultCode.INS_LIBRARY_NOT_EXISTED);
         }
-        // TODO 王嘉伟 当overviewIds不为空的时候,检测他们的projectId, methodId, insId, anaId是否一致
 
         List<IdNameAlias> runList = null;
         List<Overview4Clinic> totalOverviewList = null;
@@ -108,6 +105,7 @@ public class ClinicController {
         }
         Map<String, List<Overview4Clinic>> overviewMap = totalOverviewList.stream().collect(Collectors.groupingBy(Overview4Clinic::getRunId));
         ClinicPrepareDataVO data = new ClinicPrepareDataVO();
+
         data.setProject(project);
         if (runList.stream().filter(idNameAlias -> idNameAlias.alias() != null).count() == runList.size()) {
             data.setRunList(runList.stream().sorted(Comparator.comparing(IdNameAlias::alias)).collect(Collectors.toList()));
@@ -163,6 +161,7 @@ public class ClinicController {
             @RequestParam("overviewIds") List<String> overviewIds) throws XException {
         log.info("开始获取新预测数据-------------------------------------------------------------------------------");
         List<RunDataVO> dataList = new ArrayList<>();
+
         PeptideDO peptide = peptideService.getOne(new PeptideQuery().setLibraryId(libraryId).setPeptideRef(peptideRef), PeptideDO.class);
         for (int i = 0; i < overviewIds.size(); i++) {
             String overviewId = overviewIds.get(i);
@@ -171,6 +170,7 @@ public class ClinicController {
                 continue;
             }
             RunDataVO data = null;
+
             // 如果使用预测方法,则进行实时EIC获取
             if (predict) {
                 RunDO run = runService.getById(overview.getRunId());
@@ -185,6 +185,7 @@ public class ClinicController {
             } else {
                 data = dataService.getDataFromDB(projectId, overview.getRunId(), overview.getId(), peptideRef);
             }
+
             if (data != null) {
                 if (data.getStatus() == null) {
                     data.setStatus(IdentifyStatus.FAILED.getCode());
@@ -220,6 +221,8 @@ public class ClinicController {
 
         Result<List<RunDataVO>> result = new Result<List<RunDataVO>>(true);
         result.setData(dataList);
+
+
         Map<String, Double> intensityMap = peptide.getFragments().stream().collect(Collectors.toMap(FragmentInfo::getCutInfo, FragmentInfo::getIntensity));
         result.getFeatureMap().put("intensityMap", intensityMap);
         return result;
@@ -305,17 +308,53 @@ public class ClinicController {
         return Result.OK(map);
     }
 
-    @PostMapping(value = "/manualCheck")
-    Result manualCheck(List<PeakVO> peaks) {
-        for (int i = 0; i < peaks.size(); i++) {
-            PeakVO peak = peaks.get(i);
-        }
-        //TODO
-        //Step1 overviewId->overviewDO
-        //overviewDO-> projectId
-        //DataDO-> peptideRef, overviewId, projectId, false
 
-        //Step2 New PeakGroup
-        return Result.OK();
+    @PostMapping(value = "/manualCheck")
+    Result<List<RunDataVO>> manualCheck(
+            @RequestParam(value = "peptideRef") String peptideRef,
+            @RequestParam(value = "overViewIds") List<String> overviewIds,
+            @RequestParam(value = "projectId") String projectId,
+            @RequestParam(value = "runId") String runId,
+            @RequestParam(value = "range") List<String> range) {
+        List<RunDataVO> dataList = new ArrayList<>();
+        for (String overviewId : overviewIds) {
+            if (overviewId == null) {
+                continue;
+            }
+            OverviewDO overview = overviewService.getById(overviewId);
+            RunDataVO data = null;
+
+            data = (dataService.getDataFromDB(projectId, runId, overviewId, peptideRef));
+
+            if (data != null) {
+
+                List<PeakGroup> peakGroup = data.getPeakGroupList();
+
+                PeakGroup newPeaks = SerializationUtils.clone(data.getPeakGroupList().get(0));
+                newPeaks.setScores(data.getPeakGroupList().get(0).getScores());
+                newPeaks.setRightRt(Double.parseDouble(range.get(1)));
+                newPeaks.setLeftRt(Double.parseDouble(range.get(0)));
+                double apexRt = ((Double.parseDouble(range.get(0)) + Double.parseDouble(range.get(1))) / 2);
+                newPeaks.setApexRt(Double.parseDouble(String.valueOf(apexRt)));
+                newPeaks.setSelectedRt(Double.parseDouble(String.valueOf(apexRt)));
+                peakGroup.add(newPeaks);
+
+//                lda.scoreForPeakGroups(peakGroup, overview.getWeights(), overview.getParams().getMethod().getScore().getScoreTypes());
+                dataList.add(data);
+            }
+        }
+
+        Result<List<RunDataVO>> result = new Result<List<RunDataVO>>(true);
+        result.setData(dataList);
+        //TODO
+//        //Step1 overviewId->overviewDO
+//        //overviewDO-> projectId
+//        //DataDO-> peptideRef, overviewId, projectId, false
+//
+//        //Step2 New PeakGroup
+//        return Result.OK();
+
+        return result;
     }
 }
+
