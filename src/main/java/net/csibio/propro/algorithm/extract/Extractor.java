@@ -152,7 +152,7 @@ public class Extractor {
         boolean isHit = false;
         float ppmWindow = params.getMethod().getEic().getMzWindow().floatValue();
         for (FragmentInfo fi : coord.getFragments()) {
-            float[] intArray = acc(fi.getMz().floatValue(), ppmWindow, rtArray, ms2Map);
+            float[] intArray = acc(fi.getMz().floatValue(), ppmWindow, rtArray, ms2Map, false);
             if (intArray == null) {//如果该cutInfo没有XIC到任何数据,则不存入IntMap中,这里专门写这个if逻辑是为了帮助后续阅读代码的时候更加容易理解.我们在这边是特地没有将未检测到的碎片放入map的
                 continue;
             } else {
@@ -162,7 +162,7 @@ public class Extractor {
         }
 
         //提取self mz
-        float[] selfIntArray = acc(coord.getMz().floatValue(), ppmWindow, rtArray, ms2Map);
+        float[] selfIntArray = acc(coord.getMz().floatValue(), ppmWindow, rtArray, ms2Map, true);
         data.setSelfInts(selfIntArray);
 
         //如果所有的片段均没有提取到XIC的结果,则直接返回null
@@ -453,7 +453,7 @@ public class Extractor {
      * @param msMap
      * @return
      */
-    private float[] acc(float mz, float ppm, float[] rtArray, TreeMap<Float, MzIntensityPairs> msMap) {
+    private float[] acc(float mz, float ppm, float[] rtArray, TreeMap<Float, MzIntensityPairs> msMap, boolean withZero) {
         float window = mz * ppm * Constants.PPM_F;
         float mzStart = mz - window;
         float mzEnd = mz + window;
@@ -466,7 +466,7 @@ public class Extractor {
                 isAllZero = false;
             }
         }
-        if (isAllZero) {
+        if (isAllZero && !withZero) {
             return null;
         } else {
             return intArray;

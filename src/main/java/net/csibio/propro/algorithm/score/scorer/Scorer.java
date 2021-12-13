@@ -97,7 +97,7 @@ public class Scorer {
 
         if (!peakGroupListWrapper.isFound()) {
             //重试机制:扩大RT搜索范围并使用IonsShape重新计算XIC
-            coord.setRtRange(coord.getRtStart() - 200, coord.getRtEnd() + 200);
+            coord.setRtRange(coord.getRtStart() - params.getMethod().getEic().getExtraRtWindow(), coord.getRtEnd() + params.getMethod().getEic().getExtraRtWindow());
             dataDO = extractor.extract(coord, ms1Map, ms2Map, params, true, 100f);
             if (dataDO.getIntMap() == null || dataDO.getIntMap().size() <= coord.getFragments().size() / 2) {
                 dataDO.setStatus(IdentifyStatus.NO_ENOUGH_FRAGMENTS.getCode());
@@ -146,7 +146,12 @@ public class Scorer {
             xicScorer.calcXICScores(peakGroup, normedLibIntMap, scoreTypes);
             xicScorer.calcPearsonMatrixScore(peakGroup, normedLibIntMap, coord, scoreTypes);
             diaScorer.calculateIsotopeScores(peakGroup, productMzMap, productChargeMap, mzIntensityPairs, scoreTypes);
-            peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsHigh()) * 1d / maxIonsCount, scoreTypes);
+            if (maxIonsCount != 0) {
+                peakGroup.put(ScoreType.IonsDelta, (maxIonsCount - peakGroup.getIonsHigh()) * 1d / maxIonsCount, scoreTypes);
+            } else {
+                peakGroup.put(ScoreType.IonsDelta, 1d, scoreTypes);
+            }
+
             ms1Scorer.calcPearsonScore(peakGroup, scoreTypes);
             peakFitter.fit(peakGroup, coord); //拟合定量结果
         }

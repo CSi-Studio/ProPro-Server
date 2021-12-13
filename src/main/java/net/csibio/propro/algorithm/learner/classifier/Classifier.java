@@ -104,8 +104,16 @@ public abstract class Classifier {
 
         SelectedPeakGroup bestTargetScore = new SelectedPeakGroup(learningParams.getScoreTypes().size());
         bestTargetScore.setDecoy(false);
+        bestTargetScore.put(ScoreType.IonsDelta.getName(), 0d, scoreTypes);
+        bestTargetScore.put(ScoreType.IsoCorr.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.IsoOverlap.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.CorrShape.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.CorrShapeW.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.Pearson.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.MS1.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.MS1_SELF.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.SELF.getName(), 1d, scoreTypes);
+        bestTargetScore.put(ScoreType.SELF_DP.getName(), 1d, scoreTypes);
         bestTargetScore.put(ScoreType.CorrCoe.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.CorrCoeW.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.Pearson.getName(), 1d, scoreTypes);
@@ -117,11 +125,10 @@ public abstract class Classifier {
         bestTargetScore.put(ScoreType.Sangle.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.LogSn.getName(), 5d, scoreTypes);
         bestTargetScore.put(ScoreType.NormRt.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.IsoCorr.getName(), 1d, scoreTypes);
-        bestTargetScore.put(ScoreType.IsoOverlap.getName(), 0d, scoreTypes);
+
         bestTargetScore.put(ScoreType.MassDev.getName(), 0d, scoreTypes);
         bestTargetScore.put(ScoreType.MassDevW.getName(), 0d, scoreTypes);
-        bestTargetScore.put(ScoreType.IonsDelta.getName(), 0d, scoreTypes);
+
 
         List<SelectedPeakGroup> bestTargets = new ArrayList<>();
         bestTargets.add(bestTargetScore);

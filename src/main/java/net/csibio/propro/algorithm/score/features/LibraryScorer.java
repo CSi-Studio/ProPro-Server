@@ -102,8 +102,8 @@ public class LibraryScorer {
             double runVecNorm = FastMath.sqrt(runSum);
             double libVecNorm = FastMath.sqrt(librarySum);
 
-            double[] runSqrtVecNormed = normalize(runSqrt, runVecNorm);
-            double[] libSqrtVecNormed = normalize(libSqrt, libVecNorm);
+            double[] runSqrtVecNormed = MathUtil.normalize(runSqrt, runVecNorm);
+            double[] libSqrtVecNormed = MathUtil.normalize(libSqrt, libVecNorm);
 
             double sumOfMult = 0d;
             for (int i = 0; i < runSqrt.length; i++) {
@@ -117,8 +117,8 @@ public class LibraryScorer {
         if (scoreTypes.contains(ScoreType.Manhattan.getName())) {
             double runIntTotal = MathUtil.sum(runSqrt);
             double libIntTotal = MathUtil.sum(libSqrt);
-            double[] runSqrtNormed = normalize(runSqrt, runIntTotal);
-            double[] libSqrtNormed = normalize(libSqrt, libIntTotal);
+            double[] runSqrtNormed = MathUtil.normalize(runSqrt, runIntTotal);
+            double[] libSqrtNormed = MathUtil.normalize(libSqrt, libIntTotal);
             double sumOfDivide = 0;
             for (int i = 0; i < runSqrt.length; i++) {
                 sumOfDivide += FastMath.abs(runSqrtNormed[i] - libSqrtNormed[i]);
@@ -172,14 +172,6 @@ public class LibraryScorer {
 //        peakGroup.put(ScoreType.Spearman.getName(), score, scoreTypes);
 //    }
 
-    private double[] normalize(double[] array, double value) {
-        if (value > 0) {
-            for (int i = 0; i < array.length; i++) {
-                array[i] /= value;
-            }
-        }
-        return array;
-    }
 
     private double calculateLibraryShiftScore(Double[] libIntensities, Double[] runIntensities) {
         double maxRatio = 0d, minRatio = Double.MAX_VALUE;

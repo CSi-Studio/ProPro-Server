@@ -6,7 +6,7 @@ import net.csibio.propro.constants.enums.Classifier;
 @Data
 public class ClassifierOptions {
 
-    String algorithm = Classifier.lda.getName();
+    String algorithm = Classifier.LDA.getName();
 
     Double fdr = 0.01d;
 }

@@ -130,7 +130,6 @@ public class Lda extends Classifier {
     }
 
     private void assignment(RealMatrix xMatrix, RealVector yVector, List<SelectedPeakGroup> peakGroupList, List<String> scoreTypes) {
-
         Set<String> skipTypes = new HashSet<>();
         skipTypes.add(ScoreType.CorrShape.getName());
         skipTypes.add(ScoreType.CorrShapeW.getName());

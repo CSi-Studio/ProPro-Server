@@ -12,7 +12,10 @@ import net.csibio.propro.algorithm.stat.StatConst;
 import net.csibio.propro.constants.enums.IdentifyStatus;
 import net.csibio.propro.constants.enums.ResultCode;
 import net.csibio.propro.domain.Result;
-import net.csibio.propro.domain.bean.common.*;
+import net.csibio.propro.domain.bean.common.FloatPairs;
+import net.csibio.propro.domain.bean.common.IdName;
+import net.csibio.propro.domain.bean.common.IdNameAlias;
+import net.csibio.propro.domain.bean.common.PeptideRtPairs;
 import net.csibio.propro.domain.bean.data.PeptideRt;
 import net.csibio.propro.domain.bean.method.Method;
 import net.csibio.propro.domain.bean.overview.Overview4Clinic;
@@ -324,8 +327,8 @@ public class ClinicController {
             OverviewDO overview = overviewService.getById(overviewId);
             RunDataVO data = null;
 
-            data = (dataService.getDataFromDB(projectId, runId, overviewId, peptideRef));
-
+            data = dataService.getDataFromDB(projectId, runId, overviewId, peptideRef);
+            
             if (data != null) {
 
                 List<PeakGroup> peakGroup = data.getPeakGroupList();

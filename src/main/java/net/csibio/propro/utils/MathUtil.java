@@ -362,6 +362,15 @@ public class MathUtil {
         return result;
     }
 
+    public static double[] normalize(double[] array, double value) {
+        if (value > 0) {
+            for (int i = 0; i < array.length; i++) {
+                array[i] /= value;
+            }
+        }
+        return array;
+    }
+
     /**
      * Normalize a with a's mean and std.
      */

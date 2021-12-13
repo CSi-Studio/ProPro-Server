@@ -85,7 +85,7 @@ public class SemiSupervise {
         //Step3. 开始训练数据集
         HashMap<String, Double> weightsMap = new HashMap<>();
         switch (params.getClassifier()) {
-            case lda -> {
+            case "LDA" -> {
                 weightsMap = lda.classifier(dataList, params);
                 if (weightsMap == null) {
                     return finalResult;
@@ -93,7 +93,7 @@ public class SemiSupervise {
                 lda.score(dataList, weightsMap, params.getScoreTypes()); //补全所有PeakGroup的TotalScore字段
                 finalResult.setWeightsMap(weightsMap);
             }
-            case xgboost -> {
+            case "XGBoost" -> {
                 xgboost.classifier(dataList, params);
             }
             default -> {
@@ -209,6 +209,7 @@ public class SemiSupervise {
      * @param featureScoresList
      * @param overviewDO
      */
+    //TODO WJW 优化分布图
     public void targetDecoyDistribution(List<SelectedPeakGroup> featureScoresList, OverviewDO overviewDO) {
         HashMap<String, Integer> targetDistributions = ProProUtil.buildDistributionMap();
         HashMap<String, Integer> decoyDistributions = ProProUtil.buildDistributionMap();

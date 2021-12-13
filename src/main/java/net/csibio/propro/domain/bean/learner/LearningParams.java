@@ -14,13 +14,14 @@ import java.util.List;
 @Data
 public class LearningParams {
 
-    Classifier classifier = Classifier.lda;
+    //    Classifier classifier = Classifier.lda;
+    String classifier = Classifier.LDA.getName();
 
     double fdr = Constants.DEFAULT_FDR;
 
     double trainTestRatio = 1;
 
-    int xevalNumIter = 10;
+    int xevalNumIter = 20;
 
 //    double ssInitialFdr = 0.15;
 

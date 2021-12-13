@@ -107,6 +107,7 @@ public class RunTask extends BaseTask {
             LearningParams ap = new LearningParams();
             ap.setScoreTypes(params.getMethod().getScore().getScoreTypes());
             ap.setFdr(params.getMethod().getClassifier().getFdr());
+            ap.setClassifier(params.getMethod().getClassifier().getAlgorithm());
             FinalResult finalResult = semiSupervise.doSemiSupervise(params.getOverviewId(), ap);
             taskDO.addLog("流程执行完毕,总耗时:" + (System.currentTimeMillis() - start) / 1000 + "秒");
             if (finalResult.getMatchedUniqueProteinCount() != null && finalResult.getMatchedUniqueProteinCount() != 0) {

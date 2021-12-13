@@ -42,17 +42,21 @@ public class Xgboost extends Classifier {
 //            put("eval_metric", "auc");
 //            put("seed", "23");
             put("booster", "gbtree");
+            put("base_score", "0.4");
+            put("max_delta_step", 3);//cv
             put("min_child_weight", 3);//cv
+            put("max_child_weight", 9);//cv
             put("eta", 0.01);//0.01-0.2
-            put("max_depth", 3);//3-10,与max_leaf_nodes互斥
+            put("max_depth", 12);//3-10,与max_leaf_nodes互斥
             put("silent", 1);
+            put("gamma", 0.9);
 //            put("alpha", 1);
 //            put("lambda", 0.5);// 用于逻辑回归的时候L2正则选项
             put("objective", "binary:logitraw");
             put("eval_metric", "error");
 //            put("eval_metric", "auc");
-            put("seed", "23");
-            put("subsample", 0.5);
+            put("seed", "0");
+            put("subsample", 0.9);
         }
     };
 
@@ -95,7 +99,6 @@ public class Xgboost extends Classifier {
                 System.out.println("predict耗时:" + (System.currentTimeMillis() - start));
             }
 
-
             logger.info("总时间：" + (System.currentTimeMillis() - startTime));
             List<SelectedPeakGroup> featureScoresList = scorer.findBestPeakGroup(scores);
             ErrorStat errorStat = statistics.errorStatistics(featureScoresList, params);
@@ -113,9 +116,9 @@ public class Xgboost extends Classifier {
         DMatrix trainMat = trainPeaksToDMatrix(trainPeaks, scoreTypes);
         Map<String, DMatrix> watches = new HashMap<>();
         watches.put("train", trainMat);
-        String[] metrics = null;
+//        String[] metrics = null;
 //        String[] evalHist = XGBoost.crossValidation(trainMat, params, 5, 5, metrics, null, null);
-        Booster booster = XGBoost.train(trainMat, this.params, 5, watches, null, null);
+        Booster booster = XGBoost.train(trainMat, this.params, 480, watches, null, null);
         return booster;
     }
 

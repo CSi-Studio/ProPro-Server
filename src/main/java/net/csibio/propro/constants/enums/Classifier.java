@@ -1,8 +1,8 @@
 package net.csibio.propro.constants.enums;
 
 public enum Classifier {
-    lda("LDA"),
-    xgboost("XGBoost");
+    LDA("LDA"),
+    XGBoost("XGBoost");
 
     String name;
 

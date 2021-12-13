@@ -19,6 +19,7 @@ public class MethodUpdateVO {
     //*********************************EIC参数****************************************************//
     Double mzWindow = 15d; //MZ窗口,为a时表示的是±a,单位是ppm
     Double rtWindow = 300d; //RT窗口,为300时表示的是 ±300
+    Double extraRtWindow = 200d; //当在rtWindow窗口内没有搜索到峰的时候,会扩展RT窗口进一步搜索,为300时表示的是 ±300
     Float ionsLow = 50f; //计算IonsCountLow时的最小强度值
     Float ionsHigh = 300f; //计算IonsCountHigh时的最小强度值
     Integer maxIons = 6;
@@ -48,10 +49,8 @@ public class MethodUpdateVO {
 
     //*********************************打分参数****************************************************//
     List<String> scoreTypes = ScoreType.getAllTypesName(); //打分类型,详情见net.csibio.propro.algorithm.score.ScoreType
-    boolean diaScores = true; //是否使用DIA打分,如果使用DIA打分的话,需要提前读取Aird文件中的谱图信息以提升系统运算速度
 
     //*********************************回归参数****************************************************//
-    String classifier = Classifier.lda.name(); //回归用的算法分类器 @see net.csibio.propro.constants.enums.Classifier
+    String classifier = Classifier.LDA.name(); //回归用的算法分类器 @see net.csibio.propro.constants.enums.Classifier
     Double fdr = 0.01d; //筛选的FDR值,默认值为0.01
-    boolean removeUnmatched = false; //是否删除fdr不符合阈值的结果,默认不删除
 }

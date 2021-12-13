@@ -103,7 +103,7 @@ public class LfqBench {
         BenchStat<PeptideRatio> points = new BenchStat<>(humanPoints, yeastPoints, ecoliPoints);
         DescriptiveStatistics human = new DescriptiveStatistics();
         humanPoints.forEach(p -> {
-                    if (!Double.isInfinite(p.y())) {
+                    if (!Double.isNaN(p.y()) && !Double.isInfinite(p.y())) {
                         human.addValue(p.y());
                     }
                 }
@@ -112,14 +112,14 @@ public class LfqBench {
 
         DescriptiveStatistics yeast = new DescriptiveStatistics();
         yeastPoints.forEach(p -> {
-            if (!Double.isInfinite(p.y())) {
+            if (!Double.isNaN(p.y()) && !Double.isInfinite(p.y())) {
                 yeast.addValue(p.y());
             }
         });
 
         DescriptiveStatistics ecoli = new DescriptiveStatistics();
         ecoliPoints.forEach(p -> {
-            if (!Double.isInfinite(p.y())) {
+            if (!Double.isNaN(p.y()) && !Double.isInfinite(p.y())) {
                 ecoli.addValue(p.y());
             }
         });
