@@ -51,6 +51,6 @@ public class MethodUpdateVO {
     List<String> scoreTypes = ScoreType.getAllTypesName(); //打分类型,详情见net.csibio.propro.algorithm.score.ScoreType
 
     //*********************************回归参数****************************************************//
-    String classifier = Classifier.LDA.name(); //回归用的算法分类器 @see net.csibio.propro.constants.enums.Classifier
+    String algorithm = Classifier.LDA.name(); //回归用的算法分类器 @see net.csibio.propro.constants.enums.Classifier
     Double fdr = 0.01d; //筛选的FDR值,默认值为0.01
 }
