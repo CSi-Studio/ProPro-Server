@@ -1,5 +1,6 @@
 package net.csibio.propro.config;
 
+import com.sun.management.OperatingSystemMXBean;
 import net.csibio.propro.utils.RepositoryUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,9 +9,12 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.lang.management.ManagementFactory;
 
 @Component("vmProperties")
 public class VMProperties {
+    static OperatingSystemMXBean osmb = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+    static long size = osmb.getTotalMemorySize() / 1024 / 1024 / 1024;
 
     @Autowired
     private Environment env;
@@ -18,13 +22,13 @@ public class VMProperties {
     @Value("${repository}")
     private String repository;
 
-    @Value("${multiple}")
-    private int multiple;
+    private int multiple = (int) Math.ceil(size / 10.0);
 
     @PostConstruct
     public void init() {
-        System.out.println("Multiple Threads: " + env.getProperty("multiple"));
+        System.out.println("Multiple Threads: " + multiple);
         System.out.println("Repository: " + env.getProperty("repository"));
+        System.out.println("RAM: " + size + "GB");
         RepositoryUtil.repository = repository;
     }
 
@@ -44,10 +48,7 @@ public class VMProperties {
     }
 
     public int getMultiple() {
-        if (multiple <= 1) {
-            return 1;
-        }
-        return multiple;
+        return Math.max(multiple, 1);
     }
 
 }
