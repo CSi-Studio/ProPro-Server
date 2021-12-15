@@ -22,6 +22,7 @@ public class VMProperties {
     @Value("${repository}")
     private String repository;
 
+    //  当前计算机的RAM/10向上取整
     private int multiple = (int) Math.ceil(size / 10.0);
 
     @PostConstruct
