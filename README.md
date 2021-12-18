@@ -18,13 +18,13 @@ people exploring in the field of Proteomics.
 Download the PDF user manual for installation and How to start with ProPro <br>
 https://github.com/CSi-Studio/ProPro-Server/blob/main/User%20Manual.pdf <br>
 or just read online with the documentation: <br>
-https://www.yuque.com/csi/propro/ysau8m <br>
+https://www.yuque.com/csi/propro/ysau8m?language=en-us <br>
 As the user manual is usually updated with the ProPro. Online document is a better choose.
 
 ## Development Plan
 
 The development plan will publish and update on our official documentation website: <br>
-https://www.yuque.com/csi/propro/baxshu
+https://www.yuque.com/csi/propro/baxshu?language=en-us
 
 ## Demo Website
 
