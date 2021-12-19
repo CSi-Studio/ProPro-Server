@@ -91,6 +91,7 @@ public abstract class BaseLibraryParser {
             }
             return annotation;
         } catch (Exception e) {
+            e.printStackTrace();
             logger.error("解析Annotation错误,Annotation:" + annotations);
             return null;
         }

@@ -36,6 +36,7 @@ public class TaskDO extends BaseDO {
 
     String taskTemplate;
 
+    @Indexed
     Date createDate;
 
     Date lastModifiedDate;

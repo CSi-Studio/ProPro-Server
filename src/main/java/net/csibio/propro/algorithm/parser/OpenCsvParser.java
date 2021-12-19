@@ -102,7 +102,7 @@ public class OpenCsvParser extends BaseLibraryParser {
                 fi.setMz(transition.getProductMz());
                 fi.setIntensity(transition.getProductIonIntensity());
                 if (transition.getAnnotation() != null) {
-                    fi.setAnnotations(transition.getAnnotation());
+                    fi.setAnnotations(transition.getAnnotation().replace("\"", ""));
                 } else {
                     fi.setAnnotations(transition.getFragmentType()
                             + transition.getFragmentSeriesNumber()
