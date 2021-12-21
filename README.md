@@ -1,3 +1,11 @@
+# User Manual
+
+Download the PDF user manual for installation and How to start with ProPro <br>
+https://github.com/CSi-Studio/ProPro-Server/blob/main/User%20Manual.pdf <br>
+or just read online with the documentation: <br>
+https://www.yuque.com/csi/propro/ysau8m?language=en-us <br>
+As the user manual is usually updated with the ProPro. Online document is a better choose.
+
 # ProPro-Server
 
 ## Introduction
@@ -13,13 +21,6 @@ As a highly complex process, DIA data analysis needs to invest a lot of time in 
 formed a big team to constantly update and maintain this new "baby". We promise that ProPro will be free to all the
 people exploring in the field of Proteomics.
 
-## User Manual
-
-Download the PDF user manual for installation and How to start with ProPro <br>
-https://github.com/CSi-Studio/ProPro-Server/blob/main/User%20Manual.pdf <br>
-or just read online with the documentation: <br>
-https://www.yuque.com/csi/propro/ysau8m?language=en-us <br>
-As the user manual is usually updated with the ProPro. Online document is a better choose.
 
 ## Development Plan
 
